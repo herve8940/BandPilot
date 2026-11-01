@@ -24,6 +24,7 @@ export function level(spec:number[],f1:number,f2:number){const a=bandOf(f1),b=ba
 /** Average several spectra in power. */
 export function averageSpectra(frames:number[][]){return Array.from({length:BANDS},(_,i)=>dbSum(frames.map(f=>f[i]!).filter(Number.isFinite)));}
 const r1=(v:number)=>Math.round(v*10)/10;
+const sg=(v:number)=>String(r1(v)).replace('-','−');
 const pad=(n:number)=>String(n).padStart(2,'0');
 const hz=(f:number)=>f>=1000?`${r1(f/1000).toLocaleString('fr-BE')} kHz`:`${Math.round(f)} Hz`;
 
@@ -32,7 +33,7 @@ export const ZONES:[string,number,number][]=[['Sub',20,60],['Grave',60,120],['Ba
 
 export type Target={kind:'bus'|'lr'|'ch';n:number};
 export type Severity='important'|'conseil'|'securite';
-export type Recommendation={id:string;severity:Severity;where:string;title:string;why:string;changes:Record<string,Value>;channel?:number;bus?:number;zone?:string};
+export type Recommendation={id:string;severity:Severity;where:string;title:string;why:string;changes:Record<string,Value>;channel?:number;bus?:number;zone?:string;current?:Record<string,Value|null>};
 export type Instrument={channel:number;name:string;family:Family|null};
 export type AnalysisSnapshot={
  active:boolean;target:Target;targetLabel:string;rehearsal:boolean;scanning:boolean;lastScanAt:string|null;
@@ -90,7 +91,7 @@ export function recommend(input:{
   const low=level(spec,20,cut*0.85),body=level(spec,cut*2,cut*8);
   if(low>body-15&&body>-90)out.push({id:`hpf-${ins.channel}`,severity:'important',channel:ins.channel,where:`${ins.name} · ${allEars}`,zone:'Sub',
    title:`Coupe-bas de ${ins.name} ${on===1&&Number.isFinite(f)?`de ${Math.round(f)} → `:'à '}${cut} Hz`,
-   why:`Le micro capte du grondement sous ${cut} Hz (${Math.round(low-body)>0?'+':''}${Math.round(low-body)} dB par rapport au corps du son). Rien d’utile pour ${ins.name.toLowerCase()} à cet endroit : couper allège tous les ears.`,
+   why:`Le micro capte du grondement sous ${cut} Hz (${Math.round(low-body)>0?'+':''}${sg(Math.round(low-body))} dB par rapport au corps du son). Rien d’utile pour ${ins.name.toLowerCase()} à cet endroit : couper allège tous les ears.`,
    changes:{[`${pre}/preamp/hpon`]:1,[`${pre}/preamp/hpf`]:cut}});
  }
  // 2. Kick and bass on top of each other.
@@ -140,7 +141,7 @@ export function recommend(input:{
   const pre=`/ch/${pad(ins.channel)}`,thr=Number(p(`${pre}/dyn/thr`));if(Number(p(`${pre}/dyn/on`))!==1||!Number.isFinite(thr))continue;
   const next=Math.min(0,Math.round((thr+Math.abs(gr)-4)*2)/2);
   out.push({id:`comp-${ins.channel}`,severity:'conseil',channel:ins.channel,where:`${ins.name} · ${allEars}`,
-   title:`Compresseur de ${ins.name} : seuil ${r1(thr)} → ${r1(next)} dB`,
+   title:`Compresseur de ${ins.name} : seuil ${sg(thr)} → ${sg(next)} dB`,
    why:`Il retire jusqu’à ${Math.round(-gr)} dB : le son est écrasé et perd sa dynamique. Visé : environ 4 dB de réduction sur les passages forts.`,
    changes:{[`${pre}/dyn/thr`]:next}});
  }
@@ -151,13 +152,13 @@ export function recommend(input:{
   if(Number(p(`${pre}/dyn/on`))!==1){
    out.push({id:`limit-${b}`,severity:'securite',bus:b,where:busLabel(b),
     title:`Limiteur de protection sur ${busLabel(b)}`,
-    why:`Crêtes à ${r1(peak)} dB, trop près du maximum. Un limiteur à −6 dB garantit qu’aucun pic ne dépasse ce niveau dans les oreilles.`,
+    why:`Crêtes à ${sg(peak)} dB, trop près du maximum. Un limiteur à −6 dB garantit qu’aucun pic ne dépasse ce niveau dans les oreilles.`,
     changes:{[`${pre}/dyn/on`]:1,[`${pre}/dyn/mode`]:0,[`${pre}/dyn/ratio`]:11,[`${pre}/dyn/thr`]:-6,[`${pre}/dyn/knee`]:0,[`${pre}/dyn/attack`]:1,[`${pre}/dyn/release`]:100,[`${pre}/dyn/mgain`]:0}});
   }else{
    const fader=Number(p(`${pre}/mix/fader`));if(!Number.isFinite(fader))continue;
    out.push({id:`ear-${b}`,severity:'securite',bus:b,where:busLabel(b),
     title:`${busLabel(b)} : −3 dB`,
-    why:`Crêtes à ${r1(peak)} dB : le limiteur travaille sans arrêt. Baisser le mix de 3 dB rend le son plus propre dans l’oreille.`,
+    why:`Crêtes à ${sg(peak)} dB : le limiteur travaille sans arrêt. Baisser le mix de 3 dB rend le son plus propre dans l’oreille.`,
     changes:{[`${pre}/mix/fader`]:Math.max(-90,Math.round((fader-3)*2)/2)}});
   }
  }
@@ -170,11 +171,14 @@ export class Analyzer extends EventEmitter{
  private spectra:Record<number,number[]>={};private scanFrames:number[][]|null=null;private scanning=false;private lastScanAt:string|null=null;
  private grSamples:{at:number;comp:number[]}[]=[];private busSamples:{at:number;bus:number[]}[]=[];
  private dismissed=new Set<string>();private ab=new Map<string,Record<string,Value>>();
+ // A recommendation being compared A/B stays available even once B makes the rule silent.
+ private pinned=new Map<string,Recommendation>();
  constructor(private xr:XR18,private instruments:()=>Instrument[]){
   super();
   xr.on('rta',({bands}:{bands:number[]})=>{
    if(this.scanFrames){this.scanFrames.push(bands);return;}
-   if(!this.active)return;
+   // While scanning, the analyser listens to one instrument after the other: not the mix shown live.
+   if(!this.active||this.scanning)return;
    this.live=this.live?this.live.map((v,i)=>Math.max(bands[i]!,v-1.5)):bands;// fast attack, slow release, like a real analyser
    this.liveAt=Date.now();
    if(Date.now()-this.lastEmit>200){this.lastEmit=Date.now();this.emit('live',{bands:this.live.map(r1),at:this.liveAt});}
@@ -233,13 +237,16 @@ export class Analyzer extends EventEmitter{
   for(const s of this.busSamples)s.bus.forEach((l,i)=>{busPeak[i+1]=Math.max(busPeak[i+1]??-128,l);});
   const busNames:Record<number,string>={};const usedBuses:number[]=[];
   for(let b=1;b<=6;b++){busNames[b]=String(v[`/bus/${b}/config/name`]?.value??'');if(busNames[b]!.trim()||(busPeak[b]??-128)>-60)usedBuses.push(b);}
-  return recommend({instruments:this.instruments(),spectra:this.spectra,params:p,compGr,busPeak,busNames,usedBuses}).filter(r=>!this.dismissed.has(r.id));
+  const list=recommend({instruments:this.instruments(),spectra:this.spectra,params:p,compGr,busPeak,busNames,usedBuses});
+  for(const r of this.pinned.values())if(!list.some(x=>x.id===r.id))list.unshift(r);
+  for(const r of list)if(!this.pinned.has(r.id))r.current=Object.fromEntries(Object.keys(r.changes).map(a=>[a,p(a)??null]));
+  return list.filter(r=>!this.dismissed.has(r.id));
  }
  find(id:string){const r=this.recommendations().find(r=>r.id===id);if(!r)throw Error('Recommandation introuvable ou déjà réglée : relance l’analyse');return r;}
  dismiss(id:string){this.dismissed.add(id);this.emit('state');return this.snapshot();}
  /** A/B: switch the console between the current setting (A) and the recommendation (B), live, without backup. */
  async listen(id:string,side:'a'|'b'){
-  const r=this.find(id);
+  const r=this.find(id);this.pinned.set(id,r);
   if(side==='b'){
    if(!this.ab.has(id)){const before:Record<string,Value>={};for(const a of Object.keys(r.changes))before[a]=await this.xr.readParameter(a);this.ab.set(id,before);}
    const wire=Object.fromEntries(Object.entries(r.changes).map(([a,u])=>[a,toWire(a,u)]));
@@ -249,6 +256,8 @@ export class Analyzer extends EventEmitter{
  }
  /** Back to A before the real preview, so the backup made at apply time holds the true "before". */
  async restoreA(id:string){const before=this.ab.get(id);if(before){await this.xr.applyParameters(before,false,true);this.ab.delete(id);}}
+ /** The comparison is over (applied or closed): the rules decide again whether it is still needed. */
+ release(id:string){this.pinned.delete(id);this.emit('state');}
  snapshot():AnalysisSnapshot{
   const instruments=this.instruments();
   return {active:this.active,target:this.target,targetLabel:this.label(this.target),rehearsal:this.xr.isRehearsal(),scanning:this.scanning,lastScanAt:this.lastScanAt,

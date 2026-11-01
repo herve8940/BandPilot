@@ -1,4 +1,4 @@
-# XR18 Studio 2.0.5 — état du développement
+# XR18 Studio 2.1.0 — état du développement
 
 Cette version expose les 2 636 paramètres du catalogue XR18 connu. Les essais sur émulateur ne constituent pas une qualification matérielle ni une validation pour le concert.
 

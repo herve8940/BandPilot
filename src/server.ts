@@ -81,7 +81,9 @@ const handler: http.RequestListener = async (req, res) => {
   const user=access.user(req);
   if(path.startsWith('/api/')&&(!user||!permitted(user,req.method??'GET',path))){res.writeHead(user?403:401);res.end(JSON.stringify({error:user?'Droits insuffisants':'Connexion requise'}));return;}
   if(path==='/api/reacue/stop'&&req.method==='POST'){show.arm(false);access.log(user!,'Arrêt ReaCue');res.end(JSON.stringify({ok:true}));return;}
-  const readOnlyCoach=['/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo'].includes(path);
+  const readOnlyCoach=['/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
+    // Analysis only changes what the console's analyser looks at, never the sound: no global lock.
+    '/api/analysis/start','/api/analysis/stop','/api/analysis/target','/api/analysis/scan','/api/analysis/dismiss','/api/analysis/release'].includes(path);
   if(path.startsWith('/api/')&&req.method!=='GET'&&!readOnlyCoach){
     const coachMetadata=(path.startsWith('/api/coach/')&&path!=='/api/coach/apply')||(path.startsWith('/api/mixer-sync')&&path!=='/api/mixer-sync/apply')||path.startsWith('/api/ears-share');
     if(studioApi.busy&&!path.startsWith('/api/reacue')&&!coachMetadata){show.manualOverride();}
@@ -154,11 +156,12 @@ const handler: http.RequestListener = async (req, res) => {
       else if(path==='/api/analysis/target')result=analyzer.setTarget(d.target);
       else if(path==='/api/analysis/scan')result=await analyzer.scan();
       else if(path==='/api/analysis/dismiss')result=analyzer.dismiss(String(d.id));
+      else if(path==='/api/analysis/release'){analyzer.release(String(d.id));result=analyzer.snapshot();}
       else if(path==='/api/analysis/listen'){if(d.side!=='a'&&d.side!=='b')throw Error('side a ou b');result=await analyzer.listen(String(d.id),d.side);}
       else if(path==='/api/analysis/preview'){
         // Back to A first: the backup taken at apply time must hold the real "before".
         const r=analyzer.find(String(d.id));await analyzer.restoreA(r.id);
-        const plan=await show.console.preview(r.changes);
+        const plan=await show.console.preview(r.changes);analyzer.release(r.id);
         result={...plan,title:r.title,explanation:r.why,inputs:[r.where],recommendation:r};
       }
       else{res.writeHead(404);res.end(JSON.stringify({error:'Action inconnue'}));return;}
