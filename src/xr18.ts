@@ -27,6 +27,25 @@ export class XR18 extends EventEmitter {
   operationId(){return this.operationEpoch;}
   private fxValues=new Map<number,{slot:number;algorithm:number;parameters:{type:"f"|"i";value:number}[]}>();
   parameterState(){return Object.fromEntries(this.parameterValues);}
+  /** Rehearsal mode: the band only listens through the ears, the Main (front of house) stays muted. */
+  private rehearsal=false;
+  setRehearsal(on:boolean){this.rehearsal=on;}
+  isRehearsal(){return this.rehearsal;}
+  private guardMain(address:string,value:unknown){if(this.rehearsal&&address==='/lr/mix/on'&&Number(value)!==0)throw Error('Mode Répétition : le Main reste coupé. Quitte le mode Répétition pour l’ouvrir.');}
+  // ---------- analysis meters (spectrum analyser and dynamics) ----------
+  /** RTA source codes of the XR18 (checked on a physical XR18V2): 0-15 channels, 16 aux, 17-20 FX returns, 21-26 buses, 27-30 FX sends, 31 Main LR, 32 monitor. */
+  static readonly RTA={channel:(n:number)=>n-1,aux:16,fx:(n:number)=>16+n,bus:(n:number)=>20+n,fxSend:(n:number)=>26+n,lr:31,mon:32} as const;
+  private analysisTimer?:NodeJS.Timeout;
+  /** Ask the console for the spectrum (/meters/4) and gain reduction (/meters/6) for the next ~10 s; call again to keep them coming. */
+  subscribeAnalysis(){if(this.mode!=='real')return;this.send('/meters',['/meters/4']);this.send('/meters',['/meters/6']);}
+  startAnalysisStream(){this.subscribeAnalysis();if(!this.analysisTimer){this.analysisTimer=setInterval(()=>this.subscribeAnalysis(),4000);this.analysisTimer.unref();}}
+  stopAnalysisStream(){if(this.analysisTimer){clearInterval(this.analysisTimer);this.analysisTimer=undefined;}}
+  /** What the analyser listens to. A display setting of the console: it does not change the sound. */
+  setRtaSource(code:number,post=false){
+    if(!Number.isInteger(code)||code<0||code>32)throw Error('Source d’analyse 0..32');
+    if(this.mode!=='real')return;
+    this.send('/-stat/rta/source',[code]);this.send('/-stat/rta/pos',[post?1:0]);
+  }
   private remember(address:string,value:Value){
     const state={value,updatedAt:new Date().toISOString()};this.parameterValues.set(address,state);this.emit('parameter',{address,...state});
   }
@@ -53,7 +72,7 @@ export class XR18 extends EventEmitter {
     return this.parameterState();
   }
   async writeParameter(address:string,value:Value,allowPhantom=false){
-    const checked=validateWire(address,value),p=descriptor(address);
+    const checked=validateWire(address,value),p=descriptor(address);this.guardMain(address,checked);
     if(address.endsWith('/phantom')&&!allowPhantom)throw Error('Confirmation 48 V requise');
     if(this.mode==='simulation'){
       const fxType=/^\/fx\/([1-4])\/type$/.exec(address);if(fxType&&this.fxValues.get(Number(fxType[1]))?.algorithm!==checked)this.fxValues.set(Number(fxType[1]),{slot:Number(fxType[1]),algorithm:checked as number,parameters:[]});
@@ -75,6 +94,8 @@ export class XR18 extends EventEmitter {
     return observed;
   }
   async applyParameters(values:Record<string,Value>,allowPhantom=false,tolerant=false){
+    // Rehearsal: a scene recall or a bulk change never reopens the Main; everything else is applied.
+    if(this.rehearsal&&'/lr/mix/on' in values&&Number(values['/lr/mix/on'])!==0){values={...values};delete values['/lr/mix/on'];this.emit('warning','Mode Répétition : Main laissé coupé');}
     for(const [a,v] of Object.entries(values)){validateWire(a,v);if(a.endsWith('/phantom')&&!allowPhantom)throw Error('Confirmation 48 V requise');}
     const generation=this.generation,operation=this.operationEpoch;
     const failed:string[]=[];
@@ -129,6 +150,7 @@ export class XR18 extends EventEmitter {
    */
   liveSet(address:string,value:number|string){
     if(!liveAllowed(address))throw Error('Paramètre non autorisé en contrôle direct : '+address);
+    this.guardMain(address,value);
     const checked:Value=SOLO.test(address)?(value===1||value===0?value:(()=>{throw Error('Solo 0 ou 1');})()):validateWire(address,value);
     if(this.mode==='simulation'){this.applyLocal(address,checked);return checked;}
     if(!this.writes||!this.isLive())throw Error('Écritures désactivées ou XR18 déconnectée');
@@ -218,6 +240,14 @@ export class XR18 extends EventEmitter {
     if(this.pendingLocal.has(msg.address)&&Date.now()<this.pendingLocal.get(msg.address)!)return;
     if(SOLO.test(msg.address)&&typeof msg.args[0]==="number"){this.remember(msg.address,msg.args[0]?1:0);return;}
     if(PARAMETERS[msg.address]){try{this.remember(msg.address,validateWire(msg.address,msg.args[0]));}catch{return;}}
+    if(msg.address==="/meters/4"&&Buffer.isBuffer(msg.args[0])){
+      // 100 bands, 20 Hz to 20 kHz on a log scale, in dB.
+      try{this.emit('rta',{bands:decodeXAirMeterBlob(msg.args[0],100),at:Date.now()});}catch(e){this.emit('warning',String(e));}return;
+    }
+    if(msg.address==="/meters/6"&&Buffer.isBuffer(msg.args[0])){
+      // 39 gain-reduction values (dB, ≤ 0): 16 channel gates, 16 channel compressors, 6 bus compressors, Main.
+      try{const v=decodeXAirMeterBlob(msg.args[0],39);this.emit('dynamics',{gate:v.slice(0,16),comp:v.slice(16,32),bus:v.slice(32,38),lr:v[38],at:Date.now()});}catch(e){this.emit('warning',String(e));}return;
+    }
     if(msg.address==="/meters/1"&&Buffer.isBuffer(msg.args[0])){
       const levels=decodeXAirMeterBlob(msg.args[0],METER_LAYOUT.count);
       this.meters={channels:levels.slice(0,16),all:levels,updatedAt:new Date().toISOString()};
@@ -270,6 +300,7 @@ export class XR18 extends EventEmitter {
   }
   setMainOn(on:boolean){
     if(typeof on!=="boolean")throw Error("Boolean on required");
+    this.guardMain('/lr/mix/on',on?1:0);
     if(this.mode==="real"&&(!this.writes||!this.isLive()))throw Error("Hardware writes disabled or console not confirmed");
     if(this.mode==="real")this.send("/lr/mix/on",[on?1:0]);
     else {this.main.on=on;this.main.updatedAt=new Date().toISOString();this.remember("/lr/mix/on",on?1:0);this.emit("main",{...this.main});}
@@ -347,6 +378,7 @@ export class XR18 extends EventEmitter {
     try { await this.start(); } catch(e) { this.close();this.emit('connection');throw e; }
   }
   close() {
+    this.stopAnalysisStream();
     this.generation++;this.emit("transport-closed");
     if(this.timer)clearInterval(this.timer);this.timer=undefined;
     for(const t of this.readbackTimers.values())clearTimeout(t);this.readbackTimers.clear();this.pendingLocal.clear();

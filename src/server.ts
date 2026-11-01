@@ -1,4 +1,6 @@
-import {readFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
+import {Analyzer,familyFromName,type Instrument} from './analysis.js';
+import {source as coachSource} from './sound-coach.js';
 import {MixerSync} from './mixer-sync.js';
 import {DiagnosticLog,setDiagnosticLogger,diagnostic} from './diagnostics.js';
 import {SoundCoach,identifySymptom} from "./sound-coach.js";
@@ -40,6 +42,21 @@ const show=new ShowControl(xr18,processing,library);
 const mixerSync=new MixerSync(xr18,show.console,library);
 const coach=new SoundCoach(xr18,show.console,library);
 let aiRequestAt=0;
+// Live analysis: instruments named on the console, family from the coach when it knows the source.
+const instruments=():Instrument[]=>{
+ const v=xr18.parameterState(),profile=coach.profile(),out:Instrument[]=[];
+ for(let c=1;c<=16;c++){
+  const input=profile.inputs.find(i=>i.channel===c),name=String(v[`/ch/${String(c).padStart(2,'0')}/config/name`]?.value??'').trim()||input?.name||'';
+  if(!name&&!input)continue;
+  let family=null;try{family=input?coachSource(input.source).family:null;}catch{family=null;}
+  out.push({channel:c,name:name||`Canal ${c}`,family:family??familyFromName(name)});
+ }
+ return out;
+};
+const analyzer=new Analyzer(xr18,instruments);
+// Rehearsal mode survives a restart: the Main must not come back on by surprise.
+const rehearsalPath=join(dirname(configPath),'rehearsal.json');
+try{xr18.setRehearsal(JSON.parse(readFileSync(rehearsalPath,'utf8')).on===true);}catch{/* first start: off */}
 const studioApi=new StudioApi(xr18,access,library,show);
 // Musicians' monitor mixes on the local network (QR links). Off until started from the app.
 const ears=new EarsShare(dbPath,xr18,()=>process.env.XR18_WEB_DIST,()=>studioApi.busy?'Une opération est en cours sur l’ordinateur, réessaie dans un instant':null,()=>show.manualOverride());
@@ -117,6 +134,36 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/coach'&&req.method==='GET'){res.end(JSON.stringify({...coach.catalog(),role:user!.role}));return;}
   if(path==='/api/coach/advice'&&req.method==='GET'){
     try{const q=new URL(req.url!,'http://localhost').searchParams;res.end(JSON.stringify(coach.advice(Number(q.get('channel')),String(q.get('symptom')))));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path==='/api/rehearsal'){
+    try{
+      if(req.method==='POST'){
+        const d=await body(req);if(typeof d.on!=='boolean')throw Error('on: true ou false');
+        xr18.setRehearsal(d.on);writeFileSync(rehearsalPath,JSON.stringify({on:d.on}));diagnostic('rehearsal',{on:d.on});
+        if(d.on&&xr18.status().writesEnabled&&xr18.status().connected)await xr18.writeParameter('/lr/mix/on',0);
+      }
+      res.end(JSON.stringify({on:xr18.isRehearsal(),mainOn:xr18.mainState().on}));
+    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path.startsWith('/api/analysis')){
+    try{
+      let result:unknown;const d:any=req.method==='POST'?await body(req):{};
+      if(req.method==='GET'&&path==='/api/analysis')result=analyzer.snapshot();
+      else if(path==='/api/analysis/start')result=analyzer.start(d.target);
+      else if(path==='/api/analysis/stop')result=analyzer.stop();
+      else if(path==='/api/analysis/target')result=analyzer.setTarget(d.target);
+      else if(path==='/api/analysis/scan')result=await analyzer.scan();
+      else if(path==='/api/analysis/dismiss')result=analyzer.dismiss(String(d.id));
+      else if(path==='/api/analysis/listen'){if(d.side!=='a'&&d.side!=='b')throw Error('side a ou b');result=await analyzer.listen(String(d.id),d.side);}
+      else if(path==='/api/analysis/preview'){
+        // Back to A first: the backup taken at apply time must hold the real "before".
+        const r=analyzer.find(String(d.id));await analyzer.restoreA(r.id);
+        const plan=await show.console.preview(r.changes);
+        result={...plan,title:r.title,explanation:r.why,inputs:[r.where],recommendation:r};
+      }
+      else{res.writeHead(404);res.end(JSON.stringify({error:'Action inconnue'}));return;}
+      res.end(JSON.stringify(result));
+    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path.startsWith('/api/coach/')&&req.method==='POST'){
     try{const d=await body(req);let result:unknown;
@@ -345,6 +392,10 @@ xr18.on('reset',()=>{const message=JSON.stringify({type:'snapshot',channels:xr18
 xr18.on('parameter',state=>{const message=JSON.stringify({type:'parameter',state});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);});
 xr18.on("state", state => { const message = JSON.stringify({ type: "channel", state, status:xr18.status() }); for (const ws of wss.clients) if (ws.readyState === WebSocket.OPEN) ws.send(message); });
 xr18.on("main", state => {const message=JSON.stringify({type:"main",state});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);});
+const broadcast=(message:string)=>{for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);};
+analyzer.on('live',live=>broadcast(JSON.stringify({type:'analysis-live',live})));
+analyzer.on('progress',p=>broadcast(JSON.stringify({type:'analysis-progress',progress:p})));
+analyzer.on('state',()=>broadcast(JSON.stringify({type:'analysis',analysis:analyzer.snapshot()})));
 xr18.on("meters",state=>{const message=JSON.stringify({type:"meters",state});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);});
 xr18.on("advanced", state => {const message=JSON.stringify({type:"advanced",state});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);});
 xr18.on("connection", () => {const message=JSON.stringify({type:"status",status:xr18.status()});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);});
