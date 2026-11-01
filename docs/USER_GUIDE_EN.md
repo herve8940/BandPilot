@@ -37,9 +37,9 @@ Download the file for your computer from the [releases page](https://github.com/
 
 | Computer | File | Install |
 |---|---|---|
-| Windows | `XR18-Studio-Windows-2.0.5.exe` | Double-click. Installs for your account and creates a shortcut. |
-| Intel Mac | `XR18-Studio-macOS-2.0.5-x64.dmg` | Open it and drag XR18 Studio to Applications. |
-| Apple Silicon Mac (M1, M2, M3…) | `XR18-Studio-macOS-2.0.5-arm64.dmg` | Same. |
+| Windows | `XR18-Studio-Windows-2.1.0.exe` | Double-click. Installs for your account and creates a shortcut. |
+| Intel Mac | `XR18-Studio-macOS-2.1.0-x64.dmg` | Open it and drag XR18 Studio to Applications. |
+| Apple Silicon Mac (M1, M2, M3…) | `XR18-Studio-macOS-2.1.0-arm64.dmg` | Same. |
 | Ubuntu / Debian | `.deb` file | Open it in the software installer. |
 | Other Linux | `.AppImage` file | Allow execution in its properties, then open it. |
 
@@ -194,18 +194,31 @@ Every move goes to the mixer immediately, then the stored value is read back.
 
 ## 8. Detailed settings in Expert mode
 
-The **Expert** switch shows the whole mixer, organised like X-AIR Edit. Everything fits in the window: the 16 inputs, the Aux input and the 4 effect returns sit side by side, aligned with their overview above.
+The **Expert** switch shows the whole mixer in a dark “studio” design, with 6 views at the top left.
 
 ![Console in Expert mode](images/tuto-expert.png)
 
-- **Tabs at the top**: Mixer, Canal, Entrée, Gate, EQ, Comp, Envois, Main, Effets, Routage, Vumètres.
-- **In the middle, the selected strip** (click a name in the bank to change). A detailed view taller than the available space scrolls inside its frame; the page itself does not move.
-- **At the bottom, the fader bank**.
-- **On the right, explanations and the mix bar**: front of house, monitors or effects on the faders, DCA, Clr Solo, mute groups, auto mix, and the master fader.
-
-**? Explications** shows, next to each view, what each setting does in plain (French) language. The [console guide](GUIDE_CONSOLE.md) collects these explanations with screenshots and all 61 effects.
+- **Console**: the 16 inputs, Aux and effect returns. Each strip shows its colour, a mini EQ curve, its compressor, fader and meter. **Les faders règlent** *(faders control)*: pick front of house, an ear mix (Retour Chant, Retour Gtr…) or an effect; the faders then set that mix. On the right: the selected channel and every output level.
+- **Canal** *(channel)*: an instrument’s whole chain (input → gate → EQ → compressor → ears + FX). Click a step to open it; ‹ › changes channel.
+- **Ears**: an instruments × musicians grid. Each column is one musician’s mix, with its level and limiter. **Ajouter la protection** adds a −6 dB limiter on ears that have none.
+- **Effets** and **Routage**: the 4 effects, the outputs, and **virtual soundcheck** (the 16 channels play the USB tracks recorded in REAPER, to fine-tune without the band).
+- **Analyse**: see below.
 
 ![EQ in Expert mode](images/tuto-expert-eq.png)
+
+**Rehearsal mode.** The button at the top right (**Façade active** / **Répétition · Main coupé**) mutes the Main and **locks** it: it cannot be reopened by mistake, even by recalling a scene. Only the musicians’ ears are worked on. The setting survives a restart.
+
+**Analysis: a sound engineer listening with you.** While the band plays:
+
+1. Open **Analyse** and choose what to listen to: an ear mix (in rehearsal) or the Main.
+2. The **live spectrum** of the mix is shown against a “clean ears” target curve.
+3. Click **Analyser chaque instrument**: the app listens to each channel for a second, one after the other (the XR18 analyser has one source at a time). **Qui joue où** *(who plays where)* shows each instrument’s place in the frequencies.
+4. **Recommendations** arrive, ranked (Safety, Important, Advice): low cut too low, bass and kick piled up, guitar in the voice’s presence, resonance, over-squashing compressor, ear mix close to clipping.
+5. **Voir et valider** *(review)*: exactly what changes, then **A · Avant / B · Après** to listen live in the ears. **Appliquer** makes a backup first; **Annuler** (under “Appliqué ce soir”) puts everything back.
+
+![Live analysis](images/tuto-analyse.png)
+
+Nothing is applied without your click. The analysis uses the XR18’s own measurements (spectrum, levels, compressor gain reduction), not ears: the final taste is yours, with the A / B button.
 
 **Common tasks**:
 

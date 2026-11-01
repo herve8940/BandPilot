@@ -37,9 +37,9 @@ Télécharge le fichier qui correspond à ton ordinateur sur la [page des versio
 
 | Ordinateur | Fichier | Installation |
 |---|---|---|
-| Windows | `XR18-Studio-Windows-2.0.5.exe` | Double-clic. L’installation se fait pour ton compte et crée un raccourci. |
-| Mac Intel | `XR18-Studio-macOS-2.0.5-x64.dmg` | Ouvre-le et glisse XR18 Studio dans Applications. |
-| Mac Apple Silicon (M1, M2, M3…) | `XR18-Studio-macOS-2.0.5-arm64.dmg` | Idem. |
+| Windows | `XR18-Studio-Windows-2.1.0.exe` | Double-clic. L’installation se fait pour ton compte et crée un raccourci. |
+| Mac Intel | `XR18-Studio-macOS-2.1.0-x64.dmg` | Ouvre-le et glisse XR18 Studio dans Applications. |
+| Mac Apple Silicon (M1, M2, M3…) | `XR18-Studio-macOS-2.1.0-arm64.dmg` | Idem. |
 | Ubuntu / Debian | fichier `.deb` | Ouvre-le avec l’installateur de logiciels. |
 | Autre Linux | fichier `.AppImage` | Autorise l’exécution dans ses propriétés, puis ouvre-le. |
 
@@ -206,18 +206,31 @@ Chaque geste part tout de suite vers la table, puis l’application relit la val
 
 ## 8. Régler en détail en mode Expert
 
-Bouton **Expert** en haut de la console : toute la table, organisée comme X-AIR Edit. Tout tient dans la fenêtre : les 16 entrées, l’entrée Aux et les 4 retours d’effets sont côte à côte, alignés avec leur résumé au-dessus.
+Bouton **Expert** en haut de la console : toute la table, dans un design sombre « studio » et 6 vues en haut à gauche.
 
 ![Console en mode Expert](images/tuto-expert.png)
 
-- **En haut, les onglets** : Mixer, Canal, Entrée, Gate, EQ, Comp, Envois, Main, Effets, Routage, Vumètres.
-- **Au milieu, la vue de la tranche sélectionnée** (clique sur un nom en bas pour en changer). Si une vue détaillée est plus haute que la place disponible, elle défile dans son cadre : la page, elle, ne bouge pas.
-- **En bas, la banque de faders**.
-- **À droite, les explications et la barre de mix** : façade, retours ou effets sur les faders, DCA, Clr Solo, groupes de mute, auto-mix, et le volume général.
-
-Le bouton **? Explications** affiche à côté de chaque vue, en langage simple, à quoi sert chaque réglage. Le [Guide de la console](GUIDE_CONSOLE.md) reprend toutes ces explications avec des captures et la liste des 61 effets.
+- **Console** : les 16 entrées, l’Aux et les retours d’effets. Chaque tranche montre sa couleur, une mini-courbe d’égaliseur, son compresseur, son fader et son vumètre. **« Les faders règlent »** : choisis Façade, un ear (Retour Chant, Retour Gtr…) ou un effet ; les faders règlent alors ce mix-là. À droite : le canal sélectionné et le niveau de chaque sortie.
+- **Canal** : toute la chaîne d’un instrument (Entrée → Gate → Égaliseur → Compresseur → Ears + FX). Clique sur une étape pour l’ouvrir ; ‹ › change de canal.
+- **Ears** : un tableau instruments × musiciens. Chaque colonne est le mix d’un musicien, avec son niveau et son limiteur. Le bouton **Ajouter la protection** pose un limiteur à −6 dB sur les ears qui n’en ont pas.
+- **Effets** et **Routage** : les 4 effets, les sorties, et la **balance virtuelle** (les 16 canaux écoutent les pistes USB enregistrées dans REAPER, pour peaufiner sans les musiciens).
+- **Analyse** : voir plus bas.
 
 ![Égaliseur en mode Expert](images/tuto-expert-eq.png)
+
+**Mode Répétition.** Le bouton en haut à droite (**Façade active** / **Répétition · Main coupé**) coupe le Main et le **verrouille** : impossible de l’ouvrir par erreur, même en rappelant une scène. On ne travaille que les ears des musiciens. Le réglage est gardé au redémarrage.
+
+**Analyse : l’ingé son qui écoute avec toi.** Pendant que le groupe joue :
+
+1. Ouvre **Analyse** et choisis ce que j’écoute : un ear (en répétition) ou le Main.
+2. Le **spectre en direct** du mix s’affiche, comparé à une courbe cible « ears propres ».
+3. Clique sur **Analyser chaque instrument** : l’appli écoute chaque canal une seconde, l’un après l’autre (l’analyseur de la XR18 n’a qu’une source à la fois). La carte **Qui joue où** montre la place de chaque instrument dans les fréquences.
+4. Les **recommandations** arrivent, classées (Sécurité, Important, Conseil) : coupe-bas trop bas, basse et grosse caisse empilées, guitare dans la présence de la voix, résonance, compresseur qui écrase, ear trop près de la saturation.
+5. **Voir et valider** : ce qui change exactement, puis **A · Avant / B · Après** pour écouter en direct dans les ears. **Appliquer** fait une sauvegarde juste avant ; **Annuler** (dans « Appliqué ce soir ») remet tout comme avant.
+
+![Analyse en direct](images/tuto-analyse.png)
+
+Rien n’est appliqué sans ton clic. L’analyse se base sur les mesures de la XR18 (spectre, niveaux, réduction des compresseurs), pas sur des oreilles : le goût final, c’est toi avec le bouton A / B.
 
 **Quelques réglages courants** :
 

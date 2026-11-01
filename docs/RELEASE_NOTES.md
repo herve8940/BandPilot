@@ -1,8 +1,56 @@
-# XR18 Studio 2.0.5 — Testée sur une vraie XR18 / Tested on a real XR18
+# XR18 Studio 2.1.0 — Nouveau mode Expert et Analyse en direct / New Expert mode and live analysis
 
-![XR18 Studio](https://github.com/herve8940/xr18-studio/raw/main/docs/images/hero.png)
+![Analyse en direct](https://github.com/herve8940/xr18-studio/raw/main/docs/images/tuto-analyse.png)
 
-🇫🇷 [Tuto illustré « Mon ingé son »](https://github.com/herve8940/xr18-studio/blob/main/docs/TUTO_MON_INGE_SON.md) · 🇬🇧 [Illustrated tutorial](https://github.com/herve8940/xr18-studio/blob/main/docs/TUTO_MON_INGE_SON_EN.md)
+## Français
+
+### Quel fichier télécharger ?
+
+| Ordinateur | Fichier |
+|---|---|
+| Windows | `XR18-Studio-Windows-2.1.0.exe` |
+| Mac Apple Silicon (M1, M2, M3, M4) | `XR18-Studio-macOS-2.1.0-arm64.dmg` |
+| Mac Intel | `XR18-Studio-macOS-2.1.0-x64.dmg` |
+| Ubuntu / Debian | `XR18-Studio-Linux-2.1.0-amd64.deb` |
+| Autre Linux | `XR18-Studio-Linux-2.1.0-x86_64.AppImage` |
+
+### Nouveautés
+
+- **Mode Expert entièrement redessiné** : design sombre « studio », 6 vues claires — Console, Canal, Ears, Effets, Routage, Analyse.
+  - **Console** : tranches avec mini-courbe d’égaliseur et compresseur ; « Les faders règlent » la façade, un ear ou un effet.
+  - **Canal** : toute la chaîne d’un instrument en une page.
+  - **Ears** : tableau instruments × musiciens, niveaux et limiteurs de protection.
+  - **Routage** : balance virtuelle (les canaux rejouent les pistes USB enregistrées).
+- **Mode Répétition** : le Main est coupé et verrouillé (même un rappel de scène ne le rouvre pas) ; on ne travaille que les ears.
+- **Analyse en direct** : l’analyseur de spectre de la XR18 (100 bandes), les niveaux et la réduction des compresseurs sont lus en continu. L’appli écoute chaque instrument, montre « qui joue où » et propose des corrections d’ingé son : coupe-bas, basse / grosse caisse, guitare / voix, résonances, compresseur trop fort, ears trop près de la saturation.
+- **Valider en écoutant** : chaque proposition s’écoute en **A / B** en direct dans les ears, puis s’applique avec sauvegarde et annulation en un clic. Rien n’est appliqué sans ton accord.
+
+**Validation** : 89 tests automatiques (dont le moteur d’analyse et le mode Répétition), parcours testés contre une XR18 émulée ; les codes de l’analyseur ont été relevés sur une XR18 physique.
+
+## English
+
+### Which file?
+
+| Computer | File |
+|---|---|
+| Windows | `XR18-Studio-Windows-2.1.0.exe` |
+| Apple Silicon Mac (M1, M2, M3, M4) | `XR18-Studio-macOS-2.1.0-arm64.dmg` |
+| Intel Mac | `XR18-Studio-macOS-2.1.0-x64.dmg` |
+| Ubuntu / Debian | `XR18-Studio-Linux-2.1.0-amd64.deb` |
+| Other Linux | `XR18-Studio-Linux-2.1.0-x86_64.AppImage` |
+
+### What’s new
+
+- **Expert mode fully redesigned**: dark “studio” design, 6 clear views — Console, Channel, Ears, Effects, Routing, Analysis.
+- **Rehearsal mode**: the Main is muted and locked (even a scene recall does not reopen it); only the ears are worked on.
+- **Live analysis**: the XR18’s spectrum analyser (100 bands), levels and compressor gain reduction are read continuously. The app listens to each instrument, shows “who plays where” and proposes sound-engineer fixes: low cut, bass / kick, guitar / voice, resonances, over-compression, ear mixes close to clipping.
+- **Decide by listening**: each proposal can be heard **A / B** live in the ears, then applied with a backup and one-click undo. Nothing is applied without you.
+
+**Validation**: 89 automated tests (analysis engine and rehearsal mode included), journeys tested against an emulated XR18; analyser source codes recorded on a physical XR18.
+
+---
+
+# Version précédente / Previous release : 2.0.5
 
 ## Français
 
