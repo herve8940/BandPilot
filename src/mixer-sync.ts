@@ -1,3 +1,4 @@
+import {PREVIEW_TTL_MS} from './console-control.js';
 import {createHash,randomUUID} from 'node:crypto';
 import {PARAMETERS,fromWire,readbackTolerance,type Value} from './parameters.js';
 import {ConsoleControl,type CompleteScene} from './console-control.js';
@@ -22,9 +23,9 @@ export class MixerSync {
   const values=Object.fromEntries(Object.entries(desired.values).filter(([a,v])=>(includePhantom||!a.endsWith('/phantom'))&&!same(before.values[a],v,a)));
   const fx=desired.fx.filter((f,i)=>JSON.stringify(f)!==JSON.stringify(before.fx[i]));
   const token=randomUUID(),phantom=Object.keys(values).some(a=>a.endsWith('/phantom'));
-  if(this.plans.size>20)this.plans.clear();this.plans.set(token,{identity,before:digest(before),expires:Date.now()+120000,values,fx,sourceId,phantom});
+  if(this.plans.size>20)this.plans.clear();this.plans.set(token,{identity,before:digest(before),expires:Date.now()+PREVIEW_TTL_MS,values,fx,sourceId,phantom});
   diagnostic('sync.preview',{sourceId,changes:Object.keys(values).length,fx:fx.map(f=>f.slot),phantom});
-  return {token,sourceName:e.name,changes:Object.entries(values).map(([address,after])=>({address,before:fromWire(address,before.values[address]!),after:fromWire(address,after)})),fxSlots:fx.map(f=>f.slot),phantom,expiresSeconds:120};
+  return {token,sourceName:e.name,changes:Object.entries(values).map(([address,after])=>({address,before:fromWire(address,before.values[address]!),after:fromWire(address,after)})),fxSlots:fx.map(f=>f.slot),phantom,expiresSeconds:PREVIEW_TTL_MS/1000};
  }
  async apply(token:unknown,confirm:unknown,allowPhantom:unknown=false){
   this.live(true);const plan=typeof token==='string'?this.plans.get(token):undefined;

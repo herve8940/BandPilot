@@ -1,4 +1,5 @@
 import {diagnostic} from './diagnostics.js';
+export const PREVIEW_TTL_MS=10*60_000;
 import {randomUUID,createHash} from 'node:crypto';
 import {PARAMETERS,descriptor,validateWire,toWire,fromWire,defaultWire,type Value} from './parameters.js';
 import type {XR18} from './xr18.js';
@@ -37,7 +38,9 @@ export class ConsoleControl {
   const identity=this.identity();
   for(const a of Object.keys(values))before[a]=await this.xr.readParameter(a);
   if(this.previews.size>100)this.previews.clear();const token=randomUUID();
-  this.previews.set(token,{values,before,identity,expires:Date.now()+60000});
+  // A preview stays valid 10 minutes: apply() re-reads every value first and refuses if anything moved
+  // ("État modifié"), so the delay only has to cover a person reading the window.
+  this.previews.set(token,{values,before,identity,expires:Date.now()+PREVIEW_TTL_MS});
   return {token,changes:Object.entries(values).map(([address,v])=>({address,before:fromWire(address,before[address]!),after:fromWire(address,v),sensitive:descriptor(address).sensitive})),phantom:Object.keys(values).some(a=>a.endsWith('/phantom'))};
  }
  async apply(token:unknown,allowPhantom=false,tolerant=false){

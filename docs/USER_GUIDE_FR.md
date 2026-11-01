@@ -37,9 +37,9 @@ Télécharge le fichier qui correspond à ton ordinateur sur la [page des versio
 
 | Ordinateur | Fichier | Installation |
 |---|---|---|
-| Windows | `XR18-Studio-Windows-2.0.4.exe` | Double-clic. L’installation se fait pour ton compte et crée un raccourci. |
-| Mac Intel | `XR18-Studio-macOS-2.0.4-x64.dmg` | Ouvre-le et glisse XR18 Studio dans Applications. |
-| Mac Apple Silicon (M1, M2, M3…) | `XR18-Studio-macOS-2.0.4-arm64.dmg` | Idem. |
+| Windows | `XR18-Studio-Windows-2.0.5.exe` | Double-clic. L’installation se fait pour ton compte et crée un raccourci. |
+| Mac Intel | `XR18-Studio-macOS-2.0.5-x64.dmg` | Ouvre-le et glisse XR18 Studio dans Applications. |
+| Mac Apple Silicon (M1, M2, M3…) | `XR18-Studio-macOS-2.0.5-arm64.dmg` | Idem. |
 | Ubuntu / Debian | fichier `.deb` | Ouvre-le avec l’installateur de logiciels. |
 | Autre Linux | fichier `.AppImage` | Autorise l’exécution dans ses propriétés, puis ouvre-le. |
 

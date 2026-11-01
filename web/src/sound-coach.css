@@ -68,3 +68,4 @@
 .coach .coach-toast p{margin:0!important;flex:1}
 .coach .coach-toast-close{padding:0;min-height:0;position:absolute;top:6px;right:8px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#cfe0ee;font-size:20px;line-height:1;cursor:pointer}
 .coach .coach-toast-close:hover{background:#ffffff14}
+.gain-result .gain-moved{margin:8px 0 0;padding:8px 10px;border-radius:8px;background:#12303a;color:#bdf3f3}
