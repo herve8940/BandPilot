@@ -131,6 +131,8 @@ export const TARGET_PEAK=-6,GAIN_OK_WINDOW=3,MAX_GAIN_UP=6,MAX_GAIN_DOWN=12;
 export type GainDecision={state:'ok'|'raise'|'lower'|'clip'|'none'|'limit';deltaDb:number;targetGainDb:number|null;title:string;message:string};
 const half=(v:number)=>Math.round(v*2)/2;
 const fmt=(v:number)=>(v>0?'+':'')+String(v).replace('.',',')+' dB';
+/** Above this preamp gain a line-level source (e-drums, keys) should rather be turned up at the instrument. */
+export const LINE_GAIN_ADVICE_DB=20;
 export function gainProposal(peakDb:number,gainDb:number|null,min=-12,max=60):GainDecision{
  if(peakDb< -55)return {state:'none',deltaDb:0,targetGainDb:null,title:'Pas de signal',message:'Rien n’arrive sur cette entrée pendant la mesure. Vérifie le câble, le numéro d’entrée, le volume de l’instrument ou le 48 V d’un micro statique. Je ne monte pas le gain à l’aveugle.'};
  if(peakDb>=-1){const target=gainDb===null?null:Math.max(min,half(gainDb-6));return {state:'clip',deltaDb:-6,targetGainDb:target,title:'Ça sature',message:'Le signal touche le plafond : la vraie crête est peut-être plus haute. Je propose de baisser de 6 dB puis de remesurer. Si l’instrument lui-même distord (pédale, DI), corrige-le à la source.'};}
@@ -297,6 +299,10 @@ export class SoundCoach {
   if(!report.available)return {report,decision:null,proposal:null};
   const {address,gainDb}=await this.currentGain(channel),p=address?descriptor(address):null;
   const decision=gainProposal(report.maximumDb!,gainDb,p?.min,p?.max);
+  // E-drums and keyboards send a line-level signal: much preamp gain only adds hiss. Their own output volume is the right knob.
+  const fam=source(input.source).family;
+  if((fam==='edrums'||fam==='keys')&&(decision.state==='raise'||decision.state==='limit')&&(decision.targetGainDb??gainDb??0)>LINE_GAIN_ADVICE_DB)
+   decision.message+=` ${fam==='edrums'?'Une batterie électronique':'Un clavier'} sort un signal « ligne » : au-delà de +${LINE_GAIN_ADVICE_DB} dB de gain, monte plutôt le volume de sortie de ${fam==='edrums'?'son module (Master / Output)':'l’instrument'}, puis remesure. Le son sera plus propre (moins de souffle).`;
   if(decision.state==='ok'){const old=this.profile().calibration?.[String(channel)];this.storeCalibration(channel,{peakDb:report.maximumDb!,gainDb,bleedDb:old&&old.gainDb===gainDb?old.bleedDb:undefined});return {report,decision,gainDb,proposal:null,thresholds:thresholdsFrom(source(input.source),report.maximumDb!)};}
   if(!address||decision.targetGainDb===null||decision.targetGainDb===gainDb)return {report,decision,gainDb,proposal:null};
   const plan=await this.control.preview({[address]:decision.targetGainDb});

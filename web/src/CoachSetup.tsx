@@ -100,7 +100,7 @@ type Thresholds={compThrDb:number|null;gateThrDb:number|null;note:string};
 type Cal={channel:number;name:string;source:string;gainDb:number|null;peakDb:number|null;bleedDb:number|null;valid:boolean;needsBleed:boolean;state:'todo'|'ok'|'stale';thresholds:Thresholds|null};
 type Report={available:boolean;title:string;message:string;maximumDb?:number};
 type Decision={state:string;title:string;message:string;deltaDb:number};
-type GainResult={report:Report;decision:Decision|null;proposal:unknown|null;thresholds?:Thresholds};
+type GainResult={report:Report;decision:Decision|null;proposal:unknown|null;gainDb?:number|null;thresholds?:Thresholds};
 type BleedResult={report:Report;thresholds:Thresholds|null;message?:string};
 const db=(v:number|null|undefined)=>v===null||v===undefined?'—':(v>0?'+':'')+(Math.round(v*2)/2).toLocaleString('fr-BE')+' dB';
 const STATE_LABEL={todo:'À mesurer',ok:'Calé',stale:'Gain changé : à refaire'};
@@ -119,6 +119,8 @@ export function GainStep({profile,channel,setChannel,admin,busy,canApply,real,re
  const done=status.filter(s=>s.state==='ok').length,index=profile.inputs.findIndex(i=>i.channel===channel),next=profile.inputs[index+1];
  const measure=(kind:'gain'|'bleed')=>run(async()=>{setMeasuring(kind);try{if(kind==='gain'){const r=await api('/api/coach/gain',{channel}) as GainResult;setGain(r);setBleed(null);if(r.proposal)onPlan(r.proposal);}else setBleed(await api('/api/coach/bleed',{channel}));}finally{setMeasuring('');}});
  const th=bleed?.thresholds??current?.thresholds??null;
+ // The proposal belongs to the measure: once the gain has changed (applied here or on the console), it is out of date.
+ const gainMoved=!!gain&&gain.gainDb!=null&&current?.gainDb!=null&&current.gainDb!==gain.gainDb;
  return <div className="coach-section gain-step">
   {!real&&<p className="coach-message warn">La mesure a besoin de la vraie XR18 et des musiciens qui jouent. En simulation, aucun niveau n’est inventé : connecte la console pour régler les gains.</p>}
   <h3>Où en est chaque instrument <small>{done} / {profile.inputs.length} calés</small></h3>
@@ -134,7 +136,7 @@ export function GainStep({profile,channel,setChannel,admin,busy,canApply,real,re
    <ol className="gain-steps">
     <li className={current?.state==='ok'?'done':''}><div><b>Régler le gain</b><p>Fais jouer <b>{input.name}</b> seul, au volume du passage le plus fort du concert, pendant 5 secondes. Je vise des crêtes vers −6 dB.</p></div>
      <button className="primary" disabled={!admin||busy||!real} onClick={()=>measure('gain')}>{measuring==='gain'?'Mesure… joue maintenant !':gain?.proposal?'Remesurer':'Mesurer (5 s)'}</button>
-     {gain&&<div className={'gain-result '+(gain.decision?.state??'none')}>{gain.report.available&&gain.report.maximumDb!==undefined&&<PeakBar peak={gain.report.maximumDb}/>}<b>{gain.decision?.title??gain.report.title}</b><p>{gain.decision?.message??gain.report.message}</p>{gain.proposal!=null&&<button disabled={!admin||busy||!canApply} onClick={()=>onPlan(gain.proposal)}>Revoir et appliquer ce gain</button>}{gain.proposal!=null&&<small>Après l’avoir appliqué, remesure pour vérifier.</small>}</div>}
+     {gain&&<div className={'gain-result '+(gain.decision?.state??'none')}>{gain.report.available&&gain.report.maximumDb!==undefined&&<PeakBar peak={gain.report.maximumDb}/>}<b>{gain.decision?.title??gain.report.title}</b><p>{gain.decision?.message??gain.report.message}</p>{gain.proposal!=null&&!gainMoved&&<button disabled={!admin||busy||!canApply} onClick={()=>onPlan(gain.proposal)}>Revoir et appliquer ce gain</button>}{gain.proposal!=null&&!gainMoved&&<small>Après l’avoir appliqué, remesure pour vérifier.</small>}{gainMoved&&<p className="gain-moved"><b>Gain passé à {db(current?.gainDb)}.</b> Cette mesure date d’avant : clique sur « Remesurer » et fais rejouer {input.name} pour vérifier.</p>}</div>}
     </li>
     {current?.needsBleed&&<li className={current.bleedDb!=null&&current.valid?'done':''}><div><b>Placer le gate</b><p><b>{input.name}</b> se tait, les autres jouent fort pendant 5 secondes : je mesure la repisse (le son des autres captés par ce micro) et je place le gate juste au-dessus.</p></div>
      <button disabled={!admin||busy||!real||current.state!=='ok'} onClick={()=>measure('bleed')}>{measuring==='bleed'?'Mesure… les autres jouent !':'Mesurer la repisse (5 s)'}</button>

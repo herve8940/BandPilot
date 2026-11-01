@@ -46,3 +46,13 @@ test('values read from a physical XR18 (diagnostic of 31/10/2026) are all accept
  // The insert slot leaf is "sel" (X-AIR Edit name), "fxslot" got no answer.
  for(const p of ['/ch/01','/ch/16','/bus/3','/lr'])assert.ok(PARAMETERS[p+'/insert/sel']&&!PARAMETERS[p+'/insert/fxslot'],p);
 });
+test('a preview left open several minutes can still be applied (but not after 10 minutes)',async()=>{
+ const xr=new XR18({mode:'simulation',host:'127.0.0.1',port:10024,enableWrites:false}),library=new LibraryStore(':memory:'),control=new ConsoleControl(xr,library);
+ const realNow=Date.now;let shift=0;Date.now=()=>realNow()+shift;
+ try{
+  const p=await control.preview({'/ch/05/mix/fader':.5},true);shift=5*60_000;
+  assert.equal((await control.apply(p.token)).ok,true,'still valid after 5 minutes');
+  const q=await control.preview({'/ch/05/mix/fader':.6},true);shift+=11*60_000;
+  await assert.rejects(control.apply(q.token),/expirée/);
+ }finally{Date.now=realNow;xr.close();library.close();}
+});
