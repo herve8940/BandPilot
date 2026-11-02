@@ -1,5 +1,6 @@
 import {readFileSync,writeFileSync} from 'node:fs';
 import {Analyzer,familyFromName,type Instrument} from './analysis.js';
+import {ReaperLink,planSession,createSession,openInReaper,defaultSessionsFolder,freeHours} from './reaper.js';
 import {source as coachSource} from './sound-coach.js';
 import {MixerSync} from './mixer-sync.js';
 import {DiagnosticLog,setDiagnosticLogger,diagnostic} from './diagnostics.js';
@@ -7,6 +8,7 @@ import {SoundCoach,identifySymptom} from "./sound-coach.js";
 import {askConnectedCoach} from "./coach-ai.js";
 import {PARAMETERS,fromWire,type Value} from "./parameters.js";
 import {processingCommands} from "./processing-osc.js";
+import {homedir} from 'node:os';
 import http from "node:http";
 import https from "node:https";
 import { readFile, stat } from "node:fs/promises";
@@ -54,6 +56,20 @@ const instruments=():Instrument[]=>{
  return out;
 };
 const analyzer=new Analyzer(xr18,instruments);
+const reaper=new ReaperLink();
+/** Reads the console fresh: a session built on stale routing would record the wrong inputs. */
+async function reaperPlan(){
+ const simulation=xr18.mode==='simulation';let sampleRate:number|null=simulation?48000:null,usbMode:'18x18'|'2x2'|null=null;
+ if(!simulation){
+  for(const prefix of ['/routing/usb','/config/chlink','/rtn/aux/config','/rtn/aux/mix'])await xr18.refreshParameters(prefix);
+  for(let c=1;c<=16;c++)for(const part of ['config','mix','preamp'])await xr18.refreshParameters(`/ch/${String(c).padStart(2,'0')}/${part}`);
+  try{const v=(await xr18.query('/-prefs/clockrate')).args[0];sampleRate=v===0||/^48/.test(String(v))?48000:v===1||/^44/.test(String(v))?44100:null;}catch{/* warned in the plan */}
+  try{const v=(await xr18.query('/-prefs/usbifcmode')).args[0];usbMode=v===0||String(v)==='18x18'?'18x18':v===1||String(v)==='2x2'?'2x2':null;}catch{/* warned in the plan */}
+ }
+ // The simulator has no real USB routing: its default values would all point to channel 1.
+ const state=xr18.parameterState(),values=Object.fromEntries(Object.entries(state).filter(([a])=>!simulation||!a.startsWith('/routing/usb/')).map(([a,v])=>[a,v.value]));
+ return planSession({values,instruments:instruments(),sampleRate,usbMode,simulation});
+}
 // Rehearsal mode survives a restart: the Main must not come back on by surprise.
 const rehearsalPath=join(dirname(configPath),'rehearsal.json');
 try{xr18.setRehearsal(JSON.parse(readFileSync(rehearsalPath,'utf8')).on===true);}catch{/* first start: off */}
@@ -83,6 +99,7 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/reacue/stop'&&req.method==='POST'){show.arm(false);access.log(user!,'Arrêt ReaCue');res.end(JSON.stringify({ok:true}));return;}
   const readOnlyCoach=['/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
     // Analysis only changes what the console's analyser looks at, never the sound: no global lock.
+    '/api/reaper/plan','/api/reaper/session','/api/reaper/rec','/api/reaper/stop','/api/reaper/marker',
     '/api/analysis/start','/api/analysis/stop','/api/analysis/target','/api/analysis/scan','/api/analysis/dismiss','/api/analysis/release'].includes(path);
   if(path.startsWith('/api/')&&req.method!=='GET'&&!readOnlyCoach){
     const coachMetadata=(path.startsWith('/api/coach/')&&path!=='/api/coach/apply')||(path.startsWith('/api/mixer-sync')&&path!=='/api/mixer-sync/apply')||path.startsWith('/api/ears-share');
@@ -136,6 +153,30 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/coach'&&req.method==='GET'){res.end(JSON.stringify({...coach.catalog(),role:user!.role}));return;}
   if(path==='/api/coach/advice'&&req.method==='GET'){
     try{const q=new URL(req.url!,'http://localhost').searchParams;res.end(JSON.stringify(coach.advice(Number(q.get('channel')),String(q.get('symptom')))));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path.startsWith('/api/reaper')){
+   // Reaper never touches the console: no global lock, and Rec/Stop must work during any other operation.
+   try{
+    let result:unknown;
+    if(path==='/api/reaper'&&req.method==='GET'){await reaper.watch();result={...reaper.status(),defaultFolder:defaultSessionsFolder()};}
+    else if(path==='/api/reaper/plan'&&req.method==='GET'){const plan=await reaperPlan();result={...plan,hoursFree:await freeHours(homedir(),plan)};}
+    else if(path==='/api/reaper/session'&&req.method==='POST'){
+     const d=await body(req);if(reaper.status().recording)throw Error('Un enregistrement est en cours : arrête-le avant de préparer une session.');
+     const plan=await reaperPlan();
+     if(Array.isArray(d.tracks))for(const t of plan.tracks)t.selected=d.tracks.includes(t.id);
+     const session=await createSession(plan,{name:d.name,folder:d.folder});
+     access.log(user!,'Session Reaper créée : '+session.title);
+     reaper.session={...session,tracks:plan.tracks.filter(t=>t.selected).length};
+     await reaper.watch();await openInReaper(session.file);
+     result=reaper.status();
+    }
+    else if(path==='/api/reaper/rec'&&req.method==='POST'){access.log(user!,'Reaper : Rec');result=await reaper.record();}
+    else if(path==='/api/reaper/stop'&&req.method==='POST'){access.log(user!,'Reaper : Stop');result=await reaper.stop();}
+    else if(path==='/api/reaper/marker'&&req.method==='POST')result=reaper.marker();
+    else{res.writeHead(404);res.end(JSON.stringify({error:'Introuvable'}));return;}
+    res.end(JSON.stringify(result));
+   }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}
+   return;
   }
   if(path==='/api/rehearsal'){
     try{

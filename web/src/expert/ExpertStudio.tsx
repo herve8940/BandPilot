@@ -4,13 +4,14 @@ import { INPUTS, BUSES, FXSENDS, faderAddress, onAddress, soloAddress, stripName
 import { CompView, EqView, FxView, GateView, InputView, RoutingView, SendsView, type ViewProps } from "../xair/views";
 import { faderToDb, formatDb, logMap, RATIOS, stripColor } from "../xairMath";
 import { AnalysisView } from "./AnalysisView";
+import { RecordingView } from "./RecordingView";
 import "../xair-mixer.css";
 import "./expert.css";
 
-type View = "console" | "channel" | "ears" | "fx" | "routing" | "analysis";
+type View = "console" | "channel" | "ears" | "fx" | "routing" | "analysis" | "record";
 const VIEWS: { id: View; label: string }[] = [
   { id: "console", label: "Console" }, { id: "channel", label: "Canal" }, { id: "ears", label: "Ears" },
-  { id: "fx", label: "Effets" }, { id: "routing", label: "Routage" }, { id: "analysis", label: "Analyse" },
+  { id: "fx", label: "Effets" }, { id: "routing", label: "Routage" }, { id: "analysis", label: "Analyse" }, { id: "record", label: "Enregistrer" },
 ];
 async function api<T = any>(path: string, data?: unknown): Promise<T> {
   const r = await fetch(path, { method: data === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: data === undefined ? undefined : JSON.stringify(data) });
@@ -71,6 +72,7 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
       {view === "fx" && <div className="xm xs2-legacy"><FxView {...props} /></div>}
       {view === "routing" && <RoutingPage {...props} />}
       {view === "analysis" && <AnalysisView values={values} rehearsal={rehearsal} canWrite={writable} onCount={setRecoCount} />}
+      {view === "record" && <RecordingView />}
     </div>
   </section>;
 }

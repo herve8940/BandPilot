@@ -164,3 +164,23 @@
 /* existing X-AIR controls re-themed to graphite */
 .xs2,.xs2 .xm{--bg:#11151B;--panel:#0B0F14;--panel-2:#141920;--line:#1F2630;--text:#E8EDF3;--dim:#9AA6B4;--cyan:#3EE0E0;--cyan-d:#10302F}
 .xs2 .xs2-legacy.xm{border-color:#1F2630;border-radius:14px;padding:12px;background:#11151B}
+/* Enregistrer : session Reaper et transport */
+.xs2-rec{padding:16px}
+.xs2-rec-transport{display:flex;flex-wrap:wrap;align-items:center;gap:10px;position:sticky;top:0;z-index:2}
+.xs2-rec-transport.on{border-color:var(--g-red-line);background:var(--g-red-bg)}
+.xs2-pill.rec{background:var(--g-red-bg);border-color:var(--g-red-line);color:var(--g-red-text)}
+.xs2-rec-clock{font-size:22px;font-variant-numeric:tabular-nums}
+.xs2-rec-btn:not(:disabled){color:var(--g-red-text);border-color:var(--g-red-line)}
+.xs2-rec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.xs2-rec-head h3{margin:0}
+.xs2-rec-table{width:100%;border-collapse:collapse;font-size:13px}
+.xs2-rec-table th{text-align:left;color:var(--dim);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--g-line)}
+.xs2-rec-table td{padding:7px 8px;border-bottom:1px solid var(--g-line);vertical-align:top}
+.xs2-rec-table tr.off td{opacity:.5}
+.xs2-rec-table small{display:block;margin-top:3px;font-weight:400}
+.xs2-rec-warn{color:var(--g-red-text);margin:0 0 8px}
+.xs2-rec-table .xs2-rec-warn{margin:3px 0 0}
+.xs2-rec-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;font-size:13px}
+.xs2-rec-field input{min-width:0;padding:7px 9px;border-radius:8px;border:1px solid var(--g-line);background:var(--g-panel-2);color:inherit}
+.xs2-rec-steps{list-style:decimal;margin:10px 0 0;padding-left:22px;font-size:13px;line-height:1.5}
+.xs2-rec .main{overflow-x:auto}
