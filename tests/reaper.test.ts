@@ -19,7 +19,7 @@ test('linked channels on neighbouring USB inputs become one stereo track',()=>{
  const plan=planSession(base({'/config/chlink/3-4':1}));
  const keys=plan.tracks.find(t=>t.usb===3)!;assert.equal(keys.stereo,true);
  assert.equal(plan.tracks.some(t=>t.usb===4),false);
- const rpp=renderRpp(plan,'darwin');
+ const rpp=renderRpp(plan);
  assert.equal(field(trackBlocks(rpp).find(b=>b.includes('"Clavier"'))!,'REC'),`1 ${2+1024} 0 0 0 0 0`);
 });
 test('linked channels away from each other stay mono and say so',()=>{
@@ -40,29 +40,28 @@ test('a console in 2x2 USB or with unread settings is reported, never guessed si
 });
 test('project: raw takes, monitoring off, armed tracks, console balance as a pre-mix',()=>{
  const plan=planSession(base({'/ch/01/mix/fader':.75,'/ch/01/mix/pan':.25,'/ch/01/mix/on':0,'/ch/01/preamp/invert':1}));
- const rpp=renderRpp(plan,'darwin'),voice=trackBlocks(rpp).find(b=>b.includes('"Voix"')&&b.includes('REC 1'))!;
+ const rpp=renderRpp(plan),voice=trackBlocks(rpp).find(b=>b.includes('"Voix"')&&b.includes('REC 1'))!;
  assert.match(rpp,/SAMPLERATE 48000 1 0/);assert.match(rpp,/RECORD_PATH "Audio" ""/);
  assert.equal(Buffer.from('ZXZhdxgAAQ==','base64').subarray(0,5).toString('latin1'),'evaw\x18');
  assert.equal(field(voice,'REC'),'1 0 0 0 0 0 0');
  assert.equal(field(voice,'VOLPAN'),'1 -0.5 -1 -1 1');assert.equal(field(voice,'MUTESOLO'),'1 0 0');assert.equal(field(voice,'IPHASE'),'1');
 });
-test('a channel at -infinity stays silent in the pre-mix',()=>{
- const t=planSession(base({'/ch/01/mix/fader':0})).tracks[0]!;assert.equal(t.volume,0);
+test('a channel at -infinity stays audible in Reaper: the session must not play back silent',()=>{
+ const t=planSession(base({'/ch/01/mix/fader':0})).tracks[0]!;assert.equal(t.volume,1);
 });
 test('family folders open and close, and only real tracks are armed',()=>{
- const blocks=trackBlocks(renderRpp(planSession(base()),'darwin'));
+ const blocks=trackBlocks(renderRpp(planSession(base())));
  assert.deepEqual(blocks.map(b=>[field(b,'NAME'),field(b,'ISBUS')]),[['"Batterie"','1 1'],['"Kick"','0 0'],['"Snare"','2 -1'],['"Voix"','0 0'],['"Clavier"','0 0']]);
  assert.equal(field(blocks[0]!,'REC'),'0 0 0 0 0 0 0');
  assert.deepEqual(blocks.slice(1).map(b=>field(b,'REC')!.split(' ')[1]),['4','5','0','2']);
 });
-test('colors follow the byte order of each system',()=>{
+test('a red console channel is red in Reaper (order checked in Reaper 7.83)',()=>{
  const plan=planSession(base({'/ch/01/config/color':1}));
- const peak=(os:string)=>Number(field(trackBlocks(renderRpp(plan,os)).find(b=>b.includes('"Voix"'))!,'PEAKCOL'));
- assert.equal(peak('darwin'),0x1dc3c3c);assert.equal(peak('win32'),0x13c3cdc);
+ assert.equal(Number(field(trackBlocks(renderRpp(plan)).find(b=>b.includes('"Voix"'))!,'PEAKCOL')),0x13c3cdc);
 });
 test('names with quotes cannot break the project file',()=>{
  const plan=planSession(base({'/ch/01/config/name':'Rock"n\'Roll'}));
- const rpp=renderRpp(plan,'darwin');assert.match(rpp,/NAME `Rock"n'Roll`/);
+ const rpp=renderRpp(plan);assert.match(rpp,/NAME `Rock"n'Roll`/);
  assert.equal(safeName('../..//évil:name'),'évil name');
  assert.ok(!safeName('a/b\\c').match(/[\/\\]/));assert.equal(safeName(''),'Répétition');
 });
@@ -116,7 +115,9 @@ test('recording is only reported once Reaper confirmed it and its clock runs',as
   const started=await link.record();assert.equal(started.recording,true);assert.ok(fake.actions.includes(ACTION.record));
   assert.equal(link.marker().markers,1);await wait(30);assert.ok(fake.actions.includes(ACTION.marker));
   const stopped=await link.stop();assert.equal(stopped.recording,false);assert.equal(stopped.state,'ready');
-  assert.ok(fake.actions.includes(ACTION.stopAndSave));assert.ok(!fake.actions.includes(40668));
+  await wait(30);assert.ok(fake.actions.includes(ACTION.stopAndSave));assert.ok(!fake.actions.includes(40668));
+  assert.ok(fake.actions.indexOf(ACTION.saveProject)>fake.actions.indexOf(ACTION.stopAndSave),'project saved after the stop');
+  assert.equal(fake.actions[fake.actions.indexOf(ACTION.record)-1],ACTION.goToEnd,'a new take goes after the previous one');
  }finally{link.close();fake.close();}
 });
 test('a Rec that Reaper refuses shows an error, never a recording',async()=>{
@@ -141,7 +142,7 @@ test('silence during a take raises an alert and stops claiming to record',async(
 });
 test('a stop made in Reaper itself is reported',async()=>{
  const {fake,link}=await fakeReaper();
- try{await link.record();fake.recording=false;fake.say('/record',0);await wait(50);assert.equal(link.status().recording,false);assert.match(link.status().alert,/sans que tu aies appuyé/);}
+ try{await link.record();fake.recording=false;fake.say('/record',0);await wait(50);assert.equal(link.status().recording,false);assert.match(link.status().alert,/arrêté depuis Reaper/);assert.equal(link.dismissAlert().alert,'');}
  finally{link.close();fake.close();}
 });
 test('an unconfirmed stop stays an error, markers need a confirmed take',async()=>{

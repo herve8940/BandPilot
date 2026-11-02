@@ -16,7 +16,7 @@ import type {Instrument} from './analysis.js';
 export const REAPER_LISTEN_PORT=8765;
 export const REAPER_FEEDBACK_PORT=8766;
 /** Reaper action numbers. Stop must save: 40668 is the variant that deletes the take. */
-export const ACTION={record:1013,stopAndSave:40667,marker:40157,refreshSurfaces:41743} as const;
+export const ACTION={record:1013,stopAndSave:40667,marker:40157,refreshSurfaces:41743,goToEnd:40043,saveProject:40026} as const;
 
 export type Wire=Record<string,Value|undefined>;
 export type TrackPlan={id:string;usb:number;stereo:boolean;name:string;group:string;source:string;tap:string;selected:boolean;volume:number;pan:number;mute:boolean;invert:boolean;color:[number,number,number];warning?:string};
@@ -38,7 +38,8 @@ function pre(values:Wire,prefix:string){
  const fader=values[`${prefix}/mix/fader`];
  const db=typeof fader==='number'?Number(fromWire(`${prefix}/mix/fader`,fader)):0;
  return {
-  volume:db<=-89.9?0:Math.pow(10,db/20),
+  // A fader left at -inf (blank scene, line check) must not give a session that plays back silent.
+  volume:db<=-89.9?1:Math.pow(10,db/20),
   pan:Math.max(-1,Math.min(1,num(values[`${prefix}/mix/pan`],.5)*2-1)),
   mute:num(values[`${prefix}/mix/on`],1)===0,
  };
@@ -90,24 +91,24 @@ function quoted(text:string){
  if(!clean.includes("'"))return `'${clean}'`;
  return clean.includes('`')?`\`${clean.replaceAll('`',"'")}\``:`\`${clean}\``;
 }
-/** Reaper stores colors in the operating system's order, with a flag meaning « custom color ». */
-function nativeColor([r,g,b]:[number,number,number],platform:string){
- return ((platform==='win32'?(b<<16)|(g<<8)|r:(r<<16)|(g<<8)|b)|0x1000000)>>>0;
+/** PEAKCOL is r | g<<8 | b<<16 plus a « custom color » flag; checked in Reaper 7.83 on macOS. */
+function nativeColor([r,g,b]:[number,number,number]){
+ return ((b<<16)|(g<<8)|r|0x1000000)>>>0;
 }
 const figure=(v:number)=>String(Number(v.toFixed(6)));
-function trackLines(name:string,color:[number,number,number],folder:string,rec:string,t:Pick<TrackPlan,'volume'|'pan'|'mute'|'invert'>,platform:string){
- return [`  <TRACK {${randomUUID().toUpperCase()}}`,`    NAME ${quoted(name)}`,`    PEAKCOL ${nativeColor(color,platform)}`,`    VOLPAN ${figure(t.volume)} ${figure(t.pan)} -1 -1 1`,`    MUTESOLO ${t.mute?1:0} 0 0`,`    IPHASE ${t.invert?1:0}`,`    ISBUS ${folder}`,'    NCHAN 2',`    REC ${rec}`,'  >'];
+function trackLines(name:string,color:[number,number,number],folder:string,rec:string,t:Pick<TrackPlan,'volume'|'pan'|'mute'|'invert'>){
+ return [`  <TRACK {${randomUUID().toUpperCase()}}`,`    NAME ${quoted(name)}`,`    PEAKCOL ${nativeColor(color)}`,`    VOLPAN ${figure(t.volume)} ${figure(t.pan)} -1 -1 1`,`    MUTESOLO ${t.mute?1:0} 0 0`,`    IPHASE ${t.invert?1:0}`,`    ISBUS ${folder}`,'    NCHAN 2',`    REC ${rec}`,'  >'];
 }
 /** 24-bit WAV takes, monitoring off (the band hears the console), every take in Audio/. */
-export function renderRpp(plan:SessionPlan,platform:string=process.platform,now=Date.now()){
+export function renderRpp(plan:SessionPlan,now=Date.now()){
  const lines=[`<REAPER_PROJECT 0.1 "7.0" ${Math.floor(now/1000)} 0`,`  SAMPLERATE ${plan.sampleRate} 1 0`,'  RECORD_PATH "Audio" ""','  <RECORD_CFG','    ZXZhdxgAAQ==','  >'];
  const neutral={volume:1,pan:0,mute:false,invert:false};
  for(const group of GROUP_ORDER){
   const tracks=plan.tracks.filter(t=>t.selected&&t.group===group),folder=tracks.length>1;
-  if(folder)lines.push(...trackLines(group,GROUP_COLOR[group]!,'1 1','0 0 0 0 0 0 0',neutral,platform));
+  if(folder)lines.push(...trackLines(group,GROUP_COLOR[group]!,'1 1','0 0 0 0 0 0 0',neutral));
   tracks.forEach((t,i)=>{
    const input=(t.usb-1)+(t.stereo?1024:0);
-   lines.push(...trackLines(t.name,t.color,folder&&i===tracks.length-1?'2 -1':'0 0',`1 ${input} 0 0 0 0 0`,t,platform));
+   lines.push(...trackLines(t.name,t.color,folder&&i===tracks.length-1?'2 -1':'0 0',`1 ${input} 0 0 0 0 0`,t));
   });
  }
  lines.push('>','');
@@ -124,7 +125,7 @@ export async function freeHours(folder:string,plan:SessionPlan){
  try{const s=await statfs(folder),rate=bytesPerSecond(plan);return rate?Math.round(Number(s.bavail)*Number(s.bsize)/rate/360)/10:null;}catch{return null;}
 }
 /** Never overwrites: an existing session keeps its takes, a new folder is made beside it. */
-export async function createSession(plan:SessionPlan,options:{name?:unknown;folder?:unknown}={},platform:string=process.platform){
+export async function createSession(plan:SessionPlan,options:{name?:unknown;folder?:unknown}={}){
  if(!plan.tracks.some(t=>t.selected))throw Error('Choisis au moins une piste à enregistrer.');
  const parent=String(options.folder??'').trim()||defaultSessionsFolder();
  if(!isAbsolute(parent))throw Error('Dossier de session invalide : indique un chemin complet.');
@@ -135,7 +136,7 @@ export async function createSession(plan:SessionPlan,options:{name?:unknown;fold
   try{await mkdir(folder);}catch(e){if((e as NodeJS.ErrnoException).code==='EEXIST')continue;throw e;}
   await mkdir(join(folder,'Audio'));
   const file=join(folder,`${title}.rpp`);
-  await writeFile(file,renderRpp(plan,platform),{flag:'wx'});
+  await writeFile(file,renderRpp(plan),{flag:'wx'});
   return {title,folder,file,hoursFree:await freeHours(folder,plan)};
  }
  throw Error('Trop de sessions portent ce nom aujourd’hui.');
@@ -203,7 +204,7 @@ export class ReaperLink{
    if(m.address==='/record'){
     const on=value>=.5;
     if(!on&&this.recordFlag){
-     if(this.wasRecording&&!this.stopRequested)this.alert='Reaper a arrêté l’enregistrement sans que tu aies appuyé sur Stop.';
+     if(this.wasRecording&&!this.stopRequested){this.alert='Enregistrement arrêté depuis Reaper. Enregistre le projet dans Reaper pour garder la prise.';}
      this.recordFlag=false;this.wasRecording=false;this.recordingSince=0;this.clockMovedAt=0;
     }else if(on&&!this.recordFlag){this.recordFlag=true;this.clockMovedAt=0;this.stopRequested=false;this.alert='';this.markers=0;}
    }else if(m.address==='/time'&&Number.isFinite(value)){
@@ -233,7 +234,8 @@ export class ReaperLink{
   if(this.state()==='recording')return this.status();
   this.action(ACTION.refreshSurfaces);
   if(!await this.until(()=>this.state()!=='offline'))throw Error('Reaper ne répond pas : ouvre-le et vérifie le réglage OSC. Rien n’est enregistré.');
-  this.alert='';this.action(ACTION.record);
+  // After the last take: from the cursor, Reaper would stack the new take on the previous one.
+  this.alert='';this.action(ACTION.goToEnd);this.action(ACTION.record);
   if(!await this.until(()=>this.state()==='recording')){
    const claimed=this.recordFlag;
    this.alert=claimed?'Reaper annonce Rec mais son compteur n’avance pas. Regarde dans Reaper.':'Reaper n’a pas lancé l’enregistrement. Rien n’est enregistré.';
@@ -246,9 +248,11 @@ export class ReaperLink{
   if(!this.recordFlag)return this.status();
   this.stopRequested=true;this.action(ACTION.stopAndSave);
   if(!await this.until(()=>!this.recordFlag)){this.stopRequested=false;throw Error('Reaper n’a pas confirmé l’arrêt : arrête-le directement dans Reaper.');}
-  this.stopRequested=false;this.alert='';
+  // Without this the takes are only in Reaper's memory: a crash would leave WAV files outside the project.
+  this.stopRequested=false;this.alert='';this.action(ACTION.saveProject);
   return this.status();
  }
+ dismissAlert(){this.alert='';return this.status();}
  marker(){
   if(this.state()!=='recording')throw Error('Marqueur disponible seulement pendant un enregistrement confirmé.');
   this.action(ACTION.marker);this.markers++;

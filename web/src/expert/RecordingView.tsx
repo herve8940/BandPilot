@@ -40,7 +40,7 @@ export function RecordingView() {
       <button type="button" className="xs2-btn" disabled={busy === "stop" || !["recording", "starting", "lost"].includes(state)} onClick={() => void act("stop", "/api/reaper/stop")}>{busy === "stop" ? "Arrêt…" : "■ Stop"}</button>
       <button type="button" className="xs2-btn" disabled={!status?.recording} onClick={() => void act("marker", "/api/reaper/marker")}>Marqueur{status?.markers ? ` (${status.markers})` : ""}</button>
     </div>
-    {status?.alert && <div className="xs2-msg error" role="alert" style={{ margin: "12px 0 0" }}>{status.alert}</div>}
+    {status?.alert && <div className="xs2-msg error" role="alert" style={{ margin: "12px 0 0" }}>{status.alert}<button type="button" aria-label="Fermer" onClick={() => void act("dismiss", "/api/reaper/dismiss")}>×</button></div>}
     {error && <div className="xs2-msg error" role="alert" style={{ margin: "12px 0 0" }}>{error}<button type="button" aria-label="Fermer" onClick={() => setError("")}>×</button></div>}
     {status?.session && <p className="muted">Session préparée ici : <b>{status.session.title}</b> · {status.session.tracks} pistes{status.session.hoursFree !== null ? ` · environ ${status.session.hoursFree} h d’espace disque` : ""}. Vérifie que c’est bien elle qui est ouverte dans Reaper avant d’appuyer sur Rec.</p>}
 

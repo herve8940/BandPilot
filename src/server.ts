@@ -99,7 +99,7 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/reacue/stop'&&req.method==='POST'){show.arm(false);access.log(user!,'Arrêt ReaCue');res.end(JSON.stringify({ok:true}));return;}
   const readOnlyCoach=['/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
     // Analysis only changes what the console's analyser looks at, never the sound: no global lock.
-    '/api/reaper/plan','/api/reaper/session','/api/reaper/rec','/api/reaper/stop','/api/reaper/marker',
+    '/api/reaper/plan','/api/reaper/session','/api/reaper/rec','/api/reaper/stop','/api/reaper/marker','/api/reaper/dismiss',
     '/api/analysis/start','/api/analysis/stop','/api/analysis/target','/api/analysis/scan','/api/analysis/dismiss','/api/analysis/release'].includes(path);
   if(path.startsWith('/api/')&&req.method!=='GET'&&!readOnlyCoach){
     const coachMetadata=(path.startsWith('/api/coach/')&&path!=='/api/coach/apply')||(path.startsWith('/api/mixer-sync')&&path!=='/api/mixer-sync/apply')||path.startsWith('/api/ears-share');
@@ -173,6 +173,7 @@ const handler: http.RequestListener = async (req, res) => {
     else if(path==='/api/reaper/rec'&&req.method==='POST'){access.log(user!,'Reaper : Rec');result=await reaper.record();}
     else if(path==='/api/reaper/stop'&&req.method==='POST'){access.log(user!,'Reaper : Stop');result=await reaper.stop();}
     else if(path==='/api/reaper/marker'&&req.method==='POST')result=reaper.marker();
+    else if(path==='/api/reaper/dismiss'&&req.method==='POST')result=reaper.dismissAlert();
     else{res.writeHead(404);res.end(JSON.stringify({error:'Introuvable'}));return;}
     res.end(JSON.stringify(result));
    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}
