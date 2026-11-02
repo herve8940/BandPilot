@@ -28,7 +28,7 @@ XR18 Studio se pose sur ta console comme X-AIR Edit, avec en plus :
 
 | 🎧 **Mon ingé son** | 🎚️ **Une console claire** | 📱 **Les retours au téléphone** |
 |---|---|---|
-| Un assistant en 6 étapes : il configure chaque instrument selon les bonnes pratiques, règle les gains avec toi et prépare les retours. | Un mode **Simple** avec de gros faders pour le concert, un mode **Expert** complet façon X-AIR Edit, chaque option expliquée. | Chaque musicien scanne son QR code et règle **son** retour. Il n’a aucune application à installer et ne peut toucher à rien d’autre. |
+| Un assistant en 6 étapes : il configure chaque instrument selon les bonnes pratiques, règle les gains avec toi et prépare les retours. | Un mode **Simple** avec de gros faders pour le concert, un mode **Expert** complet avec Analyse en direct, chaque option expliquée. | Chaque musicien scanne son QR code et règle **son** retour. Il n’a aucune application à installer et ne peut toucher à rien d’autre. |
 
 ## 🎧 Mon ingé son, en 6 étapes
 
@@ -47,13 +47,14 @@ XR18 Studio se pose sur ta console comme X-AIR Edit, avec en plus :
 |---|---|---|
 | ![Console Simple](docs/images/tuto-simple.png) | ![Retour](docs/images/tuto-simple-retour.png) | ![Console Expert](docs/images/tuto-expert.png) |
 
-| Égaliseur | Gate | Compresseur |
+| Analyse en direct | Valider en écoutant | Égaliseur |
 |---|---|---|
-| ![EQ](docs/images/xair-eq.png) | ![Gate](docs/images/xair-gate.png) | ![Compresseur](docs/images/xair-comp.png) |
-| **Entrée** | **Envois** | **Effets** |
-| ![Entrée](docs/images/xair-input.png) | ![Envois](docs/images/xair-sends.png) | ![Effets](docs/images/xair-fx.png) |
+| ![Analyse en direct](docs/images/tuto-analyse.png) | ![Valider en écoutant](docs/images/tuto-analyse-valider.png) | ![Égaliseur](docs/images/tuto-expert-eq.png) |
 
-- **Toutes les pistes à l’écran**, sans faire défiler : les tranches s’adaptent à la taille de la fenêtre (vérifié de 1280×800 à 1920×1080), le menu se replie tout seul.
+- **6 vues en mode Expert** : Console, Canal, Ears, Effets, Routage, Analyse.
+- **Analyse en direct** : spectre du mix, carte « Qui joue où » et recommandations à écouter en A / B avant de les appliquer. Rien ne change sans ton clic.
+- **Mode Répétition** : le Main est coupé et verrouillé, on ne travaille que les ears.
+- **Mode Simple pour le concert** : toutes les pistes à l’écran, le menu se replie tout seul. En mode Expert, la dernière tranche peut demander un léger défilement en 1440 px.
 - **Partir d’une scène vierge** en un clic : toute la console revient à neutre, volumes en bas, sans toucher au 48 V, aux gains ni au routage, avec retour en arrière.
 - **Chaque vue explique** en langage simple ce que fait chaque bouton : voir le [guide de la console](docs/GUIDE_CONSOLE.md).
 

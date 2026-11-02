@@ -210,6 +210,24 @@ Il ne peut rien changer d’autre. Le volume est plafonné à 0 dB et monte par 
 
 ---
 
+## Et après : affiner en répétition
+
+Une fois la balance faite, le mode **Expert** peut écouter le groupe avec toi. Va dans **Console**, bouton **Expert**, vue **Analyse**.
+
+![Analyse en direct](images/tuto-analyse.png)
+
+1. **Passe en mode Répétition** si tu ne travailles que les ears : bouton en haut à droite. Le Main est coupé et reste verrouillé, même si tu rappelles une scène.
+2. **Choisis ce que tu écoutes** : l’ear d’un musicien, ou le Main.
+3. Pendant que le groupe joue, clique sur **Analyser chaque instrument**. L’appli écoute chaque canal une seconde, l’un après l’autre.
+4. **Lis les recommandations**, classées Sécurité, Important et Conseil.
+5. **Voir et valider** montre ce qui change. Compare **A · Avant** et **B · Après** dans les ears, puis clique sur **Appliquer** si ça sonne mieux. **Annuler** remet tout comme avant.
+
+> Rien n’est appliqué sans ton clic. L’analyse lit les mesures de la console, pas la musique : c’est ton oreille qui décide.
+
+Le détail est dans le [guide complet](USER_GUIDE_FR.md#8-régler-en-détail-en-mode-expert).
+
+---
+
 ## Si quelque chose ne va pas
 
 | Problème | Que faire |
@@ -218,6 +236,7 @@ Il ne peut rien changer d’autre. Le volume est plafonné à 0 dB et monte par 
 | « Pas de signal » à la mesure | Vérifie le câble, le numéro de prise, le volume de l’instrument, et le 48 V d’un micro statique (à activer toi-même dans la console). |
 | « Ça sature » | Le coach propose de baisser le gain. Si l’instrument lui-même distord (pédale, DI), corrige-le à la source. |
 | « Gain en butée » | Le préampli est déjà au maximum ou au minimum : règle la sortie de l’instrument ou la position du micro. |
+| E-drums ou clavier : gain très haut | C’est un signal ligne : monte d’abord la sortie du module ou du clavier, puis redescends le gain sur la console. |
 | Le gate coupe des notes douces | Refais **Mesurer la repisse**, ou rapproche le micro du fût. |
 | Ça siffle | Baisse le volume concerné ou **Tout couper**. Éloigne le micro des enceintes. |
 | Un réglage ne te plaît pas | **Annuler le dernier réglage guidé**. |
@@ -242,4 +261,4 @@ Il ne peut rien changer d’autre. Le volume est plafonné à 0 dB et monte par 
 
 ---
 
-Pour aller plus loin : le [guide complet](USER_GUIDE_FR.md) (console Simple et Expert, scènes, setlists) et le [détail technique du coach](INGE_SON.md) (valeurs de chaque instrument, règles de calcul).
+Pour aller plus loin : le [guide complet](USER_GUIDE_FR.md) (console Simple et Expert, mode Répétition, Analyse, scènes, setlists) et le [détail technique du coach](INGE_SON.md) (valeurs de chaque instrument, règles de calcul).

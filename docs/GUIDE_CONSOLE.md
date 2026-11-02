@@ -4,9 +4,9 @@
 
 Ce guide décrit chaque vue de la console en mode **Expert** (Jouer › Console, bouton **Expert** en haut) et ce que fait chaque réglage, en langage de musicien. Les mêmes explications sont dans l’application : bouton **? Explications** à droite de chaque vue. Survoler un réglage affiche aussi une courte description.
 
-La console reprend l’organisation de X-AIR Edit : les onglets en haut, la vue du canal sélectionné au milieu, la banque de faders en bas et la barre de réglages à droite.
+> **Depuis la version 2.1.0**, le mode Expert est organisé en 6 vues : Console, Canal, Ears, Effets, Routage, Analyse. Les réglages expliqués ici sont les mêmes, mais ils ont changé de place et les images montrent l’ancienne présentation : **Entrée, Gate, EQ, Comp et Envois** sont les étapes de la vue **Canal**. Pour la nouvelle organisation, voir le [guide utilisateur](USER_GUIDE_FR.md#8-régler-en-détail-en-mode-expert).
 
-![Console complète](images/console.png)
+![Console en mode Expert](images/tuto-expert.png)
 
 ## Avant de commencer : les gestes
 
