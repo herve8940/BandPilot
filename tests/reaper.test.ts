@@ -8,7 +8,8 @@ import {encodeOsc,decodeOsc,oscFloat} from '../src/osc.js';
 import {XR18} from '../src/xr18.js';
 import {ConsoleControl} from '../src/console-control.js';
 import {LibraryStore} from '../src/library-store.js';
-import {SoundCoach,suggestMusicians} from '../src/sound-coach.js';
+import {REAPER_FX} from '../src/reaper-fx.js';
+import {SOURCES,SoundCoach,suggestMusicians} from '../src/sound-coach.js';
 import {familyFromName} from '../src/analysis.js';
 import {ACTION,ReaperLink,createSession,openInReaper,planSession,readOsc,renderRpp,safeName,type Wire} from '../src/reaper.js';
 
@@ -76,11 +77,23 @@ test('project: raw takes, monitoring off, armed tracks, console balance as a pre
 test('a channel at -infinity stays audible in Reaper: the session must not play back silent',()=>{
  const t=planSession(base({'/ch/01/mix/fader':0})).tracks[0]!;assert.equal(t.volume,1);
 });
-test('family folders open and close, and only real tracks are armed',()=>{
+test('tracks stay flat, in USB order, with no folder',()=>{
  const blocks=trackBlocks(renderRpp(planSession(base())));
- assert.deepEqual(blocks.map(b=>[field(b,'NAME'),field(b,'ISBUS')]),[['"Batterie"','1 1'],['"Kick"','0 0'],['"Snare"','2 -1'],['"Voix"','0 0'],['"Clavier"','0 0']]);
- assert.equal(field(blocks[0]!,'REC'),'0 0 0 0 0 0 0');
- assert.deepEqual(blocks.slice(1).map(b=>field(b,'REC')!.split(' ')[1]),['4','5','0','2']);
+ assert.deepEqual(blocks.map(b=>[field(b,'NAME'),field(b,'ISBUS'),field(b,'REC')!.split(' ')[1]]),[['"Voix"','0 0','0'],['"Clavier"','0 0','2'],['"Kick"','0 0','4'],['"Snare"','0 0','5']]);
+});
+test('each instrument gets its own Reaper settings, and e-drums stay electronic',()=>{
+ const instruments=[{channel:1,name:'E-drums',family:'edrums',source:'drum-module'},{channel:2,name:'Basse',family:'bass'},{channel:3,name:'E-drums',family:familyFromName('E-drums')},{channel:4,name:'Backing',family:'track',source:'backing-track'},{channel:5,name:'Kick',family:'kick'}] as never;
+ const plan=planSession(base({},{instruments})),rpp=renderRpp(plan,0,'darwin'),blocks=trackBlocks(rpp);
+ const fx=(i:number)=>[...blocks[i]!.matchAll(/<VST "VST: (\w+)/g)].map(m=>m[1]);
+ assert.deepEqual(fx(0),['ReaEQ']);assert.deepEqual(fx(1),['ReaEQ','ReaComp']);assert.deepEqual(fx(2),['ReaEQ']);
+ assert.deepEqual(fx(3),[]);assert.deepEqual(fx(4),['ReaEQ','ReaGate','ReaComp']);
+ assert.equal(plan.tracks[0]!.presetLabel,'Batterie électronique (mono)');assert.equal(plan.tracks[3]!.presetLabel,'Backing track (depuis l’ordinateur)');
+ assert.equal((rpp.match(/<[A-Z]/g)??[]).length,(rpp.match(/^\s*>\s*$/gm)??[]).length,'blocks are balanced');
+ assert.match(renderRpp(plan,0,'win32'),/reaeq\.dll/);
+ const ids=[...rpp.matchAll(/FXID (\{[^}]*\})/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);
+});
+test('every coach instrument has its Reaper settings',()=>{
+ for(const s of SOURCES)assert.ok(s.id in REAPER_FX,s.id);
 });
 test('a red console channel is red in Reaper (order checked in Reaper 7.83)',()=>{
  const plan=planSession(base({'/ch/01/config/color':1}));

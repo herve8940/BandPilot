@@ -34,7 +34,7 @@ export const ZONES:[string,number,number][]=[['Sub',20,60],['Grave',60,120],['Ba
 export type Target={kind:'bus'|'lr'|'ch';n:number};
 export type Severity='important'|'conseil'|'securite';
 export type Recommendation={id:string;severity:Severity;where:string;title:string;why:string;changes:Record<string,Value>;channel?:number;bus?:number;zone?:string;current?:Record<string,Value|null>};
-export type Instrument={channel:number;name:string;family:Family|null};
+export type Instrument={channel:number;name:string;family:Family|null;source?:string};
 export type AnalysisSnapshot={
  active:boolean;target:Target;targetLabel:string;rehearsal:boolean;scanning:boolean;lastScanAt:string|null;
  live:{bands:number[];at:number}|null;

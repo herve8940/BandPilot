@@ -12,6 +12,8 @@ import {isAbsolute,join} from 'node:path';
 import {decodeOsc,encodeOsc,type OscMessage} from './osc.js';
 import {PARAMETERS,fromWire,type Value} from './parameters.js';
 import type {Instrument} from './analysis.js';
+import {REAPER_FX} from './reaper-fx.js';
+import {SOURCES} from './sound-coach.js';
 
 export const REAPER_LISTEN_PORT=8765;
 export const REAPER_FEEDBACK_PORT=8766;
@@ -19,12 +21,17 @@ export const REAPER_FEEDBACK_PORT=8766;
 export const ACTION={record:1013,stopAndSave:40667,marker:40157,refreshSurfaces:41743,goToEnd:40043,saveProject:40026} as const;
 
 export type Wire=Record<string,Value|undefined>;
-export type TrackPlan={id:string;usb:number;stereo:boolean;name:string;group:string;source:string;tap:string;selected:boolean;volume:number;pan:number;mute:boolean;invert:boolean;color:[number,number,number];warning?:string};
+export type TrackPlan={id:string;usb:number;stereo:boolean;name:string;group:string;source:string;tap:string;selected:boolean;preset:string|null;presetLabel:string;volume:number;pan:number;mute:boolean;invert:boolean;color:[number,number,number];warning?:string};
 export type SessionPlan={sampleRate:number;tracks:TrackPlan[];warnings:string[]};
 export type PlanInput={values:Wire;instruments:Instrument[];sampleRate:number|null;usbMode:'18x18'|'2x2'|null;simulation:boolean};
 
 const GROUPS:Record<string,string>={kick:'Batterie',snare:'Batterie',toms:'Batterie',cymbals:'Batterie',edrums:'Batterie',voice:'Voix',backing:'Voix',bass:'Instruments',guitar:'Instruments',keys:'Instruments'};
-const GROUP_ORDER=['Batterie','Voix','Instruments','Autres'];
+/** Without a coach instrument, the name decides: « E-drums » is an electronic kit, never an acoustic one. */
+const FAMILY_PRESET:Record<string,string>={voice:'lead-rock',backing:'backing-vocal',guitar:'electric-rhythm',bass:'bass-di',kick:'kick',snare:'snare',toms:'toms',cymbals:'overheads',keys:'keys',edrums:'drum-module'};
+function presetFor(known?:Instrument){
+ const id=known?.source??FAMILY_PRESET[known?.family??'']??null,source=SOURCES.find(s=>s.id===id);
+ return {preset:id&&REAPER_FX[id]?id:null,presetLabel:source?.label??'Sans traitement'};
+}
 const GROUP_COLOR:Record<string,[number,number,number]>={Batterie:[214,84,72],Voix:[62,190,120],Instruments:[70,130,220],Autres:[140,150,165]};
 /** Scribble strip colors of the X-Air family, 1-7 (8-15 are the inverted versions). */
 const CONSOLE_COLOR:Record<number,[number,number,number]>={1:[220,60,60],2:[60,200,90],3:[230,200,60],4:[70,120,230],5:[210,80,210],6:[60,210,220],7:[225,225,225]};
@@ -73,13 +80,13 @@ export function planSession(input:PlanInput):SessionPlan{
    // AIN is the physical socket, before the channel's source switch: it stays silent for a computer source.
    const warnings=[fromComputer?(tap==='AIN'?`Ce canal joue le son de l’ordinateur. En AIN, la piste sera vide : dans Routage, passe USB ${usb} sur IN.`:tap==='IN'?undefined:tapWarning(tap)):tapWarning(tap)];
    if(linked&&!stereo&&n===odd)warnings.push(`Canaux ${n}-${n+1} couplés mais pas sur deux entrées USB voisines : piste mono.`);
-   track={id:`usb${usb}`,usb,stereo,name,group,source,tap,selected:!!known,...pre(values,prefix),invert:num(values[`${prefix}/preamp/invert`],0)===1,color,warning:warnings.filter(Boolean).join(' ')||undefined};
+   track={id:`usb${usb}`,usb,stereo,name,group,source,tap,selected:!!known,...presetFor(known),...pre(values,prefix),invert:num(values[`${prefix}/preamp/invert`],0)===1,color,warning:warnings.filter(Boolean).join(' ')||undefined};
   }else{
    const aux=source==='AuxL',stereo=(aux&&next==='AuxR')||(source==='L'&&next==='R');
    const custom=String(values['/rtn/aux/config/name']??'').trim();
    const name=aux?custom||'Aux':source==='L'?'Mix L/R':source||`USB ${usb}`;
    const mix=aux?pre(values,'/rtn/aux'):{volume:1,pan:0,mute:false};
-   track={id:`usb${usb}`,usb,stereo,name,group:'Autres',source,tap,selected:aux&&!!custom&&custom.toLowerCase()!=='aux',...mix,invert:false,color:GROUP_COLOR.Autres!};
+   track={id:`usb${usb}`,usb,stereo,name,group:'Autres',source,tap,selected:aux&&!!custom&&custom.toLowerCase()!=='aux',preset:null,presetLabel:'Sans traitement',...mix,invert:false,color:GROUP_COLOR.Autres!};
   }
   tracks.push(track);if(track.stereo)usb++;
  }
@@ -97,21 +104,18 @@ function nativeColor([r,g,b]:[number,number,number]){
  return ((b<<16)|(g<<8)|r|0x1000000)>>>0;
 }
 const figure=(v:number)=>String(Number(v.toFixed(6)));
-function trackLines(name:string,color:[number,number,number],folder:string,rec:string,t:Pick<TrackPlan,'volume'|'pan'|'mute'|'invert'>){
- return [`  <TRACK {${randomUUID().toUpperCase()}}`,`    NAME ${quoted(name)}`,`    PEAKCOL ${nativeColor(color)}`,`    VOLPAN ${figure(t.volume)} ${figure(t.pan)} -1 -1 1`,`    MUTESOLO ${t.mute?1:0} 0 0`,`    IPHASE ${t.invert?1:0}`,`    ISBUS ${folder}`,'    NCHAN 2',`    REC ${rec}`,'  >'];
+function fxChain(preset:string|null,platform:string){
+ const chain=preset?REAPER_FX[preset]:undefined;if(!chain)return [];
+ const library=platform==='win32'?'.dll':platform==='linux'?'.vst.so':'.vst.dylib';
+ return chain.replaceAll('.vst.dylib',library).replace(/FXID \{[^}]*\}/g,()=>`FXID {${randomUUID().toUpperCase()}}`).split('\n').map(line=>'    '+line);
 }
-/** 24-bit WAV takes, monitoring off (the band hears the console), every take in Audio/. */
-export function renderRpp(plan:SessionPlan,now=Date.now()){
+function trackLines(t:TrackPlan,platform:string){
+ return [`  <TRACK {${randomUUID().toUpperCase()}}`,`    NAME ${quoted(t.name)}`,`    PEAKCOL ${nativeColor(t.color)}`,`    VOLPAN ${figure(t.volume)} ${figure(t.pan)} -1 -1 1`,`    MUTESOLO ${t.mute?1:0} 0 0`,`    IPHASE ${t.invert?1:0}`,'    ISBUS 0 0','    NCHAN 2',`    REC 1 ${(t.usb-1)+(t.stereo?1024:0)} 0 0 0 0 0`,...fxChain(t.preset,platform),'  >'];
+}
+/** Flat track list in USB order, 24-bit WAV takes, monitoring off (the band hears the console), takes in Audio/. FX only act on playback. */
+export function renderRpp(plan:SessionPlan,now=Date.now(),platform:string=process.platform){
  const lines=[`<REAPER_PROJECT 0.1 "7.0" ${Math.floor(now/1000)} 0`,`  SAMPLERATE ${plan.sampleRate} 1 0`,'  RECORD_PATH "Audio" ""','  <RECORD_CFG','    ZXZhdxgAAQ==','  >'];
- const neutral={volume:1,pan:0,mute:false,invert:false};
- for(const group of GROUP_ORDER){
-  const tracks=plan.tracks.filter(t=>t.selected&&t.group===group),folder=tracks.length>1;
-  if(folder)lines.push(...trackLines(group,GROUP_COLOR[group]!,'1 1','0 0 0 0 0 0 0',neutral));
-  tracks.forEach((t,i)=>{
-   const input=(t.usb-1)+(t.stereo?1024:0);
-   lines.push(...trackLines(t.name,t.color,folder&&i===tracks.length-1?'2 -1':'0 0',`1 ${input} 0 0 0 0 0`,t));
-  });
- }
+ for(const t of plan.tracks)if(t.selected)lines.push(...trackLines(t,platform));
  lines.push('>','');
  return lines.join('\n');
 }

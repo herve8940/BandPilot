@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-type Track = { id: string; usb: number; stereo: boolean; name: string; group: string; source: string; tap: string; selected: boolean; warning?: string };
+type Track = { id: string; usb: number; stereo: boolean; name: string; presetLabel: string; source: string; tap: string; selected: boolean; warning?: string };
 type Plan = { sampleRate: number; tracks: Track[]; warnings: string[]; hoursFree: number | null };
 type State = "offline" | "ready" | "starting" | "recording" | "stopping" | "lost";
 type Status = { state: State; recording: boolean; elapsed: number; markers: number; alert: string; defaultFolder?: string; ports: { listen: number; feedback: number }; session: { title: string; file: string; hoursFree: number | null; tracks: number } | null };
@@ -48,11 +48,11 @@ export function RecordingView() {
       <div className="main xs2-card">
         <div className="xs2-rec-head"><h3>Pistes à enregistrer</h3><button type="button" className="xs2-btn" disabled={!!busy} onClick={() => void load()}>{busy === "plan" ? "Lecture…" : "Relire la console"}</button></div>
         {plan?.warnings.map(w => <p key={w} className="xs2-rec-warn">{w}</p>)}
-        {plan ? <table className="xs2-rec-table"><thead><tr><th /><th>Piste</th><th>Entrée USB</th><th>Format</th><th>Famille</th><th>Prélèvement</th></tr></thead><tbody>
+        {plan ? <table className="xs2-rec-table"><thead><tr><th /><th>Piste</th><th>Entrée USB</th><th>Format</th><th>Réglages Reaper</th><th>Prélèvement</th></tr></thead><tbody>
           {plan.tracks.map(t => <tr key={t.id} className={selected.has(t.id) ? "" : "off"}>
             <td><input type="checkbox" aria-label={`Enregistrer ${t.name}`} checked={selected.has(t.id)} onChange={() => toggle(t.id)} /></td>
             <td><b>{t.name}</b>{selected.has(t.id) && t.warning && <small className="xs2-rec-warn">{t.warning}</small>}</td>
-            <td>{t.stereo ? `${t.usb}-${t.usb + 1}` : t.usb}</td><td>{t.stereo ? "Stéréo" : "Mono"}</td><td>{t.group}</td><td>{t.tap}</td>
+            <td>{t.stereo ? `${t.usb}-${t.usb + 1}` : t.usb}</td><td>{t.stereo ? "Stéréo" : "Mono"}</td><td>{t.presetLabel}</td><td>{t.tap}</td>
           </tr>)}</tbody></table> : <div className="xs2-empty">Lecture de la console…</div>}
       </div>
       <aside className="side">
@@ -60,7 +60,7 @@ export function RecordingView() {
           <h3>Préparer la session</h3>
           <label className="xs2-rec-field">Nom<input value={name} maxLength={60} placeholder="Répétition" onChange={e => setName(e.target.value)} /></label>
           <label className="xs2-rec-field">Dossier<input value={folder} placeholder={status?.defaultFolder ?? ""} onChange={e => setFolder(e.target.value)} /></label>
-          <p className="muted">{chosen.length} piste{chosen.length > 1 ? "s" : ""} · WAV 24 bits · {plan ? plan.sampleRate / 1000 : "—"} kHz{plan?.hoursFree != null ? ` · environ ${plan.hoursFree} h d’espace disque` : ""}{alerts.length ? ` · ${alerts.length} à vérifier` : ""}</p>
+          <p className="muted">{chosen.length} piste{chosen.length > 1 ? "s" : ""} · WAV 24 bits · réglages par instrument · {plan ? plan.sampleRate / 1000 : "—"} kHz{plan?.hoursFree != null ? ` · environ ${plan.hoursFree} h d’espace disque` : ""}{alerts.length ? ` · ${alerts.length} à vérifier` : ""}</p>
           <button type="button" className="xs2-btn primary" disabled={!!busy || !chosen.length || !!status?.recording} onClick={() => void prepare()}>{busy === "session" ? "Préparation…" : "Créer et ouvrir dans Reaper"}</button>
           <p className="muted">Une session existante n’est jamais écrasée. La console n’est pas modifiée.</p>
         </div>

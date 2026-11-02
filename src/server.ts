@@ -51,7 +51,7 @@ const instruments=():Instrument[]=>{
   const input=profile.inputs.find(i=>i.channel===c),name=String(v[`/ch/${String(c).padStart(2,'0')}/config/name`]?.value??'').trim()||input?.name||'';
   if(!name&&!input)continue;
   let family=null;try{family=input?coachSource(input.source).family:null;}catch{family=null;}
-  out.push({channel:c,name:name||`Canal ${c}`,family:family??familyFromName(name)});
+  out.push({channel:c,name:name||`Canal ${c}`,family:family??familyFromName(name),source:input?.source});
  }
  return out;
 };
