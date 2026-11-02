@@ -212,6 +212,24 @@ They cannot change anything else. Volume is capped at 0 dB and rises in small st
 
 ---
 
+## What next: refine during rehearsal
+
+Once the balance is done, **Expert** mode can listen to the band with you. Go to **Console**, **Expert** button, **Analyse** view.
+
+![Live analysis](images/tuto-analyse.png)
+
+1. **Switch to Rehearsal mode** if you only work on the ears: button at the top right. The Main is muted and stays locked, even if you recall a scene.
+2. **Choose what to listen to**: a musician’s ear mix, or the Main.
+3. While the band plays, click **Analyser chaque instrument** *(analyse each instrument)*. The app listens to each channel for one second, one after the other.
+4. **Read the recommendations**, ranked Safety, Important and Advice.
+5. **Voir et valider** *(review)* shows what changes. Compare **A · Avant** and **B · Après** in the ears, then click **Appliquer** if it sounds better. **Annuler** puts everything back.
+
+> Nothing is applied without your click. The analysis reads the console’s measurements, not the music: your ears decide.
+
+Details are in the [full guide](USER_GUIDE_EN.md).
+
+---
+
 ## If something goes wrong
 
 | Problem | What to do |
@@ -220,6 +238,7 @@ They cannot change anything else. Volume is capped at 0 dB and rises in small st
 | “Pas de signal” *(no signal)* | Check the cable, the input number, the instrument volume, and 48 V for a condenser mic (switch it on yourself in the console). |
 | “Ça sature” *(clipping)* | The coach offers to lower the gain. If the instrument itself distorts (pedal, DI), fix it at the source. |
 | “Gain en butée” *(gain at its limit)* | The preamp is already at maximum or minimum: adjust the instrument output or mic position. |
+| E-drums or keyboard: very high gain | This is a line signal: first turn up the module or keyboard output, then bring the console gain down. |
 | The gate cuts soft notes | Measure the bleed again, or move the mic closer to the drum. |
 | Feedback | Lower the level or **Tout couper**. Move the mic away from the speakers. |
 | You don’t like a change | **Annuler le dernier réglage guidé**. |
@@ -244,4 +263,4 @@ They cannot change anything else. Volume is capped at 0 dB and rises in small st
 
 ---
 
-More: the [full guide](USER_GUIDE_EN.md) (Simple and Expert console, scenes, setlists) and the [coach’s technical details](INGE_SON.md) (per-instrument values, calculation rules, in French).
+More: the [full guide](USER_GUIDE_EN.md) (Simple and Expert console, Rehearsal mode, Analysis, scenes, setlists) and the [coach’s technical details](INGE_SON.md) (per-instrument values, calculation rules, in French).
