@@ -67,11 +67,12 @@ export function planSession(input:PlanInput):SessionPlan{
    const n=Number(channel[1]),odd=n%2===1?n:n-1,linked=num(values[`/config/chlink/${odd}-${odd+1}`],0)===1;
    const stereo=linked&&n===odd&&next===`Ch${pad(n+1)}`,known=instruments.find(i=>i.channel===n);
    const prefix=`/ch/${pad(n)}`,name=String(values[`${prefix}/config/name`]??'').trim()||known?.name||`Canal ${n}`;
-   const group=GROUPS[known?.family??'']??'Autres';
+   // A channel set to USB plays a source from the computer (backing track): it is no instrument family.
+   const fromComputer=num(values[`${prefix}/preamp/rtnsw`],0)===1,group=fromComputer?'Autres':GROUPS[known?.family??'']??'Autres';
    const color=CONSOLE_COLOR[num(values[`${prefix}/config/color`],0)&7]??GROUP_COLOR[group]!;
-   const warnings=[tapWarning(tap)];
+   // AIN is the physical socket, before the channel's source switch: it stays silent for a computer source.
+   const warnings=[fromComputer?(tap==='AIN'?`Ce canal joue le son de l’ordinateur. En AIN, la piste sera vide : dans Routage, passe USB ${usb} sur IN.`:tap==='IN'?undefined:tapWarning(tap)):tapWarning(tap)];
    if(linked&&!stereo&&n===odd)warnings.push(`Canaux ${n}-${n+1} couplés mais pas sur deux entrées USB voisines : piste mono.`);
-   if(num(values[`${prefix}/preamp/rtnsw`],0)===1)warnings.push('Ce canal écoute le retour USB et non sa prise physique : remets-le sur Mic/Line A/D.');
    track={id:`usb${usb}`,usb,stereo,name,group,source,tap,selected:!!known,...pre(values,prefix),invert:num(values[`${prefix}/preamp/invert`],0)===1,color,warning:warnings.filter(Boolean).join(' ')||undefined};
   }else{
    const aux=source==='AuxL',stereo=(aux&&next==='AuxR')||(source==='L'&&next==='R');

@@ -45,6 +45,7 @@ export type AnalysisSnapshot={
 /** Guess the family of an input from its name when the coach does not know it. */
 export function familyFromName(name:string):Family|null{
  const n=name.toLowerCase();
+ if(/backing(?! ?voc)|playback|s[eé]quence/.test(n))return 'track';
  if(/kick|grosse|gc\b|bd\b/.test(n))return 'kick';
  if(/snare|caisse|clair/.test(n))return 'snare';
  if(/tom/.test(n))return 'toms';

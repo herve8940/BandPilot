@@ -5,6 +5,11 @@ import {mkdtemp,readFile,readdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {encodeOsc,decodeOsc,oscFloat} from '../src/osc.js';
+import {XR18} from '../src/xr18.js';
+import {ConsoleControl} from '../src/console-control.js';
+import {LibraryStore} from '../src/library-store.js';
+import {SoundCoach,suggestMusicians} from '../src/sound-coach.js';
+import {familyFromName} from '../src/analysis.js';
 import {ACTION,ReaperLink,createSession,openInReaper,planSession,readOsc,renderRpp,safeName,type Wire} from '../src/reaper.js';
 
 const base=(values:Wire={},extra={})=>({values,instruments:[{channel:1,name:'Voix',family:'voice'},{channel:3,name:'Clavier',family:'keys'},{channel:5,name:'Kick',family:'kick'},{channel:6,name:'Snare',family:'snare'}] as never,sampleRate:48000,usbMode:'18x18' as const,simulation:false,...extra});
@@ -27,11 +32,33 @@ test('linked channels away from each other stay mono and say so',()=>{
  assert.equal(t.stereo,false);assert.match(t.warning!,/mono/);
 });
 test('processed, mute-following and USB-return channels are flagged',()=>{
- const taps=planSession(base({'/routing/usb/01/pos':10,'/routing/usb/03/pos':1,'/ch/05/preamp/rtnsw':1})).tracks;
+ const taps=planSession(base({'/routing/usb/01/pos':10,'/routing/usb/03/pos':1})).tracks;
  assert.match(taps[0]!.warning!,/traitements/);
  assert.match(taps.find(t=>t.usb===3)!.warning!,/muette/);
- assert.match(taps.find(t=>t.usb===5)!.warning!,/retour USB/);
  assert.equal(planSession(base({})).tracks[0]!.warning,undefined);
+});
+test('a backing track played from the computer is recorded, with the tap that really carries it',()=>{
+ const onAin=planSession(base({'/ch/05/preamp/rtnsw':1})).tracks.find(t=>t.usb===5)!;
+ assert.match(onAin.warning!,/passe USB 5 sur IN/);assert.equal(onAin.group,'Autres');assert.equal(onAin.selected,true);
+ assert.equal(planSession(base({'/ch/05/preamp/rtnsw':1,'/routing/usb/05/pos':2})).tracks.find(t=>t.usb===5)!.warning,undefined);
+});
+test('Backing track chosen as an instrument listens to USB and gets recorded',async()=>{
+ const values=SoundCoach.channelValues({channel:4,source:'backing-track',name:'Backing'});
+ assert.equal(values['/ch/04/preamp/rtnsw'],1);assert.equal(values['/routing/usb/04/pos'],'IN');
+ assert.equal(values['/ch/04/dyn/on'],0);
+ assert.equal(SoundCoach.channelValues({channel:4,source:'bass-di',name:'Basse'})['/routing/usb/04/pos'],undefined);
+ assert.equal(suggestMusicians([{channel:4,source:'backing-track',name:'Backing'}]).length,0);
+ const track=planSession(base({'/ch/04/preamp/rtnsw':1,'/routing/usb/04/pos':2},{instruments:[{channel:4,name:'Backing',family:'track'}]})).tracks.find(t=>t.usb===4)!;
+ assert.equal(track.selected,true);assert.equal(track.warning,undefined);assert.equal(track.group,'Autres');
+ assert.equal(familyFromName('Backing'),'track');assert.equal(familyFromName('Backing voc'),'backing');
+});
+test('applying Backing track through the coach really writes USB source and tap',async()=>{
+ const xr=new XR18({mode:'simulation',host:'127.0.0.1',port:10024,enableWrites:false}),library=new LibraryStore(':memory:'),control=new ConsoleControl(xr,library),coach=new SoundCoach(xr,control,library);
+ try{
+  coach.saveProfile({version:1,inputs:[{channel:4,source:'backing-track',name:'Backing'}],completed:[]});
+  const plan=await coach.prepare(4);assert.match(plan.explanation,/backing track/i);await coach.apply(plan.token,true);
+  const state=xr.parameterState();assert.equal(state['/ch/04/preamp/rtnsw']!.value,1);assert.equal(state['/routing/usb/04/pos']!.value,2);
+ }finally{library.close?.();}
 });
 test('a console in 2x2 USB or with unread settings is reported, never guessed silently',()=>{
  assert.ok(planSession(base({},{usbMode:'2x2'})).warnings.some(w=>/2×2/.test(w)));

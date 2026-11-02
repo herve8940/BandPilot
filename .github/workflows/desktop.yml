@@ -13,15 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: windows-latest
-            name: windows
-          - os: macos-15-intel
-            name: macos-intel
-          - os: macos-15
-            name: macos-apple-silicon
-          - os: ubuntu-latest
-            name: linux
+        # DEV test builds: Mac Intel only. Everything else builds all four systems.
+        include: ${{ fromJSON(github.ref_name == 'DEV' && '[{"os":"macos-15-intel","name":"macos-intel"}]' || '[{"os":"windows-latest","name":"windows"},{"os":"macos-15-intel","name":"macos-intel"},{"os":"macos-15","name":"macos-apple-silicon"},{"os":"ubuntu-latest","name":"linux"}]') }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read

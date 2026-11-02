@@ -11,7 +11,7 @@ import type {LibraryStore} from './library-store.js';
  * Thresholds are STARTING points for signals gain-staged around -18 dBFS
  * average / -6 dBFS peaks: they are shown as such and must be refined by ear.
  */
-export type Family='voice'|'backing'|'guitar'|'bass'|'kick'|'snare'|'toms'|'cymbals'|'keys'|'edrums';
+export type Family='voice'|'backing'|'guitar'|'bass'|'kick'|'snare'|'toms'|'cymbals'|'keys'|'edrums'|'track';
 export type Source={id:string;label:string;group:string;family:Family;color:number;name:string;preset:string;pan:number;compThr:number|null;gateThr:number|null};
 const S=(id:string,label:string,group:string,family:Family,color:number,name:string,preset:string,pan:number,compThr:number|null,gateThr:number|null):Source=>({id,label,group,family,color,name,preset,pan,compThr,gateThr});
 export const SOURCES:Source[]=[
@@ -34,7 +34,8 @@ export const SOURCES:Source[]=[
  S('drum-module','Batterie électronique (mono)','Batterie électronique','edrums',4,'E-drums','drum-module',0,null,null),
  S('drum-module-l','Batterie électronique — gauche','Batterie électronique','edrums',4,'TD27 L','drum-module',-100,null,null),
  S('drum-module-r','Batterie électronique — droite','Batterie électronique','edrums',4,'TD27 R','drum-module',100,null,null),
- S('keys','Clavier / piano','Claviers','keys',5,'Clavier','keys',20,-20,null)
+ S('keys','Clavier / piano','Claviers','keys',5,'Clavier','keys',20,-20,null),
+ S('backing-track','Backing track (depuis l’ordinateur)','Ordinateur','track',7,'Backing','backing-track',0,null,null)
 ];
 export const source=(id:string)=>{const s=SOURCES.find(s=>s.id===id);if(!s)throw Error('Instrument inconnu : '+id);return s;};
 /** Monitor (in-ear / wedge) starting mix by musician role, in dB of pre-fader send. */
@@ -48,11 +49,11 @@ export const ROLES:{id:Role;label:string;color:number;hint:string}[]=[
 ];
 const OFF=-90;
 export const MONITOR_RECIPES:Record<Role,Record<Family,number>>={
- chant:   {voice:-3, backing:-10,guitar:-16,bass:-14,kick:-10,snare:-14,toms:-24,cymbals:-26,keys:-14,edrums:-10},
- guitare: {voice:-8, backing:-15,guitar:-12,bass:-14,kick:-10,snare:-12,toms:-24,cymbals:-26,keys:-16,edrums:-10},
- basse:   {voice:-10,backing:-18,guitar:-16,bass:-4, kick:-5, snare:-10,toms:-20,cymbals:-26,keys:-18,edrums:-6},
- batterie:{voice:-8, backing:-18,guitar:-15,bass:-5, kick:-6, snare:-14,toms:-22,cymbals:OFF,keys:-18,edrums:-4},
- clavier: {voice:-8, backing:-14,guitar:-15,bass:-12,kick:-10,snare:-12,toms:-24,cymbals:-26,keys:-4, edrums:-10}
+ chant:   {voice:-3, backing:-10,guitar:-16,bass:-14,kick:-10,snare:-14,toms:-24,cymbals:-26,keys:-14,edrums:-10,track:-12},
+ guitare: {voice:-8, backing:-15,guitar:-12,bass:-14,kick:-10,snare:-12,toms:-24,cymbals:-26,keys:-16,edrums:-10,track:-12},
+ basse:   {voice:-10,backing:-18,guitar:-16,bass:-4, kick:-5, snare:-10,toms:-20,cymbals:-26,keys:-18,edrums:-6,track:-12},
+ batterie:{voice:-8, backing:-18,guitar:-15,bass:-5, kick:-6, snare:-14,toms:-22,cymbals:OFF,keys:-18,edrums:-4,track:-12},
+ clavier: {voice:-8, backing:-14,guitar:-15,bass:-12,kick:-10,snare:-12,toms:-24,cymbals:-26,keys:-4, edrums:-10,track:-12}
 };
 /** Own instrument: clearly in front of everything else. */
 export const OWN_LEVEL=-3;
@@ -93,13 +94,13 @@ export const TEMPLATES:{id:string;label:string;description:string;inputs:Input[]
   inputs:[I(1,'lead-rock'),I(2,'backing-vocal'),I(3,'acoustic-guitar'),I(4,'keys'),I(5,'bass-di')]}
 ];
 export const GROUP_TEMPLATE:Input[]=TEMPLATES[0]!.inputs;
-const ROLE_OF:Record<Family,Role>={voice:'chant',backing:'chant',guitar:'guitare',bass:'basse',kick:'batterie',snare:'batterie',toms:'batterie',cymbals:'batterie',edrums:'batterie',keys:'clavier'};
+const ROLE_OF:Record<Family,Role>={voice:'chant',backing:'chant',guitar:'guitare',bass:'basse',kick:'batterie',snare:'batterie',toms:'batterie',cymbals:'batterie',edrums:'batterie',keys:'clavier',track:'clavier'};
 /** One musician per player: the lead singer, each guitar, the bassist, the whole kit, keys. Max 6 buses. */
 export function suggestMusicians(inputs:Input[]):Musician[]{
  const out:Musician[]=[];
  for(const i of [...inputs].sort((a,b)=>a.channel-b.channel)){
   const s=source(i.source),role=ROLE_OF[s.family];
-  if(s.family==='backing')continue;
+  if(s.family==='backing'||s.family==='track')continue;
   const shared=role==='batterie'||role==='basse'||role==='clavier'?out.find(m=>m.role===role):undefined;
   if(shared){shared.channels.push(i.channel);continue;}
   if(out.length>=6)continue;
@@ -145,7 +146,7 @@ export function gainProposal(peakDb:number,gainDb:number|null,min=-12,max=60):Ga
  return {state:wanted>0?'raise':'lower',deltaDb:target-gainDb,targetGainDb:target,title:wanted>0?'Signal trop faible':'Signal trop fort',message:`Niveau max mesuré : ${fmt(half(peakDb))}. Je propose ${fmt(target-gainDb)} de gain (${fmt(gainDb)} → ${fmt(target)}), puis une nouvelle mesure.${Math.abs(wanted)>Math.abs(target-gainDb)?' On y va par étapes pour éviter un coup de volume dans les retours.':''}`};
 }
 /** Compressor starts this many dB under the measured peak, per family (gentler on cymbals). */
-export const COMP_UNDER_PEAK:Record<Family,number>={voice:8,backing:8,guitar:6,bass:8,kick:6,snare:6,toms:6,cymbals:4,keys:6,edrums:6};
+export const COMP_UNDER_PEAK:Record<Family,number>={voice:8,backing:8,guitar:6,bass:8,kick:6,snare:6,toms:6,cymbals:4,keys:6,edrums:6,track:6};
 export function thresholdsFrom(src:Source,peakDb:number,bleedDb?:number){
  const clamp=(v:number,lo:number,hi:number)=>half(Math.max(lo,Math.min(hi,v)));
  const comp=src.compThr===null?null:clamp(peakDb-COMP_UNDER_PEAK[src.family],-60,0);
@@ -207,6 +208,8 @@ export class SoundCoach {
   values[prefix+'/config/name']=consoleName(i.name);values[prefix+'/config/color']=s.color;
   values[prefix+'/dyn/knee']=2;values[prefix+'/dyn/det']='RMS';values[prefix+'/dyn/auto']=0;values[prefix+'/dyn/mix']=100;
   values[prefix+'/mix/pan']=s.pan;
+  // Played by the computer: the channel listens to USB, and USB send N taps after that switch (AIN is the empty socket).
+  if(s.family==='track'){values[prefix+'/preamp/rtnsw']=1;values[`/routing/usb/${String(i.channel).padStart(2,'0')}/pos`]='IN';}
   return values;
  }
  async prepare(channel?:number){
@@ -218,7 +221,7 @@ export class SoundCoach {
   const one=inputs.length===1?source(inputs[0]!.source):null;
   const thresholdsNote=!estimated.length?' Seuils du compresseur et du gate calés sur ton signal mesuré.':calibrated.length?` Seuils calés sur la mesure pour : ${calibrated.join(', ')}. Valeurs de départ (gain pas encore mesuré) pour : ${estimated.join(', ')} — passe par l’étape 3.`:' Seuils = valeurs de départ : règle le gain à l’étape 3 pour que je les cale sur ton vrai signal.';
   return {...await this.control.preview(values),title:one?`Configuration complète : ${one.label.toLowerCase().startsWith(inputs[0]!.name.toLowerCase())?one.label:`${inputs[0]!.name} · ${one.label}`}`:`Configuration complète de ${inputs.length} instruments`,
-   explanation:'Nom, couleur, coupe-bas, égaliseur 4 bandes, compresseur, gate et position stéréo, selon les bonnes pratiques live pour chaque instrument.'+thresholdsNote+' Gain d’entrée, 48 V, volumes, mutes et routage ne sont pas touchés ici.',inputs:inputs.map(i=>`${i.name} (entrée ${i.channel})`)};
+   explanation:'Nom, couleur, coupe-bas, égaliseur 4 bandes, compresseur, gate et position stéréo, selon les bonnes pratiques live pour chaque instrument.'+thresholdsNote+(inputs.some(i=>source(i.source).family==='track')?' Le backing track passe sur sa source USB et son entrée d’enregistrement est réglée pour l’enregistrer. Gain d’entrée, 48 V, volumes et mutes ne sont pas touchés.':' Gain d’entrée, 48 V, volumes, mutes et routage ne sont pas touchés ici.'),inputs:inputs.map(i=>`${i.name} (entrée ${i.channel})`)};
  }
  /** Monitor mixes: one bus per musician, pre-fader sends shaped by role. */
  static earsValues(profile:CoachProfile,bus?:number){
