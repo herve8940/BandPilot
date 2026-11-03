@@ -1,0 +1,44 @@
+/* Recording + show redesign for DEV; presentation only, existing REAPER controls remain functional. */
+.sh{--g-bg:#0b1328;--g-head:#111d36;--g-panel:#15233d;--g-panel-2:#1b2b49;--g-panel-3:#1d3153;--g-line:#2b3d60;--g-line-2:#3b5078;--g-text:#edf3ff;--g-text-2:#b0c0da;--g-text-3:#8ba1c3;--g-accent:#a88cff;--g-accent-ink:#fff;--g-accent-soft:#322565;--g-accent-text:#e5dfff;--g-ok:#38e8ac;--g-ok-bg:#10362e;--g-ok-line:#296954;--g-red:#ff667b;--g-red-bg:#351d35;--g-red-line:#7d3855;--g-red-text:#ffb9c8;background:radial-gradient(ellipse 75% 45% at 75% -20%,#4b2c8b65,transparent),#0b1328;color:var(--g-text);border:1px solid #31456d;border-radius:20px;padding:22px;box-shadow:0 18px 50px #03071670}
+.sh .xs2-card,.sh .sh-transport,.sh .sh-player{background:linear-gradient(145deg,#1a2a47,#111c32);border:1px solid #34496e;border-radius:17px;box-shadow:0 10px 30px #03081955}
+.sh .sh-head{padding:4px 2px 12px;border-bottom:1px solid #304366}
+.sh .sh-title{font-size:clamp(22px,2.3vw,30px);letter-spacing:-.04em;font-weight:800}
+.sh .sh-seg{background:#0c162b;border-color:#3b4d71}
+.sh .sh-seg button.on{background:linear-gradient(125deg,#7556df,#5136ae);color:#fff;box-shadow:0 5px 18px #7754e75c}
+.sh .sh-status span{background:#192840;border-color:#3d5276}
+.sh .sh-status span.ok{background:#10352d;border-color:#327d63;color:#76f5c4}
+.sh .sh-transport{padding:18px 20px;gap:18px}
+.sh .sh-transport.rec{background:linear-gradient(130deg,#3c203e,#221b37);border-color:#8b4567}
+.sh .sh-clock{font-size:clamp(27px,3vw,40px);font-weight:750;letter-spacing:-.045em;color:#f4f6ff}
+.sh .sh-big,.sh .sh-cmd{background:linear-gradient(160deg,#273a5d,#1a2a47);border:1px solid #455a81;border-radius:13px;min-height:50px}
+.sh .sh-big:hover:not(:disabled),.sh .sh-cmd:hover:not(:disabled){border-color:#a58aff;background:#302a60;box-shadow:0 4px 16px #6b4bdf33}
+.sh .sh-big.rec:not(:disabled){background:linear-gradient(125deg,#6d2a4b,#45233d);color:#ffd1db;border-color:#b85178}
+.sh .sh-song{background:#1b2a46;border-color:#2c4166;border-radius:12px;min-height:54px}
+.sh .sh-song.on{background:linear-gradient(120deg,#392e76,#252854);border-color:#a28aff;box-shadow:0 4px 15px #654bd244}
+.sh .sh-cmd.next{background:linear-gradient(130deg,#7856e9,#5136ae);border:1px solid #987cf7;color:#fff}
+.sh .sh-cmd.danger{background:#3a2039;border-color:#8d4164;color:#ffc0ce}
+.sh .sh-now{background:radial-gradient(ellipse at 50% 0%,#3b2d7255,transparent 65%),linear-gradient(150deg,#182744,#111b31);border-radius:20px}
+.sh .sh-now h1{letter-spacing:-.055em}
+.sh .sh-now h2{color:#c1aaff}
+.sh .sh-check input{accent-color:#9d7eff}
+.sh .sh-lane{border-color:#3b5078}
+.sh button:focus-visible,.xs2-rec button:focus-visible,.xs2-rec input:focus-visible{outline:2px solid #a78bfa;outline-offset:3px}
+/* REAPER multitrack recorder: preserve native status, track selection, session actions */
+.xs2-rec{--g-accent:#a88cff;--g-accent-ink:#fff;--g-accent-soft:#322565;--g-line:#2b3d60;--g-line-2:#3b5078;--g-text:#edf3ff;--g-text-2:#b0c0da;--g-panel:#15233d;--g-panel-2:#1b2b49;--g-red-bg:#351d35;--g-red-line:#7d3855;--g-red-text:#ffb9c8;color:#edf3ff}
+.xs2-rec .xs2-card{background:linear-gradient(155deg,#1a2a47,#111c32);border:1px solid #354b70;border-radius:18px;box-shadow:0 12px 30px #0003}
+.xs2-rec .xs2-rec-transport{padding:18px 22px;gap:12px}
+.xs2-rec .xs2-rec-transport.on{background:linear-gradient(120deg,#3b203e,#211d3a);border-color:#ad5677}
+.xs2-rec .xs2-rec-clock{font-size:clamp(24px,3vw,36px);font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.xs2-rec .xs2-rec-btn{background:linear-gradient(130deg,#a33863,#792b58);color:#fff;border:1px solid #c95a80}
+.xs2-rec .xs2-btn.primary{background:linear-gradient(130deg,#7856e9,#573bb7);color:#fff;border-color:#997eff}
+.xs2-rec .xs2-rec-table{width:100%;border-collapse:separate;border-spacing:0 5px}
+.xs2-rec .xs2-rec-table th{text-transform:uppercase;font-size:11px;letter-spacing:.08em;color:#a6b8d5;text-align:left}
+.xs2-rec .xs2-rec-table td{background:#1b2b49;border-top:1px solid #30456c;border-bottom:1px solid #30456c;padding:11px 9px}
+.xs2-rec .xs2-rec-table td:first-child{border-radius:10px 0 0 10px;border-left:1px solid #30456c}
+.xs2-rec .xs2-rec-table td:last-child{border-radius:0 10px 10px 0;border-right:1px solid #30456c}
+.xs2-rec .xs2-rec-table tr.off td{opacity:.55}
+.xs2-rec input[type=checkbox]{accent-color:#9b7aff;width:18px;height:18px}
+.xs2-rec .xs2-rec-field input{background:#0d192f;color:#eef4ff;border:1px solid #42557a;border-radius:11px;padding:11px}
+.xs2-rec .xs2-rec-warn{color:#ffd49b}
+@media(max-width:800px){.sh{padding:12px}.sh .sh-head{gap:8px}.sh .sh-transport{padding:12px}.xs2-rec .xs2-rec-table{display:block;overflow-x:auto;white-space:nowrap}.xs2-rec .xs2-rec-transport{padding:12px;flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.sh button{transition:none}}
