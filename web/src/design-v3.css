@@ -42,3 +42,20 @@
 .xs2 .xs2-dialog{background:#131f35;border-color:#42547a;box-shadow:0 35px 100px #000b}
 @media(max-width:800px){.xs2 .xs2-head{padding:12px}.xs2 .xs2-body{padding:10px}.xs2 .xs2-tabs{overflow-x:auto;max-width:100%;flex-wrap:nowrap}.xs2 .xs2-tabs button{white-space:nowrap}.xs2 .xs2-split>.side{max-width:none}}
 @media(prefers-reduced-motion:reduce){.studio button,.studio a,.xs2 button{transition:none}}
+
+/* App v2 navigation and shell */
+.studio.app2{background:radial-gradient(ellipse 55% 45% at 85% -12%,#36226090,transparent 75%),#080d1b;color:#eaf0ff}
+.studio.app2 .rail{background:linear-gradient(170deg,#111b34,#0b1223 70%,#191335);border-right:1px solid #2b3c61;box-shadow:12px 0 32px #0003}
+.studio.app2 .rail-logo .logo-mark{background:linear-gradient(135deg,#3ac8ff,#8c5cff);color:#fff;box-shadow:0 7px 25px #6c5dfb55}
+.studio.app2 .rail-logo em{color:#b49bff}
+.studio.app2 .rail-space.active{background:linear-gradient(125deg,#202c50,#2b2057);box-shadow:inset 0 0 0 1px #6751a7}
+.studio.app2 .rail-space.active .rail-space-btn svg{color:#c4a7ff}
+.studio.app2 .rail-pages button.active{background:linear-gradient(115deg,#6545d2,#4c36a3);color:#fff}
+.studio.app2 .subnav button.active{background:linear-gradient(115deg,#6545d2,#4c36a3);color:#fff}
+.studio.app2 .workspace{background:transparent}
+.studio.app2 .topbar{background:#101a31d9;border-bottom:1px solid #2c3c60;backdrop-filter:blur(14px)}
+.studio.app2 .rail-status{border-color:#38517a;background:#152640}
+.studio.app2 .panel,.studio.app2 .card{border-color:#30446b;background:linear-gradient(150deg,#192641,#111b31)}
+.studio.app2 .rail-space-btn:hover{background:#263354}
+.studio.app2 .bottombar{background:#101a30ed;border-top:1px solid #334568}
+.studio.app2 .bottombar button.active{color:#c7aaff}
