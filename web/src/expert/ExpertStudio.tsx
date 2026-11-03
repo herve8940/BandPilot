@@ -4,13 +4,14 @@ import { INPUTS, BUSES, FXSENDS, faderAddress, onAddress, soloAddress, stripName
 import { CompView, EqView, FxView, GateView, InputView, RoutingView, SendsView, type ViewProps } from "../xair/views";
 import { faderToDb, formatDb, logMap, RATIOS, stripColor } from "../xairMath";
 import { AnalysisView } from "./AnalysisView";
+import { RecordingView } from "./RecordingView";
 import "../xair-mixer.css";
 import "./expert.css";
 
-type View = "console" | "channel" | "ears" | "fx" | "routing" | "analysis";
+type View = "console" | "channel" | "ears" | "fx" | "routing" | "analysis" | "recording";
 const VIEWS: { id: View; label: string }[] = [
   { id: "console", label: "Console" }, { id: "channel", label: "Canal" }, { id: "ears", label: "Ears" },
-  { id: "fx", label: "Effets" }, { id: "routing", label: "Routage" }, { id: "analysis", label: "Analyse" },
+  { id: "fx", label: "Effets" }, { id: "routing", label: "Routage" }, { id: "analysis", label: "Analyse" }, { id: "recording", label: "Enregistrement" },
 ];
 async function api<T = any>(path: string, data?: unknown): Promise<T> {
   const r = await fetch(path, { method: data === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: data === undefined ? undefined : JSON.stringify(data) });
@@ -50,7 +51,7 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
   };
   const props: ViewProps = { strip, values, set, canWrite: writable, confirmed, open: (s) => { select(s); go("channel"); } };
 
-  return <section className="xs2" aria-label="Mode Expert">
+  return <section className="xs2 xs3" aria-label="Mode Expert">\n    <div className="xs3-intro"><div className="xs3-emblem">◈</div><div><h1>Mode Expert</h1><p>Contrôle des traitements de canal · Préampli · Gate · Compresseur · EQ · Envois · Routage</p></div><div className="xs3-intro-status"><span className={online ? "live" : "off"}>● {online ? "XR18 connectée" : "XR18 hors ligne"}</span></div></div>
     <header className="xs2-head">
       <nav className="xs2-tabs" aria-label="Vues du mode Expert">
         {VIEWS.map(v => <button key={v.id} type="button" className={view === v.id ? "on" : ""} aria-current={view === v.id ? "page" : undefined} onClick={() => go(v.id)}>
@@ -64,6 +65,7 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
       <span className={`xs2-pill ${online ? "live" : "off"}`}><span className="xs2-dot" />{online ? (writable ? "Contrôle actif" : "Lecture seule") : "Hors ligne"}</span>
     </header>
     {(message || notice || error) && <div className={`xs2-msg${error || message ? " error" : ""}`} role="status">{error || message || notice}<button type="button" aria-label="Fermer" onClick={() => { clearMessage(); setNotice(""); setError(""); }}>×</button></div>}
+    {(view === "channel" || view === "console") && <div className="xs3-channelrail" role="tablist" aria-label="Sélection des canaux">{INPUTS.map((s, i) => <button type="button" key={s.id} role="tab" aria-selected={s.id === strip.id} className={s.id === strip.id ? "active" : ""} onClick={() => { select(s); go("channel"); }}><small>{i + 1}</small><span className="xs3-channelcolor" style={{background:stripColor(num(values, `${s.prefix}/config/color`))}}/><b>{stripName(s, values)}</b></button>)}</div>}
     <div className="xs2-body">
       {view === "console" && <ConsoleView values={values} set={set} writable={writable} rehearsal={rehearsal} strip={strip} select={select} openChannel={() => go("channel")} openAnalysis={() => go("analysis")} recoCount={recoCount} />}
       {view === "channel" && <ChannelPage {...props} select={select} />}
@@ -71,7 +73,9 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
       {view === "fx" && <div className="xm xs2-legacy"><FxView {...props} /></div>}
       {view === "routing" && <RoutingPage {...props} />}
       {view === "analysis" && <AnalysisView values={values} rehearsal={rehearsal} canWrite={writable} onCount={setRecoCount} />}
+      {view === "recording" && <RecordingView />}
     </div>
+    {view !== "recording" && <button className="xs3-record-dock" type="button" onClick={() => go("recording")}><span className="xs3-rec-light">●</span><span><strong>Enregistrement</strong><small>Multicanal · REAPER · WAV 24 bits</small></span><span className="xs3-record-action">Ouvrir l’enregistreur →</span></button>}
   </section>;
 }
 
@@ -152,11 +156,13 @@ function Outputs({ values, rehearsal }: { values: Values; rehearsal: boolean }) 
   </div></div>;
 }
 
+function eqPathWide(values: Values, prefix: string) { const bands = readEq(values,prefix,4), on=num(values,`${prefix}/eq/on`,1)===1; const hp=num(values,`${prefix}/preamp/hpon`)===1?logMap(num(values,`${prefix}/preamp/hpf`),20,400):undefined; let d=""; for(let x=0;x<=600;x+=4){const f=20*Math.pow(1000,x/600);const y=Math.max(4,Math.min(96,50-eqResponse(bands,f,on,hp)*3));d+=`${x?"L":"M"}${x} ${y.toFixed(1)} `;}return d; }
+
 // ---------------- Channel ----------------
 type Step = "input" | "gate" | "eq" | "comp" | "sends";
 function ChannelPage(props: ViewProps & { select: (s: Strip) => void }) {
   const { strip, values, select } = props;
-  const [step, setStep] = useState<Step>("eq");
+  const [step, setStep] = useState<Step>("comp");
   const i = INPUTS.findIndex(s => s.id === strip.id), p = strip.prefix, ch = strip.kind === "ch";
   const hp = num(values, `${p}/preamp/hpon`) === 1;
   const steps: { id: Step; title: string; value: string; on: boolean }[] = [
@@ -174,8 +180,8 @@ function ChannelPage(props: ViewProps & { select: (s: Strip) => void }) {
       <div><h2>{stripName(strip, values)}</h2><div className="muted">{strip.fallback}</div></div>
       <button type="button" className="xs2-sq" aria-label="Canal suivant" disabled={i >= INPUTS.length - 1} onClick={() => select(INPUTS[i + 1]!)}>›</button>
     </div>
-    <div className="xs2-steps">{steps.map((s, k) => <button key={s.id} type="button" className={step === s.id ? "on" : ""} aria-pressed={step === s.id} onClick={() => setStep(s.id)}><small>{k + 1} · {s.title.toUpperCase()}</small><b>{s.title}</b><span>{s.value}</span></button>)}</div>
-    <div className="xm xs2-legacy">{detail}</div>
+    <div className="xs3-channel-layout"><aside className="xs3-channel-sidebar"><div className="xs3-source-icon">♫</div><strong>{stripName(strip, values)}</strong><small>{strip.fallback}</small><div className="xs3-channel-meter"><span style={{height:`${Math.max(2,Math.min(100,(num(values, `${p}/mix/fader`,0.5))*100))}%`}} /></div><span>Fader {dbText(num(values, `${p}/mix/fader`,0.5))}</span></aside><div className="xs3-channel-main"><div className="xs2-steps">{steps.map((s, k) => <button key={s.id} type="button" className={step === s.id ? "on" : ""} aria-pressed={step === s.id} onClick={() => setStep(s.id)}><small>{k + 1} · {s.title.toUpperCase()}</small><b>{s.title}</b><span>{s.value}</span></button>)}</div>
+    <div className="xm xs2-legacy">{detail}</div>{step === "comp" && <div className="xs3-eq-preview"><strong>Égaliseur · aperçu réel</strong><svg viewBox="0 0 600 100" preserveAspectRatio="none" role="img" aria-label="Courbe de réponse de l’égaliseur"><path d="M0 50H600" stroke="#3a4b70" strokeDasharray="4 4"/><path d={eqPathWide(values,p)} stroke="#a88aff" fill="none" strokeWidth="3"/></svg><button type="button" className="xs2-btn" onClick={() => setStep("eq")}>Ouvrir l’égaliseur</button></div>}</div></div>
   </>;
 }
 
