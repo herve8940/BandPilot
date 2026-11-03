@@ -43,11 +43,16 @@ jobs:
         run: |
           $installer = Get-ChildItem release/XR18-Studio-Windows-*.exe | Select-Object -First 1
           $installDir = Join-Path $env:RUNNER_TEMP 'XR18SmokeInstall'
-          $result = Start-Process -FilePath $installer.FullName -ArgumentList '/S', "/D=$installDir" -Wait -PassThru
+          # NSIS oneClick installers do not support the /D custom-directory switch reliably.
+          # Install in the current user profile and discover the actual installation path.
+          $result = Start-Process -FilePath $installer.FullName -ArgumentList '/S' -Wait -PassThru
           if ($result.ExitCode -ne 0) { throw "Installation failed: $($result.ExitCode)" }
-          node desktop/smoke.cjs (Join-Path $installDir 'XR18 Studio.exe')
+          $installedExe = Join-Path $env:LOCALAPPDATA 'Programs/XR18 Studio/XR18 Studio.exe'
+          if (-not (Test-Path $installedExe)) { throw "Installer exited successfully but application not found at $installedExe" }
+          node desktop/smoke.cjs $installedExe
           if ($LASTEXITCODE -ne 0) { throw 'Installed Windows application failed to start' }
       - name: Upload desktop installers
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: xr18-studio-${{ matrix.name }}
