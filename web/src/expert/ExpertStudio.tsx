@@ -5,6 +5,7 @@ import { CompView, EqView, FxView, GateView, InputView, RoutingView, SendsView, 
 import { faderToDb, formatDb, logMap, RATIOS, stripColor } from "../xairMath";
 import { AnalysisView } from "./AnalysisView";
 import { RecordingView } from "./RecordingView";
+import { RecordingDock } from "./RecordingDock";
 import "../xair-mixer.css";
 import "./expert.css";
 import "./expert-v3.css";
@@ -77,7 +78,7 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
       {view === "analysis" && <AnalysisView values={values} rehearsal={rehearsal} canWrite={writable} onCount={setRecoCount} />}
       {view === "recording" && <RecordingView />}
     </div>
-    {view !== "recording" && <button className="xs3-record-dock" type="button" onClick={() => go("recording")}><span className="xs3-rec-light">●</span><span><strong>Enregistrement</strong><small>Multicanal · REAPER · WAV 24 bits</small></span><span className="xs3-record-action">Ouvrir l’enregistreur →</span></button>}
+    {view !== "recording" && <RecordingDock open={() => go("recording")} />}
   </section>;
 }
 
@@ -163,7 +164,7 @@ function eqPathWide(values: Values, prefix: string) { const bands = readEq(value
 // ---------------- Channel ----------------
 type Step = "input" | "gate" | "eq" | "comp" | "sends";
 function ChannelPage(props: ViewProps & { select: (s: Strip) => void }) {
-  const { strip, values, select } = props;
+  const { strip, values, select, set, canWrite } = props;
   const [step, setStep] = useState<Step>("comp");
   const i = INPUTS.findIndex(s => s.id === strip.id), p = strip.prefix, ch = strip.kind === "ch";
   const hp = num(values, `${p}/preamp/hpon`) === 1;
@@ -182,7 +183,7 @@ function ChannelPage(props: ViewProps & { select: (s: Strip) => void }) {
       <div><h2>{stripName(strip, values)}</h2><div className="muted">{strip.fallback}</div></div>
       <button type="button" className="xs2-sq" aria-label="Canal suivant" disabled={i >= INPUTS.length - 1} onClick={() => select(INPUTS[i + 1]!)}>›</button>
     </div>
-    <div className="xs3-channel-layout"><aside className="xs3-channel-sidebar"><div className="xs3-source-icon">♫</div><strong>{stripName(strip, values)}</strong><small>{strip.fallback}</small><div className="xs3-channel-meter"><span style={{height:`${Math.max(2,Math.min(100,(num(values, `${p}/mix/fader`,0.5))*100))}%`}} /></div><span>Fader {dbText(num(values, `${p}/mix/fader`,0.5))}</span></aside><div className="xs3-channel-main"><div className="xs2-steps">{steps.map((s, k) => <button key={s.id} type="button" className={step === s.id ? "on" : ""} aria-pressed={step === s.id} onClick={() => setStep(s.id)}><small>{k + 1} · {s.title.toUpperCase()}</small><b>{s.title}</b><span>{s.value}</span></button>)}</div>
+    <div className="xs3-channel-layout"><aside className="xs3-channel-sidebar"><div className="xs3-source-icon">♫</div><strong>{stripName(strip, values)}</strong><small>{strip.fallback}</small><label className="xs3-fader-label">Fader {dbText(num(values, `${p}/mix/fader`,0.5))}<input type="range" orient="vertical" min="0" max="1" step=".005" value={num(values, `${p}/mix/fader`,0.5)} disabled={!canWrite} onChange={e => set(`${p}/mix/fader`, Number(e.target.value))} aria-label={`Volume de ${stripName(strip,values)}`} /></label><div className="xs3-channel-actions"><button type="button" disabled={!canWrite} className={num(values, `${p}/mix/on`,1) === 0 ? "muted" : ""} onClick={() => set(`${p}/mix/on`,num(values, `${p}/mix/on`,1)===1?0:1)}> {num(values, `${p}/mix/on`,1)===1?"Mute":"Réactiver"} </button></div></aside><div className="xs3-channel-main"><div className="xs2-steps">{steps.map((s, k) => <button key={s.id} type="button" className={step === s.id ? "on" : ""} aria-pressed={step === s.id} onClick={() => setStep(s.id)}><small>{k + 1} · {s.title.toUpperCase()}</small><b>{s.title}</b><span>{s.value}</span></button>)}</div>
     <div className="xm xs2-legacy">{detail}</div>{step === "comp" && <div className="xs3-eq-preview"><strong>Égaliseur · aperçu réel</strong><svg viewBox="0 0 600 100" preserveAspectRatio="none" role="img" aria-label="Courbe de réponse de l’égaliseur"><path d="M0 50H600" stroke="#3a4b70" strokeDasharray="4 4"/><path d={eqPathWide(values,p)} stroke="#a88aff" fill="none" strokeWidth="3"/></svg><button type="button" className="xs2-btn" onClick={() => setStep("eq")}>Ouvrir l’égaliseur</button></div>}</div></div>
   </>;
 }
