@@ -1,0 +1,34 @@
+/* V3 component layout, backed by the existing live OSC and REAPER components. */
+.xs3{background:radial-gradient(ellipse at 80% 0%,#32265d77,transparent 54%),#090f20;border:1px solid #2b3f66;border-radius:20px;color:#edf2ff}
+.xs3-intro{display:flex;align-items:center;gap:17px;padding:20px 23px 13px}
+.xs3-emblem{font-size:40px;color:#ae83ff;text-shadow:0 0 24px #8e56f7}
+.xs3-intro h1{margin:0;font-size:27px;letter-spacing:-.04em}.xs3-intro p{margin:4px 0 0;color:#a8b9d7}
+.xs3-intro-status{margin-left:auto}.xs3-intro-status span{display:block;border:1px solid #425475;border-radius:12px;padding:10px 14px;color:#c6d2e8}.xs3-intro-status .live{border-color:#207f6a;color:#65edb9;background:#0d302d}
+.xs3 .xs2-head{background:transparent;border:0;padding:4px 20px 13px}
+.xs3 .xs2-tabs{background:#151e36;border-color:#344469;flex:1}
+.xs3 .xs2-tabs button{height:42px;font-weight:650}
+.xs3 .xs2-tabs button.on{background:linear-gradient(135deg,#7552eb,#4933a1);color:white;box-shadow:0 0 0 1px #a58aff inset,0 5px 17px #7755e855}
+.xs3-channelrail{display:flex;gap:8px;padding:7px 19px 15px;overflow-x:auto;scrollbar-width:thin;flex-shrink:0}
+.xs3-channelrail button{min-width:77px;max-width:110px;flex:1;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:linear-gradient(#17223d,#0e172b);border:1px solid #34486d;border-radius:12px;color:#cbd8ef}
+.xs3-channelrail button.active{border:2px solid #36dff3;background:linear-gradient(#15334b,#12223b);box-shadow:0 0 15px #20c6e04a;color:white}
+.xs3-channelrail button small{font-size:12px;color:#e1e8fa}.xs3-channelrail button b{font-size:12px;overflow:hidden;text-overflow:ellipsis;max-width:100%;white-space:nowrap}.xs3-channelcolor{width:23px;height:8px;border-radius:5px;box-shadow:0 0 9px currentColor}
+.xs3 .xs2-body{padding:0 18px 16px}
+.xs3-channel-layout{display:grid;grid-template-columns:minmax(175px,225px) minmax(0,1fr);gap:14px;align-items:stretch}
+.xs3-channel-sidebar{display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px;background:linear-gradient(155deg,#192744,#10192f);border:1px solid #34496e;border-radius:18px}
+.xs3-source-icon{width:100%;height:100px;display:grid;place-items:center;font-size:60px;background:radial-gradient(ellipse at center,#532d84,#131e36 70%);border-radius:14px;color:#c99bff}
+.xs3-channel-sidebar strong{font-size:20px}.xs3-channel-sidebar small{color:#a9b9d5}
+.xs3-channel-meter{height:180px;width:30px;border:1px solid #42577d;border-radius:9px;padding:4px;background:#080f20;display:flex;align-items:flex-end}
+.xs3-channel-meter span{width:100%;border-radius:4px;background:linear-gradient(to top,#35e6ad,#50b9ed,#a778ff)}
+.xs3-channel-main{min-width:0;display:flex;flex-direction:column;gap:13px}
+.xs3-channel-main .xs2-steps{margin:0;display:flex;gap:7px;overflow-x:auto}
+.xs3-channel-main .xs2-steps button{flex:1;min-width:120px;border-radius:12px;background:#1c2b49;border:1px solid #405273}
+.xs3-channel-main .xs2-steps button.on{background:linear-gradient(130deg,#6c4de0,#45328f);border-color:#ac91ff}
+.xs3-channel-main .xs2-legacy{border-radius:17px;background:linear-gradient(150deg,#192743,#10192e);border:1px solid #34496e;padding:12px;min-width:0}
+.xs3-eq-preview{padding:14px 18px;background:linear-gradient(130deg,#182642,#101a30);border:1px solid #354a70;border-radius:16px;display:flex;flex-direction:column;gap:10px}
+.xs3-eq-preview svg{width:100%;height:92px;background:repeating-linear-gradient(to right,transparent 0,transparent 49px,#3b4a6d55 50px),#0a1427;border:1px solid #30466d;border-radius:9px}
+.xs3-eq-preview button{align-self:flex-end}
+.xs3-record-dock{margin:0 18px 15px;width:calc(100% - 36px);min-height:90px;display:flex;align-items:center;gap:17px;padding:15px 22px;border:1px solid #6b4db4;border-radius:18px;background:linear-gradient(105deg,#242043,#111d36 48%,#29224e);color:#f4f2ff;text-align:left}
+.xs3-rec-light{font-size:35px;color:#ff5978;text-shadow:0 0 14px #ff4d72}
+.xs3-record-dock strong{display:block;font-size:22px}.xs3-record-dock small{display:block;color:#aebbd8;margin-top:4px}.xs3-record-action{margin-left:auto;border:1px solid #715cbd;background:#3a2c79;padding:12px 15px;border-radius:12px}
+.xs3-record-dock:hover{border-color:#b18fff;box-shadow:0 0 22px #6248bb66}
+@media(max-width:900px){.xs3-channel-layout{grid-template-columns:1fr}.xs3-channel-sidebar{display:none}.xs3-intro{flex-wrap:wrap}.xs3-intro-status{margin-left:0}.xs3-record-action{display:none}}
