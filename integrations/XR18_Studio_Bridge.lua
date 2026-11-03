@@ -5,7 +5,7 @@ local SEP = package.config:sub(1, 1)
 local DIR = r.GetResourcePath() .. SEP .. "XR18Studio"
 r.RecursiveCreateDirectory(DIR, 0)
 local REQ, RES, BEAT = DIR .. SEP .. "request.lua", DIR .. SEP .. "response.json", DIR .. SEP .. "heartbeat.txt"
-local VERSION = "1.2.0"
+local VERSION = "1.2.1"
 
 local function jstr(s)
   return '"' .. tostring(s):gsub('[%z\1-\31\\"]', function(c)
@@ -142,7 +142,8 @@ end
 function H.select_take(a)
   local changed = 0
   each_track(function(tr)
-    if is_rec(track_name(tr)) then
+    -- Une session « groupe seul » a des pistes armées sans préfixe REC.
+    if is_rec(track_name(tr)) or r.GetMediaTrackInfo_Value(tr, "I_RECARM") == 1 then
       for i = 0, r.CountTrackMediaItems(tr) - 1 do
         local it = r.GetTrackMediaItem(tr, i)
         local p = r.GetMediaItemInfo_Value(it, "D_POSITION")

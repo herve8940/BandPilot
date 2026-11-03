@@ -182,7 +182,11 @@ const handler: http.RequestListener = async (req, res) => {
      if(path==='/api/show/install'){if(d.confirm!==true)throw Error('Confirmation requise');access.log(user!,'Installation du pont Reaper');result=await bridge.install();}
      else if(path==='/api/show/goto'){if(reaper.status().recording)throw Error('Enregistrement en cours : arrête-le avant de changer de morceau.');result=await bridge.call('goto_pos',{pos:Number(d.pos)});}
      else if(path==='/api/show/loop')result=await bridge.call('set_loop',{on:d.on===true,start:Number(d.start),stop:Number(d.stop)});
-     else if(path==='/api/show/take')result=await bridge.call('select_take',{take:Number(d.take),start:Number(d.start),stop:Number(d.stop)});
+     else if(path==='/api/show/take'){
+      const done=await bridge.call<{changed:number}>('select_take',{take:Number(d.take),start:Number(d.start),stop:Number(d.stop)});
+      if(!done.changed)throw Error('Cette prise n’existe pas sur ces pistes');
+      result=done;
+     }
      else if(path==='/api/show/track')result=await bridge.call('track_mute',{name:String(d.name),on:d.on===true,solo:d.solo===true});
      else if(path==='/api/show/play'){await reaper.watch();result=await reaper.play();}
      else if(path==='/api/show/stop'){await reaper.watch();result=reaper.status().recording||reaper.status().state==='starting'?await reaper.stop():await reaper.halt();}
