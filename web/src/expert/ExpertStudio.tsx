@@ -52,7 +52,8 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
   };
   const props: ViewProps = { strip, values, set, canWrite: writable, confirmed, open: (s) => { select(s); go("channel"); } };
 
-  return <section className="xs2 xs3" aria-label="Mode Expert">\n    <div className="xs3-intro"><div className="xs3-emblem">◈</div><div><h1>Mode Expert</h1><p>Contrôle des traitements de canal · Préampli · Gate · Compresseur · EQ · Envois · Routage</p></div><div className="xs3-intro-status"><span className={online ? "live" : "off"}>● {online ? "XR18 connectée" : "XR18 hors ligne"}</span></div></div>
+  return <section className="xs2 xs3" aria-label="Mode Expert">
+    <div className="xs3-intro"><div className="xs3-emblem">◈</div><div><h1>Mode Expert</h1><p>Contrôle des traitements de canal · Préampli · Gate · Compresseur · EQ · Envois · Routage</p></div><div className="xs3-intro-status"><span className={online ? "live" : "off"}>● {online ? "XR18 connectée" : "XR18 hors ligne"}</span></div></div>
     <header className="xs2-head">
       <nav className="xs2-tabs" aria-label="Vues du mode Expert">
         {VIEWS.map(v => <button key={v.id} type="button" className={view === v.id ? "on" : ""} aria-current={view === v.id ? "page" : undefined} onClick={() => go(v.id)}>
