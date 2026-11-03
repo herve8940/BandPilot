@@ -32,3 +32,16 @@
 .xs3-record-dock strong{display:block;font-size:22px}.xs3-record-dock small{display:block;color:#aebbd8;margin-top:4px}.xs3-record-action{margin-left:auto;border:1px solid #715cbd;background:#3a2c79;padding:12px 15px;border-radius:12px}
 .xs3-record-dock:hover{border-color:#b18fff;box-shadow:0 0 22px #6248bb66}
 @media(max-width:900px){.xs3-channel-layout{grid-template-columns:1fr}.xs3-channel-sidebar{display:none}.xs3-intro{flex-wrap:wrap}.xs3-intro-status{margin-left:0}.xs3-record-action{display:none}}
+
+/* Live fader and REAPER transport — controls are wired, never simulated */
+.xs3-fader-label{display:flex;align-items:center;flex-direction:column;gap:12px;font-weight:700;color:#e2e9fa}
+.xs3-fader-label input[type=range]{writing-mode:vertical-lr;direction:rtl;appearance:slider-vertical;width:38px;height:170px;accent-color:#9d7aff;cursor:pointer}
+.xs3-channel-actions{display:flex;gap:8px}.xs3-channel-actions button{padding:9px 18px;border-radius:10px;background:#253455;border:1px solid #52638a;color:#fff}.xs3-channel-actions button.muted{background:#733149;border-color:#df6683}
+.xs3-record-dock{cursor:default;flex-wrap:wrap}.xs3-record-open{display:flex;align-items:center;gap:14px;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;min-width:190px}.xs3-record-open strong{display:block;font-size:20px}.xs3-record-open small{display:block;font-size:12px;color:#adbcda}.xs3-rec-light.active{animation:xs3-rec-pulse 1.2s infinite}
+.xs3-rec-clock{font-size:clamp(23px,2.5vw,35px);font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.04em;background:#0b152b;padding:12px 17px;border-radius:12px;border:1px solid #32486e}
+.xs3-rec-state{display:flex;flex-direction:column;gap:4px;color:#b8c8e0}.xs3-rec-state span.active{color:#ff728d}.xs3-rec-state small{color:#92a7c7}
+.xs3-rec-controls{display:flex;gap:7px;margin-left:auto}.xs3-rec-controls button{border:1px solid #47587b;background:linear-gradient(#29385c,#1b2844);color:#f3f6ff;border-radius:13px;min-height:46px;padding:8px 12px;cursor:pointer}.xs3-rec-controls button.rec{background:#602d4b;border-color:#ad5277;color:#ffc3d2}.xs3-rec-controls button:disabled{opacity:.35;cursor:not-allowed}.xs3-rec-controls button:not(:disabled):hover{border-color:#ad8dff}.xs3-rec-controls button span{font-size:11px;margin-left:4px}
+.xs3-rec-error{flex-basis:100%;color:#ffc0ce;font-size:12px}
+@keyframes xs3-rec-pulse{50%{opacity:.4;text-shadow:0 0 28px #ff5577}}
+@media(max-width:1000px){.xs3-rec-controls{margin-left:0}.xs3-record-dock{gap:12px}.xs3-rec-controls button span{display:none}}
+@media(prefers-reduced-motion:reduce){.xs3-rec-light.active{animation:none}}
