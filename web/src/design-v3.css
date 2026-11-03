@@ -59,3 +59,27 @@
 .studio.app2 .rail-space-btn:hover{background:#263354}
 .studio.app2 .bottombar{background:#101a30ed;border-top:1px solid #334568}
 .studio.app2 .bottombar button.active{color:#c7aaff}
+
+/* Full-application visual language — all windows and modules, not just Expert */
+.studio.app2{--bg:#090f20;--surface:#121e35;--surface-2:#1b2945;--surface-3:#253658;--line:#31466a;--line-2:#42587c;--text:#eef3ff;--text-2:#acbbd5;--text-3:#879bbd;--accent:#a88aff;--accent-2:#7e64e9;--accent-soft:#9b7bff24;--ok:#3de2ad;--ok-soft:#3de2ad22;--warn:#ffbd66;--warn-soft:#ffbd6620;--danger:#ff6d85;--danger-soft:#ff6d8525;--radius:13px;--radius-lg:19px;--shadow:0 14px 40px #02061770}
+.studio.app2 .workspace{background:radial-gradient(ellipse at 82% 0%,#2e24566a,transparent 58%),#090f20}
+.studio.app2 .workspace-header,.studio.app2 .page-header{border-bottom-color:#31466a}
+.studio.app2 h1,.studio.app2 h2,.studio.app2 h3{letter-spacing:-.035em}
+.studio.app2 .studio-panel,.studio.app2 .studio-card,.studio.app2 .card,.studio.app2 .panel,.studio.app2 .panel-card{background:linear-gradient(145deg,#1a2945,#111b31);border:1px solid #344a6e;border-radius:18px;box-shadow:0 9px 27px #0206154d}
+.studio.app2 input:not([type=checkbox]):not([type=range]),.studio.app2 textarea,.studio.app2 select{background:#0e1a31;border:1px solid #3c5276;border-radius:10px;color:#edf3ff}
+.studio.app2 input:focus-visible,.studio.app2 textarea:focus-visible,.studio.app2 select:focus-visible{outline:2px solid #a88aff;outline-offset:2px}
+.studio.app2 input[type=checkbox],.studio.app2 input[type=range]{accent-color:#a88aff}
+.studio.app2 button.primary,.studio.app2 .btn-primary,.studio.app2 .primary-btn{background:linear-gradient(130deg,#7754e5,#5b3ab6);color:#fff;border-color:#9878f4;box-shadow:0 5px 20px #7052df44}
+.studio.app2 .badge,.studio.app2 .pill{border-radius:999px}
+.studio.app2 .tab.active,.studio.app2 .tabs .active,.studio.app2 .segmented .active{background:linear-gradient(120deg,#7152d9,#4d369e);color:#fff;border-color:#997bff}
+.studio.app2 .notice,.studio.app2 .info-box{border-color:#40557b;background:#172743}
+.studio.app2 .warning,.studio.app2 .alert-warning{background:#332b25;border-color:#76583d;color:#ffd7a5}
+.studio.app2 .error,.studio.app2 .alert-error{background:#382137;border-color:#81445b;color:#ffc4d0}
+.studio.app2 .success,.studio.app2 .alert-success{background:#11382e;border-color:#2b755d;color:#a5f5d7}
+.studio.app2 .mixer-toolbar,.studio.app2 .channel-header,.studio.app2 .panel-title{border-color:#32476d}
+.studio.app2 .pro-channel{background:linear-gradient(180deg,#1b2b48,#121d34);border:1px solid #30486d;border-radius:14px}
+.studio.app2 .pro-channel.picked{background:linear-gradient(180deg,#2d2858,#1a2342);border-color:#a78bfa}
+.studio.app2 .fx-card,.studio.app2 .preset-card,.studio.app2 .song-card,.studio.app2 .scene-card{background:linear-gradient(145deg,#1d2c4a,#141e34);border:1px solid #344a70;border-radius:15px}
+.studio.app2 .bottombar{box-shadow:0 -10px 35px #02061766}
+.studio.app2 .disclaimer,.studio.app2 small{color:var(--text-2)}
+@media(max-width:900px){.studio.app2 .studio-panel,.studio.app2 .studio-card{border-radius:14px}.studio.app2 .workspace{min-width:0}}
