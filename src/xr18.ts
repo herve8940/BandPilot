@@ -31,7 +31,7 @@ export class XR18 extends EventEmitter {
   private rehearsal=false;
   setRehearsal(on:boolean){this.rehearsal=on;}
   isRehearsal(){return this.rehearsal;}
-  private guardMain(address:string,value:unknown){if(this.rehearsal&&address==='/lr/mix/on'&&Number(value)!==0)throw Error('Mode Répétition : le Main reste coupé. Quitte le mode Répétition pour l’ouvrir.');}
+  private guardMain(address:string,value:unknown){if(this.rehearsal&&address==='/lr/mix/on'&&Number(value)!==0)throw Error('Ears seulement : le Main reste coupé. Quitte ce mode pour l’ouvrir.');}
   // ---------- analysis meters (spectrum analyser and dynamics) ----------
   /** RTA source codes of the XR18 (checked on a physical XR18V2): 0-15 channels, 16 aux, 17-20 FX returns, 21-26 buses, 27-30 FX sends, 31 Main LR, 32 monitor. */
   static readonly RTA={channel:(n:number)=>n-1,aux:16,fx:(n:number)=>16+n,bus:(n:number)=>20+n,fxSend:(n:number)=>26+n,lr:31,mon:32} as const;

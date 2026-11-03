@@ -4,14 +4,13 @@ import { INPUTS, BUSES, FXSENDS, faderAddress, onAddress, soloAddress, stripName
 import { CompView, EqView, FxView, GateView, InputView, RoutingView, SendsView, type ViewProps } from "../xair/views";
 import { faderToDb, formatDb, logMap, RATIOS, stripColor } from "../xairMath";
 import { AnalysisView } from "./AnalysisView";
-import { RecordingView } from "./RecordingView";
 import "../xair-mixer.css";
 import "./expert.css";
 
-type View = "console" | "channel" | "ears" | "fx" | "routing" | "analysis" | "record";
+type View = "console" | "channel" | "ears" | "fx" | "routing" | "analysis";
 const VIEWS: { id: View; label: string }[] = [
   { id: "console", label: "Console" }, { id: "channel", label: "Canal" }, { id: "ears", label: "Ears" },
-  { id: "fx", label: "Effets" }, { id: "routing", label: "Routage" }, { id: "analysis", label: "Analyse" }, { id: "record", label: "Enregistrer" },
+  { id: "fx", label: "Effets" }, { id: "routing", label: "Routage" }, { id: "analysis", label: "Analyse" },
 ];
 async function api<T = any>(path: string, data?: unknown): Promise<T> {
   const r = await fetch(path, { method: data === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: data === undefined ? undefined : JSON.stringify(data) });
@@ -46,8 +45,8 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
   useEffect(() => { const t = setInterval(() => { void api<{ recommendations: unknown[] }>("/api/analysis").then(a => setRecoCount(a.recommendations.length)).catch(() => undefined); }, 5000); return () => clearInterval(t); }, []);
   const toggleRehearsal = async () => {
     const next = !rehearsal;
-    if (!confirm(next ? "Passer en mode Répétition ? Le Main (façade) est coupé et reste coupé : on ne travaille que les ears des musiciens." : "Quitter le mode Répétition ? Le Main reste coupé tant que tu ne le rallumes pas toi-même.")) return;
-    try { const r = await api<{ on: boolean }>("/api/rehearsal", { on: next }); setRehearsal(r.on); setNotice(r.on ? "Mode Répétition : Main coupé, analyse sur les ears." : "Mode Répétition quitté."); } catch (e) { setError((e as Error).message); }
+    if (!confirm(next ? "Passer en Ears seulement ? Le Main (façade) est coupé et reste coupé : on ne travaille que les ears des musiciens." : "Quitter Ears seulement ? Le Main reste coupé tant que tu ne le rallumes pas toi-même.")) return;
+    try { const r = await api<{ on: boolean }>("/api/rehearsal", { on: next }); setRehearsal(r.on); setNotice(r.on ? "Ears seulement : Main coupé, analyse sur les ears." : "Ears seulement quitté."); } catch (e) { setError((e as Error).message); }
   };
   const props: ViewProps = { strip, values, set, canWrite: writable, confirmed, open: (s) => { select(s); go("channel"); } };
 
@@ -59,8 +58,8 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
         </button>)}
       </nav>
       <div className="xs2-spacer" />
-      <button type="button" className={`xs2-pill ${rehearsal ? "rehearsal" : "foh"}`} onClick={() => void toggleRehearsal()} disabled={!canWrite} title="En répétition, le Main est coupé et verrouillé : on ne règle que les ears">
-        {rehearsal ? <><Lock /> Répétition · Main coupé</> : "Façade active"}
+      <button type="button" className={`xs2-pill ${rehearsal ? "rehearsal" : "foh"}`} onClick={() => void toggleRehearsal()} disabled={!canWrite} title="En Ears seulement, le Main est coupé et verrouillé : on ne règle que les ears">
+        {rehearsal ? <><Lock /> Ears seulement · Main coupé</> : "Façade active"}
       </button>
       <span className={`xs2-pill ${online ? "live" : "off"}`}><span className="xs2-dot" />{online ? (writable ? "Contrôle actif" : "Lecture seule") : "Hors ligne"}</span>
     </header>
@@ -72,7 +71,6 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
       {view === "fx" && <div className="xm xs2-legacy"><FxView {...props} /></div>}
       {view === "routing" && <RoutingPage {...props} />}
       {view === "analysis" && <AnalysisView values={values} rehearsal={rehearsal} canWrite={writable} onCount={setRecoCount} />}
-      {view === "record" && <RecordingView />}
     </div>
   </section>;
 }

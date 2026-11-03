@@ -1,6 +1,6 @@
 {
   "name": "xr18-studio",
-  "version": "2.2.0-dev.5",
+  "version": "2.2.0-dev.6",
   "description": "Free app for the Behringer XR18 / X18 / MR18 mixer: guided sound engineer for beginners, X-AIR Edit style graphical console, in-ear monitors on each musician's phone.",
   "keywords": [
     "behringer",
@@ -77,6 +77,7 @@
     "files": [
       "desktop/**/*",
       "dist/src/**/*",
+      "integrations/**/*",
       "node_modules/**/*",
       "package.json",
       "!**/*.map",

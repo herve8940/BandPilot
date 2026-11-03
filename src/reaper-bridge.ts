@@ -1,0 +1,70 @@
+/** Client of XR18_Studio_Bridge.lua, the script that runs inside Reaper (same file exchange as ReaCue's bridge). */
+import {randomUUID} from 'node:crypto';
+import {existsSync,statSync} from 'node:fs';
+import {appendFile,copyFile,mkdir,readFile,rename,rm,writeFile} from 'node:fs/promises';
+import {homedir} from 'node:os';
+import {dirname,join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+
+export type Take={index:number;name:string;file:string;active:boolean};
+export type Item={pos:number;length:number;takes:Take[]};
+export type ShowTrack={index:number;name:string;rec:boolean;role:string|null;mute:boolean;solo:boolean;armed:boolean;items:Item[]};
+export type Song={title:string;start:number;countin:number;stop:number};
+export type ShowState={version:string;project:string;concert:string|null;songs:Song[];regions:{start:number;stop:number;name:string}[];tracks:ShowTrack[];pos:number;playing:boolean;recording:boolean;loop:{on:boolean;start:number;stop:number};length:number};
+
+export function reaperResources(env=process.env,platform=process.platform,home=homedir()){
+ if(env.REAPER_RESOURCE_PATH)return env.REAPER_RESOURCE_PATH;
+ if(platform==='darwin')return join(home,'Library','Application Support','REAPER');
+ if(platform==='win32')return join(env.APPDATA??home,'REAPER');
+ return join(home,'.config','REAPER');
+}
+export function toLua(v:unknown):string{
+ if(v===null||v===undefined)return 'nil';
+ if(typeof v==='boolean')return String(v);
+ if(typeof v==='number')return Number.isFinite(v)?String(v):'0';
+ if(typeof v==='string')return '"'+[...v].map(c=>c==='\\'?'\\\\':c==='"'?'\\"':c.charCodeAt(0)<32||c.charCodeAt(0)===127?'\\'+String(c.charCodeAt(0)).padStart(3,'0'):c).join('')+'"';
+ if(Array.isArray(v))return '{'+v.map(toLua).join(',')+'}';
+ return '{'+Object.entries(v as object).filter(([,x])=>x!==undefined&&x!==null).map(([k,x])=>`[${toLua(k)}]=${toLua(x)}`).join(',')+'}';
+}
+export class ReaperBridge{
+ private queue:Promise<unknown>=Promise.resolve();
+ constructor(private resources=reaperResources(),private timeoutMs=3000){}
+ private get dir(){return join(this.resources,'XR18Studio');}
+ alive(){
+  try{return Date.now()-statSync(join(this.dir,'heartbeat.txt')).mtimeMs<8000;}catch{return false;}
+ }
+ async call<T=unknown>(cmd:string,args:object={}):Promise<T>{
+  const run=()=>this.exchange<T>(cmd,args);
+  const next=this.queue.then(run,run);this.queue=next.catch(()=>undefined);return next;
+ }
+ private async exchange<T>(cmd:string,args:object):Promise<T>{
+  if(!this.alive())throw Error('Le pont XR18 Studio ne répond pas dans Reaper : installe-le dans Répéter, puis redémarre Reaper.');
+  const id=randomUUID(),req=join(this.dir,'request.lua'),res=join(this.dir,'response.json');
+  await rm(res,{force:true});await writeFile(req+'.tmp',toLua({id,cmd,args}));await rename(req+'.tmp',req);
+  const end=Date.now()+this.timeoutMs;
+  while(Date.now()<end){
+   try{
+    const data=JSON.parse(await readFile(res,'utf8'));
+    if(data.id===id||data.id===undefined){await rm(res,{force:true});if(!data.ok)throw Object.assign(Error(data.error??'Erreur du pont'),{bridge:true});return data.result as T;}
+   }catch(e){if((e as {bridge?:boolean}).bridge)throw e;}
+   await new Promise(r=>setTimeout(r,30));
+  }
+  await rm(req,{force:true});
+  throw Error('Reaper ne répond pas. Regarde s’il affiche un message.');
+ }
+ state(){return this.call<ShowState>('state');}
+ /** Copies the script next to the others and starts it with Reaper. Nothing of ReaCue is changed. */
+ async install(source=defaultScript()){
+  const scripts=join(this.resources,'Scripts'),target=join(scripts,'XR18 Studio','XR18_Studio_Bridge.lua'),startup=join(scripts,'__startup.lua');
+  if(!existsSync(this.resources))throw Error('Dossier de Reaper introuvable : ouvre Reaper une première fois.');
+  await mkdir(dirname(target),{recursive:true});await copyFile(source,target);
+  const line='dofile(reaper.GetResourcePath() .. "/Scripts/XR18 Studio/XR18_Studio_Bridge.lua") -- XR18 Studio';
+  const current=existsSync(startup)?await readFile(startup,'utf8'):'';
+  if(!current.includes('XR18_Studio_Bridge.lua'))await appendFile(startup,(current&&!current.endsWith('\n')?'\n':'')+line+'\n');
+  return {installed:true,restartNeeded:!this.alive()};
+ }
+}
+export function defaultScript(){
+ for(const up of ['../integrations','../../integrations']){const p=fileURLToPath(new URL(up+'/XR18_Studio_Bridge.lua',import.meta.url));if(existsSync(p))return p;}
+ throw Error('Script du pont introuvable dans l’application.');
+}

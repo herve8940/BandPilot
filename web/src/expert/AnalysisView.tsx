@@ -69,7 +69,7 @@ export function AnalysisView({ values, rehearsal, canWrite, onCount }: { values:
       {snap?.active ? <button type="button" className="xs2-btn" onClick={() => void run("stop", async () => load(await api<Snapshot>("/api/analysis/stop", {})))}>Pause</button>
         : <button type="button" className="xs2-btn primary" disabled={!!busy} onClick={() => void start()}>Lancer l’écoute</button>}
     </div>
-    {rehearsal && <p className="muted" style={{ margin: "0 0 10px" }}>Mode Répétition : la façade est coupée, l’analyse porte sur les ears des musiciens.</p>}
+    {rehearsal && <p className="muted" style={{ margin: "0 0 10px" }}>Ears seulement : la façade est coupée, l’analyse porte sur les ears des musiciens.</p>}
     {error && <div className="xs2-msg error" style={{ margin: "0 0 12px" }}>{error}<button type="button" aria-label="Fermer" onClick={() => setError("")}>×</button></div>}
 
     <div className="xs2-split">

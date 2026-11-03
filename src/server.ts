@@ -1,6 +1,8 @@
 import {readFileSync,writeFileSync} from 'node:fs';
 import {Analyzer,familyFromName,type Instrument} from './analysis.js';
-import {ReaperLink,planSession,createSession,openInReaper,defaultSessionsFolder,freeHours} from './reaper.js';
+import {ReaperLink,planSession,createSession,openInReaper,defaultSessionsFolder,freeHours,presenceCommands} from './reaper.js';
+import {ReaperBridge} from './reaper-bridge.js';
+import {wavPeaks} from './peaks.js';
 import {source as coachSource} from './sound-coach.js';
 import {MixerSync} from './mixer-sync.js';
 import {DiagnosticLog,setDiagnosticLogger,diagnostic} from './diagnostics.js';
@@ -57,6 +59,11 @@ const instruments=():Instrument[]=>{
 };
 const analyzer=new Analyzer(xr18,instruments);
 const reaper=new ReaperLink();
+const bridge=new ReaperBridge();
+const SONG_TAIL_S=8;
+const presencePath=join(dirname(configPath),'presence.json');
+const loadPresence=():string[]=>{try{const v=JSON.parse(readFileSync(presencePath,'utf8'));return Array.isArray(v)?v.map(String):[];}catch{return [];}};
+const savePresence=(v:string[])=>writeFileSync(presencePath,JSON.stringify(v));
 /** Reads the console fresh: a session built on stale routing would record the wrong inputs. */
 async function reaperPlan(){
  const simulation=xr18.mode==='simulation';let sampleRate:number|null=simulation?48000:null,usbMode:'18x18'|'2x2'|null=null;
@@ -99,7 +106,7 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/reacue/stop'&&req.method==='POST'){show.arm(false);access.log(user!,'Arrêt ReaCue');res.end(JSON.stringify({ok:true}));return;}
   const readOnlyCoach=['/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
     // Analysis only changes what the console's analyser looks at, never the sound: no global lock.
-    '/api/reaper/plan','/api/reaper/session','/api/reaper/rec','/api/reaper/stop','/api/reaper/marker','/api/reaper/dismiss',
+    '/api/reaper/plan','/api/reaper/session','/api/reaper/rec','/api/reaper/stop','/api/reaper/marker','/api/reaper/dismiss','/api/show/install','/api/show/goto','/api/show/loop','/api/show/take','/api/show/track','/api/show/play','/api/show/stop','/api/show/continue','/api/show/presence','/api/show/original','/api/show/rec',
     '/api/analysis/start','/api/analysis/stop','/api/analysis/target','/api/analysis/scan','/api/analysis/dismiss','/api/analysis/release'].includes(path);
   if(path.startsWith('/api/')&&req.method!=='GET'&&!readOnlyCoach){
     const coachMetadata=(path.startsWith('/api/coach/')&&path!=='/api/coach/apply')||(path.startsWith('/api/mixer-sync')&&path!=='/api/mixer-sync/apply')||path.startsWith('/api/ears-share');
@@ -153,6 +160,50 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/coach'&&req.method==='GET'){res.end(JSON.stringify({...coach.catalog(),role:user!.role}));return;}
   if(path==='/api/coach/advice'&&req.method==='GET'){
     try{const q=new URL(req.url!,'http://localhost').searchParams;res.end(JSON.stringify(coach.advice(Number(q.get('channel')),String(q.get('symptom')))));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path.startsWith('/api/show')){
+   try{
+    const q=new URL(req.url??'/','http://localhost').searchParams;let result:unknown;
+    if(path==='/api/show'&&req.method==='GET'){result={alive:bridge.alive(),presence:loadPresence(),...(bridge.alive()?await bridge.state():{})};}
+    else if(path==='/api/show/peaks'&&req.method==='GET'){
+     const file=String(q.get('file')??''),state=await bridge.state();
+     const known=state.tracks.some(t=>t.items.some(i=>i.takes.some(k=>k.file===file)));
+     if(!known)throw Error('Fichier inconnu du projet');
+     result={peaks:await wavPeaks(file,Math.min(1200,Number(q.get('buckets'))||600))};
+    }
+    else if(req.method!=='POST'){res.writeHead(405);res.end(JSON.stringify({error:'Méthode non autorisée'}));return;}
+    else{
+     const d=await body(req);
+     if(path==='/api/show/install'){if(d.confirm!==true)throw Error('Confirmation requise');access.log(user!,'Installation du pont Reaper');result=await bridge.install();}
+     else if(path==='/api/show/goto'){if(reaper.status().recording)throw Error('Enregistrement en cours : arrête-le avant de changer de morceau.');result=await bridge.call('goto_pos',{pos:Number(d.pos)});}
+     else if(path==='/api/show/loop')result=await bridge.call('set_loop',{on:d.on===true,start:Number(d.start),stop:Number(d.stop)});
+     else if(path==='/api/show/take')result=await bridge.call('select_take',{take:Number(d.take),start:Number(d.start),stop:Number(d.stop)});
+     else if(path==='/api/show/track')result=await bridge.call('track_mute',{name:String(d.name),on:d.on===true,solo:d.solo===true});
+     else if(path==='/api/show/play'){await reaper.watch();result=reaper.play();}
+     else if(path==='/api/show/stop'){await reaper.watch();result=reaper.status().recording||reaper.status().state==='starting'?await reaper.stop():reaper.halt();}
+     else if(path==='/api/show/continue')result=reaper.cancelAutoStop();
+     else if(path==='/api/show/presence'){
+      const plan=await reaperPlan(),present=(Array.isArray(d.present)?d.present:[]).map(String),rec=plan.tracks.filter(t=>t.selected);
+      const {rec:add,unarm,roles}=presenceCommands(rec,present);
+      savePresence(present);await bridge.call('apply_presence',{rec:add,unarm,roles});result={present};
+     }
+     else if(path==='/api/show/original'){
+      const state=await bridge.state(),names:Record<string,boolean>={},roles:Record<string,boolean>={};
+      for(const t of state.tracks){if(t.rec)names[t.name]=d.on===true;else if(t.role)roles[t.role]=false;}
+      if(d.on!==true){const plan=await reaperPlan();Object.assign(roles,presenceCommands(plan.tracks.filter(t=>t.selected),loadPresence()).roles);}
+      result=await bridge.call('apply_mutes',{names,roles});
+     }
+     else if(path==='/api/show/rec'){
+      if(!Number.isFinite(d.start))throw Error('Morceau requis');
+      await bridge.call('goto_pos',{pos:Number(d.start)});
+      access.log(user!,'Reaper : Rec sur un morceau');await reaper.record({atEnd:false});
+      result=reaper.setAutoStop(Number.isFinite(d.stop)?Number(d.stop)+SONG_TAIL_S:null,SONG_TAIL_S);
+     }
+     else{res.writeHead(404);res.end(JSON.stringify({error:'Introuvable'}));return;}
+    }
+    res.end(JSON.stringify(result));
+   }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}
+   return;
   }
   if(path.startsWith('/api/reaper')){
    // Reaper never touches the console: no global lock, and Rec/Stop must work during any other operation.

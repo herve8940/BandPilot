@@ -18,7 +18,7 @@ import {SOURCES} from './sound-coach.js';
 export const REAPER_LISTEN_PORT=8765;
 export const REAPER_FEEDBACK_PORT=8766;
 /** Reaper action numbers. Stop must save: 40668 is the variant that deletes the take. */
-export const ACTION={record:1013,stopAndSave:40667,marker:40157,refreshSurfaces:41743,goToEnd:40043,saveProject:40026} as const;
+export const ACTION={play:1007,stop:1016,record:1013,stopAndSave:40667,marker:40157,refreshSurfaces:41743,goToEnd:40043,saveProject:40026} as const;
 
 export type Wire=Record<string,Value|undefined>;
 export type TrackPlan={id:string;usb:number;stereo:boolean;name:string;group:string;source:string;tap:string;selected:boolean;preset:string|null;presetLabel:string;volume:number;pan:number;mute:boolean;invert:boolean;color:[number,number,number];warning?:string};
@@ -109,7 +109,7 @@ function fxChain(preset:string|null,platform:string){
  const library=platform==='win32'?'.dll':platform==='linux'?'.vst.so':'.vst.dylib';
  return chain.replaceAll('.vst.dylib',library).replace(/FXID \{[^}]*\}/g,()=>`FXID {${randomUUID().toUpperCase()}}`).split('\n').map(line=>'    '+line);
 }
-function trackLines(t:TrackPlan,platform:string){
+export function trackLines(t:TrackPlan,platform:string){
  return [`  <TRACK {${randomUUID().toUpperCase()}}`,`    NAME ${quoted(t.name)}`,`    PEAKCOL ${nativeColor(t.color)}`,`    VOLPAN ${figure(t.volume)} ${figure(t.pan)} -1 -1 1`,`    MUTESOLO ${t.mute?1:0} 0 0`,`    IPHASE ${t.invert?1:0}`,'    ISBUS 0 0','    NCHAN 2',`    REC 1 ${(t.usb-1)+(t.stereo?1024:0)} 0 0 0 0 0`,...fxChain(t.preset,platform),'  >'];
 }
 /** Flat track list in USB order, 24-bit WAV takes, monitoring off (the band hears the console), takes in Audio/. FX only act on playback. */
@@ -118,6 +118,24 @@ export function renderRpp(plan:SessionPlan,now=Date.now(),platform:string=proces
  for(const t of plan.tracks)if(t.selected)lines.push(...trackLines(t,platform));
  lines.push('>','');
  return lines.join('\n');
+}
+
+/** ReaCue role that a console instrument replaces, so that a present musician silences his stem. */
+const SOURCE_ROLE:Record<string,string>={'electric-solo':'lead_guitar'};
+const FAMILY_ROLE:Record<string,string>={voice:'vocals',backing:'vocals',bass:'bass',guitar:'guitars',kick:'drums',snare:'drums',toms:'drums',cymbals:'drums',edrums:'drums',keys:'keys'};
+export function roleOf(track:Pick<TrackPlan,'preset'>){
+ const id=track.preset??'',source=SOURCES.find(s=>s.id===id);
+ return SOURCE_ROLE[id]??FAMILY_ROLE[source?.family??'']??null;
+}
+/** Present: armed REC track, stem muted. Absent: REC track unarmed, stem audible. Stems are never deleted. */
+export function presenceCommands(tracks:TrackPlan[],present:string[],platform:string=process.platform){
+ const rec:{name:string;chunk:string}[]=[],unarm:string[]=[],roles:Record<string,boolean>={};
+ for(const t of tracks){
+  const name=`REC ${t.name}`,here=present.includes(t.id),role=roleOf(t);
+  if(here)rec.push({name,chunk:trackLines({...t,name},platform).join('\n')});else unarm.push(name);
+  if(role)roles[role]=(roles[role]??false)||here;
+ }
+ return {rec,unarm,roles};
 }
 
 export const defaultSessionsFolder=()=>join(homedir(),'Documents','XR18 Studio','Sessions Reaper');
@@ -176,6 +194,7 @@ export class ReaperLink{
  private timer?:NodeJS.Timeout;
  private listening?:Promise<void>;
  private lastSeen=0;private recordFlag=false;private clock=0;private clockMovedAt=0;
+ private autoStopAt:number|null=null;private autoStopTail=0;
  private recordingSince=0;private wasRecording=false;private stopRequested=false;private markers=0;
  private alert='';
  session:{title:string;file:string;folder:string;hoursFree:number|null;tracks:number}|null=null;
@@ -199,6 +218,7 @@ export class ReaperLink{
   if(now-this.lastSeen>=this.timing.pollMs)this.action(ACTION.refreshSurfaces);
   const state=this.state(now);
   if(state==='lost'&&!this.alert)this.alert='Reaper ne répond plus pendant la prise. Regarde dans Reaper si l’enregistrement continue.';
+  if(state==='recording'&&this.autoStopAt!==null&&this.clock>=this.autoStopAt)void this.stop().catch(()=>undefined);
   if(state==='recording'){this.wasRecording=true;if(this.alert.startsWith('Reaper ne répond plus'))this.alert='';}
  }
  private receive(packet:Buffer){
@@ -209,8 +229,9 @@ export class ReaperLink{
    if(m.address==='/record'){
     const on=value>=.5;
     if(!on&&this.recordFlag){
-     if(this.wasRecording&&!this.stopRequested){this.alert='Enregistrement arrêté depuis Reaper. Enregistre le projet dans Reaper pour garder la prise.';}
-     this.recordFlag=false;this.wasRecording=false;this.recordingSince=0;this.clockMovedAt=0;
+     const songEnded=this.autoStopAt!==null&&this.clock>=this.autoStopAt-this.autoStopTail-1;
+     if(this.wasRecording&&!this.stopRequested&&!songEnded){this.alert='Enregistrement arrêté depuis Reaper. Enregistre le projet dans Reaper pour garder la prise.';}
+     this.recordFlag=false;this.wasRecording=false;this.recordingSince=0;this.clockMovedAt=0;this.autoStopAt=null;
     }else if(on&&!this.recordFlag){this.recordFlag=true;this.clockMovedAt=0;this.stopRequested=false;this.alert='';this.markers=0;}
    }else if(m.address==='/time'&&Number.isFinite(value)){
     if(this.recordFlag&&value!==this.clock){this.clockMovedAt=Date.now();this.recordingSince||=Date.now();this.wasRecording=true;}
@@ -227,20 +248,25 @@ export class ReaperLink{
  }
  status(){
   const state=this.state();
-  return {state,recording:state==='recording',elapsed:state==='recording'&&this.recordingSince?Math.floor((Date.now()-this.recordingSince)/1000):0,markers:this.markers,alert:this.alert,session:this.session,ports:this.ports};
+  return {state,clock:this.clock,autoStopIn:this.autoStopAt!==null&&state==='recording'&&this.autoStopAt-this.clock<=this.autoStopTail?Math.max(0,Math.ceil(this.autoStopAt-this.clock)):null,recording:state==='recording',elapsed:state==='recording'&&this.recordingSince?Math.floor((Date.now()-this.recordingSince)/1000):0,markers:this.markers,alert:this.alert,session:this.session,ports:this.ports};
  }
  private async until(ok:()=>boolean){
   const end=Date.now()+this.timing.confirmMs;
   while(Date.now()<end){if(ok())return true;await new Promise(r=>setTimeout(r,25));}
   return ok();
  }
- async record(){
+ /** Stops the take at this project time, tail included. Keeps running if the band goes on and cancelAutoStop() is called. */
+ setAutoStop(at:number|null,tail=0){this.autoStopAt=at;this.autoStopTail=tail;return this.status();}
+ cancelAutoStop(){return this.setAutoStop(null);}
+ play(){this.action(ACTION.play);return this.status();}
+ halt(){if(this.recordFlag)throw Error('Enregistrement en cours : utilise Stop.');this.action(ACTION.stop);return this.status();}
+ async record(options:{atEnd?:boolean}={}){
   await this.watch();
   if(this.state()==='recording')return this.status();
   this.action(ACTION.refreshSurfaces);
   if(!await this.until(()=>this.state()!=='offline'))throw Error('Reaper ne répond pas : ouvre-le et vérifie le réglage OSC. Rien n’est enregistré.');
-  // After the last take: from the cursor, Reaper would stack the new take on the previous one.
-  this.alert='';this.action(ACTION.goToEnd);this.action(ACTION.record);
+  // After the last take when the band plays alone: from the cursor, Reaper would stack the new take on the previous one.
+  this.alert='';if(options.atEnd!==false)this.action(ACTION.goToEnd);this.action(ACTION.record);
   if(!await this.until(()=>this.state()==='recording')){
    const claimed=this.recordFlag;
    this.alert=claimed?'Reaper annonce Rec mais son compteur n’avance pas. Regarde dans Reaper.':'Reaper n’a pas lancé l’enregistrement. Rien n’est enregistré.';

@@ -2,6 +2,8 @@ import {SoundCoach,PlanDialog,type Plan} from "./SoundCoach";
 import {EarsSharePanel} from "./EarsSharePanel";
 import {ConsolePanel} from "./ConsolePanel";
 import {ExpertStudio} from "./expert/ExpertStudio";
+import {Rehearse} from "./show/Rehearse";
+import {Concert} from "./show/Concert";
 import {SimpleMixer} from "./SimpleMixer";
 import "./theme.css";
 import {FxConsole} from "./FxConsole";
@@ -22,7 +24,7 @@ type Status = { mode: "simulation" | "real"; connected: boolean; writesEnabled: 
 type Scene = { id: string; name: string; created: string; faders: number[] };
 type Song = { id: string; title: string; artist: string; bpm: number };
 type Tab = "mixer" | "eq" | "dynamics" | "sends" | "fx" | "routing" | "dca" | "controls";
-type Page = "coach" | "console" | "ears" | "rehearsals" | "setlists" | "scenes" | "settings";
+type Page = "coach" | "console" | "ears" | "rehearse" | "concert" | "rehearsals" | "setlists" | "scenes" | "settings";
 type Stored = { scenes: Scene[]; songs: Song[]; setlist: string[]; notes: string };
 const KEY = "xr18-studio-local-v1";
 const NAMES = ["Chant","Guitare 1","Guitare 2","Basse","Kick","Caisse","Tom 1","Tom 2","OH gauche","OH droite","Clavier L","Clavier R","Playback L","Playback R","Ambiance","Réserve"];
@@ -39,14 +41,18 @@ const MENU: { page: Page; name: string; icon: typeof AudioLines }[] = [
   { page:"rehearsals", name:"Répétitions", icon:Music2 }, { page:"setlists", name:"Setlists", icon:ListMusic },
   { page:"scenes", name:"Snapshots", icon:Disc3 }, { page:"settings", name:"Configuration", icon:Settings2 },
 ];
-type Space = "play" | "prep" | "setup";
+type Space = "play" | "rehearse" | "show" | "prep" | "setup";
 const SPACES: { id: Space; name: string; hint: string; icon: typeof AudioLines; pages: Page[] }[] = [
   { id:"play", name:"Jouer", hint:"Console, retours et coach", icon:SlidersHorizontal, pages:["console","ears","coach"] },
+  { id:"rehearse", name:"Répéter", hint:"Enregistrer et réécouter", icon:Music2, pages:["rehearse"] },
+  { id:"show", name:"Concert", hint:"Dérouler le set", icon:ListMusic, pages:["concert"] },
   { id:"prep", name:"Préparer", hint:"Setlists, répétitions, scènes", icon:ListMusic, pages:["setlists","rehearsals","scenes"] },
   { id:"setup", name:"Réglages", hint:"Connexion et système", icon:Settings2, pages:["settings"] },
 ];
 const PAGE_INFO: Record<Page, { name: string; hint: string; icon: typeof AudioLines }> = {
   console: { name:"Console", hint:"Volumes, mutes et réglages de chaque source", icon:SlidersHorizontal },
+  rehearse: { name:"Répéter", hint:"Avec tes morceaux ReaCue ou le groupe seul", icon:Music2 },
+  concert: { name:"Concert", hint:"Écran de scène : peu de boutons, gros affichage", icon:ListMusic },
   ears: { name:"Retours", hint:"Chaque musicien règle son retour sur son téléphone (QR code)", icon:Headphones },
   coach: { name:"Mon ingé son", hint:"Préparer, écouter et corriger pas à pas", icon:Zap },
   setlists: { name:"Setlists", hint:"Répertoire et ordre de passage", icon:ListMusic },
@@ -339,7 +345,7 @@ export default function App() {
       </header>
       {blankPlan && <PlanDialog plan={blankPlan} busy={blankBusy} canApply={canWrite} mode={isSim ? "simulation" : "real"} onClose={() => setBlankPlan(null)} onApply={() => void applyBlank()}/>}
       {notice && <div className="studio-alert" role="alert"><CircleAlert size={16}/><span>{notice}</span><button onClick={()=>setNotice("")}>Fermer</button></div>}
-      {page==="coach" ? <SoundCoach status={status} online={socketOk} onConnect={()=>setPage("settings")} onMonitors={()=>setPage("ears")} onExpert={()=>{setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="console" ? consoleMode==="simple" ? <div className="content"><SimpleMixer canWrite={canWrite} onExpert={ch=>{if(ch)setSelected(ch);setExpertTab(ch?"eq":"mixer");setTab("mixer");setConsoleMode("expert");}}/></div> : <>
+      {page==="rehearse" ? <Rehearse/> : page==="concert" ? <Concert/> : page==="coach" ? <SoundCoach status={status} online={socketOk} onConnect={()=>setPage("settings")} onMonitors={()=>setPage("ears")} onExpert={()=>{setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="console" ? consoleMode==="simple" ? <div className="content"><SimpleMixer canWrite={canWrite} onExpert={ch=>{if(ch)setSelected(ch);setExpertTab(ch?"eq":"mixer");setTab("mixer");setConsoleMode("expert");}}/></div> : <>
         <div className="studio-tabs">{TABS.map(t=><button key={t.id} className={tab===t.id?"active":""} onClick={()=>setTab(t.id)}>{t.name}</button>)}<span className="tabs-spacer"/>{lastBackup&&<button className="blank-btn" disabled={!canWrite||blankBusy} onClick={()=>void undoBlank()} title="Annuler la remise à zéro"><Undo2 size={15}/> Revenir à avant</button>}<button className="blank-btn" disabled={!canWrite||blankBusy} onClick={()=>void startBlank()} title="Remettre toute la console à neutre (sans toucher au 48 V, aux gains ni au routage)"><Eraser size={15}/> {blankBusy&&!blankPlan?"Lecture de la console…":"Partir d’une scène vierge"}</button></div>
         <div className="studio-work">
           {tab==="mixer" ? <>

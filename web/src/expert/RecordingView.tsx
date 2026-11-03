@@ -13,7 +13,7 @@ const LABEL: Record<State, string> = { offline: "Reaper non relié", ready: "Rea
 const PILL: Record<State, string> = { offline: "off", ready: "live", starting: "off", recording: "rec", stopping: "off", lost: "rec" };
 const clock = (s: number) => [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60].map(n => String(n).padStart(2, "0")).join(":");
 
-export function RecordingView() {
+export function RecordingView({ embedded = false }: { embedded?: boolean }) {
   const [status, setStatus] = useState<Status | null>(null), [plan, setPlan] = useState<Plan | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set()), [name, setName] = useState(""), [folder, setFolder] = useState("");
   const [busy, setBusy] = useState(""), [error, setError] = useState("");
@@ -32,14 +32,14 @@ export function RecordingView() {
   const alerts = chosen.filter(t => t.warning);
 
   return <div className="xs2-page xs2-rec">
-    <div className={`xs2-card xs2-rec-transport ${state === "recording" ? "on" : ""}`}>
+    {!embedded && <div className={`xs2-card xs2-rec-transport ${state === "recording" ? "on" : ""}`}>
       <span className={`xs2-pill ${PILL[state]}`}><span className="xs2-dot" />{LABEL[state]}</span>
       {status?.recording && <b className="xs2-rec-clock">{clock(status.elapsed)}</b>}
       <div className="xs2-spacer" />
       <button type="button" className="xs2-btn xs2-rec-btn" disabled={!!busy || state !== "ready"} onClick={() => void act("rec", "/api/reaper/rec")}>{busy === "rec" ? "Attente de Reaper…" : "● Rec"}</button>
       <button type="button" className="xs2-btn" disabled={busy === "stop" || !["recording", "starting", "lost"].includes(state)} onClick={() => void act("stop", "/api/reaper/stop")}>{busy === "stop" ? "Arrêt…" : "■ Stop"}</button>
       <button type="button" className="xs2-btn" disabled={!status?.recording} onClick={() => void act("marker", "/api/reaper/marker")}>Marqueur{status?.markers ? ` (${status.markers})` : ""}</button>
-    </div>
+    </div>}
     {status?.alert && <div className="xs2-msg error" role="alert" style={{ margin: "12px 0 0" }}>{status.alert}<button type="button" aria-label="Fermer" onClick={() => void act("dismiss", "/api/reaper/dismiss")}>×</button></div>}
     {error && <div className="xs2-msg error" role="alert" style={{ margin: "12px 0 0" }}>{error}<button type="button" aria-label="Fermer" onClick={() => setError("")}>×</button></div>}
     {status?.session && <p className="muted">Session préparée ici : <b>{status.session.title}</b> · {status.session.tracks} pistes{status.session.hoursFree !== null ? ` · environ ${status.session.hoursFree} h d’espace disque` : ""}. Vérifie que c’est bien elle qui est ouverte dans Reaper avant d’appuyer sur Rec.</p>}

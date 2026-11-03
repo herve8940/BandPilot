@@ -75,8 +75,8 @@ test('rehearsal: the Main cannot be reopened, and a scene recall leaves it muted
  const xr=new XR18({mode:'simulation',host:'127.0.0.1',port:10024,enableWrites:false});
  try{
   xr.setRehearsal(true);
-  await assert.rejects(xr.writeParameter('/lr/mix/on',1),/Répétition/);
-  assert.throws(()=>xr.setMainOn(true),/Répétition/);
+  await assert.rejects(xr.writeParameter('/lr/mix/on',1),/Ears seulement/);
+  assert.throws(()=>xr.setMainOn(true),/Ears seulement/);
   await xr.writeParameter('/lr/mix/on',0);
   await xr.applyParameters({'/lr/mix/on':1,'/ch/01/mix/fader':.5});
   assert.equal(await xr.readParameter('/lr/mix/on'),0,'Main still muted');
