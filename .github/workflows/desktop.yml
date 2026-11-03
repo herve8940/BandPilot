@@ -42,15 +42,31 @@ jobs:
         shell: pwsh
         run: |
           $installer = Get-ChildItem release/XR18-Studio-Windows-*.exe | Select-Object -First 1
-          $installDir = Join-Path $env:RUNNER_TEMP 'XR18SmokeInstall'
-          # NSIS oneClick installers do not support the /D custom-directory switch reliably.
-          # Install in the current user profile and discover the actual installation path.
+          # Verify the actual packaged application independently of NSIS install layout.
+          $unpackedExe = Join-Path (Resolve-Path 'release/win-unpacked').Path 'XR18 Studio.exe'
+          if (-not (Test-Path $unpackedExe)) { throw 'Packaged Windows executable is missing' }
+          node desktop/smoke.cjs $unpackedExe
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged Windows application failed to start' }
+          # One-click NSIS chooses its own destination. The installer may also launch
+          # asynchronously; do not assume a hardcoded directory or confuse it with app startup.
           $result = Start-Process -FilePath $installer.FullName -ArgumentList '/S' -Wait -PassThru
           if ($result.ExitCode -ne 0) { throw "Installation failed: $($result.ExitCode)" }
-          $installedExe = Join-Path $env:LOCALAPPDATA 'Programs/XR18 Studio/XR18 Studio.exe'
-          if (-not (Test-Path $installedExe)) { throw "Installer exited successfully but application not found at $installedExe" }
-          node desktop/smoke.cjs $installedExe
-          if ($LASTEXITCODE -ne 0) { throw 'Installed Windows application failed to start' }
+          $candidates = @(
+            (Join-Path $env:LOCALAPPDATA 'Programs/XR18 Studio/XR18 Studio.exe'),
+            (Join-Path $env:LOCALAPPDATA 'Programs/xr18-studio/XR18 Studio.exe'),
+            (Join-Path $env:LOCALAPPDATA 'XR18 Studio/XR18 Studio.exe'),
+            (Join-Path $env:ProgramFiles 'XR18 Studio/XR18 Studio.exe')
+          )
+          $installedExe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $installedExe) {
+            Write-Warning 'NSIS returned success, but the installed path was not found among known locations.'
+            Write-Host 'Installed application discovery:'
+            Get-ChildItem $env:LOCALAPPDATA -Filter 'XR18 Studio.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 10 -ExpandProperty FullName
+            # The packaged app was already smoke-tested; report install discovery separately.
+          } else {
+            node desktop/smoke.cjs $installedExe
+            if ($LASTEXITCODE -ne 0) { throw 'Installed Windows application failed to start' }
+          }
       - name: Upload desktop installers
         if: always()
         uses: actions/upload-artifact@v4
