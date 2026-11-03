@@ -25,8 +25,9 @@ export const position = (show: Show, link: Link | null) => link && link.state !=
 /** What still prevents a good recording, in plain words. Empty when everything is fine. */
 export function setupIssues(show: Show, consoleRate?: number) {
   const out: string[] = [], a = show.audio; if (!a) return out;
-  if (a.inputs === 0) out.push("Reaper n’a pas de carte son active : Préférences › Audio › Device, choisis la XR18.");
-  else if (a.inputs < 18) out.push(`Reaper ne voit que ${a.inputs} entrées : choisis la XR18 dans Préférences › Audio › Device, en 18×18.`);
+  // No name and no inputs: Reaper has simply not opened its device yet, and it does so when recording starts.
+  if (a.inputs === 0 && !a.device) return out;
+  if (a.inputs < 18) out.push(`Reaper ne voit que ${a.inputs} entrées : choisis la XR18 dans Préférences › Audio › Device, en 18×18.`);
   if (a.rate && consoleRate && a.rate !== consoleRate) out.push(`La console est à ${consoleRate / 1000} kHz et Reaper à ${a.rate / 1000} kHz : mets-les à la même valeur.`);
   return out;
 }
