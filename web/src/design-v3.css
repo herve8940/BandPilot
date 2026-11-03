@@ -1,0 +1,61 @@
+/* XR18 Studio V3 — visual layer, no OSC behavior changes. */
+:root{color-scheme:dark;--v3-ink:#eaf0ff;--v3-muted:#93a6c6;--v3-line:#273657;--v3-cyan:#3bdcff;--v3-purple:#9367ff}
+.studio{background:radial-gradient(ellipse 60% 36% at 72% -8%,#34205b6e,transparent 75%),radial-gradient(ellipse 35% 30% at 0% 90%,#103a6870,transparent 80%),#080d1b;color:var(--v3-ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+.studio-side{background:linear-gradient(175deg,#101a31,#0b1121 70%,#151033);border-right:1px solid #263457;box-shadow:12px 0 35px #02061733}
+.studio-logo{letter-spacing:-.045em}
+.studio-main{background:transparent}
+.studio-panel,.studio .card,.studio .panel{border-color:#28395b;background:linear-gradient(155deg,#17233b 0%,#10192d 72%,#11172a 100%);box-shadow:0 12px 34px #0307153d}
+.studio button,.studio a,.xs2 button{transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.studio button:focus-visible,.studio a:focus-visible,.xs2 button:focus-visible{outline:2px solid #6ce5ff;outline-offset:3px}
+.studio button:hover:not(:disabled){filter:brightness(1.1)}
+.studio-top,.studio-header{background:#0d1529dd;border-bottom:1px solid #28395b;backdrop-filter:blur(14px)}
+.studio .side-health{border-color:#34517d;background:linear-gradient(145deg,#10223a,#121a31)}
+.studio .safety-pill{border-color:#325274;background:#142740;color:#a6e9ff}
+.studio .top-button{border:1px solid #374c72;background:linear-gradient(160deg,#253553,#17243c);border-radius:11px;color:#eef4ff}
+.studio .top-button:hover:not(:disabled){border-color:#8d75ff;box-shadow:0 0 0 1px #785aff44}
+.studio .rail-pages button.active,.studio .subnav button.active{background:linear-gradient(115deg,#4936a8,#5f3bba);color:#fff;box-shadow:0 5px 20px #6848ee55}
+.studio .led{box-shadow:0 0 14px #22e7a080}
+.studio .mixer-head h1{font-weight:760;letter-spacing:-.045em}
+.studio .pro-channel{border-color:#2d4064;background:linear-gradient(180deg,#192944,#101b31)}
+.studio .pro-channel.picked{box-shadow:inset 0 0 0 1px #6b70ff,0 0 16px #5c56ff35}
+.studio .ch-meter{background:#0b1427}
+.studio .pro-channel .ch-slider{accent-color:#8e72ff}
+.studio .field input,.studio .field select,.studio .field textarea{background:#0d172b;border:1px solid #34476c;color:#eaf0ff;border-radius:10px}
+.studio .disclaimer{color:#a6b4ce}
+.xs2{--g-bg:#0a1121;--g-head:#101b33;--g-panel:#131f36;--g-panel-2:#182741;--g-panel-3:#1a2c4b;--g-sel:#211e50;--g-line:#273a5c;--g-line-2:#354b72;--g-text:#edf2ff;--g-text-2:#a7b7d3;--g-text-3:#8196b9;--g-accent:#a78bfa;--g-accent-ink:#fff;--g-accent-soft:#35266b;--g-accent-text:#e0d7ff;--g-ok:#3ee8ad;--g-ok-bg:#0e302c;--g-ok-line:#236858;--g-ok-text:#9af5da;--g-red:#ff647a;--g-red-bg:#3b1c36;--g-red-line:#73334f;--g-red-text:#ffb7c4;background:radial-gradient(ellipse at 68% -25%,#3a286b75,transparent 60%),#0a1121;border:1px solid #34456c;border-radius:20px;box-shadow:0 20px 60px #0006}
+.xs2 .xs2-head{padding:17px 20px;background:linear-gradient(110deg,#151e3c,#10182e 70%);border-bottom:1px solid #35466c}
+.xs2 .xs2-tabs{border-color:#33476d;background:#0c162c}
+.xs2 .xs2-tabs button{border-radius:9px;color:#b2c0db}
+.xs2 .xs2-tabs button.on{background:linear-gradient(130deg,#7253df,#4934a4);color:#fff;box-shadow:0 4px 18px #7352e55a}
+.xs2 .xs2-pill.live{background:#0d302e;border-color:#26765e;color:#66edc3}
+.xs2 .xs2-body{padding:20px}
+.xs2 .xs2-card{background:linear-gradient(155deg,#172641,#111c32);border:1px solid #324569;border-radius:17px;box-shadow:0 9px 30px #02061644}
+.xs2 .xs2-chip{background:#17253e;border-color:#34476a;border-radius:11px}
+.xs2 .xs2-chip.on{background:linear-gradient(135deg,#4934a4,#32276e);border-color:#9676ff;color:#fff;box-shadow:0 0 18px #7455ee30}
+.xs2 .xs2-btn.primary{background:linear-gradient(120deg,#7251e7,#9772fa);color:#fff;box-shadow:0 7px 20px #6d4bea4a}
+.xs2 .xs2-strip{background:linear-gradient(180deg,#1b2b47,#111b31);border-color:#324669}
+.xs2 .xs2-strip.sel{background:linear-gradient(180deg,#2d275c,#191d3d);border-color:#9b78ff;box-shadow:inset 0 0 0 1px #8b69ef,0 0 22px #7652ee35}
+.xs2 .xs2-strip .eq{background:#0e1830;border-radius:6px}
+.xs2 .xs2-legacy.xm{--bg:#111d33;--panel:#0c1629;--panel-2:#1a2943;--line:#344767;--text:#eef2ff;--dim:#a8b8d5;--cyan:#8f78ff;--cyan-d:#30255c;background:#111d33;border-color:#324667}
+.xs2 .xs2-steps button.on{background:linear-gradient(125deg,#7251df,#4434a0);color:#fff;border-color:#987cff}
+.xs2 .xs2-chain>div.on{border-color:#735be2;background:#25204e}
+.xs2 .xs2-dialog{background:#131f35;border-color:#42547a;box-shadow:0 35px 100px #000b}
+@media(max-width:800px){.xs2 .xs2-head{padding:12px}.xs2 .xs2-body{padding:10px}.xs2 .xs2-tabs{overflow-x:auto;max-width:100%;flex-wrap:nowrap}.xs2 .xs2-tabs button{white-space:nowrap}.xs2 .xs2-split>.side{max-width:none}}
+@media(prefers-reduced-motion:reduce){.studio button,.studio a,.xs2 button{transition:none}}
+
+/* App v2 navigation and shell */
+.studio.app2{background:radial-gradient(ellipse 55% 45% at 85% -12%,#36226090,transparent 75%),#080d1b;color:#eaf0ff}
+.studio.app2 .rail{background:linear-gradient(170deg,#111b34,#0b1223 70%,#191335);border-right:1px solid #2b3c61;box-shadow:12px 0 32px #0003}
+.studio.app2 .rail-logo .logo-mark{background:linear-gradient(135deg,#3ac8ff,#8c5cff);color:#fff;box-shadow:0 7px 25px #6c5dfb55}
+.studio.app2 .rail-logo em{color:#b49bff}
+.studio.app2 .rail-space.active{background:linear-gradient(125deg,#202c50,#2b2057);box-shadow:inset 0 0 0 1px #6751a7}
+.studio.app2 .rail-space.active .rail-space-btn svg{color:#c4a7ff}
+.studio.app2 .rail-pages button.active{background:linear-gradient(115deg,#6545d2,#4c36a3);color:#fff}
+.studio.app2 .subnav button.active{background:linear-gradient(115deg,#6545d2,#4c36a3);color:#fff}
+.studio.app2 .workspace{background:transparent}
+.studio.app2 .topbar{background:#101a31d9;border-bottom:1px solid #2c3c60;backdrop-filter:blur(14px)}
+.studio.app2 .rail-status{border-color:#38517a;background:#152640}
+.studio.app2 .panel,.studio.app2 .card{border-color:#30446b;background:linear-gradient(150deg,#192641,#111b31)}
+.studio.app2 .rail-space-btn:hover{background:#263354}
+.studio.app2 .bottombar{background:#101a30ed;border-top:1px solid #334568}
+.studio.app2 .bottombar button.active{color:#c7aaff}
