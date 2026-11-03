@@ -24,7 +24,7 @@ function Wave({ track, items, range, muted, rec, cursor }: { track: number; item
   return <canvas ref={ref} className="sh-wave" aria-hidden="true" />;
 }
 export function Player({ show, band = false, cursor, range, disabled, onSeek, onTrack }: { show: Show; band?: boolean; cursor: number; range: Range; disabled: boolean; onSeek: (t: number) => void; onTrack: (t: ShowTrack, solo: boolean) => void }) {
-  const lanes = (show.tracks ?? []).filter(t => !["CUES", "VOIX", "CLICK"].includes(t.name) && t.items.some(i => i.pos < range.stop && i.pos + i.length > range.start));
+  const lanes = (show.tracks ?? []).filter(t => !["CUES", "VOIX", "VOICE", "CLICK"].includes(t.name) && t.items.some(i => i.pos < range.stop && i.pos + i.length > range.start));
   const sections = (show.regions ?? []).filter(r => r.start >= range.start - .05 && r.stop <= range.stop + .05), span = Math.max(.001, range.stop - range.start);
   const seek = (e: React.MouseEvent<HTMLDivElement>) => { if (disabled) return; const b = e.currentTarget.getBoundingClientRect(); onSeek(range.start + (e.clientX - b.left) / b.width * span); };
   const cursorLeft = `${Math.max(0, Math.min(100, (cursor - range.start) / span * 100))}%`;

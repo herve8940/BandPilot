@@ -11,8 +11,8 @@ export type Take={index:number;name:string;file:string;active:boolean};
 export type Item={pos:number;length:number;takes:Take[]};
 export type ShowTrack={index:number;name:string;rec:boolean;role:string|null;mute:boolean;solo:boolean;armed:boolean;items:Item[]};
 export type Song={title:string;start:number;countin:number;stop:number};
-export const BRIDGE_VERSION='1.1.0';
-export type ShowState={version:string;project:string;setlist?:string;concert:string|null;songs:Song[];regions:{start:number;stop:number;name:string}[];tracks:ShowTrack[];pos:number;playing:boolean;recording:boolean;loop:{on:boolean;start:number;stop:number};length:number};
+export const BRIDGE_VERSION='1.2.0';
+export type ShowState={version:string;project:string;setlist?:string;concert:string|null;songs:Song[];regions:{start:number;stop:number;name:string}[];tracks:ShowTrack[];pos:number;playing:boolean;recording:boolean;loop:{on:boolean;start:number;stop:number};length:number;audio?:{inputs:number;rate:number;device:string}};
 
 export function reaperResources(env=process.env,platform=process.platform,home=homedir()){
  if(env.REAPER_RESOURCE_PATH)return env.REAPER_RESOURCE_PATH;
@@ -28,10 +28,20 @@ export function toLua(v:unknown):string{
  if(Array.isArray(v))return '{'+v.map(toLua).join(',')+'}';
  return '{'+Object.entries(v as object).filter(([,x])=>x!==undefined&&x!==null).map(([k,x])=>`[${toLua(k)}]=${toLua(x)}`).join(',')+'}';
 }
+/** Windows briefly locks a file that the other side is reading. */
+async function retry(task:()=>Promise<unknown>,tries=8){
+ for(let i=0;;i++){
+  try{return await task();}catch(e){
+   if(i>=tries||!['EBUSY','EPERM','EACCES'].includes((e as NodeJS.ErrnoException).code??''))throw e;
+   await new Promise(r=>setTimeout(r,25));
+  }
+ }
+}
 export class ReaperBridge{
  private queue:Promise<unknown>=Promise.resolve();
  constructor(private resources=reaperResources(),private timeoutMs=3000){}
  private get dir(){return join(this.resources,'XR18Studio');}
+ installed(){return existsSync(join(this.resources,'Scripts','XR18 Studio','XR18_Studio_Bridge.lua'));}
  alive(){
   try{return Date.now()-statSync(join(this.dir,'heartbeat.txt')).mtimeMs<8000;}catch{return false;}
  }
@@ -42,16 +52,17 @@ export class ReaperBridge{
  private async exchange<T>(cmd:string,args:object):Promise<T>{
   if(!this.alive())throw Error('Le pont XR18 Studio ne répond pas dans Reaper : installe-le dans Répéter, puis redémarre Reaper.');
   const id=randomUUID(),req=join(this.dir,'request.lua'),res=join(this.dir,'response.json');
-  await rm(res,{force:true});await writeFile(req+'.tmp',toLua({id,cmd,args}));await rename(req+'.tmp',req);
+  await retry(()=>rm(res,{force:true}));await writeFile(req+'.tmp',toLua({id,cmd,args}));await retry(()=>rename(req+'.tmp',req));
   const end=Date.now()+this.timeoutMs;
   while(Date.now()<end){
    try{
     const data=JSON.parse(await readFile(res,'utf8'));
-    if(data.id===id||data.id===undefined){await rm(res,{force:true});if(!data.ok)throw Object.assign(Error(data.error??'Erreur du pont'),{bridge:true});return data.result as T;}
+    if(data.id!==id&&data.id!==undefined)await rm(res,{force:true}).catch(()=>undefined);
+    else{await retry(()=>rm(res,{force:true}));if(!data.ok)throw Object.assign(Error(data.error??'Erreur du pont'),{bridge:true});return data.result as T;}
    }catch(e){if((e as {bridge?:boolean}).bridge)throw e;}
    await new Promise(r=>setTimeout(r,30));
   }
-  await rm(req,{force:true});
+  await rm(req,{force:true}).catch(()=>undefined);
   throw Error('Reaper ne répond pas. Regarde s’il affiche un message.');
  }
  state(){return this.call<ShowState>('state');}
@@ -78,5 +89,5 @@ export function defaultScript(){
 export async function saveLiveRoles(setlist:string,roles:string[]){
  const data=JSON.parse(await readFile(setlist,'utf8'));
  data.live=roles;
- const tmp=setlist+'.xr18tmp';await writeFile(tmp,JSON.stringify(data,null,2));await rename(tmp,setlist);
+ const tmp=setlist+'.xr18tmp';await writeFile(tmp,JSON.stringify(data,null,2));await retry(()=>rename(tmp,setlist));
 }

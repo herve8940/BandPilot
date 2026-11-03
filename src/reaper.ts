@@ -166,7 +166,7 @@ export function openInReaper(file:string,platform:string=process.platform,run:ty
   const done=(fallback?:()=>void)=>(error:Error|null)=>error?(fallback?fallback():fail()):resolve();
   if(platform==='darwin')run('open',['-a','REAPER',file],done(()=>run('open',[file],done())));
   else if(platform==='win32')run('rundll32',['url.dll,FileProtocolHandler',file],done());
-  else run('xdg-open',[file],done());
+  else run('xdg-open',[file],done(()=>run('reaper',[file],done())));
  });
 }
 
@@ -182,7 +182,7 @@ export class ReaperLink{
  private lastSeen=0;private recordFlag=false;private clock=0;private clockMovedAt=0;
  private autoStopAt:number|null=null;private autoStopTail=0;
  private recordingSince=0;private wasRecording=false;private stopRequested=false;private markers=0;
- private alert='';
+ private alert='';private playing=false;
  session:{title:string;file:string;folder:string;hoursFree:number|null;tracks:number}|null=null;
  constructor(private io:ReaperIo,private timing:ReaperTimings=TIMINGS){}
  async watch(){
@@ -202,10 +202,12 @@ export class ReaperLink{
   if(state==='recording'){this.wasRecording=true;if(this.alert.startsWith('Reaper ne répond plus'))this.alert='';}
  }
  private receive(t:Transport){
-  this.lastSeen=Date.now();
+  this.lastSeen=Date.now();this.playing=t.playing;
   if(!t.recording&&this.recordFlag){
    const songEnded=this.autoStopAt!==null&&this.clock>=this.autoStopAt-this.autoStopTail-1;
-   if(this.wasRecording&&!this.stopRequested&&!songEnded)this.alert='Enregistrement arrêté depuis Reaper. Enregistre le projet dans Reaper pour garder la prise.';
+   if(this.wasRecording&&!this.stopRequested&&!songEnded)this.alert='Enregistrement arrêté depuis Reaper. La prise est gardée.';
+   // Stopped by Reaper or ReaCue at the end of a song: the take must not stay in memory only.
+   if(this.wasRecording&&!this.stopRequested)void this.io.actions([ACTION.saveProject]).catch(()=>undefined);
    this.recordFlag=false;this.wasRecording=false;this.recordingSince=0;this.clockMovedAt=0;this.autoStopAt=null;
   }else if(t.recording&&!this.recordFlag){this.recordFlag=true;this.clockMovedAt=0;this.stopRequested=false;this.alert='';this.markers=0;}
   if(this.recordFlag&&t.pos!==this.clock){this.clockMovedAt=Date.now();this.recordingSince||=Date.now();this.wasRecording=true;}
@@ -220,7 +222,7 @@ export class ReaperLink{
  }
  status(){
   const state=this.state();
-  return {state,clock:this.clock,autoStopIn:this.autoStopAt!==null&&state==='recording'&&this.autoStopAt-this.clock<=this.autoStopTail?Math.max(0,Math.ceil(this.autoStopAt-this.clock)):null,recording:state==='recording',elapsed:state==='recording'&&this.recordingSince?Math.floor((Date.now()-this.recordingSince)/1000):0,markers:this.markers,alert:this.alert,session:this.session};
+  return {state,playing:this.playing,clock:this.clock,autoStopIn:this.autoStopAt!==null&&state==='recording'&&this.autoStopAt-this.clock<=this.autoStopTail?Math.max(0,Math.ceil(this.autoStopAt-this.clock)):null,recording:state==='recording',elapsed:state==='recording'&&this.recordingSince?Math.floor((Date.now()-this.recordingSince)/1000):0,markers:this.markers,alert:this.alert,session:this.session};
  }
  private async until(ok:()=>boolean){
   const end=Date.now()+this.timing.confirmMs;

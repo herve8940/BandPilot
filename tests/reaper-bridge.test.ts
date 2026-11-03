@@ -10,7 +10,7 @@ import {ACTION,ReaperLink,planSession,presenceCommands,roleOf} from '../src/reap
 
 test('requests stay plain Lua data, quotes and accents included',()=>{
  assert.equal(toLua({a:'é"\\',b:[1,true]}),'{["a"]="é\\"\\\\",["b"]={1,true}}');
- assert.equal(toLua('x\ny'),'"x\\010y"');assert.equal(reaperResources({},'darwin','/h'),'/h/Library/Application Support/REAPER');
+ assert.equal(toLua('x\ny'),'"x\\010y"');assert.equal(reaperResources({},'darwin','/h'),join('/h','Library','Application Support','REAPER'));assert.equal(reaperResources({APPDATA:'/a'},'win32','/h'),join('/a','REAPER'));assert.equal(reaperResources({},'linux','/h'),join('/h','.config','REAPER'));
 });
 test('a dead bridge is reported, not waited for',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'xr18-bridge-'));

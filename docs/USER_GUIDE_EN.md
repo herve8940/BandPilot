@@ -206,7 +206,7 @@ The **Expert** switch shows the whole mixer in a dark “studio” design, with 
 
 ![EQ in Expert mode](images/tuto-expert-eq.png)
 
-**Rehearsal mode.** The button at the top right (**Façade active** / **Répétition · Main coupé**) mutes the Main and **locks** it: it cannot be reopened by mistake, even by recalling a scene. Only the musicians’ ears are worked on. The setting survives a restart.
+**Ears seulement** (ears only). The button at the top right (**Façade active** / **Ears seulement · Main coupé**) mutes the Main and **locks** it: it cannot be reopened by mistake, even by recalling a scene. Only the musicians’ ears are worked on. The setting survives a restart.
 
 **Analysis: a sound engineer listening with you.** While the band plays:
 
@@ -270,6 +270,21 @@ Each card shows whether that musician’s phone is connected. If a phone is lost
 - Sharing stops when the app closes; restart it each time. QR codes stay valid while the computer keeps the same network address (same router); on another network, print them again. Reserving the computer’s address in the router keeps it fixed.
 - The connection is not encrypted: use the band’s private, password-protected Wi-Fi, never a public network.
 - Adding the page to the phone’s home screen (browser menu › “Add to Home Screen”) reopens it like an app.
+
+## Rehearse and Concert with Reaper
+
+Prepare your songs in ReaCue. XR18 Studio drives, Reaper plays and records, and can stay in the background.
+
+**Once only:** in **Répéter**, click **Installer le pont**, then restart Reaper. In Reaper, choose the XR18 in Preferences › Audio › Device. The app tells you what is missing. ReaCue is not modified.
+
+**Groupe seul** (band alone): create a session, then press Rec. Takes follow each other. To remove a take, delete it in Reaper.
+
+**Avec mes morceaux** (with my songs): open your ReaCue project, pick the song, tick **Qui est là** (who is here). Someone present is recorded and their ReaCue track is muted. Someone absent keeps their track, if the song has separate stems. Rec starts at the top of the song and stops 8 seconds after its end, unless you click **Continuer**. The player compares takes with the original.
+
+**Concert:** with **Enregistrement prévu**, each song you start is recorded. In Reaper, Stop always ends recording, so what happens between two songs is not recorded. Stop and Tout couper need 2 presses.
+
+**Backing track:** choose this instrument in Mon ingé son. The channel switches to its USB source and its track is recorded.
+
 
 ## 10. Prepare: setlists, rehearsals, scenes
 

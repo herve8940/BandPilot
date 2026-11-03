@@ -87,7 +87,7 @@ test('each instrument gets its own Reaper settings, and e-drums stay electronic'
  assert.deepEqual(fx(3),[]);assert.deepEqual(fx(4),['ReaEQ','ReaGate','ReaComp']);
  assert.equal(plan.tracks[0]!.presetLabel,'Batterie électronique (mono)');assert.equal(plan.tracks[3]!.presetLabel,'Backing track (depuis l’ordinateur)');
  assert.equal((rpp.match(/<[A-Z]/g)??[]).length,(rpp.match(/^\s*>\s*$/gm)??[]).length,'blocks are balanced');
- assert.match(renderRpp(plan,0,'win32'),/reaeq\.dll/);
+ assert.match(renderRpp(plan,0,'win32'),/reaeq\.dll/);assert.match(renderRpp(plan,0,'linux'),/reaeq\.vst\.so/);
  const ids=[...rpp.matchAll(/FXID (\{[^}]*\})/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);
 });
 test('every coach instrument has its Reaper settings',()=>{
@@ -117,6 +117,10 @@ test('Reaper opens with the session on each system, with the file as a plain arg
  const run=((cmd:string,args:string[],cb:(e:Error|null)=>void)=>{calls.push([cmd,...args]);cb(calls.length===1&&cmd==='open'?Error('no app'):null);}) as never;
  await openInReaper('/a b/c.rpp','darwin',run);
  assert.deepEqual(calls,[['open','-a','REAPER','/a b/c.rpp'],['open','/a b/c.rpp']]);
+ calls.length=0;await openInReaper('C:\\a b\\c.rpp','win32',((c:string,a:string[],cb:(e:Error|null)=>void)=>{calls.push([c,...a]);cb(null);}) as never);
+ assert.deepEqual(calls[0],['rundll32','url.dll,FileProtocolHandler','C:\\a b\\c.rpp']);
+ calls.length=0;await openInReaper('/a/c.rpp','linux',((c:string,a:string[],cb:(e:Error|null)=>void)=>{calls.push([c,...a]);cb(c==='xdg-open'?Error('none'):null);}) as never);
+ assert.deepEqual(calls.map(c=>c[0]),['xdg-open','reaper']);
 });
 
 /** A stand-in for Reaper, as seen through the bridge. */
@@ -163,9 +167,9 @@ test('silence during a take raises an alert and stops claiming to record',async(
  try{await link.record();fake.alive=false;await wait(350);const s=link.status();assert.equal(s.state,'lost');assert.equal(s.recording,false);assert.match(s.alert,/ne répond plus/);}
  finally{link.close();fake.close();}
 });
-test('a stop made in Reaper itself is reported',async()=>{
+test('a stop made in Reaper itself is reported and the take is saved',async()=>{
  const {fake,link}=await fakeReaper();
- try{await link.record();fake.recording=false;await wait(60);assert.equal(link.status().recording,false);assert.match(link.status().alert,/arrêté depuis Reaper/);assert.equal(link.dismissAlert().alert,'');}
+ try{await link.record();fake.recording=false;await wait(60);assert.equal(link.status().recording,false);assert.ok(fake.actions.includes(ACTION.saveProject));assert.match(link.status().alert,/arrêté depuis Reaper/);assert.equal(link.dismissAlert().alert,'');}
  finally{link.close();fake.close();}
 });
 test('an unconfirmed stop stays an error, markers need a confirmed take',async()=>{

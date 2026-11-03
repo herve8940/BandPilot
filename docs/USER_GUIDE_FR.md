@@ -218,7 +218,7 @@ Bouton **Expert** en haut de la console : toute la table, dans un design sombre 
 
 ![Égaliseur en mode Expert](images/tuto-expert-eq.png)
 
-**Mode Répétition.** Le bouton en haut à droite (**Façade active** / **Répétition · Main coupé**) coupe le Main et le **verrouille** : impossible de l’ouvrir par erreur, même en rappelant une scène. On ne travaille que les ears des musiciens. Le réglage est gardé au redémarrage.
+**Ears seulement.** Le bouton en haut à droite (**Façade active** / **Ears seulement · Main coupé**) coupe le Main et le **verrouille** : impossible de l’ouvrir par erreur, même en rappelant une scène. On ne travaille que les ears des musiciens. Le réglage est gardé au redémarrage.
 
 **Analyse : l’ingé son qui écoute avec toi.** Pendant que le groupe joue :
 
@@ -282,6 +282,21 @@ Chaque carte indique si le téléphone du musicien est connecté. Si un téléph
 - Le partage s’arrête quand on ferme l’application : il faut le redémarrer à chaque lancement. Les QR codes restent valables tant que l’ordinateur garde la même adresse sur le réseau (même routeur) ; sur un autre réseau, réimprime-les. Pour une adresse fixe, réserve-la pour l’ordinateur dans les réglages du routeur.
 - La connexion n’est pas chiffrée : utilise le Wi-Fi privé du groupe, protégé par mot de passe, jamais un réseau public.
 - Ajouter la page à l’écran d’accueil du téléphone (menu du navigateur › « Sur l’écran d’accueil ») permet de la rouvrir comme une application.
+
+## Répéter et Concert avec Reaper
+
+Tu prépares tes morceaux dans ReaCue. XR18 Studio pilote, Reaper joue et enregistre. Reaper peut rester en arrière-plan.
+
+**Une seule fois :** dans **Répéter**, clique sur **Installer le pont**, puis redémarre Reaper. Dans Reaper, choisis la XR18 dans Préférences › Audio › Device. L'appli te dit ce qui manque. ReaCue n'est pas modifié.
+
+**Groupe seul :** crée une session, puis appuie sur Rec. Les prises se suivent. Pour retirer une prise, supprime-la dans Reaper.
+
+**Avec mes morceaux :** ouvre ton projet ReaCue, choisis le morceau, coche **Qui est là**. Un présent est enregistré et sa piste ReaCue est coupée. Un absent garde sa piste, si le morceau a ses stems séparés. Rec démarre au début du morceau et s'arrête 8 secondes après la fin, sauf si tu cliques sur **Continuer**. Le lecteur compare les prises et l'original.
+
+**Concert :** avec **Enregistrement prévu**, chaque morceau lancé est enregistré. Dans Reaper, Stop arrête toujours l'enregistrement : ce qui se passe entre deux morceaux n'est donc pas enregistré. Stop et Tout couper demandent 2 appuis.
+
+**Backing track :** choisis cet instrument dans Mon ingé son. Le canal passe sur sa source USB et sa piste est enregistrée.
+
 
 ## 10. Préparer : setlists, répétitions, scènes
 

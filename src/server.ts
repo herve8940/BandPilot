@@ -65,6 +65,9 @@ const presencePath=join(dirname(configPath),'presence.json');
 const loadPresence=():string[]=>{try{const v=JSON.parse(readFileSync(presencePath,'utf8'));return Array.isArray(v)?v.map(String):[];}catch{return [];}};
 const savePresence=(v:string[])=>writeFileSync(presencePath,JSON.stringify(v));
 /** Reads the console fresh: a session built on stale routing would record the wrong inputs. */
+let planCache:{at:number;plan:ReturnType<typeof planSession>}|undefined;
+/** Reading the whole console takes seconds: screens reuse a recent read, a new session always reads again. */
+async function recentPlan(){if(!planCache||Date.now()-planCache.at>60000)planCache={at:Date.now(),plan:await reaperPlan()};return structuredClone(planCache.plan);}
 async function reaperPlan(){
  const simulation=xr18.mode==='simulation';let sampleRate:number|null=simulation?48000:null,usbMode:'18x18'|'2x2'|null=null;
  if(!simulation){
@@ -164,7 +167,7 @@ const handler: http.RequestListener = async (req, res) => {
   if(path.startsWith('/api/show')){
    try{
     const q=new URL(req.url??'/','http://localhost').searchParams;let result:unknown;
-    if(path==='/api/show'&&req.method==='GET'){result={alive:bridge.alive(),bridgeCurrent:BRIDGE_VERSION,presence:loadPresence(),...(bridge.alive()?await bridge.state():{})};}
+    if(path==='/api/show'&&req.method==='GET'){result={alive:bridge.alive(),installed:bridge.installed(),bridgeCurrent:BRIDGE_VERSION,rehearsal:xr18.isRehearsal(),presence:loadPresence(),...(bridge.alive()?await bridge.state():{})};}
     else if(path==='/api/show/peaks'&&req.method==='GET'){
      const track=Number(q.get('track')),item=Number(q.get('item')),take=Number(q.get('take')),buckets=Math.min(1200,Number(q.get('buckets'))||600);
      const state=await bridge.state(),file=state.tracks.find(t=>t.index===track)?.items[item]?.takes[take]?.file;
@@ -185,16 +188,18 @@ const handler: http.RequestListener = async (req, res) => {
      else if(path==='/api/show/stop'){await reaper.watch();result=reaper.status().recording||reaper.status().state==='starting'?await reaper.stop():await reaper.halt();}
      else if(path==='/api/show/continue')result=reaper.cancelAutoStop();
      else if(path==='/api/show/presence'){
-      const plan=await reaperPlan(),present=(Array.isArray(d.present)?d.present:[]).map(String),rec=plan.tracks.filter(t=>t.selected);
+      const plan=await recentPlan(),present=(Array.isArray(d.present)?d.present:[]).map(String),rec=plan.tracks.filter(t=>t.selected);
       const {rec:add,unarm,roles}=presenceCommands(rec,present);
       savePresence(present);await bridge.call('apply_presence',{rec:add,unarm,roles});
-      const state=await bridge.state();if(state.setlist)await saveLiveRoles(state.setlist,Object.keys(roles).filter(r=>roles[r]));
+      const state=await bridge.state();
+      // ReaCue applies this itself when its window is open. The mutes above already cover the case where it is closed.
+      if(state.setlist)await saveLiveRoles(state.setlist,Object.keys(roles).filter(r=>roles[r])).catch(e=>diagnostic('reacue-live',{error:(e as Error).message}));
       result={present};
      }
      else if(path==='/api/show/original'){
       const state=await bridge.state(),names:Record<string,boolean>={},roles:Record<string,boolean>={};
       for(const t of state.tracks){if(t.rec)names[t.name]=d.on===true;else if(t.role)roles[t.role]=false;}
-      if(d.on!==true){const plan=await reaperPlan();Object.assign(roles,presenceCommands(plan.tracks.filter(t=>t.selected),loadPresence()).roles);}
+      if(d.on!==true){const plan=await recentPlan();Object.assign(roles,presenceCommands(plan.tracks.filter(t=>t.selected),loadPresence()).roles);}
       result=await bridge.call('apply_mutes',{names,roles});
      }
      else if(path==='/api/show/rec'){
@@ -214,7 +219,7 @@ const handler: http.RequestListener = async (req, res) => {
    try{
     let result:unknown;
     if(path==='/api/reaper'&&req.method==='GET'){await reaper.watch();result={...reaper.status(),defaultFolder:defaultSessionsFolder()};}
-    else if(path==='/api/reaper/plan'&&req.method==='GET'){const plan=await reaperPlan();result={...plan,hoursFree:await freeHours(homedir(),plan)};}
+    else if(path==='/api/reaper/plan'&&req.method==='GET'){const plan=await recentPlan();result={...plan,hoursFree:await freeHours(homedir(),plan)};}
     else if(path==='/api/reaper/session'&&req.method==='POST'){
      const d=await body(req);if(reaper.status().recording)throw Error('Un enregistrement est en cours : arrête-le avant de préparer une session.');
      const plan=await reaperPlan();

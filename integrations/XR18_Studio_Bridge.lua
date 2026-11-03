@@ -5,7 +5,7 @@ local SEP = package.config:sub(1, 1)
 local DIR = r.GetResourcePath() .. SEP .. "XR18Studio"
 r.RecursiveCreateDirectory(DIR, 0)
 local REQ, RES, BEAT = DIR .. SEP .. "request.lua", DIR .. SEP .. "response.json", DIR .. SEP .. "heartbeat.txt"
-local VERSION = "1.1.0"
+local VERSION = "1.2.0"
 
 local function jstr(s)
   return '"' .. tostring(s):gsub('[%z\1-\31\\"]', function(c)
@@ -100,7 +100,8 @@ function H.state()
   local a, b = r.GetSet_LoopTimeRange(false, true, 0, 0, false)
   return { version = VERSION, project = project, setlist = c and c.setlist or nil, concert = c and (c.name or "") or nil, songs = songs, regions = regions(), tracks = tracks,
     pos = (play & 1) == 1 and r.GetPlayPosition() or r.GetCursorPosition(), playing = (play & 1) == 1, recording = (play & 4) == 4,
-    loop = { on = r.GetSetRepeat(-1) == 1, start = a, stop = b }, length = r.GetProjectLength(0) }
+    loop = { on = r.GetSetRepeat(-1) == 1, start = a, stop = b }, length = r.GetProjectLength(0),
+    audio = { inputs = r.GetNumAudioInputs(), rate = tonumber(select(2, r.GetAudioDeviceInfo("SRATE", ""))) or 0, device = select(2, r.GetAudioDeviceInfo("IDENT_IN", "")) or "" } }
 end
 function H.transport()
   local play = r.GetPlayState()
