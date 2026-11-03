@@ -7,6 +7,7 @@ import { AnalysisView } from "./AnalysisView";
 import { RecordingView } from "./RecordingView";
 import "../xair-mixer.css";
 import "./expert.css";
+import "./expert-v3.css";
 
 type View = "console" | "channel" | "ears" | "fx" | "routing" | "analysis" | "recording";
 const VIEWS: { id: View; label: string }[] = [
