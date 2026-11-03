@@ -213,6 +213,18 @@ export class XR18 extends EventEmitter {
     this.send("/xremote");
     this.send("/meters",["/meters/1",2]);
     this.timer = setInterval(() => {this.send("/xremote");this.send("/meters",["/meters/1",2]); this.send("/lr/mix/fader"); if(this.connected&&!this.isLive()){this.connected=false;this.emit("connection",{connected:false});}}, 8000);
+    // X AIR Edit can change channel labels without a reliable unsolicited OSC notification.
+    // Poll only read-only metadata; never write or replay mixer settings.
+    const metadataTimer=setInterval(() => {
+      if(this.socket!==transport || !this.isLive())return;
+      for(let i=1;i<=16;i++){
+        const ch=String(i).padStart(2,"0");
+        this.send(`/ch/${ch}/config/name`);
+        this.send(`/ch/${ch}/config/color`);
+      }
+    },2500);
+    metadataTimer.unref();
+    transport.once("close",()=>clearInterval(metadataTimer));
     this.timer.unref();
     this.send("/lr/mix/fader");
     this.send("/lr/mix/on");
