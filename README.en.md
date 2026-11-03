@@ -6,7 +6,7 @@
 
 [![Latest version](https://img.shields.io/github/v/release/herve8940/xr18-studio?label=version&color=3ee0e0)](https://github.com/herve8940/xr18-studio/releases/latest) [![Downloads](https://img.shields.io/github/downloads/herve8940/xr18-studio/total?color=2b7cf6)](https://github.com/herve8940/xr18-studio/releases) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Windows · macOS · Linux](https://img.shields.io/badge/Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-free-555)](https://github.com/herve8940/xr18-studio/releases/latest)
 
-A **free** app to control a **Behringer XR18, X18 or MR18** digital mixer: an X-AIR Edit alternative designed for beginners. It offers a step-by-step assistant, a clear console where every track fits on screen, and each musician's in-ear mix on their own phone.
+A **free** app to control a **Behringer XR18, X18 or MR18** digital mixer: an X-AIR Edit alternative designed for beginners. It offers a step-by-step assistant, a clear console, and each musician's in-ear mix on their own phone.
 
 [🇫🇷 Français](README.md) · 🇬🇧 English
 
@@ -28,7 +28,7 @@ XR18 Studio controls your console like X-AIR Edit, plus:
 
 | 🎧 **“Mon ingé son”** | 🎚️ **A clear console** | 📱 **Monitors on phones** |
 |---|---|---|
-| A 6-step assistant: it sets up each instrument with live best practice, sets the gains with you and prepares the monitor mixes. | A **Simple** mode with big faders for the show, and a full X-AIR Edit–style **Expert** mode, every option explained. | Each musician scans their QR code and adjusts **their own** mix. No app to install, and nothing else they can touch. |
+| A 6-step assistant: it sets up each instrument with live best practice, sets the gains with you and prepares the monitor mixes. | A **Simple** mode with big faders for the show, and a full **Expert** mode with live analysis, every option explained. | Each musician scans their QR code and adjusts **their own** mix. No app to install, and nothing else they can touch. |
 
 ## 🎧 “Mon ingé son” in 6 steps
 
@@ -49,13 +49,14 @@ XR18 Studio controls your console like X-AIR Edit, plus:
 |---|---|---|
 | ![Simple console](docs/images/tuto-simple.png) | ![Monitor mix](docs/images/tuto-simple-retour.png) | ![Expert console](docs/images/tuto-expert.png) |
 
-| EQ | Gate | Compressor |
+| Live analysis | Check by ear | EQ |
 |---|---|---|
-| ![EQ](docs/images/xair-eq.png) | ![Gate](docs/images/xair-gate.png) | ![Compressor](docs/images/xair-comp.png) |
-| **Input** | **Sends** | **Effects** |
-| ![Input](docs/images/xair-input.png) | ![Sends](docs/images/xair-sends.png) | ![Effects](docs/images/xair-fx.png) |
+| ![Live analysis](docs/images/tuto-analyse.png) | ![Check by ear](docs/images/tuto-analyse-valider.png) | ![EQ](docs/images/tuto-expert-eq.png) |
 
-- **Every track on screen**, with no scrolling: strips adapt to the window size (checked from 1280×800 to 1920×1080) and the menu folds automatically.
+- **6 views in Expert mode**: Console, Channel, Ears, Effects, Routing, Analysis.
+- **Live analysis**: mix spectrum, “Who plays where” map and recommendations to compare A / B before applying them. Nothing changes without your click.
+- **Rehearsal mode**: the Main stays muted and locked, you only work on the ears.
+- **Simple mode for the show**: every track on screen and the menu folds automatically. In Expert mode, the last strip may need a little scrolling at 1440 px.
 - **Start from a blank scene** in one click: the whole mixer goes back to neutral with levels down, without touching 48 V, gains or routing, and it can be undone.
 - **Each view explains** every control in plain words: see the [console guide](docs/GUIDE_CONSOLE.md) (in French).
 

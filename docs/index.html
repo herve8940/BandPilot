@@ -27,7 +27,7 @@
 {"@context":"https://schema.org","@graph":[
 {"@type":"SoftwareApplication","name":"XR18 Studio","applicationCategory":"MultimediaApplication","applicationSubCategory":"Audio mixer controller","operatingSystem":"Windows, macOS, Linux","softwareVersion":"2.1.0","inLanguage":["fr","en"],"isAccessibleForFree":true,"license":"https://opensource.org/licenses/MIT","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Application gratuite pour piloter une table de mixage Behringer XR18, X18 ou MR18 : ingé son guidé pour débutants, console graphique façon X-AIR Edit, retours in-ear sur le téléphone de chaque musicien.","url":"https://herve8940.github.io/xr18-studio/","downloadUrl":"https://github.com/herve8940/xr18-studio/releases/latest","codeRepository":"https://github.com/herve8940/xr18-studio","screenshot":"https://herve8940.github.io/xr18-studio/images/hero.png","author":{"@type":"Person","name":"Hervé Naessens"}},
 {"@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"XR18 Studio remplace-t-il X-AIR Edit ?","acceptedAnswer":{"@type":"Answer","text":"Il propose les mêmes vues (Mixer, Canal, Entrée, Gate, EQ, Comp, Envois, Main, Effets, Routage, Vumètres) et ajoute un assistant pour débutants et les retours sur téléphone. Les deux peuvent être utilisés sur la même console."}},
+{"@type":"Question","name":"XR18 Studio remplace-t-il X-AIR Edit ?","acceptedAnswer":{"@type":"Answer","text":"Il couvre les réglages de X-AIR Edit, réunis en 6 vues (Console, Canal, Ears, Effets, Routage, Analyse), et ajoute un assistant pour débutants, l’Analyse en direct et les retours sur téléphone. Les deux peuvent être utilisés sur la même console."}},
 {"@type":"Question","name":"Est-ce gratuit ?","acceptedAnswer":{"@type":"Answer","text":"Oui. XR18 Studio est gratuit et open source (licence MIT)."}},
 {"@type":"Question","name":"Fonctionne-t-il avec une X18 ou une MR18 ?","acceptedAnswer":{"@type":"Answer","text":"Oui : XR18, X18, MR18 et leurs versions V2 sont reconnues automatiquement."}},
 {"@type":"Question","name":"Les musiciens doivent-ils installer une application ?","acceptedAnswer":{"@type":"Answer","text":"Non. Chacun scanne son QR code et règle son retour dans le navigateur de son téléphone, sur le même Wi-Fi."}},
@@ -81,7 +81,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px}
 <div class="wrap">
 <header class="top">
   <a class="brand" href="./"><span class="mark">≡</span>XR18 Studio</a>
-  <nav aria-label="Navigation"><a href="#coach">Mon ingé son</a><a href="#console">Console</a><a href="#retours">Retours</a><a href="#installer">Installer</a><a href="#faq">FAQ</a><a href="en.html" hreflang="en" lang="en">🇬🇧 English</a></nav>
+  <nav aria-label="Navigation"><a href="#coach">Mon ingé son</a><a href="#console">Console</a><a href="#analyse">Analyse</a><a href="#retours">Retours</a><a href="#installer">Installer</a><a href="#faq">FAQ</a><a href="en.html" hreflang="en" lang="en">🇬🇧 English</a></nav>
 </header>
 </div>
 
@@ -104,7 +104,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px}
   <p class="intro">Répétitions, petites salles, bars, fêtes : tu as une Behringer XR18, des micros et des musiciens, et tu veux que ça sonne sans apprendre le jargon.</p>
   <div class="grid3">
     <article class="card"><img src="images/tuto-coach-batterie.png" width="1440" height="1000" alt="Assistant Mon ingé son : configuration complète de chaque instrument" loading="lazy"><h3>🎧 Mon ingé son</h3><p>Il configure chaque instrument selon les bonnes pratiques du live, règle les gains avec toi et prépare les retours.</p></article>
-    <article class="card"><img src="images/tuto-simple.png" width="1440" height="900" alt="Console XR18 en mode Simple, toutes les pistes visibles" loading="lazy"><h3>🎚️ Une console claire</h3><p>Toutes les pistes visibles d’un coup. Mode Simple pour le concert, mode Expert complet façon X-AIR Edit.</p></article>
+    <article class="card"><img src="images/tuto-simple.png" width="1440" height="900" alt="Console XR18 en mode Simple, toutes les pistes visibles" loading="lazy"><h3>🎚️ Une console claire</h3><p>Mode Simple pour le concert, toutes les pistes visibles d’un coup. Mode Expert complet, avec Analyse en direct.</p></article>
     <article class="card"><img src="images/tuto-share.png" width="1440" height="900" alt="QR codes des retours in-ear de chaque musicien" loading="lazy"><h3>📱 Les retours au téléphone</h3><p>Chaque musicien scanne son QR code et règle <b>son</b> mix in-ear. Il n’a aucune application à installer.</p></article>
   </div>
 </div>
@@ -132,11 +132,28 @@ footer .links{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px}
   <div>
     <h2>🎚️ Toute la console, d’un coup d’œil</h2>
     <ul class="ticks">
-      <li><b>Toutes les pistes à l’écran</b>, sans faire défiler : 16 entrées, Aux et retours d’effets.</li>
-      <li><b>Les vues de X-AIR Edit</b> : Mixer, Canal, Entrée, Gate, EQ, Comp, Envois, Main, Effets, Routage, Vumètres.</li>
+      <li><b>Toutes les pistes réunies</b> : 16 entrées, Aux et retours d’effets, avec mini-courbe d’égaliseur et compresseur.</li>
+      <li><b>6 vues claires</b> : Console, Canal, Ears, Effets, Routage, Analyse.</li>
+      <li><b>Les ears en tableau</b> : instruments × musiciens, avec limiteurs de protection.</li>
       <li><b>Chaque bouton expliqué</b> en langage simple, avec les 61 effets décrits.</li>
       <li><b>Partir d’une scène vierge</b> en un clic, sans toucher au 48 V, aux gains ni au routage.</li>
       <li><b>Toujours protégé</b> : 48 V, routage et effets demandent confirmation, avec sauvegarde.</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<section id="analyse">
+<div class="wrap split">
+  <img src="images/tuto-analyse.png" width="1440" height="900" alt="Vue Analyse : spectre en direct, carte Qui joue où et recommandations" loading="lazy">
+  <div>
+    <h2>🔎 L’Analyse en direct</h2>
+    <ul class="ticks">
+      <li><b>Le spectre du mix</b>, lu sur la XR18 et comparé à une courbe cible.</li>
+      <li><b>Qui joue où</b> : la place de chaque instrument, et ceux qui se gênent.</li>
+      <li><b>Des recommandations classées</b> : Sécurité, Important, Conseil.</li>
+      <li><b>Valider en écoutant</b> : compare A / B dans les ears, applique avec sauvegarde, annule en un clic.</li>
+      <li><b>Mode Répétition</b> : le Main est coupé et verrouillé, on ne travaille que les ears.</li>
     </ul>
   </div>
 </div>
@@ -176,12 +193,12 @@ footer .links{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px}
 <section id="faq">
 <div class="wrap">
   <h2>Questions fréquentes</h2>
-  <details><summary>XR18 Studio remplace-t-il X-AIR Edit ?</summary><p>Il propose les mêmes vues (Mixer, Canal, Entrée, Gate, EQ, Comp, Envois, Main, Effets, Routage, Vumètres). Il ajoute un assistant pour débutants et les retours sur téléphone. Tu peux utiliser les deux sur la même console.</p></details>
+  <details><summary>XR18 Studio remplace-t-il X-AIR Edit ?</summary><p>Il couvre les réglages de X-AIR Edit, réunis en 6 vues (Console, Canal, Ears, Effets, Routage, Analyse), et ajoute un assistant pour débutants, l’Analyse en direct et les retours sur téléphone. Tu peux utiliser les deux sur la même console.</p></details>
   <details><summary>Est-ce gratuit ?</summary><p>Oui, gratuit et open source (licence MIT).</p></details>
   <details><summary>Fonctionne-t-il avec une X18 ou une MR18 ?</summary><p>Oui : XR18, X18, MR18 et leurs versions V2 sont reconnues automatiquement.</p></details>
   <details><summary>Les musiciens doivent-ils installer une application ?</summary><p>Non. Chacun scanne son QR code et règle son retour dans le navigateur de son téléphone, sur le même Wi-Fi.</p></details>
   <details><summary>Faut-il Internet ?</summary><p>Non. Tout fonctionne sur le réseau local de la console ou du groupe.</p></details>
-  <details><summary>Le coach entend-il le son ?</summary><p>Non. Il lit les réglages et les niveaux de la console, pas l’audio. Ses conseils d’écoute partent de ta description. Les valeurs proposées sont des points de départ : ton oreille a le dernier mot.</p></details>
+  <details><summary>Le coach entend-il le son ?</summary><p>Non. Il lit les réglages et les mesures de la console (niveaux, spectre, compresseurs), pas l’audio. Ses conseils d’écoute partent de ta description. Les valeurs proposées sont des points de départ : ton oreille a le dernier mot.</p></details>
 </div>
 </section>
 </main>

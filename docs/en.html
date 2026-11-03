@@ -27,7 +27,7 @@
 {"@context":"https://schema.org","@graph":[
 {"@type":"SoftwareApplication","name":"XR18 Studio","applicationCategory":"MultimediaApplication","applicationSubCategory":"Audio mixer controller","operatingSystem":"Windows, macOS, Linux","softwareVersion":"2.1.0","inLanguage":["fr","en"],"isAccessibleForFree":true,"license":"https://opensource.org/licenses/MIT","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Free app to control a Behringer XR18, X18 or MR18 digital mixer: guided sound engineer for beginners, X-AIR Edit style graphical console, in-ear monitor mixes on each musician's phone.","url":"https://herve8940.github.io/xr18-studio/en.html","downloadUrl":"https://github.com/herve8940/xr18-studio/releases/latest","codeRepository":"https://github.com/herve8940/xr18-studio","screenshot":"https://herve8940.github.io/xr18-studio/images/hero.png","author":{"@type":"Person","name":"Hervé Naessens"}},
 {"@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"Does XR18 Studio replace X-AIR Edit?","acceptedAnswer":{"@type":"Answer","text":"It offers the same views (Mixer, Channel, Input, Gate, EQ, Comp, Sends, Main, Effects, Routing, Meters) and adds a beginner assistant and monitors on phones. Both can be used on the same console."}},
+{"@type":"Question","name":"Does XR18 Studio replace X-AIR Edit?","acceptedAnswer":{"@type":"Answer","text":"It covers the X-AIR Edit settings, gathered in 6 views (Console, Channel, Ears, Effects, Routing, Analysis), and adds a beginner assistant, live analysis and monitors on phones. Both can be used on the same console."}},
 {"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. XR18 Studio is free and open source (MIT licence)."}},
 {"@type":"Question","name":"Does it work with an X18 or MR18?","acceptedAnswer":{"@type":"Answer","text":"Yes: XR18, X18, MR18 and their V2 versions are detected automatically."}},
 {"@type":"Question","name":"Do musicians need to install an app?","acceptedAnswer":{"@type":"Answer","text":"No. Each one scans their QR code and adjusts their mix in their phone browser, on the same Wi-Fi."}},
@@ -81,7 +81,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px}
 <div class="wrap">
 <header class="top">
   <a class="brand" href="./"><span class="mark">≡</span>XR18 Studio</a>
-  <nav aria-label="Navigation"><a href="#coach">Sound engineer</a><a href="#console">Console</a><a href="#retours">Monitors</a><a href="#installer">Install</a><a href="#faq">FAQ</a><a href="./" hreflang="fr" lang="fr">🇫🇷 Français</a></nav>
+  <nav aria-label="Navigation"><a href="#coach">Sound engineer</a><a href="#console">Console</a><a href="#analysis">Analysis</a><a href="#retours">Monitors</a><a href="#installer">Install</a><a href="#faq">FAQ</a><a href="./" hreflang="fr" lang="fr">🇫🇷 Français</a></nav>
 </header>
 </div>
 
@@ -104,7 +104,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px}
   <p class="intro">Rehearsals, small venues, bars, parties: you have a Behringer XR18, mics and musicians, and you want a good sound without learning the jargon.</p>
   <div class="grid3">
     <article class="card"><img src="images/tuto-coach-batterie.png" width="1440" height="1000" alt="Mon ingé son assistant: complete setup of each instrument" loading="lazy"><h3>🎧 “Mon ingé son”</h3><p>It sets up each instrument with live best practice, sets the gains with you and prepares the monitor mixes.</p></article>
-    <article class="card"><img src="images/tuto-simple.png" width="1440" height="900" alt="XR18 console in Simple mode, all tracks visible" loading="lazy"><h3>🎚️ A clear console</h3><p>Every track visible at once. Simple mode for the show, full X-AIR Edit style Expert mode.</p></article>
+    <article class="card"><img src="images/tuto-simple.png" width="1440" height="900" alt="XR18 console in Simple mode, all tracks visible" loading="lazy"><h3>🎚️ A clear console</h3><p>Simple mode for the show, every track visible at once. Full Expert mode, with live analysis.</p></article>
     <article class="card"><img src="images/tuto-share.png" width="1440" height="900" alt="QR codes for each musician’s in-ear mix" loading="lazy"><h3>📱 Monitors on phones</h3><p>Each musician scans their QR code and adjusts <b>their own</b> in-ear mix. There is no app to install.</p></article>
   </div>
 </div>
@@ -132,11 +132,28 @@ footer .links{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px}
   <div>
     <h2>🎚️ The whole console at a glance</h2>
     <ul class="ticks">
-      <li><b>Every track on screen</b>, no scrolling: 16 inputs, Aux and effect returns.</li>
-      <li><b>The X-AIR Edit views</b>: Mixer, Channel, Input, Gate, EQ, Comp, Sends, Main, Effects, Routing, Meters.</li>
+      <li><b>Every track together</b>: 16 inputs, Aux and effect returns, with a small EQ curve and compressor.</li>
+      <li><b>6 clear views</b>: Console, Channel, Ears, Effects, Routing, Analysis.</li>
+      <li><b>Ears as a table</b>: instruments × musicians, with protection limiters.</li>
       <li><b>Every control explained</b> in plain words (in French), with all 61 effects described.</li>
       <li><b>Start from a blank scene</b> in one click, without touching 48 V, gains or routing.</li>
       <li><b>Always protected</b>: 48 V, routing and effects ask for confirmation, with a backup.</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<section id="analysis">
+<div class="wrap split">
+  <img src="images/tuto-analyse.png" width="1440" height="900" alt="Analysis view: live spectrum, Who plays where map and recommendations" loading="lazy">
+  <div>
+    <h2>🔎 Live analysis</h2>
+    <ul class="ticks">
+      <li><b>The mix spectrum</b>, read from the XR18 and compared with a target curve.</li>
+      <li><b>Who plays where</b>: the place of each instrument, and which ones clash.</li>
+      <li><b>Ranked recommendations</b>: Safety, Important, Advice.</li>
+      <li><b>Check by ear</b>: compare A / B in the ears, apply with a backup, undo in one click.</li>
+      <li><b>Rehearsal mode</b>: the Main stays muted and locked, you only work on the ears.</li>
     </ul>
   </div>
 </div>
@@ -176,12 +193,12 @@ footer .links{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px}
 <section id="faq">
 <div class="wrap">
   <h2>FAQ</h2>
-  <details><summary>Does XR18 Studio replace X-AIR Edit?</summary><p>It offers the same views (Mixer, Channel, Input, Gate, EQ, Comp, Sends, Main, Effects, Routing, Meters). It adds a beginner assistant and monitors on phones. You can use both on the same console.</p></details>
+  <details><summary>Does XR18 Studio replace X-AIR Edit?</summary><p>It covers the X-AIR Edit settings, gathered in 6 views (Console, Channel, Ears, Effects, Routing, Analysis), and adds a beginner assistant, live analysis and monitors on phones. You can use both on the same console.</p></details>
   <details><summary>Is it free?</summary><p>Yes, free and open source (MIT licence).</p></details>
   <details><summary>Does it work with an X18 or MR18?</summary><p>Yes: XR18, X18, MR18 and their V2 versions are detected automatically.</p></details>
   <details><summary>Do musicians need to install an app?</summary><p>No. Each one scans their QR code and adjusts their mix in their phone browser, on the same Wi-Fi.</p></details>
   <details><summary>Is Internet needed?</summary><p>No. Everything runs on the console’s or the band’s local network.</p></details>
-  <details><summary>Does the coach hear the sound?</summary><p>No. It reads the console’s settings and levels, not the audio. Its listening advice comes from your description. Proposed values are starting points: your ears have the final say.</p></details><details><summary>Is the app in English?</summary><p>The interface is in French. The guides and the tutorial are available in English, with every French button name translated.</p></details>
+  <details><summary>Does the coach hear the sound?</summary><p>No. It reads the console’s settings and measurements (levels, spectrum, compressors), not the audio. Its listening advice comes from your description. Proposed values are starting points: your ears have the final say.</p></details><details><summary>Is the app in English?</summary><p>The interface is in French. The guides and the tutorial are available in English, with every French button name translated.</p></details>
 </div>
 </section>
 </main>
