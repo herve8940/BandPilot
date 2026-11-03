@@ -19,6 +19,7 @@ import "./studio.css";
 import "./fx-library.css";
 import "./processing.css";
 import "./design-v3.css";
+import "./recording-v3.css";
 
 type Channel = { channel: number; fader: number; on: boolean; updatedAt: string | null };
 type Status = { mode: "simulation" | "real"; connected: boolean; writesEnabled: boolean; host?:string };
