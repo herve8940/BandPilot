@@ -1,17 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import dgram from 'node:dgram';
 import {mkdtemp,readFile,readdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {encodeOsc,decodeOsc,oscFloat} from '../src/osc.js';
 import {XR18} from '../src/xr18.js';
 import {ConsoleControl} from '../src/console-control.js';
 import {LibraryStore} from '../src/library-store.js';
 import {REAPER_FX} from '../src/reaper-fx.js';
 import {SOURCES,SoundCoach,suggestMusicians} from '../src/sound-coach.js';
 import {familyFromName} from '../src/analysis.js';
-import {ACTION,ReaperLink,createSession,openInReaper,planSession,readOsc,renderRpp,safeName,type Wire} from '../src/reaper.js';
+import {ACTION,ReaperLink,createSession,openInReaper,planSession,renderRpp,safeName,type Wire} from '../src/reaper.js';
 
 const base=(values:Wire={},extra={})=>({values,instruments:[{channel:1,name:'Voix',family:'voice'},{channel:3,name:'Clavier',family:'keys'},{channel:5,name:'Kick',family:'kick'},{channel:6,name:'Snare',family:'snare'}] as never,sampleRate:48000,usbMode:'18x18' as const,simulation:false,...extra});
 const trackBlocks=(rpp:string)=>rpp.split('  <TRACK ').slice(1);
@@ -120,30 +118,15 @@ test('Reaper opens with the session on each system, with the file as a plain arg
  await openInReaper('/a b/c.rpp','darwin',run);
  assert.deepEqual(calls,[['open','-a','REAPER','/a b/c.rpp'],['open','/a b/c.rpp']]);
 });
-test('OSC bundles from Reaper are read',()=>{
- const one=encodeOsc('/record',[oscFloat(1)]),size=Buffer.alloc(4);size.writeInt32BE(one.length);
- const bundle=Buffer.concat([Buffer.from('#bundle\0','latin1'),Buffer.alloc(8),size,one]);
- assert.equal(readOsc(bundle)[0]!.address,'/record');
-});
 
-/** A stand-in for Reaper: answers on the feedback port like its OSC surface. */
+/** A stand-in for Reaper, as seen through the bridge. */
 async function fakeReaper(options:{refuseRecord?:boolean;frozenClock?:boolean;ignoreStop?:boolean}={}){
- const socket=dgram.createSocket('udp4');await new Promise<void>(r=>socket.bind(0,'127.0.0.1',()=>r()));
- const listen=(socket.address() as {port:number}).port,probe=dgram.createSocket('udp4');
- await new Promise<void>(r=>probe.bind(0,'127.0.0.1',()=>r()));
- const feedback=(probe.address() as {port:number}).port;await new Promise<void>(r=>probe.close(()=>r()));
- const fake={actions:[] as number[],recording:false,alive:true,time:0,timer:undefined as NodeJS.Timeout|undefined,
-  say(address:string,value:number){socket.send(encodeOsc(address,[oscFloat(value)]),feedback,'127.0.0.1');},
-  close(){clearInterval(fake.timer);socket.close();}};
- socket.on('message',packet=>{
-  if(!fake.alive)return;
-  const id=Number(decodeOsc(packet).address.split('/').at(-1));fake.actions.push(id);
-  if(id===ACTION.refreshSurfaces)fake.say('/record',fake.recording?1:0);
-  if(id===ACTION.record&&!options.refuseRecord){fake.recording=true;fake.say('/record',1);}
-  if(id===ACTION.stopAndSave&&!options.ignoreStop){fake.recording=false;fake.say('/record',0);}
- });
- fake.timer=setInterval(()=>{if(fake.alive&&fake.recording){fake.time+=options.frozenClock?0:.05;fake.say('/time',fake.time);}},20);
- const link=new ReaperLink({listen,feedback},{pollMs:30,silenceMs:250,confirmMs:400,stoppedClockMs:200});
+ const fake={actions:[] as number[],recording:false,alive:true,time:0,timer:undefined as NodeJS.Timeout|undefined,close(){clearInterval(fake.timer);}};
+ fake.timer=setInterval(()=>{if(fake.alive&&fake.recording&&!options.frozenClock)fake.time+=.05;},20);
+ const link=new ReaperLink({
+  transport:async()=>{if(!fake.alive)throw Error('dead');return {playing:fake.recording,recording:fake.recording,pos:fake.time};},
+  actions:async ids=>{if(!fake.alive)throw Error('dead');for(const id of ids){fake.actions.push(id);if(id===ACTION.record&&!options.refuseRecord)fake.recording=true;if(id===ACTION.stopAndSave&&!options.ignoreStop)fake.recording=false;}},
+ },{pollMs:15,silenceMs:250,confirmMs:400,stoppedClockMs:200});
  return {fake,link};
 }
 const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
@@ -151,9 +134,9 @@ const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 test('recording is only reported once Reaper confirmed it and its clock runs',async()=>{
  const {fake,link}=await fakeReaper();
  try{
-  await link.watch();await wait(60);assert.equal(link.status().state,'ready');assert.equal(link.status().recording,false);
+  await link.watch();await wait(40);assert.equal(link.status().state,'ready');assert.equal(link.status().recording,false);
   const started=await link.record();assert.equal(started.recording,true);assert.ok(fake.actions.includes(ACTION.record));
-  assert.equal(link.marker().markers,1);await wait(30);assert.ok(fake.actions.includes(ACTION.marker));
+  assert.equal((await link.marker()).markers,1);assert.ok(fake.actions.includes(ACTION.marker));
   const stopped=await link.stop();assert.equal(stopped.recording,false);assert.equal(stopped.state,'ready');
   await wait(30);assert.ok(fake.actions.includes(ACTION.stopAndSave));assert.ok(!fake.actions.includes(40668));
   assert.ok(fake.actions.indexOf(ACTION.saveProject)>fake.actions.indexOf(ACTION.stopAndSave),'project saved after the stop');
@@ -182,11 +165,11 @@ test('silence during a take raises an alert and stops claiming to record',async(
 });
 test('a stop made in Reaper itself is reported',async()=>{
  const {fake,link}=await fakeReaper();
- try{await link.record();fake.recording=false;fake.say('/record',0);await wait(50);assert.equal(link.status().recording,false);assert.match(link.status().alert,/arrêté depuis Reaper/);assert.equal(link.dismissAlert().alert,'');}
+ try{await link.record();fake.recording=false;await wait(60);assert.equal(link.status().recording,false);assert.match(link.status().alert,/arrêté depuis Reaper/);assert.equal(link.dismissAlert().alert,'');}
  finally{link.close();fake.close();}
 });
 test('an unconfirmed stop stays an error, markers need a confirmed take',async()=>{
  const {fake,link}=await fakeReaper({ignoreStop:true});
- try{assert.throws(()=>link.marker(),/confirmé/);await link.record();await assert.rejects(link.stop(),/n’a pas confirmé/);assert.equal(link.status().recording,true);}
+ try{await assert.rejects(link.marker(),/confirmé/);await link.record();await assert.rejects(link.stop(),/n’a pas confirmé/);assert.equal(link.status().recording,true);}
  finally{link.close();fake.close();}
 });

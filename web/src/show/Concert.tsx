@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BridgeInstall, Status } from "./Rehearse";
+import { BridgeInstall, needsBridge, Status } from "./Rehearse";
 import { call, clock, position, sectionName, songAt, useShow } from "./api";
 import "../expert/expert.css";
 import "./show.css";
@@ -19,7 +19,7 @@ export function Concert() {
   const section = (show.regions ?? []).find(r => cursor >= r.start && cursor < r.stop);
   const start = () => { if (!song) return; if (recordShow) void act("/api/show/rec", { start: cursor > song.start + 1 ? cursor : song.countin, stop: song.stop }); else void act("/api/show/play"); };
   const wanted = recordShow && !recording && running;
-  if (!show.alive) return <section className="xs2 sh"><BridgeInstall act={act} /></section>;
+  if (needsBridge(show)) return <section className="xs2 sh"><BridgeInstall act={act} /></section>;
   return <section className="xs2 sh sh-concert" aria-label="Concert">
     <div className="sh-head"><b className="sh-title">{show.concert || "Concert"}</b><div className="xs2-spacer" />
       {recording ? <span className="sh-rec">● REC {clock(link!.elapsed)}</span> : <button type="button" className={`xs2-btn ${recordShow ? "primary" : ""}`} disabled={running} aria-pressed={recordShow} onClick={() => setRecordShow(!recordShow)}>{recordShow ? "Enregistrement prévu" : "Sans enregistrement"}</button>}

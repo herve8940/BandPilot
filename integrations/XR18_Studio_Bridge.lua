@@ -5,7 +5,7 @@ local SEP = package.config:sub(1, 1)
 local DIR = r.GetResourcePath() .. SEP .. "XR18Studio"
 r.RecursiveCreateDirectory(DIR, 0)
 local REQ, RES, BEAT = DIR .. SEP .. "request.lua", DIR .. SEP .. "response.json", DIR .. SEP .. "heartbeat.txt"
-local VERSION = "1.0.0"
+local VERSION = "1.1.0"
 
 local function jstr(s)
   return '"' .. tostring(s):gsub('[%z\1-\31\\"]', function(c)
@@ -37,18 +37,14 @@ local function read_file(path)
 end
 local function track_name(tr) local _, n = r.GetTrackName(tr); return n end
 
--- mêmes rôles que ReaCue : on reconnaît ses pistes par leur nom
-local ROLE_WORDS = {
-  { "vocals", { "chant", "voix", "vocal", "lead vox" } }, { "drums", { "batterie", "drum" } }, { "bass", { "basse", "bass" } },
-  { "lead_guitar", { "guitare solo", "lead guitar", "lead gtr" } }, { "guitars", { "guitare", "guitar" } },
-  { "keys", { "clavier", "keys", "piano" } }, { "other", { "autres", "other" } },
-}
+-- mêmes noms exacts que ReaCue : VOIX, CUES, CLICK et Mix ne sont jamais des instruments
+local ROLE_BY_NAME = { chant = "vocals", vocals = "vocals", batterie = "drums", drums = "drums", batt = "drums", basse = "bass", bass = "bass",
+  guitares = "guitars", guitars = "guitars", guitare = "guitars", guitar = "guitars", ["guitare solo"] = "lead_guitar", ["lead guitar"] = "lead_guitar",
+  ["lead guitars"] = "lead_guitar", claviers = "keys", keys = "keys", clavier = "keys", piano = "keys", synth = "keys", autres = "other", other = "other" }
 local function is_rec(name) return name:sub(1, 4) == "REC " end
 local function role_of(name)
   if is_rec(name) then return nil end
-  local n = name:lower()
-  for _, e in ipairs(ROLE_WORDS) do for _, w in ipairs(e[2]) do if n:find(w, 1, true) then return e[1] end end end
-  return nil
+  return ROLE_BY_NAME[(name:gsub("%s+%d+$", "")):lower()]
 end
 local function each_track(fn) for i = 0, r.CountTracks(0) - 1 do fn(r.GetTrack(0, i), i) end end
 local function find_track(name)
@@ -102,9 +98,33 @@ function H.state()
   if c then for i, s in ipairs(c.songs) do songs[i] = { title = s.title or s.name or ("Morceau " .. i), start = s.start, countin = s.countin or s.start, stop = s.stop } end end
   local play = r.GetPlayState()
   local a, b = r.GetSet_LoopTimeRange(false, true, 0, 0, false)
-  return { version = VERSION, project = project, concert = c and (c.name or "") or nil, songs = songs, regions = regions(), tracks = tracks,
+  return { version = VERSION, project = project, setlist = c and c.setlist or nil, concert = c and (c.name or "") or nil, songs = songs, regions = regions(), tracks = tracks,
     pos = (play & 1) == 1 and r.GetPlayPosition() or r.GetCursorPosition(), playing = (play & 1) == 1, recording = (play & 4) == 4,
     loop = { on = r.GetSetRepeat(-1) == 1, start = a, stop = b }, length = r.GetProjectLength(0) }
+end
+function H.transport()
+  local play = r.GetPlayState()
+  return { playing = (play & 1) == 1, paused = (play & 2) == 2, recording = (play & 4) == 4,
+    pos = (play & 1) == 1 and r.GetPlayPosition() or r.GetCursorPosition() }
+end
+-- Plusieurs actions dans le même tour : rien ne peut s'intercaler entre « aller à la fin » et « Rec ».
+function H.action(a) for _, id in ipairs(a.ids) do r.Main_OnCommand(id, 0) end return H.transport() end
+-- Forme d'onde lue par Reaper : marche aussi pour MP3, FLAC, etc.
+function H.peaks(a)
+  local tr = assert(r.GetTrack(0, a.track), "piste introuvable")
+  local it = assert(r.GetTrackMediaItem(tr, a.item), "élément introuvable")
+  local take = assert(r.GetTake(it, a.take), "prise introuvable")
+  local pos, len = r.GetMediaItemInfo_Value(it, "D_POSITION"), r.GetMediaItemInfo_Value(it, "D_LENGTH")
+  local n = math.max(1, math.min(a.buckets, 2000))
+  local buf = r.new_array(n * 2)
+  local ret = r.GetMediaItemTake_Peaks(take, n / len, pos, 1, n, 0, buf)
+  local got, t = math.floor(ret) & 0xFFFFF, buf.table()
+  local out = {}
+  for i = 1, got do
+    local hi, lo = t[i] or 0, t[got + i] or 0
+    out[i] = math.floor(math.max(math.abs(hi), math.abs(lo)) * 1000 + 0.5) / 1000
+  end
+  return { peaks = out }
 end
 function H.goto_pos(a) r.SetEditCurPos(a.pos, true, true); return { pos = a.pos } end
 function H.set_loop(a)

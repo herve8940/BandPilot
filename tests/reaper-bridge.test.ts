@@ -4,11 +4,9 @@ import {existsSync,mkdirSync,writeFileSync,readFileSync,rmSync,watch} from 'node
 import {mkdtemp,mkdir,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import dgram from 'node:dgram';
-import {ReaperBridge,reaperResources,toLua} from '../src/reaper-bridge.js';
+import {ReaperBridge,reaperResources,saveLiveRoles,toLua} from '../src/reaper-bridge.js';
 import {wavPeaks} from '../src/peaks.js';
 import {ACTION,ReaperLink,planSession,presenceCommands,roleOf} from '../src/reaper.js';
-import {decodeOsc,encodeOsc,oscFloat} from '../src/osc.js';
 
 test('requests stay plain Lua data, quotes and accents included',()=>{
  assert.equal(toLua({a:'é"\\',b:[1,true]}),'{["a"]="é\\"\\\\",["b"]={1,true}}');
@@ -55,14 +53,10 @@ test('present musicians are recorded and silence their stem, absent ones keep it
  assert.deepEqual(c.roles,{drums:true,bass:true,vocals:false});assert.match(c.rec[0]!.chunk,/NAME "REC E-drums"/);assert.equal(roleOf(tracks[0]!),'drums');
 });
 async function fake(){
- const socket=dgram.createSocket('udp4');await new Promise<void>(r=>socket.bind(0,'127.0.0.1',()=>r()));
- const listen=(socket.address() as {port:number}).port,probe=dgram.createSocket('udp4');await new Promise<void>(r=>probe.bind(0,'127.0.0.1',()=>r()));
- const feedback=(probe.address() as {port:number}).port;await new Promise<void>(r=>probe.close(()=>r()));
  const f={actions:[] as number[],rec:false,time:0,timer:undefined as NodeJS.Timeout|undefined};
- const say=(a:string,v:number)=>socket.send(encodeOsc(a,[oscFloat(v)]),feedback,'127.0.0.1');
- socket.on('message',m=>{const id=Number(decodeOsc(m).address.split('/').at(-1));f.actions.push(id);if(id===ACTION.refreshSurfaces)say('/record',f.rec?1:0);if(id===ACTION.record){f.rec=true;say('/record',1);}if(id===ACTION.stopAndSave){f.rec=false;say('/record',0);}});
- f.timer=setInterval(()=>{if(f.rec){f.time+=.05;say('/time',f.time);}},10);
- return {f,link:new ReaperLink({listen,feedback},{pollMs:20,silenceMs:300,confirmMs:500,stoppedClockMs:200}),close(){clearInterval(f.timer);socket.close();}};
+ f.timer=setInterval(()=>{if(f.rec)f.time+=.05;},10);
+ const link=new ReaperLink({transport:async()=>({playing:f.rec,recording:f.rec,pos:f.time}),actions:async ids=>{for(const id of ids){f.actions.push(id);if(id===ACTION.record)f.rec=true;if(id===ACTION.stopAndSave)f.rec=false;}}},{pollMs:15,silenceMs:300,confirmMs:500,stoppedClockMs:200});
+ return {f,link,close(){clearInterval(f.timer);}};
 }
 test('a song take starts where it is told, stops by itself after the tail, and can be prolonged',async()=>{
  const {f,link,close}=await fake();
@@ -76,5 +70,11 @@ test('a song take starts where it is told, stops by itself after the tail, and c
 });
 test('plain Stop refuses to cut a take without saving it',async()=>{
  const {link,close}=await fake();
- try{await link.record();assert.throws(()=>link.halt(),/Enregistrement en cours/);}finally{link.close();close();}
+ try{await link.record();await assert.rejects(link.halt(),/Enregistrement en cours/);}finally{link.close();close();}
+});
+test('Qui est là goes where ReaCue reads it, without touching the rest of the setlist',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'xr18-live-')),f=join(dir,'c.setlist.json');
+ await writeFile(f,JSON.stringify({songs:['a'],live:['vocals'],live_exceptions:{a:{bass:'stem'}}}));
+ await saveLiveRoles(f,['bass','drums']);
+ assert.deepEqual(JSON.parse(readFileSync(f,'utf8')),{songs:['a'],live:['bass','drums'],live_exceptions:{a:{bass:'stem'}}});
 });

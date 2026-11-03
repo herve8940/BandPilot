@@ -59,3 +59,4 @@
 .sh-cmd.next{background:var(--g-accent);color:var(--g-accent-ink);border:0}
 .sh-cmd.danger{background:var(--g-red-bg);border-color:var(--g-red-line);color:var(--g-red-text)}
 @media(max-width:1000px){.sh-grid,.sh-grid.band,.sh-show{grid-template-columns:minmax(0,1fr)}.sh-cmds{grid-template-columns:repeat(2,minmax(0,1fr))}.sh-row{grid-template-columns:110px minmax(0,1fr)}}
+.sh-transport small.sh-project{font-weight:500}

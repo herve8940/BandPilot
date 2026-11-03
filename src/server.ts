@@ -1,7 +1,7 @@
 import {readFileSync,writeFileSync} from 'node:fs';
 import {Analyzer,familyFromName,type Instrument} from './analysis.js';
 import {ReaperLink,planSession,createSession,openInReaper,defaultSessionsFolder,freeHours,presenceCommands} from './reaper.js';
-import {ReaperBridge} from './reaper-bridge.js';
+import {ReaperBridge,BRIDGE_VERSION,saveLiveRoles} from './reaper-bridge.js';
 import {wavPeaks} from './peaks.js';
 import {source as coachSource} from './sound-coach.js';
 import {MixerSync} from './mixer-sync.js';
@@ -58,8 +58,8 @@ const instruments=():Instrument[]=>{
  return out;
 };
 const analyzer=new Analyzer(xr18,instruments);
-const reaper=new ReaperLink();
 const bridge=new ReaperBridge();
+const reaper=new ReaperLink({transport:()=>bridge.transport(),actions:ids=>bridge.actions(ids)});
 const SONG_TAIL_S=8;
 const presencePath=join(dirname(configPath),'presence.json');
 const loadPresence=():string[]=>{try{const v=JSON.parse(readFileSync(presencePath,'utf8'));return Array.isArray(v)?v.map(String):[];}catch{return [];}};
@@ -164,12 +164,14 @@ const handler: http.RequestListener = async (req, res) => {
   if(path.startsWith('/api/show')){
    try{
     const q=new URL(req.url??'/','http://localhost').searchParams;let result:unknown;
-    if(path==='/api/show'&&req.method==='GET'){result={alive:bridge.alive(),presence:loadPresence(),...(bridge.alive()?await bridge.state():{})};}
+    if(path==='/api/show'&&req.method==='GET'){result={alive:bridge.alive(),bridgeCurrent:BRIDGE_VERSION,presence:loadPresence(),...(bridge.alive()?await bridge.state():{})};}
     else if(path==='/api/show/peaks'&&req.method==='GET'){
-     const file=String(q.get('file')??''),state=await bridge.state();
-     const known=state.tracks.some(t=>t.items.some(i=>i.takes.some(k=>k.file===file)));
-     if(!known)throw Error('Fichier inconnu du projet');
-     result={peaks:await wavPeaks(file,Math.min(1200,Number(q.get('buckets'))||600))};
+     const track=Number(q.get('track')),item=Number(q.get('item')),take=Number(q.get('take')),buckets=Math.min(1200,Number(q.get('buckets'))||600);
+     const state=await bridge.state(),file=state.tracks.find(t=>t.index===track)?.items[item]?.takes[take]?.file;
+     if(file===undefined)throw Error('Prise introuvable dans le projet');
+     // WAV takes are read here so Reaper is not slowed down; anything else (MP3, MIDI click) is read by Reaper.
+     const peaks=/\.wav$/i.test(file)?await wavPeaks(file,buckets).catch(()=>null):null;
+     result={peaks:peaks??(await bridge.peaks(track,item,take,buckets)).peaks};
     }
     else if(req.method!=='POST'){res.writeHead(405);res.end(JSON.stringify({error:'Méthode non autorisée'}));return;}
     else{
@@ -179,13 +181,15 @@ const handler: http.RequestListener = async (req, res) => {
      else if(path==='/api/show/loop')result=await bridge.call('set_loop',{on:d.on===true,start:Number(d.start),stop:Number(d.stop)});
      else if(path==='/api/show/take')result=await bridge.call('select_take',{take:Number(d.take),start:Number(d.start),stop:Number(d.stop)});
      else if(path==='/api/show/track')result=await bridge.call('track_mute',{name:String(d.name),on:d.on===true,solo:d.solo===true});
-     else if(path==='/api/show/play'){await reaper.watch();result=reaper.play();}
-     else if(path==='/api/show/stop'){await reaper.watch();result=reaper.status().recording||reaper.status().state==='starting'?await reaper.stop():reaper.halt();}
+     else if(path==='/api/show/play'){await reaper.watch();result=await reaper.play();}
+     else if(path==='/api/show/stop'){await reaper.watch();result=reaper.status().recording||reaper.status().state==='starting'?await reaper.stop():await reaper.halt();}
      else if(path==='/api/show/continue')result=reaper.cancelAutoStop();
      else if(path==='/api/show/presence'){
       const plan=await reaperPlan(),present=(Array.isArray(d.present)?d.present:[]).map(String),rec=plan.tracks.filter(t=>t.selected);
       const {rec:add,unarm,roles}=presenceCommands(rec,present);
-      savePresence(present);await bridge.call('apply_presence',{rec:add,unarm,roles});result={present};
+      savePresence(present);await bridge.call('apply_presence',{rec:add,unarm,roles});
+      const state=await bridge.state();if(state.setlist)await saveLiveRoles(state.setlist,Object.keys(roles).filter(r=>roles[r]));
+      result={present};
      }
      else if(path==='/api/show/original'){
       const state=await bridge.state(),names:Record<string,boolean>={},roles:Record<string,boolean>={};
@@ -223,7 +227,7 @@ const handler: http.RequestListener = async (req, res) => {
     }
     else if(path==='/api/reaper/rec'&&req.method==='POST'){access.log(user!,'Reaper : Rec');result=await reaper.record();}
     else if(path==='/api/reaper/stop'&&req.method==='POST'){access.log(user!,'Reaper : Stop');result=await reaper.stop();}
-    else if(path==='/api/reaper/marker'&&req.method==='POST')result=reaper.marker();
+    else if(path==='/api/reaper/marker'&&req.method==='POST')result=await reaper.marker();
     else if(path==='/api/reaper/dismiss'&&req.method==='POST')result=reaper.dismissAlert();
     else{res.writeHead(404);res.end(JSON.stringify({error:'Introuvable'}));return;}
     res.end(JSON.stringify(result));

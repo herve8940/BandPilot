@@ -5,12 +5,14 @@ import {appendFile,copyFile,mkdir,readFile,rename,rm,writeFile} from 'node:fs/pr
 import {homedir} from 'node:os';
 import {dirname,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import type {Transport} from './reaper.js';
 
 export type Take={index:number;name:string;file:string;active:boolean};
 export type Item={pos:number;length:number;takes:Take[]};
 export type ShowTrack={index:number;name:string;rec:boolean;role:string|null;mute:boolean;solo:boolean;armed:boolean;items:Item[]};
 export type Song={title:string;start:number;countin:number;stop:number};
-export type ShowState={version:string;project:string;concert:string|null;songs:Song[];regions:{start:number;stop:number;name:string}[];tracks:ShowTrack[];pos:number;playing:boolean;recording:boolean;loop:{on:boolean;start:number;stop:number};length:number};
+export const BRIDGE_VERSION='1.1.0';
+export type ShowState={version:string;project:string;setlist?:string;concert:string|null;songs:Song[];regions:{start:number;stop:number;name:string}[];tracks:ShowTrack[];pos:number;playing:boolean;recording:boolean;loop:{on:boolean;start:number;stop:number};length:number};
 
 export function reaperResources(env=process.env,platform=process.platform,home=homedir()){
  if(env.REAPER_RESOURCE_PATH)return env.REAPER_RESOURCE_PATH;
@@ -53,6 +55,9 @@ export class ReaperBridge{
   throw Error('Reaper ne répond pas. Regarde s’il affiche un message.');
  }
  state(){return this.call<ShowState>('state');}
+ transport(){return this.call<Transport>('transport');}
+ actions(ids:number[]){return this.call('action',{ids});}
+ peaks(track:number,item:number,take:number,buckets:number){return this.call<{peaks:number[]}>('peaks',{track,item,take,buckets});}
  /** Copies the script next to the others and starts it with Reaper. Nothing of ReaCue is changed. */
  async install(source=defaultScript()){
   const scripts=join(this.resources,'Scripts'),target=join(scripts,'XR18 Studio','XR18_Studio_Bridge.lua'),startup=join(scripts,'__startup.lua');
@@ -67,4 +72,11 @@ export class ReaperBridge{
 export function defaultScript(){
  for(const up of ['../integrations','../../integrations']){const p=fileURLToPath(new URL(up+'/XR18_Studio_Bridge.lua',import.meta.url));if(existsSync(p))return p;}
  throw Error('Script du pont introuvable dans l’application.');
+}
+
+/** ReaCue keeps « joué en live » in its setlist file and reapplies it itself: writing there keeps one truth. */
+export async function saveLiveRoles(setlist:string,roles:string[]){
+ const data=JSON.parse(await readFile(setlist,'utf8'));
+ data.live=roles;
+ const tmp=setlist+'.xr18tmp';await writeFile(tmp,JSON.stringify(data,null,2));await rename(tmp,setlist);
 }

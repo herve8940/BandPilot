@@ -6,12 +6,14 @@ import "../expert/expert.css";
 import "./show.css";
 
 type Plan = { tracks: { id: string; name: string; selected: boolean; presetLabel: string }[] };
+const projectName = (p: string) => p.split(/[\\/]/).at(-1)?.replace(/\.rpp$/i, "") ?? p;
 export function Status({ show, link }: { show: { alive: boolean }; link: { state: string } | null }) {
   return <div className="sh-status"><span className={link && link.state !== "offline" ? "ok" : ""}>Reaper</span><span className={show.alive ? "ok" : ""}>Pont</span></div>;
 }
+export const needsBridge = (s: { alive: boolean; version?: string; bridgeCurrent?: string }) => !s.alive || (!!s.version && s.version !== s.bridgeCurrent);
 export function BridgeInstall({ act }: { act: (p: string, d?: unknown) => Promise<unknown> }) {
   const [done, setDone] = useState(false);
-  return <div className="xs2-card sh-install"><h3>Relier XR18 Studio à tes morceaux</h3><p className="muted">Une seule fois : j’ajoute un petit script dans Reaper. ReaCue n’est pas modifié. Reaper doit ensuite être redémarré.</p>
+  return <div className="xs2-card sh-install"><h3>Relier XR18 Studio à Reaper</h3><p className="muted">Une seule fois : j’ajoute un petit script dans Reaper, qui sert à Rec, Stop et à l’affichage de tes morceaux. Redémarre ensuite Reaper.</p>
     <button type="button" className="xs2-btn primary" onClick={() => { if (confirm("Ajouter le pont XR18 Studio au démarrage de Reaper ?")) void act("/api/show/install", { confirm: true }).then(r => { if (r) setDone(true); }); }}>Installer le pont</button>
     {done && <p role="status">Installé. Redémarre Reaper.</p>}</div>;
 }
@@ -47,7 +49,7 @@ export function Rehearse() {
     </div>
     {(error || link?.alert) && <div className="xs2-msg error" role="alert">{error || link?.alert}<button type="button" aria-label="Fermer" onClick={() => { setError(""); if (link?.alert) void act("/api/reaper/dismiss"); }}>×</button></div>}
     <div className={`sh-transport ${recording ? "rec" : ""}`}>
-      <div><small>{recording ? "Enregistrement confirmé par Reaper" : link?.state === "ready" ? (canRec ? "Prêt" : "Coche qui est là pour enregistrer") : link?.state === "lost" ? "Liaison perdue : regarde Reaper" : link?.state === "starting" ? "Démarrage…" : "Reaper non relié"}</small><b>{mode === "songs" ? song?.title ?? "Aucun morceau" : link?.session?.title ?? "Session du groupe"}</b></div>
+      <div><small className="sh-project">{show.project ? `Projet ouvert : ${projectName(show.project)}` : ""}</small><small>{recording ? "Enregistrement confirmé par Reaper" : link?.state === "ready" ? (canRec ? "Prêt" : "Coche qui est là pour enregistrer") : link?.state === "lost" ? "Liaison perdue : regarde Reaper" : link?.state === "starting" ? "Démarrage…" : "Reaper non relié"}</small><b>{mode === "songs" ? song?.title ?? "Aucun morceau" : link?.session?.title ?? "Session du groupe"}</b></div>
       <strong className="sh-clock">{clock(recording ? link!.elapsed : cursor - range.start)}</strong>
       {link?.autoStopIn !== null && link?.autoStopIn !== undefined && <button type="button" className="xs2-btn" onClick={() => void act("/api/show/continue")}>Arrêt dans {link.autoStopIn} s · Continuer</button>}
       <div className="xs2-spacer" />
@@ -58,8 +60,7 @@ export function Rehearse() {
     </div>
 
     {mode === "band" && !firstRec && <RecordingView embedded />}
-    {mode === "band" && !show.alive && <BridgeInstall act={act} />}
-    {mode === "songs" && !show.alive ? <BridgeInstall act={act} /> : (mode === "songs" || firstRec) && <div className={`sh-grid ${mode === "band" ? "band" : ""}`}>
+        {needsBridge(show) ? <BridgeInstall act={act} /> : (mode === "songs" || firstRec) && <div className={`sh-grid ${mode === "band" ? "band" : ""}`}>
       {mode === "songs" && <aside className="xs2-card"><h3>{show.concert || "Morceaux"}</h3>{songs.length ? songs.map((s, i) => <button key={s.start} type="button" className={`sh-song ${s === song ? "on" : ""}`} disabled={busy} onClick={() => pick(i)}><b>{s.title}</b><small>{clock(s.stop - s.start)}</small></button>) : <p className="muted">Ouvre un projet ReaCue dans Reaper.</p>}</aside>}
       <main className="xs2-card sh-main"><Player show={show} band={mode === "band"} cursor={cursor} range={range} disabled={busy} onSeek={t => void act("/api/show/goto", { pos: t })} onTrack={onTrack} />
         <div className="sh-tools">{mode === "songs" && section && <button type="button" className={`xs2-btn ${loop ? "primary" : ""}`} onClick={() => void act("/api/show/loop", { on: !loop, start: section.start, stop: section.stop })}>{loop ? "Arrêter la boucle" : "Boucler cette section"}</button>}</div></main>

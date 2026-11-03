@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 type Track = { id: string; usb: number; stereo: boolean; name: string; presetLabel: string; source: string; tap: string; selected: boolean; warning?: string };
 type Plan = { sampleRate: number; tracks: Track[]; warnings: string[]; hoursFree: number | null };
 type State = "offline" | "ready" | "starting" | "recording" | "stopping" | "lost";
-type Status = { state: State; recording: boolean; elapsed: number; markers: number; alert: string; defaultFolder?: string; ports: { listen: number; feedback: number }; session: { title: string; file: string; hoursFree: number | null; tracks: number } | null };
+type Status = { state: State; recording: boolean; elapsed: number; markers: number; alert: string; defaultFolder?: string; session: { title: string; file: string; hoursFree: number | null; tracks: number } | null };
 
 async function api<T>(path: string, data?: unknown): Promise<T> {
   const r = await fetch(path, { method: data === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: data === undefined ? undefined : JSON.stringify(data) });
@@ -64,16 +64,7 @@ export function RecordingView({ embedded = false }: { embedded?: boolean }) {
           <button type="button" className="xs2-btn primary" disabled={!!busy || !chosen.length || !!status?.recording} onClick={() => void prepare()}>{busy === "session" ? "Préparation…" : "Créer et ouvrir dans Reaper"}</button>
           <p className="muted">Une session existante n’est jamais écrasée. La console n’est pas modifiée.</p>
         </div>
-        <details className="xs2-card" open={state === "offline"}>
-          <summary><b>Relier Reaper (une seule fois)</b></summary>
-          <ol className="xs2-rec-steps">
-            <li>Dans Reaper : Préférences › Control/OSC/web › Add › OSC.</li>
-            <li>Mode : Configure device IP+local port. Device IP : 127.0.0.1.</li>
-            <li>Device port : {status?.ports.feedback ?? 8766}. Local listen port : {status?.ports.listen ?? 8765}.</li>
-            <li>Coche « Allow binding messages to REAPER actions and FX learn », puis OK.</li>
-            <li>Préférences › Audio › Device : choisis la XR18 (X18/XR18).</li>
-          </ol>
-        </details>
+        <div className="xs2-card"><h3>Carte son</h3><p className="muted">Une seule fois dans Reaper : Préférences › Audio › Device, choisis la XR18.</p></div>
       </aside>
     </div>
   </div>;
