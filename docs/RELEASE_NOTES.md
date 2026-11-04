@@ -2,7 +2,7 @@
 
 XR18 Studio devient **BandPilot**. L’application reste gratuite et open source, avec les identifiants de données historiques conservés.
 
-![BandPilot 2.2 — console en simulation](https://herve8940.github.io/xr18-studio/images/bandpilot-2.2/console.png)
+![BandPilot 2.2 — console en simulation](https://herve8940.github.io/BandPilot/images/bandpilot-2.2/console.png)
 
 ## Correctif 2.2.1 / Hotfix
 
@@ -43,11 +43,11 @@ Les essais physiques ont été faits sur **XR18**. MR18/X18 et XR12/MR12 demande
 
 **X32 : support partiel et expérimental.** Mélangeur, EQ, dynamique principale, envois, bus/DCA/matrices de base. Préamplis, routage complet, FX, vumètres, scènes complètes, coach, retours téléphone et USB complets restent indisponibles ou à adapter. Les fichiers X-Air ne sont pas envoyés comme scènes X32.
 
-La qualité acoustique, le concert complet et certaines intégrations externes restent à vérifier dans le contexte réel. [Matrice détaillée](https://herve8940.github.io/xr18-studio/multi-model.html).
+La qualité acoustique, le concert complet et certaines intégrations externes restent à vérifier dans le contexte réel. [Matrice détaillée](https://herve8940.github.io/BandPilot/multi-model.html).
 
 ### Vérifications
 
-**137 tests backend et 4 régressions React réussis** sur la préparation de cette version, compilation serveur/interface réussie ; contrôles de construction et lancement des installateurs dans le workflow de publication. Les tests Lua utilisent une doublure de l’API REAPER et ne constituent pas une certification acoustique. [Rapport manuel et corrections](https://herve8940.github.io/xr18-studio/corrections-tests-manuels.html).
+**137 tests backend et 4 régressions React réussis** sur la préparation de cette version, compilation serveur/interface réussie ; contrôles de construction et lancement des installateurs dans le workflow de publication. Les tests Lua utilisent une doublure de l’API REAPER et ne constituent pas une certification acoustique. [Rapport manuel et corrections](https://herve8940.github.io/BandPilot/corrections-tests-manuels.html).
 
 ## English
 
@@ -55,6 +55,6 @@ XR18 Studio is now **BandPilot 2.2.1**, retaining legacy data identifiers. New r
 
 Install the matching Windows, Intel Mac, Apple Silicon Mac, Debian/Ubuntu or AppImage package. Packages and SHA-256 checksums are released together after build/startup checks. Installers may be unsigned/unnotarized. Back up scenes and projects first. Update REAPER bridge to **1.2.2**, save projects and restart REAPER.
 
-Physical testing was performed on **XR18 only**. Other model profiles need hardware validation. XR12/MR12 have two physical Aux outputs and stereo USB-stick recording, not PC multitrack USB. **X32 remains partial and experimental**, with full preamp/routing/FX/meters/scenes/coach/phone-monitor/USB integration unavailable. See the [compatibility matrix](https://herve8940.github.io/xr18-studio/multi-model.html).
+Physical testing was performed on **XR18 only**. Other model profiles need hardware validation. XR12/MR12 have two physical Aux outputs and stereo USB-stick recording, not PC multitrack USB. **X32 remains partial and experimental**, with full preamp/routing/FX/meters/scenes/coach/phone-monitor/USB integration unavailable. See the [compatibility matrix](https://herve8940.github.io/BandPilot/multi-model.html).
 
-137 backend tests and 4 React regressions passed during preparation, including production Lua against a REAPER API double; real acoustic and complete concert validation remain necessary. Updated [English guide](https://herve8940.github.io/xr18-studio/USER_GUIDE_EN.html) and captioned [video tour](https://herve8940.github.io/xr18-studio/VIDEO_TOUR.html).
+137 backend tests and 4 React regressions passed during preparation, including production Lua against a REAPER API double; real acoustic and complete concert validation remain necessary. Updated [English guide](https://herve8940.github.io/BandPilot/USER_GUIDE_EN.html) and captioned [video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html).

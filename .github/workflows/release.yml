@@ -10,8 +10,37 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  package:
+  prepare:
     if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      needed: ${{ steps.version.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check whether this version is already published
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PYTHON'
+          import json,os,urllib.request,urllib.error
+          version=json.load(open('package.json'))['version']
+          request=urllib.request.Request(f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/releases/tags/v{version}",headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+          try:
+              with urllib.request.urlopen(request) as response:
+                  release=json.load(response)
+              needed=False
+              print('Version already exists; metadata-only changes do not rebuild or overwrite installers.')
+          except urllib.error.HTTPError as error:
+              if error.code!=404: raise
+              needed=True
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              output.write('needed='+str(needed).lower()+'\n')
+          PYTHON
+  package:
+    needs: prepare
+    if: needs.prepare.outputs.needed == 'true'
     strategy:
       fail-fast: false
       matrix:

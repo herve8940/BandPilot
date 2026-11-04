@@ -14,7 +14,7 @@ BandPilot succède à XR18 Studio. Cette version réunit les améliorations de c
 
 ## Vérifications et limites
 
-137 tests automatiques passent dans la préparation de cette version, avec compilation serveur et interface. Les installateurs sont publiés seulement après les contrôles du workflow Windows, Mac Intel, Mac Apple Silicon et Linux. Le statut réel de ces contrôles reste visible dans [GitHub Actions](https://github.com/herve8940/xr18-studio/actions).
+137 tests automatiques passent dans la préparation de cette version, avec compilation serveur et interface. Les installateurs sont publiés seulement après les contrôles du workflow Windows, Mac Intel, Mac Apple Silicon et Linux. Le statut réel de ces contrôles reste visible dans [GitHub Actions](https://github.com/herve8940/BandPilot/actions).
 
 Les essais matériels ont été effectués sur XR18. Les autres modèles demandent une validation physique. La X32 reste **partielle et expérimentale**, sans préamplis, routage, FX, vumètres, scènes, coach, retours téléphone et USB complets. Le concert complet, certaines intégrations et les résultats acoustiques ne sont pas certifiés.
 

@@ -2,7 +2,7 @@
 title: BandPilot
 description: Free mixer control, guided sound checks, REAPER rehearsals and personal monitor mixes. Model capabilities and validation limits are documented.
 url: https://herve8940.github.io
-baseurl: /xr18-studio
+baseurl: /BandPilot
 lang: fr
 author: Hervé Naessens
 image: /images/bandpilot-2.2/console.png

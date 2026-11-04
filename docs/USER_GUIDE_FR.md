@@ -6,7 +6,7 @@ BandPilot est le nouveau nom de XR18 Studio. Il réunit console, balance guidée
 
 ## 1. Installer et conserver ses données
 
-Télécharge la version de ton ordinateur dans [les versions officielles](https://github.com/herve8940/xr18-studio/releases/latest) : Windows `.exe`, Mac Intel `x64.dmg`, Mac Apple Silicon `arm64.dmg`, Linux `.deb` ou `.AppImage`. Ferme l’ancienne application avant d’installer. Les identifiants de données de XR18 Studio sont conservés : exporte tout de même tes scènes importantes avant la mise à jour. Aucun projet REAPER n’est converti automatiquement.
+Télécharge la version de ton ordinateur dans [les versions officielles](https://github.com/herve8940/BandPilot/releases/latest) : Windows `.exe`, Mac Intel `x64.dmg`, Mac Apple Silicon `arm64.dmg`, Linux `.deb` ou `.AppImage`. Ferme l’ancienne application avant d’installer. Les identifiants de données de XR18 Studio sont conservés : exporte tout de même tes scènes importantes avant la mise à jour. Aucun projet REAPER n’est converti automatiquement.
 
 Si le système bloque le lancement, vérifie l’origine et consulte son message de sécurité. Sur macOS, l’autorisation **Réseau local** est nécessaire pour la découverte et les retours. Sur Windows, autorise l’application sur le réseau privé approprié. Les installateurs peuvent ne pas être signés ou notariés.
 

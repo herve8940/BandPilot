@@ -4,9 +4,9 @@ Merci de ton intérêt pour XR18 Studio ! / Thanks for your interest in XR18 Stu
 
 ## Signaler un problème ou proposer une idée / Report a bug or suggest an idea
 
-Ouvre une [issue](https://github.com/herve8940/xr18-studio/issues/new/choose). Le plus utile : la version, ton ordinateur, ta console (XR18, X18, MR18), une capture d’écran et le journal de diagnostic (Réglages › Télécharger le journal de diagnostic).
+Ouvre une [issue](https://github.com/herve8940/BandPilot/issues/new/choose). Le plus utile : la version, ton ordinateur, ta console (XR18, X18, MR18), une capture d’écran et le journal de diagnostic (Réglages › Télécharger le journal de diagnostic).
 
-Open an [issue](https://github.com/herve8940/xr18-studio/issues/new/choose) with the version, your computer, your mixer, a screenshot and the diagnostic log.
+Open an [issue](https://github.com/herve8940/BandPilot/issues/new/choose) with the version, your computer, your mixer, a screenshot and the diagnostic log.
 
 ## Développer / Develop
 

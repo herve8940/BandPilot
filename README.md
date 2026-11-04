@@ -4,11 +4,11 @@
 
 **Ton groupe. Ta console. Ton son.**
 
-[![Version](https://img.shields.io/github/v/release/herve8940/xr18-studio)](https://github.com/herve8940/xr18-studio/releases/latest) [![CI](https://github.com/herve8940/xr18-studio/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/herve8940/xr18-studio/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/herve8940/BandPilot)](https://github.com/herve8940/BandPilot/releases/latest) [![CI](https://github.com/herve8940/BandPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/herve8940/BandPilot/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
 
 Application gratuite pour préparer la balance, piloter la console, donner les retours aux musiciens et répéter avec REAPER. **BandPilot est le nouveau nom de XR18 Studio.**
 
-[⬇ Télécharger](https://github.com/herve8940/xr18-studio/releases/latest) · [🌐 Site](https://herve8940.github.io/xr18-studio/) · [📘 Guide FR](docs/USER_GUIDE_FR.md) · [English](README.en.md) · [🎬 Visite vidéo](https://herve8940.github.io/xr18-studio/VIDEO_TOUR.html)
+[⬇ Télécharger](https://github.com/herve8940/BandPilot/releases/latest) · [🌐 Site](https://herve8940.github.io/BandPilot/) · [📘 Guide FR](docs/USER_GUIDE_FR.md) · [English](README.en.md) · [🎬 Visite vidéo](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
 ![Console BandPilot 2.2 en simulation](docs/images/bandpilot-2.2/console.png)
 

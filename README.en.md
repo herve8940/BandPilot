@@ -2,7 +2,7 @@
 
 **Your band. Your mixer. Your sound.**
 
-[Download](https://github.com/herve8940/xr18-studio/releases/latest) · [Website](https://herve8940.github.io/xr18-studio/en.html) · [Full guide](docs/USER_GUIDE_EN.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/xr18-studio/VIDEO_TOUR.html)
+[Download](https://github.com/herve8940/BandPilot/releases/latest) · [Website](https://herve8940.github.io/BandPilot/en.html) · [Full guide](docs/USER_GUIDE_EN.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
 BandPilot is the new name of XR18 Studio: a free local app for guided sound checks, visual mixer control, personal phone monitors and REAPER rehearsals. Windows, Intel/Apple Silicon macOS and Linux.
 

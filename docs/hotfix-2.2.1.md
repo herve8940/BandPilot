@@ -22,4 +22,4 @@ Trois autres scénarios vérifient l’attente d’autorisation, la nouvelle ten
 
 L’interface corrigée a aussi été inspectée avec le backend de l’application du Mac et la vraie XR18 en lecture seule. Aucun contrôle audio matériel n’a été activé pour ces essais.
 
-[Versions et téléchargements](https://github.com/herve8940/xr18-studio/releases/latest) · [Notes de version](RELEASE_NOTES.md)
+[Versions et téléchargements](https://github.com/herve8940/BandPilot/releases/latest) · [Notes de version](RELEASE_NOTES.md)
