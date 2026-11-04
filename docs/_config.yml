@@ -5,7 +5,7 @@ url: https://herve8940.github.io
 baseurl: /xr18-studio
 lang: fr
 author: Hervé Naessens
-image: /images/social-preview.png
+image: /images/bandpilot-2.2/console.png
 theme: jekyll-theme-primer
 plugins:
   - jekyll-sitemap
@@ -20,3 +20,25 @@ exclude:
   - CAHIER_DES_CHARGES.md
   - DEMARRAGE.md
   - RELEASE_1_0.md
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+  - scope:
+      path: "index.html"
+    values:
+      layout: null
+  - scope:
+      path: "en.html"
+    values:
+      layout: null
+      lang: en
+  - scope:
+      path: "USER_GUIDE_EN.md"
+    values:
+      lang: en
+  - scope:
+      path: "TUTO_MON_INGE_SON_EN.md"
+    values:
+      lang: en
