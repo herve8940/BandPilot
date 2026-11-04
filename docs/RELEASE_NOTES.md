@@ -1,8 +1,16 @@
-# BandPilot 2.2.0 — console, coach et répétitions / mixer, coach and rehearsals
+# BandPilot 2.2.1 — console, coach et répétitions / mixer, coach and rehearsals
 
 XR18 Studio devient **BandPilot**. L’application reste gratuite et open source, avec les identifiants de données historiques conservés.
 
 ![BandPilot 2.2 — console en simulation](https://herve8940.github.io/xr18-studio/images/bandpilot-2.2/console.png)
+
+## Correctif 2.2.1 / Hotfix
+
+Corrige la duplication du panneau de connexion lors des mises à jour d’état de la console : deux composants frères utilisaient la même clé React. Les droits locaux ne sont plus affichés comme restreints pendant leur chargement ; un échec de lecture propose une nouvelle tentative. Les contrôles serveur et les vrais rôles restreints restent inchangés.
+
+Fixes duplicated connection panels during mixer state updates caused by colliding React sibling keys. Permission loading and request errors now have explicit states and retry. Server authorization and genuine restricted roles are preserved.
+
+Validation : **137 tests backend + 4 régressions React**, avec reproduction de 17 panneaux avant correction contre un seul après 15 rafraîchissements. Le contrôle de démarrage des installateurs ouvre aussi la vraie page de connexion et vérifie ses commandes.
 
 ## Français
 
@@ -10,11 +18,11 @@ XR18 Studio devient **BandPilot**. L’application reste gratuite et open source
 
 | Ordinateur | Installateur |
 |---|---|
-| Windows | `BandPilot-Windows-2.2.0.exe` |
-| Mac Intel | `BandPilot-macOS-2.2.0-x64.dmg` |
-| Mac Apple Silicon | `BandPilot-macOS-2.2.0-arm64.dmg` |
-| Ubuntu / Debian | `BandPilot-Linux-2.2.0-amd64.deb` |
-| Autre Linux | `BandPilot-Linux-2.2.0-x86_64.AppImage` |
+| Windows | `BandPilot-Windows-2.2.1.exe` |
+| Mac Intel | `BandPilot-macOS-2.2.1-x64.dmg` |
+| Mac Apple Silicon | `BandPilot-macOS-2.2.1-arm64.dmg` |
+| Ubuntu / Debian | `BandPilot-Linux-2.2.1-amd64.deb` |
+| Autre Linux | `BandPilot-Linux-2.2.1-x86_64.AppImage` |
 
 Les cinq installateurs et leurs sommes SHA-256 sont publiés ensemble après réussite des tests et des démarrages sur les plateformes de construction. Les installateurs peuvent ne pas être signés/notariés. Sauvegarde tes scènes et projets avant mise à jour.
 
@@ -39,14 +47,14 @@ La qualité acoustique, le concert complet et certaines intégrations externes r
 
 ### Vérifications
 
-**137 tests automatiques réussis** sur la préparation de cette version, compilation serveur/interface réussie ; contrôles de construction et lancement des installateurs dans le workflow de publication. Les tests Lua utilisent une doublure de l’API REAPER et ne constituent pas une certification acoustique. [Rapport manuel et corrections](https://herve8940.github.io/xr18-studio/corrections-tests-manuels.html).
+**137 tests backend et 4 régressions React réussis** sur la préparation de cette version, compilation serveur/interface réussie ; contrôles de construction et lancement des installateurs dans le workflow de publication. Les tests Lua utilisent une doublure de l’API REAPER et ne constituent pas une certification acoustique. [Rapport manuel et corrections](https://herve8940.github.io/xr18-studio/corrections-tests-manuels.html).
 
 ## English
 
-XR18 Studio is now **BandPilot 2.2.0**, retaining legacy data identifiers. New responsive Expert console, coach dashboard, rehearsal player, project-aware presence and original playback, verified loops, persistent notes/setlists, live phone permission updates and model-aware discovery.
+XR18 Studio is now **BandPilot 2.2.1**, retaining legacy data identifiers. New responsive Expert console, coach dashboard, rehearsal player, project-aware presence and original playback, verified loops, persistent notes/setlists, live phone permission updates and model-aware discovery.
 
 Install the matching Windows, Intel Mac, Apple Silicon Mac, Debian/Ubuntu or AppImage package. Packages and SHA-256 checksums are released together after build/startup checks. Installers may be unsigned/unnotarized. Back up scenes and projects first. Update REAPER bridge to **1.2.2**, save projects and restart REAPER.
 
 Physical testing was performed on **XR18 only**. Other model profiles need hardware validation. XR12/MR12 have two physical Aux outputs and stereo USB-stick recording, not PC multitrack USB. **X32 remains partial and experimental**, with full preamp/routing/FX/meters/scenes/coach/phone-monitor/USB integration unavailable. See the [compatibility matrix](https://herve8940.github.io/xr18-studio/multi-model.html).
 
-137 automated tests passed during preparation, including production Lua against a REAPER API double; real acoustic and complete concert validation remain necessary. Updated [English guide](https://herve8940.github.io/xr18-studio/USER_GUIDE_EN.html) and captioned [video tour](https://herve8940.github.io/xr18-studio/VIDEO_TOUR.html).
+137 backend tests and 4 React regressions passed during preparation, including production Lua against a REAPER API double; real acoustic and complete concert validation remain necessary. Updated [English guide](https://herve8940.github.io/xr18-studio/USER_GUIDE_EN.html) and captioned [video tour](https://herve8940.github.io/xr18-studio/VIDEO_TOUR.html).

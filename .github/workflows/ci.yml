@@ -25,7 +25,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: npm ci --ignore-scripts
       - working-directory: web
-        run: npm install
+        run: npm ci
+      - run: npm run test:web
       - working-directory: web
         run: npm run build

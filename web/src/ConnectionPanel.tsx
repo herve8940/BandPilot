@@ -12,8 +12,10 @@ export function ConnectionPanel({status}:{status:Status}){
  const model=useMixerModel();
  const [simulationModel,setSimulationModel]=useState<MixerModelId>(model.id);
  const [version,setVersion]=useState("");useEffect(()=>{void fetch("/api/version").then(r=>r.json()).then(d=>setVersion(d.version)).catch(()=>undefined);},[]);
- const [admin,setAdmin]=useState(false),[working,setWorking]=useState(false),[devices,setDevices]=useState<Device[]>([]),[message,setMessage]=useState(''),[error,setError]=useState(''),[host,setHost]=useState('');
- useEffect(()=>{void request('/api/auth').then(a=>setAdmin(a.user?.role==='admin')).catch(()=>{});},[]);
+ const [permission,setPermission]=useState<'loading'|'admin'|'restricted'|'error'>('loading'),[authAttempt,setAuthAttempt]=useState(0),[authError,setAuthError]=useState('');
+ const admin=permission==='admin';
+ const [working,setWorking]=useState(false),[devices,setDevices]=useState<Device[]>([]),[message,setMessage]=useState(''),[error,setError]=useState(''),[host,setHost]=useState('');
+ useEffect(()=>{let active=true;setPermission('loading');setAuthError('');void request('/api/auth').then(a=>{if(active)setPermission(a.user?.role==='admin'?'admin':'restricted');}).catch(e=>{if(active){setPermission('error');setAuthError(e.message);}});return()=>{active=false;};},[authAttempt]);
  const run=async(action:()=>Promise<void>)=>{setWorking(true);setError('');setMessage('');try{await action();}catch(e){setMessage('');setError((e as Error).message);}finally{setWorking(false);}};
  const connect=async(device:Device)=>{
   setMessage('Connexion à '+device.name+'…');
@@ -45,6 +47,6 @@ export function ConnectionPanel({status}:{status:Status}){
   <p className="app-version">BandPilot <b>{version||"…"}</b></p>
   <p><a href="/api/diagnostics/log" download="xr18-studio-diagnostic.log">Télécharger le journal de diagnostic</a></p>
   <p>Après un essai de connexion, télécharge ce fichier pour le joindre au support. Il contient les adresses IP locales et les réponses d’identité de la console, sans clé API ni mot de passe.</p>
-  <p>La connexion ne modifie aucun réglage audio. Le mode et l’adresse sont conservés au prochain démarrage.</p></>:<p>La connexion à la console est gérée par l’administrateur.</p>}
+  <p>La connexion ne modifie aucun réglage audio. Le mode et l’adresse sont conservés au prochain démarrage.</p></>:permission==='loading'?<p role="status">Vérification des droits de la session…</p>:permission==='error'?<div><p role="alert">Impossible de vérifier les droits de la session : {authError}</p><button onClick={()=>setAuthAttempt(n=>n+1)}>Réessayer la vérification des droits</button></div>:<p>La connexion à la console est gérée par l’administrateur.</p>}
  </section>;
 }

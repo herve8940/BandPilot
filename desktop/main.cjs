@@ -91,6 +91,16 @@ app.whenReady().then(async () => {
       await new Promise(resolve=>setTimeout(resolve,1000));
       const rendered=await win.webContents.executeJavaScript('document.body.textContent.includes("BandPilot")');
       if(!rendered)throw Error("Interface BandPilot non rendue");
+      // Exercise the actual connection screen, not only the first rendered page.
+      await win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");
+      let connectionReady=false;
+      for(let attempt=0;attempt<25;attempt++){
+        const check=await win.webContents.executeJavaScript(`({panels:[...document.querySelectorAll('h2')].filter(e=>e.textContent==='Connexion à ma console').length,controls:[...document.querySelectorAll('button')].filter(e=>e.textContent==='Détecter et connecter ma console').length})`);
+        if(check.panels>1||check.controls>1)throw Error("Panneau de connexion dupliqué");
+        if(check.panels===1&&check.controls===1){connectionReady=true;break;}
+        await new Promise(resolve=>setTimeout(resolve,200));
+      }
+      if(!connectionReady)throw Error("Connexion locale : commandes administrateur non disponibles");
       const auth=await fetch(`http://127.0.0.1:${port}/api/auth`);
       if(!auth.ok)throw Error("Authentification locale indisponible");
       app.exit(0);

@@ -28,6 +28,8 @@ jobs:
         run: npm ci
       - name: Install frontend dependencies
         run: npm --prefix web ci
+      - name: Frontend connection regressions
+        run: npm run test:web
       - name: Backend tests
         shell: bash
         # Failing test names and their first error lines are raised as annotations (readable without the raw log).

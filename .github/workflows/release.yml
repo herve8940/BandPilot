@@ -34,6 +34,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm --prefix web ci
+      - name: Frontend connection regressions
+        run: npm run test:web
       - name: Backend tests
         shell: bash
         run: |
@@ -140,4 +142,21 @@ jobs:
             exit 1
           fi
           gh release create "$tag" installers/* --target "$GITHUB_SHA" --title "BandPilot $version" --notes-file docs/RELEASE_NOTES.md --draft
-          gh release edit "$tag" --draft=false --latest
+          # A GitHub 5xx can arrive after the edit was applied. Re-read state before retrying.
+          published=false
+          for attempt in 1 2 3; do
+            if gh release edit "$tag" --draft=false --latest; then
+              published=true
+              break
+            fi
+            latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name 2>/dev/null || true)
+            if [ "$latest" = "$tag" ]; then
+              published=true
+              break
+            fi
+            sleep 3
+          done
+          if [ "$published" != true ]; then
+            echo "Could not confirm publication; keep the existing assets for inspection."
+            exit 1
+          fi

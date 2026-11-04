@@ -61,8 +61,10 @@ La simulation de console ne simule pas REAPER : REC capture ses véritables entr
 
 ## Développement
 
-Node.js 20+ (CI et installateurs : Node 22). `npm ci`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test` et `npm run build:all`. Installateurs : `npm run desktop:package`.
+Node.js 20+ (CI et installateurs : Node 22). `npm ci`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test`, `npm run test:web` et `npm run build:all`. Installateurs : `npm run desktop:package`.
 
-137 tests automatisés couvrent notamment OSC, scènes, FX, comptes, retours, REAPER, Lua et profils de console. Ils ne remplacent pas une validation acoustique et un concert complet sur chaque matériel. La publication attend les contrôles des quatre plateformes de construction et conserve les sommes SHA-256.
+137 tests backend et 4 tests de régression React couvrent notamment OSC, scènes, FX, comptes, retours, REAPER, Lua et profils de console. Ils ne remplacent pas une validation acoustique et un concert complet sur chaque matériel. La publication attend les contrôles des quatre plateformes de construction et conserve les sommes SHA-256.
 
 Les anciens identifiants `xr18-studio`, le dépôt, les clés de données et les chemins REAPER restent pour préserver la compatibilité. Projet indépendant, non affilié à Behringer, Midas ou Music Tribe ; marques de leurs propriétaires. Licence [MIT](LICENSE).
+
+Correctif de démarrage : [panneau de connexion 2.2.1](docs/hotfix-2.2.1.md).

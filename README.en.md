@@ -33,8 +33,10 @@ Back up scenes, install the matching package, explore simulation, discover hardw
 
 ## Development and validation
 
-Node 20+ (CI/packages: Node 22). `npm ci`, `npm --prefix web ci`, `npm run studio`; checks: `npm test`, `npm run build:all`; packages: `npm run desktop:package`.
+Node 20+ (CI/packages: Node 22). `npm ci`, `npm --prefix web ci`, `npm run studio`; checks: `npm test`, `npm run test:web`, `npm run build:all`; packages: `npm run desktop:package`.
 
-137 automated tests cover OSC, scenes, FX, accounts, monitors, REAPER/Lua and model profiles. They do not certify acoustic results or every hardware model. Packages are published together after platform checks, with SHA-256 checksums. Legacy data identifiers and REAPER paths remain for compatibility.
+137 backend tests and 4 React regressions cover OSC, scenes, FX, accounts, monitors, REAPER/Lua and model profiles. They do not certify acoustic results or every hardware model. Packages are published together after platform checks, with SHA-256 checksums. Legacy data identifiers and REAPER paths remain for compatibility.
 
 Independent MIT project, not affiliated with Behringer, Midas or Music Tribe. Trademarks belong to their owners.
+
+Startup fix: [connection panel 2.2.1](docs/hotfix-2.2.1.md).
