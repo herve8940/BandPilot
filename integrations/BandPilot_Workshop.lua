@@ -1,10 +1,18 @@
 -- Isolated, stopped REAPER project for virtual soundcheck. Never edits the source project.
 return function(H, r, helpers)
+  local spectrum_file=debug.getinfo(1,'S').source:sub(2):gsub('[^/\\]+$','')..'BandPilot_Spectrum.lua'
+  local spectrum=dofile(spectrum_file)(r)
   local function current() local p, path = r.EnumProjects(-1, ''); return p, path end
   local function stopped() assert(r.GetPlayState()==0, 'Arrête la lecture et l’enregistrement dans REAPER') end
   -- REAPER may close its device while BandPilot is in front. Reopen it on an explicit
   -- workshop command; Audio_Init leaves an already open device alone and never starts playback.
-  local function audio() if r.GetNumAudioOutputs()==0 then r.Audio_Init() end end
+  local function audio()
+    -- The channel count can remain cached while the device itself is closed.
+    r.Audio_Init()
+    -- Background media can stay offline after the device opens: REAPER then reports
+    -- a stereo source as mono, or returns silence to an audio accessor.
+    r.Main_OnCommand(40101,0) -- Item: Set all media online; does not start playback.
+  end
   local function checked(a)
     local p, path=current()
     local _, id=r.GetProjExtState(p,'BandPilot','workshop')
@@ -41,6 +49,7 @@ return function(H, r, helpers)
   end
   function H.workshop_create(a)
     stopped();local source,sourcepath=current();assert(sourcepath==a.source,'Projet source changé')
+    audio()
     assert(type(a.id)=='string' and a.id:match('^[%x%-]+$'),'Identifiant invalide')
     assert(type(a.start)=='number' and type(a.stop)=='number' and a.start>=0 and a.stop-a.start>=1 and a.stop-a.start<=120,'Passage de 120 secondes maximum')
     assert(#a.mapping>0 and #a.mapping<=16,'Choisis les pistes')
@@ -127,16 +136,37 @@ return function(H, r, helpers)
     assert(rate>=32000 and rate<=192000,'Fréquence audio indisponible')
     local accessor=assert(r.CreateTrackAudioAccessor(tr),'Audio inaccessible')
     local ok,result=pcall(function()
+      local channels=a.channels or 2;assert(channels==1 or channels==2,'Format mono/stéréo invalide')
       local frames=math.floor(rate*a.duration);local peak,sum,count,clipped=0,0,0,0
-      for offset=0,frames-1,2048 do
-        local n=math.min(2048,frames-offset);local buffer=r.new_array(n*2)
-        local got=r.GetAudioAccessorSamples(accessor,rate,2,a.start+offset/rate,n,buffer)
+      local bands={};for i=1,28 do bands[i]=0 end
+      local left,right,cross,sl,sr=0,0,0,0,0;local blocks=0
+      for offset=0,frames-1,8192 do
+        local n=math.min(8192,frames-offset);local buffer=r.new_array(n*channels)
+        local got=r.GetAudioAccessorSamples(accessor,rate,channels,a.start+offset/rate,n,buffer)
         assert(got>=0,'Échantillons audio illisibles')
-        count=count+n*2 -- Include silent gaps in the RMS denominator for the whole passage.
-        if got>0 then for _,v in ipairs(buffer.table()) do local x=math.abs(v);peak=math.max(peak,x);sum=sum+v*v;if x>=.999 then clipped=clipped+1 end end end
+        count=count+n*channels
+        if got>0 then
+          local samples=buffer.table()
+          for _,v in ipairs(samples) do local x=math.abs(v);peak=math.max(peak,x);sum=sum+v*v;if x>=.999 then clipped=clipped+1 end end
+          if channels==2 then for i=1,n do local l,rr=samples[2*i-1],samples[2*i];left=left+l*l;right=right+rr*rr;cross=cross+l*rr;sl=sl+l;sr=sr+rr end end
+          -- Partial blocks retain their correct duration when spectra are aggregated.
+          local spec=spectrum(samples,n,channels,rate);for i,v in ipairs(spec) do bands[i]=bands[i]+v*n/frames end
+          blocks=blocks+1
+        end
       end
-      return {start=a.start,duration=a.duration,peak=peak,sumSquares=sum,samples=count,clipped=clipped,rate=rate}
+      local stereo=channels==2 and {left=math.max(0,left-sl*sl/frames),right=math.max(0,right-sr*sr/frames),cross=cross-sl*sr/frames,frames=frames} or nil
+      return {start=a.start,duration=a.duration,peak=peak,sumSquares=sum,samples=count,clipped=clipped,rate=rate,spectrum=bands,stereo=stereo}
     end)
     r.DestroyAudioAccessor(accessor);assert(ok,result);return result
+  end
+  function H.workshop_measure_batch(a)
+    assert(type(a.duration)=='number' and a.duration>0 and a.duration<=3,'Trois secondes maximum par lot')
+    local windows={}
+    for offset=0,math.ceil(a.duration)-1 do
+      local one={};for k,v in pairs(a) do one[k]=v end
+      one.start=a.start+offset;one.duration=math.min(1,a.duration-offset)
+      windows[#windows+1]=H.workshop_measure(one)
+    end
+    return {windows=windows}
   end
 end

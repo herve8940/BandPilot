@@ -61,7 +61,7 @@ La simulation de console ne simule pas REAPER : REC capture ses véritables entr
 
 ## Développement
 
-Sur **DEV 2.3.0-dev.1**, l’[Atelier du son et les conseils mesurés](docs/ATELIER_DU_SON.md) ajoutent le travail sur un extrait REAPER, la comparaison A/B et la restauration des sources. Pont REAPER **1.3.0** requis ; validation acoustique encore nécessaire avant une version stable.
+Sur **DEV 2.3.0-dev.2**, l’[Atelier du son et les conseils mesurés](docs/ATELIER_DU_SON.md) ajoutent le travail sur un extrait REAPER, la comparaison A/B et la restauration des sources. Spectre par instrument, compatibilité mono, conseils EQ et essais de polarité sont intégrés. Pont REAPER **1.4.0** requis.
 
 Node.js 20+ (CI et installateurs : Node 22). `npm ci`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test`, `npm run test:web` et `npm run build:all`. Installateurs : `npm run desktop:package`.
 

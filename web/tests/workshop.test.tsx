@@ -32,3 +32,11 @@ test('measured advice presents fact, hypothesis and impact; recovery keeps resto
  await f.click('Terminer · garder A');assert.deepEqual(f.requests[0],{path:'/api/workshop/finish',body:{keep:'A',confirm:true}});
  }finally{await f.close();}
 });
+
+test('all EQ and phase findings are reachable and their settings use musician-friendly labels',async()=>{
+ const s={id:'a',name:'Test',phase:'active',side:'B',model:'XR18',start:0,stop:30,mapping:[],note:'',advice:[0,1,2,3].map(i=>({id:`a${i}`,kind:i===3?'eq':'level',channel:1,title:i===3?'Grave chargé':`Niveau ${i}`,fact:'Mesure',hypothesis:'Comparer',impact:'Retours après EQ',start:10,stop:11,changes:i===3?{'/ch/01/eq/2/g':-3,'/ch/01/eq/2/f':250}:{}}))};
+ const f=await fixture({active:s,history:[],supported:true,job:null});try{
+ assert.doesNotMatch(f.dom.window.document.body.textContent,/Grave chargé/);await f.click('EQ');assert.match(f.dom.window.document.body.textContent,/Grave chargé/);assert.match(f.dom.window.document.body.textContent,/EQ 2 · Gain : -3 dB/);assert.doesNotMatch(f.dom.window.document.body.textContent,/\/ch\/01\/eq/);
+ await f.click('Phase');assert.match(f.dom.window.document.body.textContent,/Aucun constat dans cette catégorie/);
+ }finally{await f.close();}
+});

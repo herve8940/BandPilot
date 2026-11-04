@@ -24,6 +24,7 @@ async function fixture(){
   if(cmd==='workshop_leave'){state.project='/source.rpp';return {};}
   if(cmd==='workshop_transport'){state.playing=args.action==='play';return {};}
   if(cmd==='workshop_revision')return {revision:5};
+  if(cmd==='workshop_measure_batch')return {windows:Array.from({length:Math.ceil(args.duration)},(_,i)=>({start:args.start+i,duration:Math.min(1,args.duration-i),peak:.5,sumSquares:10,samples:48000,clipped:0,rate:48000}))};
   if(cmd==='workshop_measure')return {start:args.start,duration:args.duration,peak:.5,sumSquares:10,samples:48000,clipped:0,rate:48000};
   return {};
  }};
@@ -41,9 +42,9 @@ test('raw measurements use RMS over all samples and never invent a compressor me
  assert.equal(e.peakDb,-6);assert.equal(e.rmsDb,-6);assert.equal(e.crestDb,0);assert.deepEqual(measuredAdvice([e],{}),[]);
  assert.throws(()=>evidence(1,'silent',[]));assert.throws(()=>evidence(1,'missing',[{start:0,duration:1,peak:0,sumSquares:0,samples:0,clipped:0,rate:48000}]));
 });
-test('clipping advice does not pretend to repair recorded clipping; all advice is limited to three priorities',()=>{
+test('clipping advice does not pretend to repair recorded clipping; every finding remains available beyond the first three priorities',()=>{
  const rows=Array.from({length:5},(_,i)=>evidence(i+1,'Track',[{start:0,duration:1,peak:1,sumSquares:1,samples:100,clipped:3,rate:48000}]));
- const advice=measuredAdvice(rows,{});assert.equal(advice.length,3);assert.deepEqual(advice[0]!.changes,{});assert.match(advice[0]!.hypothesis,/pas une preuve/);
+ const advice=measuredAdvice(rows,{});assert.equal(advice.length,5);assert.deepEqual(advice[0]!.changes,{});assert.match(advice[0]!.hypothesis,/pas une preuve/);
 });
 test('only inactive compressors receive a bounded crest-factor proposal; no gain, route or phantom change',()=>{
  const e=evidence(2,'Basse',[{start:1,duration:1,peak:.8,sumSquares:1,samples:10000,clipped:0,rate:48000}]);
@@ -105,4 +106,45 @@ test('a stalled REAPER counter invalidates live evidence and stops the workshop'
  assert.equal(f.workshop.status().job!.running,false);assert.match(f.workshop.status().job!.error,/compteur REAPER/);
  assert.equal(f.workshop.status().active!.dynamics,undefined);assert.equal(f.state.playing,false);
  }finally{clearInterval(timer);f.close();}
+});
+
+test('live analysis completes when polling skips the exact loop boundary',async()=>{
+ const f=await fixture();let timer:ReturnType<typeof setInterval>|undefined;try{
+ const catalog=await f.workshop.catalog();await f.workshop.create({source:catalog.project,start:0,stop:30,mapping,confirm:true,rawConfirmed:true,deviceConfirmed:true,token:catalog.token});
+ f.xr.subscribeAnalysis=()=>{};
+ // Native REAPER trace: 29.36 s then 0.38 s, with neither boundary sampled.
+ const positions=[0,5,10,15,20,25,28.3,29.362,.376];let index=0;
+ f.bridge.state=async()=>({...f.state,pos:f.state.playing?positions[Math.min(index++,positions.length-1)]!:0,loop:{on:true,start:0,stop:30}});
+ timer=setInterval(()=>f.xr.emit('dynamics',{comp:Array(16).fill(-12),at:Date.now()}),40);
+ await f.workshop.listenAnalyze();for(let i=0;i<1000&&f.workshop.status().job?.running;i++)await new Promise(r=>setTimeout(r,5));
+ assert.equal(f.workshop.status().job!.error,'');assert.equal(f.workshop.status().job!.progress,100);
+ assert.equal(f.workshop.status().active!.dynamics![0]!.maxReduction,12);assert.equal(f.state.playing,false);
+ }finally{clearInterval(timer);f.close();}
+});
+
+test('a stereo polarity trial changes only the right channel and A/B/finish restore both polarities',async()=>{
+ const f=await fixture();try{
+ f.catalog.tracks[0]!.channels=2;const c=await f.workshop.catalog();
+ await f.workshop.create({source:c.project,start:0,stop:2,mapping:[{...mapping[0],channel:1,channels:2,family:'backing'}],confirm:true,rawConfirmed:true,deviceConfirmed:true,token:c.token});
+ const call=f.bridge.call;f.bridge.call=async(cmd,args)=>{const result=await call(cmd,args);if(cmd==='workshop_measure_batch')return {windows:Array.from({length:Math.ceil(args.duration)},(_,i)=>({start:args.start+i,duration:1,peak:.2,sumSquares:100,samples:96000,clipped:0,rate:48000,spectrum:Array(28).fill(1),stereo:{left:50,right:50,cross:-50,frames:48000}}))};return result;};
+ await f.workshop.analyze();while(f.workshop.status().job?.running)await new Promise(r=>setTimeout(r,5));
+ assert.equal(f.workshop.status().job!.error,'');const advice=f.workshop.status().active!.advice!.find(a=>a.id==='phase-1')!;assert.ok(advice);
+ await f.workshop.trial(advice.id,'try');assert.equal(await f.xr.readParameter('/ch/01/preamp/invert'),0);assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),1);
+ await f.workshop.trial(advice.id,'keep');await f.workshop.compare('A');assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),0);
+ await f.workshop.compare('B');assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),1);await f.workshop.finish('A',true);assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),0);
+ }finally{f.close();}
+});
+
+test('a stereo source across two console pairs refuses a newly linked right channel before writing polarity',async()=>{
+ const f=await fixture();try{
+ f.catalog.tracks[0]!.channels=2;const c=await f.workshop.catalog();
+ await f.workshop.create({source:c.project,start:0,stop:2,mapping:[{...mapping[0],channel:2,channels:2,family:'backing'}],confirm:true,rawConfirmed:true,deviceConfirmed:true,token:c.token});
+ const call=f.bridge.call;f.bridge.call=async(cmd,args)=>cmd==='workshop_measure_batch'?{windows:[0,1].map(i=>({start:i,duration:1,peak:.2,sumSquares:100,samples:96000,clipped:0,rate:48000,spectrum:Array(28).fill(1),stereo:{left:50,right:50,cross:-50,frames:48000}}))}:call(cmd,args);
+ await f.workshop.analyze();while(f.workshop.status().job?.running)await new Promise(r=>setTimeout(r,5));
+ assert.ok(f.workshop.status().active!.advice!.find(a=>a.id==='phase-2')!.changes['/ch/03/preamp/invert']);
+ await f.xr.writeParameter('/config/chlink/3-4',1);await assert.rejects(()=>f.workshop.trial('phase-2','try'),/Canaux liés/);
+ assert.equal(await f.xr.readParameter('/ch/03/preamp/invert'),0);assert.equal(await f.xr.readParameter('/ch/04/preamp/invert'),0);
+ await f.workshop.analyze();while(f.workshop.status().job?.running)await new Promise(r=>setTimeout(r,5));
+ assert.deepEqual(f.workshop.status().active!.advice!.find(a=>a.id==='phase-2')!.changes,{});
+ }finally{f.close();}
 });

@@ -5,7 +5,7 @@ local SEP = package.config:sub(1, 1)
 local DIR = r.GetResourcePath() .. SEP .. "XR18Studio"
 r.RecursiveCreateDirectory(DIR, 0)
 local REQ, RES, BEAT = DIR .. SEP .. "request.lua", DIR .. SEP .. "response.json", DIR .. SEP .. "heartbeat.txt"
-local VERSION = "1.3.0"
+local VERSION = "1.4.0"
 
 local function jstr(s)
   return '"' .. tostring(s):gsub('[%z\1-\31\\"]', function(c)
@@ -17,7 +17,7 @@ local function json(v)
   local t = type(v)
   if v == nil then return "null"
   elseif t == "boolean" then return tostring(v)
-  elseif t == "number" then if v ~= v or v == math.huge or v == -math.huge then return "0" end return string.format("%.6f", v)
+  elseif t == "number" then if v ~= v or v == math.huge or v == -math.huge then return "0" end return string.format("%.12g", v)
   elseif t == "string" then return jstr(v)
   elseif t == "table" then
     if #v > 0 or next(v) == nil then local o = {} for i, x in ipairs(v) do o[i] = json(x) end return "[" .. table.concat(o, ",") .. "]" end
