@@ -5,7 +5,7 @@ local SEP = package.config:sub(1, 1)
 local DIR = r.GetResourcePath() .. SEP .. "XR18Studio"
 r.RecursiveCreateDirectory(DIR, 0)
 local REQ, RES, BEAT = DIR .. SEP .. "request.lua", DIR .. SEP .. "response.json", DIR .. SEP .. "heartbeat.txt"
-local VERSION = "1.2.2"
+local VERSION = "1.2.3"
 
 local function jstr(s)
   return '"' .. tostring(s):gsub('[%z\1-\31\\"]', function(c)
@@ -243,12 +243,37 @@ local function handle(src)
 end
 XR18_BRIDGE = { handle = handle, H = H, json = json, role_of = role_of }
 
+-- Isolated mailboxes allow installed/dev instances to coexist without stealing responses.
+local pending_responses = {}
+local function process_request(path, response)
+  local src = read_file(path)
+  if not src then return end
+  if not os.remove(path) then return end -- locked on Windows: do not execute the same action twice
+  -- Serialization must also be protected: a transient item must not stop the deferred loop.
+  local ok, text = pcall(function() return json(handle(src)) end)
+  if ok then pending_responses[response] = text end
+end
 local beat = 0
 local function loop()
   local now = r.time_precise()
-  if now - beat > 2 then beat = now; pcall(write_atomic, BEAT, tostring(os.time())) end
-  local src = read_file(REQ)
-  if src then os.remove(REQ); pcall(write_atomic, RES, json(handle(src))) end
+  if now - beat > 2 then beat = now; pcall(write_atomic, BEAT, "BandPilotBridge/2\n" .. VERSION .. "\n" .. tostring(os.time())) end
+  pcall(process_request, REQ, RES) -- compatibility with previously installed BandPilot versions
+  local requests = {}
+  local i = 0
+  while true do
+    local name = r.EnumerateFiles(DIR, i)
+    if not name then break end
+    local id = name:match("^request%-([%x%-]+)%.lua$")
+    if id then requests[#requests + 1] = {name=name, id=id} end
+    i = i + 1
+  end
+  for _, req in ipairs(requests) do
+    pcall(process_request, DIR .. SEP .. req.name, DIR .. SEP .. "response-" .. req.id .. ".json")
+  end
+  -- Windows/antivirus can briefly lock files. Retain the result and retry without rerunning Rec.
+  for path, text in pairs(pending_responses) do
+    if pcall(write_atomic, path, text) then pending_responses[path] = nil end
+  end
   r.defer(loop)
 end
 if not XR18_BRIDGE_NO_LOOP then

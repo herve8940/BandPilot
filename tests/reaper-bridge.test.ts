@@ -78,3 +78,41 @@ test('Qui est là goes where ReaCue reads it, without touching the rest of the s
  await saveLiveRoles(f,['bass','drums']);
  assert.deepEqual(JSON.parse(readFileSync(f,'utf8')),{songs:['a'],live:['bass','drums'],live_exceptions:{a:{bass:'stem'}}});
 });
+
+test('isolated bridge mailboxes preserve concurrent clients and coalesce repeated state polls',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'bandpilot-multiclient-')),box=join(dir,'XR18Studio');await mkdir(box);
+ await writeFile(join(box,'heartbeat.txt'),'BandPilotBridge/2\r\n1.2.3\r\n1');
+ const {readdir,readFile,rm}=await import('node:fs/promises');
+ let active=false,closed=false;const seen:string[]=[];
+ const timer=setInterval(async()=>{
+  if(active||closed)return;active=true;
+  try{for(const name of await readdir(box)){
+   if(!/^request-[a-f0-9-]+\.lua$/.test(name))continue;
+   const src=await readFile(join(box,name),'utf8'),id=/\["id"\]="([^"]+)"/.exec(src)![1]!,cmd=/\["cmd"\]="([^"]+)"/.exec(src)![1]!;
+   await rm(join(box,name));seen.push(cmd);
+   await new Promise(r=>setTimeout(r,20));
+   await writeFile(join(box,`response-${id}.json`),JSON.stringify({id,ok:true,result:{cmd}}));
+  }}finally{active=false;}
+ },5);
+ try{
+  const a=new ReaperBridge(dir,1000),b=new ReaperBridge(dir,1000);
+  const results=await Promise.all([a.state(),a.state(),a.state(),b.transport(),b.actions([ACTION.record])]);
+  assert.equal(results.length,5);assert.equal(seen.filter(x=>x==='state').length,1);
+  assert.deepEqual([...seen].sort(),['action','state','transport']);
+  assert.deepEqual((await readdir(box)).filter(n=>n.startsWith('request-')||n.startsWith('response-')),[]);
+ }finally{closed=true;clearInterval(timer);}
+});
+
+test('transport and Stop bypass queued waveform work',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'bandpilot-priority-')),box=join(dir,'XR18Studio');await mkdir(box);await writeFile(join(box,'heartbeat.txt'),'1');
+ const seen:string[]=[];
+ const w=watch(box,()=>{const req=join(box,'request.lua');if(!existsSync(req))return;
+  let src;try{src=readFileSync(req,'utf8');rmSync(req);}catch{return;}
+  const id=/\["id"\]="([^"]+)"/.exec(src)![1],cmd=/\["cmd"\]="([^"]+)"/.exec(src)![1]!;seen.push(cmd);
+  setTimeout(()=>writeFileSync(join(box,'response.json'),JSON.stringify({id,ok:true,result:{}})),30);
+ });
+ try{
+  const b=new ReaperBridge(dir);await Promise.all([b.call('peaks'),b.call('peaks'),b.state(),b.actions([ACTION.stopAndSave]),b.transport()]);
+  assert.deepEqual(seen,['peaks','action','transport','state','peaks']);
+ }finally{w.close();}
+});

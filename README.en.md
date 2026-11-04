@@ -40,3 +40,7 @@ Node 20+ (CI/packages: Node 22). `npm ci`, `npm --prefix web ci`, `npm run studi
 Independent MIT project, not affiliated with Behringer, Midas or Music Tribe. Trademarks belong to their owners.
 
 Startup fix: [connection panel 2.2.1](docs/hotfix-2.2.1.md).
+
+## BandPilot 2.2.2
+
+[Personal layouts and monitor desk](docs/WORKSPACES.md#english): model/screen-specific layouts, per-musician mix/EQ/compression and signal paths. Includes the [REAPER bridge 1.2.3 fix](docs/hotfix-2.2.2.md).

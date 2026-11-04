@@ -36,3 +36,11 @@ test('simulation analog and USB routing default to distinct inputs',async()=>{
  const xr=new XR18({mode:'simulation',host:'127.0.0.1',port:10024,enableWrites:false});
  try{await xr.syncLiveView();assert.equal(await xr.readParameter('/ch/05/config/insrc'),4);assert.equal(await xr.readParameter('/routing/usb/05/src'),4);}finally{xr.close();}
 });
+
+test('production bridge retains Rec response across Windows file locks without rerunning the action',()=>{
+ const require=createRequire(import.meta.url);
+ for(const platform of ['native','windows']){
+ const r=spawnSync(process.execPath,[require.resolve('fengari-node-cli/src/lua-cli.js'),'tests/reaper-bridge-io.lua',platform],{encoding:'utf8'});
+ assert.equal(r.status,0,r.stdout+r.stderr);assert.match(r.stdout,/I\/O regressions passed/);
+ }
+});

@@ -1,5 +1,7 @@
 # BandPilot 2.2 — guide illustré
 
+**Nouveautés 2.2.2 :** [console personnelle, régie des retours et correctif REAPER](WORKSPACES.md).
+
 [English](USER_GUIDE_EN.md) · [Mon ingé son](TUTO_MON_INGE_SON.md) · [Visite vidéo](VIDEO_TOUR.md) · [Compatibilité détaillée](multi-model.md)
 
 BandPilot est le nouveau nom de XR18 Studio. Il réunit console, balance guidée, retours personnels, préparation de concert et répétitions avec REAPER. Les captures ci-dessous proviennent de la version 2.2 en **simulation** ; ce ne sont pas des mesures audio réelles.
@@ -70,7 +72,7 @@ Le téléphone suit les changements lecture seule/contrôle sans rechargement. L
 
 <h2 id="reaper">8. Répéter et enregistrer avec REAPER</h2>
 
-REAPER est un logiciel séparé, avec sa propre installation et licence. Dans **Répéter**, installe le pont proposé **1.2.2**, sauvegarde tes projets puis redémarre REAPER pour charger sa nouvelle version. Les anciens chemins techniques XR18 Studio sont conservés pour rester compatibles.
+REAPER est un logiciel séparé, avec sa propre installation et licence. Dans **Répéter**, installe le pont proposé **1.2.3**, sauvegarde tes projets puis redémarre REAPER pour charger sa nouvelle version. Les anciens chemins techniques XR18 Studio sont conservés pour rester compatibles.
 
 1. Dans **Enregistrement**, relis la console, choisis les pistes et le dossier, puis **Créer et ouvrir dans Reaper**. Une session existante n’est pas écrasée. Vérifie le périphérique audio, les entrées et la fréquence dans REAPER.
 2. L’USB multipiste automatique concerne XR18/MR18/X18. XR12/MR12 n’ont pas cette interface ; la carte et le routage X32 ne sont pas pris en charge par cette préparation.

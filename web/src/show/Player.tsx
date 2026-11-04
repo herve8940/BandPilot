@@ -2,11 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { call, clock, sectionName, type Item, type Show, type ShowTrack } from "./api";
 
 type Range = { start: number; stop: number };
-function Wave({ track, items, range, muted, rec, cursor }: { track: number; items: Item[]; range: Range; muted: boolean; rec: boolean; cursor: number }) {
+function Wave({ track, items, range, muted, rec, cursor, paused }: { track: number; items: Item[]; range: Range; muted: boolean; rec: boolean; cursor: number; paused:boolean }) {
   const ref = useRef<HTMLCanvasElement>(null), [size, setSize] = useState({ width: 1, height: 1 }), [peaks, setPeaks] = useState<Record<string, number[] | null>>({});
   const wanted = useMemo(() => items.map((item, index) => ({ item, index })).filter(({ item }) => item.pos < range.stop && item.pos + item.length > range.start && item.takes.some(t => t.active)), [items, range.start, range.stop]);
   const keyOf = (i: Item) => { const t = i.takes.find(k => k.active); return `${i.pos}:${t?.index}:${t?.file}`; };
-  useEffect(() => { for (const { item, index } of wanted) { const key = keyOf(item), take = item.takes.find(t => t.active)!.index; if (!(key in peaks)) { setPeaks(p => ({ ...p, [key]: null })); void call<{ peaks: number[] | null }>(`/api/show/peaks?track=${track}&item=${index}&take=${take}&buckets=800`).then(r => setPeaks(p => ({ ...p, [key]: r.peaks }))).catch(() => undefined); } } }, [wanted, track]);
+  useEffect(() => { if(paused)return; for (const { item, index } of wanted) { const key = keyOf(item), take = item.takes.find(t => t.active)!.index; if (!(key in peaks)) { setPeaks(p => ({ ...p, [key]: null })); void call<{ peaks: number[] | null }>(`/api/show/peaks?track=${track}&item=${index}&take=${take}&buckets=800`).then(r => setPeaks(p => ({ ...p, [key]: r.peaks }))).catch(() => undefined); } } }, [wanted, track, paused]);
   // Redraw paused waveforms when the window, layout or display scale changes.
   useEffect(() => {
     const canvas = ref.current;
@@ -50,7 +50,7 @@ export function Player({ show, band = false, cursor, range, disabled, onSeek, on
       <div className="sh-lane"><div><b>{t.name.replace(/^REC /, "")}</b><small>{t.rec || band ? "Prise du groupe" : "Piste ReaCue"}</small></div>
         <button type="button" className={t.mute ? "warn" : ""} aria-pressed={t.mute} aria-label={`Couper ${t.name}`} onClick={() => onTrack(t, false)}>M</button>
         <button type="button" className={t.solo ? "on" : ""} aria-pressed={t.solo} aria-label={`Écouter ${t.name} seule`} onClick={() => onTrack(t, true)}>S</button></div>
-      <div className="sh-track" onClick={seek}><Wave track={t.index} items={t.items} range={range} muted={t.mute} rec={t.rec || band} cursor={cursor} /><i style={{ left: cursorLeft }} /></div>
+      <div className="sh-track" onClick={seek}><Wave track={t.index} items={t.items} range={range} muted={t.mute} rec={t.rec || band} cursor={cursor} paused={disabled} /><i style={{ left: cursorLeft }} /></div>
     </div>) : <div className="xs2-empty">Rien à afficher pour l’instant : lance une prise.</div>}
     <div className="sh-time">{clock(cursor - range.start)} / {clock(span)}</div>
   </div>;

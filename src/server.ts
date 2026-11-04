@@ -186,7 +186,8 @@ const handler: http.RequestListener = async (req, res) => {
     }
     else if(path==='/api/show/peaks'&&req.method==='GET'){
      const track=Number(q.get('track')),item=Number(q.get('item')),take=Number(q.get('take')),buckets=Math.min(1200,Number(q.get('buckets'))||600);
-     const state=await bridge.state(),file=state.tracks.find(t=>t.index===track)?.items[item]?.takes[take]?.file;
+     const state=await bridge.state(),selected=state.tracks.find(t=>t.index===track),file=selected?.items[item]?.takes[take]?.file;
+     if(state.recording){res.end(JSON.stringify({peaks:null}));return;}
      if(file===undefined)throw Error('Prise introuvable dans le projet');
      // WAV takes are read here so Reaper is not slowed down; anything else (MP3, MIDI click) is read by Reaper.
      const peaks=/\.wav$/i.test(file)?await wavPeaks(file,buckets).catch(()=>null):null;
@@ -205,7 +206,7 @@ const handler: http.RequestListener = async (req, res) => {
      }
      else if(path==='/api/show/track')result=await bridge.call('track_mute',{name:String(d.name),on:d.on===true,solo:d.solo===true});
      else if(path==='/api/show/play'){await reaper.watch();result=await reaper.play();}
-     else if(path==='/api/show/stop'){await reaper.watch();result=reaper.status().recording||reaper.status().state==='starting'?await reaper.stop():await reaper.halt();}
+     else if(path==='/api/show/stop'){await reaper.watch();result=['recording','starting','lost','stopping'].includes(reaper.status().state)?await reaper.stop():await reaper.halt();}
      else if(path==='/api/show/continue')result=reaper.cancelAutoStop();
      else if(path==='/api/show/presence'){
       const plan=await recentPlan(),present=(Array.isArray(d.present)?d.present:[]).map(String),rec=plan.tracks.filter(t=>t.selected);

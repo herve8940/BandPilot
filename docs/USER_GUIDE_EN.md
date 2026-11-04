@@ -1,5 +1,7 @@
 # BandPilot 2.2 — illustrated guide
 
+**New in 2.2.2:** [personal layouts, monitor desk and REAPER fix](WORKSPACES.md#english).
+
 [Français](USER_GUIDE_FR.md) · [Sound-check coach](TUTO_MON_INGE_SON_EN.md) · [Video tour](VIDEO_TOUR.md) · [Detailed compatibility](multi-model.md)
 
 BandPilot is the new name of XR18 Studio. It brings together mixer control, guided sound checks, personal monitors, show preparation and REAPER rehearsals. These new screenshots show **simulation**, not real audio measurements.
@@ -64,7 +66,7 @@ Already open phones follow read-only/control changes without a reload. Profiles 
 
 <h2 id="reaper">8. REAPER rehearsals and recording</h2>
 
-REAPER is separate software with its own installation and license. Install bridge **1.2.2** from Rehearse, save projects, then restart REAPER to load the updated bridge. Legacy technical paths remain for compatibility.
+REAPER is separate software with its own installation and license. Install bridge **1.2.3** from Rehearse, save projects, then restart REAPER to load the updated bridge. Legacy technical paths remain for compatibility.
 
 1. In Recording, refresh the console, choose tracks and destination, then create and open a session. Existing sessions are not overwritten. Verify the audio device, input channels and sample rate in REAPER.
 2. Automatic multitrack preparation is for XR18/MR18/X18. XR12/MR12 lack that PC interface. X32 card/routing preparation is unavailable.

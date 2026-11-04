@@ -56,7 +56,7 @@ La simulation de console ne simule pas REAPER : REC capture ses véritables entr
 - [Guide complet FR](docs/USER_GUIDE_FR.md) · [Full English guide](docs/USER_GUIDE_EN.md)
 - [Mon ingé son FR](docs/TUTO_MON_INGE_SON.md) · [English coach tutorial](docs/TUTO_MON_INGE_SON_EN.md)
 - [Visite vidéo et transcription](docs/VIDEO_TOUR.md) — montage de six captures en simulation, 42 secondes, sous-titres FR/EN.
-- [Nouveautés 2.2.0](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
+- [Nouveautés 2.2.2](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
 - [Contrôles X-Air détaillés](docs/GUIDE_CONSOLE.md) · [Architecture et API](docs/SQLITE_API.md)
 
 ## Développement
@@ -68,3 +68,7 @@ Node.js 20+ (CI et installateurs : Node 22). `npm ci`, `npm --prefix web ci`, pu
 Les anciens identifiants `xr18-studio`, le dépôt, les clés de données et les chemins REAPER restent pour préserver la compatibilité. Projet indépendant, non affilié à Behringer, Midas ou Music Tribe ; marques de leurs propriétaires. Licence [MIT](LICENSE).
 
 Correctif de démarrage : [panneau de connexion 2.2.1](docs/hotfix-2.2.1.md).
+
+## BandPilot 2.2.2
+
+[Console personnelle et régie des retours](docs/WORKSPACES.md) : disposition par modèle et taille d’écran, mix/EQ/compression par musicien, parcours du signal. Inclut le [correctif REAPER 1.2.3](docs/hotfix-2.2.2.md).

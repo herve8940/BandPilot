@@ -1,6 +1,6 @@
 {
   "name": "xr18-studio",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "BandPilot: free local mixer control, guided sound checks, personal monitors and REAPER rehearsals. Model-aware X-Air/M-Air support; partial X32 adapter.",
   "keywords": [
     "behringer",
@@ -31,7 +31,7 @@
   },
   "license": "MIT",
   "author": {
-    "name": "Herv\u00e9 Naessens"
+    "name": "Hervé Naessens"
   },
   "private": true,
   "type": "module",
@@ -110,7 +110,7 @@
       "category": "public.app-category.music",
       "artifactName": "BandPilot-macOS-${version}-${arch}.${ext}",
       "extendInfo": {
-        "NSLocalNetworkUsageDescription": "BandPilot communique avec ta console compatible sur le r\u00e9seau local (OSC/UDP) et partage les retours avec les t\u00e9l\u00e9phones des musiciens.",
+        "NSLocalNetworkUsageDescription": "BandPilot communique avec ta console compatible sur le réseau local (OSC/UDP) et partage les retours avec les téléphones des musiciens.",
         "NSBonjourServices": [
           "_osc._udp",
           "_http._tcp"
@@ -124,7 +124,7 @@
       ],
       "category": "AudioVideo",
       "artifactName": "BandPilot-Linux-${version}-${arch}.${ext}",
-      "maintainer": "Herv\u00e9 Naessens"
+      "maintainer": "Hervé Naessens"
     },
     "nsis": {
       "oneClick": true,

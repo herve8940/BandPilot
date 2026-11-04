@@ -11,7 +11,7 @@ export type Take={valid?:boolean;index:number;name:string;file:string;active:boo
 export type Item={pos:number;length:number;takes:Take[]};
 export type ShowTrack={index:number;name:string;rec:boolean;role:string|null;mute:boolean;solo:boolean;armed:boolean;items:Item[]};
 export type Song={title:string;start:number;countin:number;stop:number};
-export const BRIDGE_VERSION='1.2.2';
+export const BRIDGE_VERSION='1.2.3';
 export type ShowState={version:string;original?:boolean;project:string;setlist?:string;concert:string|null;songs:Song[];regions:{start:number;stop:number;name:string}[];tracks:ShowTrack[];pos:number;playing:boolean;recording:boolean;loop:{on:boolean;start:number;stop:number};length:number;audio?:{inputs:number;rate:number;device:string}};
 
 export function reaperResources(env=process.env,platform=process.platform,home=homedir()){
@@ -38,7 +38,9 @@ async function retry(task:()=>Promise<unknown>,tries=8){
  }
 }
 export class ReaperBridge{
- private queue:Promise<unknown>=Promise.resolve();
+ private queue:{priority:number;run:()=>Promise<void>}[]=[];
+ private running=false;
+ private reads=new Map<string,Promise<unknown>>();
  constructor(private resources=reaperResources(),private timeoutMs=3000){}
  private get dir(){return join(this.resources,'XR18Studio');}
  installed(){return existsSync(join(this.resources,'Scripts','XR18 Studio','XR18_Studio_Bridge.lua'));}
@@ -46,23 +48,40 @@ export class ReaperBridge{
   try{return Date.now()-statSync(join(this.dir,'heartbeat.txt')).mtimeMs<8000;}catch{return false;}
  }
  async call<T=unknown>(cmd:string,args:object={}):Promise<T>{
-  const run=()=>this.exchange<T>(cmd,args);
-  const next=this.queue.then(run,run);this.queue=next.catch(()=>undefined);return next;
+  // Polling and waveform requests must never build an unbounded queue ahead of Rec/Stop.
+  const read=(cmd==='state'||cmd==='transport')&&Object.keys(args).length===0;
+  if(read&&this.reads.has(cmd))return this.reads.get(cmd) as Promise<T>;
+  const next=new Promise<T>((resolve,reject)=>{
+   this.queue.push({priority:cmd==='peaks'?2:cmd==='state'?1:0,run:async()=>{
+    try{resolve(await this.exchange<T>(cmd,args));}catch(e){reject(e);}
+   }});
+  });
+  if(read){this.reads.set(cmd,next);void next.finally(()=>this.reads.delete(cmd)).catch(()=>undefined);}
+  void this.drain();return next;
+ }
+ private async drain(){
+  if(this.running)return;this.running=true;
+  try{while(this.queue.length){this.queue.sort((a,b)=>a.priority-b.priority);await this.queue.shift()!.run();}}
+  finally{this.running=false;}
  }
  private async exchange<T>(cmd:string,args:object):Promise<T>{
   if(!this.alive())throw Error('Le pont XR18 Studio ne répond pas dans Reaper : installe-le dans Répéter, puis redémarre Reaper.');
-  const id=randomUUID(),req=join(this.dir,'request.lua'),res=join(this.dir,'response.json');
+  const id=randomUUID();
+  // Versioned heartbeat negotiates isolated mailboxes. Older bridges remain readable for updating.
+  const isolated=/^BandPilotBridge\/2\r?\n/.test(await readFile(join(this.dir,'heartbeat.txt'),'utf8'));
+  const req=join(this.dir,isolated?`request-${id}.lua`:'request.lua'),res=join(this.dir,isolated?`response-${id}.json`:'response.json');
   await retry(()=>rm(res,{force:true}));await writeFile(req+'.tmp',toLua({id,cmd,args}));await retry(()=>rename(req+'.tmp',req));
   const end=Date.now()+this.timeoutMs;
   while(Date.now()<end){
    try{
     const data=JSON.parse(await readFile(res,'utf8'));
-    if(data.id!==id&&data.id!==undefined)await rm(res,{force:true}).catch(()=>undefined);
+    if(data.id!==id&&data.id!==undefined){/* Never delete a response owned by another legacy client. */}
     else{await retry(()=>rm(res,{force:true}));if(!data.ok)throw Object.assign(Error(data.error??'Erreur du pont'),{bridge:true});return data.result as T;}
    }catch(e){if((e as {bridge?:boolean}).bridge)throw e;}
    await new Promise(r=>setTimeout(r,30));
   }
   await rm(req,{force:true}).catch(()=>undefined);
+  if(isolated)await rm(res,{force:true}).catch(()=>undefined);
   throw Error('Reaper ne répond pas. Regarde s’il affiche un message.');
  }
  state(){return this.call<ShowState>('state');}

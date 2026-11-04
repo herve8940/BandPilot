@@ -8,6 +8,7 @@ import { faderToDb, formatDb, logMap, RATIOS, stripColor } from "../xairMath";
 import { AnalysisView } from "./AnalysisView";
 import { RecordingView } from "./RecordingView";
 import { RecordingDock } from "./RecordingDock";
+import {DeskLayoutTools, MonitorDesk, SignalPath, useDeskLayout} from "./Workspace";
 import "../xair-mixer.css";
 import "./expert.css";
 import "./expert-v3.css";
@@ -99,8 +100,11 @@ function ConsoleView({ values, set, writable, rehearsal, strip, select }: { valu
   useEffect(() => { if (rehearsal && layer === 0) setLayer(1); }, [rehearsal, layer]);
   const levels = useMeters();
   const used = (s: Strip) => s.kind !== "ch" || stripName(s, values) !== s.fallback || (levels[s.meters[0]!] ?? -128) > -60;
+  const desk=useDeskLayout(model.id);
   const color = (s: Strip) => stripColor(num(values, `${s.prefix}/config/color`));
-  return <div className="expert-console">
+  return <div className={`expert-console density-${desk.layout.density}`}>
+    <DeskLayoutTools strips={INPUTS} values={values} desk={desk}/>
+    <button type="button" className="desk-output-toggle" aria-expanded={desk.layout.outputs} onClick={()=>desk.update({outputs:!desk.layout.outputs})}>{desk.layout.outputs?"Replier les sorties et le Master":"Afficher les sorties et le Master"}</button>
     <div className="main">
       <div className="expert-bankbar"><div role="group" aria-label="Banque de tranches"><button type="button" aria-pressed={bank === "inputs"} onClick={() => setBank("inputs")}>Entrées 1–{model.channels}</button><button type="button" aria-pressed={bank === "returns"} onClick={() => setBank("returns")}>Aux + retours FX</button></div><button type="button" className="xs2-btn" onClick={() => document.getElementById("expert-channel-parameters")?.scrollIntoView({ block: "start" })}>Paramètres de {stripName(strip, values)} ↓</button></div>
       <div className="xs2-bar">
@@ -110,7 +114,7 @@ function ConsoleView({ values, set, writable, rehearsal, strip, select }: { valu
         {FXSENDS.map((f, i) => <button key={f.id} type="button" className={`xs2-chip${layer === i + 7 ? " on" : ""}`} onClick={() => setLayer(i + 7)}>FX {i + 1}</button>)}
       </div>
       <div className="xs2-strips" role="list" aria-label="Tranches">
-        {INPUTS.filter(s => bank === "inputs" ? s.kind === "ch" : s.kind !== "ch").map(s => {
+        {INPUTS.filter(s => (bank === "inputs" ? s.kind === "ch" : s.kind !== "ch") && !desk.layout.hidden.includes(s.id)).map(s => {
           const fa = faderAddress(s, layer), oa = onAddress(s), so = soloAddress(s), on = num(values, oa, 1) === 1;
           const gain = gainControl(s, values,model.micPreamps);
           const comp = s.kind === "ch" && num(values, `${s.prefix}/dyn/on`) === 1;
@@ -131,8 +135,8 @@ function ConsoleView({ values, set, writable, rehearsal, strip, select }: { valu
         })}
       </div>
     </div>
-    <section className="expert-output-bank" aria-label="Faders des sorties et groupes">
-      <h3>Sorties et groupes <small>Bus 1–6 · Départs FX · DCA · Main LR</small></h3>
+    {desk.layout.outputs&&<section className="expert-output-bank" aria-label="Faders des sorties et groupes">
+      <h3>Sorties et groupes <small>Bus 1–{model.buses} · Départs FX · DCA · Main LR</small></h3>
       <div className="xs2-strips expert-output-strips" role="list" aria-label="Sorties et groupes">
         {[...OUTPUTS, MAIN].map(output => {
           const address = faderAddress(output, 0), mute = onAddress(output);
@@ -146,7 +150,8 @@ function ConsoleView({ values, set, writable, rehearsal, strip, select }: { valu
           </div>;
         })}
       </div>
-    </section>
+    </section>}
+    {!INPUTS.some(s=>(bank==="inputs"?s.kind==="ch":s.kind!=="ch")&&!desk.layout.hidden.includes(s.id))&&<p role="status">Aucune tranche visible dans cette banque. Utilise « Ma console » pour les réafficher.</p>}
   </div>;
 }
 
@@ -177,7 +182,7 @@ function ChannelPage(props: ViewProps & { select: (s: Strip) => void }) {
       <div className="expert-selected-level"><label>Volume de {stripName(strip, values)} · {dbText(num(values, faderAddress(strip, 0)))} dB<input type="range" min="0" max="1" step=".005" aria-label={`Volume du canal sélectionné ${stripName(strip, values)}`} value={num(values, faderAddress(strip, 0))} disabled={!canWrite} onChange={e => set(faderAddress(strip, 0), Number(e.target.value))}/></label><button type="button" className="xs2-btn" aria-label="Canal précédent" disabled={i <= 0} onClick={() => select(ALL[i - 1]!)}>‹</button><button type="button" className="xs2-btn" aria-label="Canal suivant" disabled={i >= ALL.length - 1} onClick={() => select(ALL[i + 1]!)}>›</button></div>
     </div>
     {strip.kind === "dca" && <p className="muted">Ce DCA commande le niveau des canaux qui lui sont affectés. Leurs traitements se règlent sur chaque canal.</p>}
-    <nav className="expert-parameter-jumps" aria-label="Accès direct aux traitements">{applicable.map(b => <button key={b.id} type="button" onClick={() => document.getElementById(`expert-block-${b.id}`)?.scrollIntoView({ block: "start" })}>{b.title.split(" · ")[0]} ↓</button>)}</nav>
+    <>{["ch","aux","fxrtn"].includes(strip.kind)&&<SignalPath source={strip} values={values}/>}</><nav className="expert-parameter-jumps" aria-label="Accès direct aux traitements">{applicable.map(b => <button key={b.id} type="button" onClick={() => document.getElementById(`expert-block-${b.id}`)?.scrollIntoView({ block: "start" })}>{b.title.split(" · ")[0]} ↓</button>)}</nav>
     <div className="expert-parameter-grid">{applicable.map(b => <section key={b.id} id={`expert-block-${b.id}`} className={`expert-parameter-block block-${b.id}`} aria-label={b.title}><h3>{b.title}</h3><div className="xm xs2-legacy">{b.content}</div></section>)}</div>
   </section>;
 }
@@ -286,20 +291,22 @@ function EarsView({ values, set, writable, confirmed }: { values: Values; set: S
   const {ALL,MAIN,OUTPUTS,INPUTS,BUSES,FXSENDS,model}=useAirStrips();
   const levels = useMeters(), fresh = meterStore.fresh();
   const rows = INPUTS.filter(s => s.kind !== "ch" || stripName(s, values) !== s.fallback || (levels[s.meters[0]!] ?? -128) > -60);
-  const limiterOff = BUSES.map((_, i) => i + 1).filter(b => num(values, `/bus/${b}/dyn/on`) !== 1 && busName(values, b) !== `Bus ${b}`);
+  const limiterOff = BUSES.slice(0,model.monitorOutputs).map((_, i) => i + 1).filter(b => num(values, `/bus/${b}/dyn/on`) !== 1 && busName(values, b) !== `Bus ${b}`);
   const addLimiters = () => {
     const v: Record<string, Value> = {};
     for (const b of limiterOff) Object.assign(v, { [`/bus/${b}/dyn/on`]: 1, [`/bus/${b}/dyn/mode`]: 0, [`/bus/${b}/dyn/ratio`]: 11, [`/bus/${b}/dyn/thr`]: -6, [`/bus/${b}/dyn/knee`]: 0, [`/bus/${b}/dyn/attack`]: 1, [`/bus/${b}/dyn/release`]: 100, [`/bus/${b}/dyn/mgain`]: 0 });
     void confirmed(v, `Ajouter un limiteur de protection à −6 dB sur ${limiterOff.map(b => earsLabel(values, b)).join(", ")} ?`);
   };
   return <>
-    <div className="xs2-bar"><div><div style={{ fontSize: 18, fontWeight: 700 }}>Les ears du groupe</div><div className="muted">Chaque colonne est le mix d’un musicien. Le téléphone du musicien règle la même colonne.</div></div></div>
+    <MonitorDesk values={values} set={set} writable={writable} confirmed={confirmed} reduction={bus=><GainReduction strip={bus}/>}/>
+    <details className="monitor-matrix"><summary>Matrice complète · tous les envois et bus internes</summary>
+    <div className="xs2-bar"><div><div style={{ fontSize: 18, fontWeight: 700 }}>Matrice des bus</div><div className="muted">Chaque colonne est un bus. Seuls les bus reliés à une sortie physique alimentent directement un retour.</div></div></div>
     <div className="xs2-matrix" role="table" aria-label="Envois vers les ears">
       <div className="row head" role="row"><div role="columnheader" className="muted">Source</div>
         {BUSES.map((b, i) => { const db = fresh ? levels[b.meters[0]!] ?? -128 : -128; const lim = num(values, `/bus/${i + 1}/dyn/on`) === 1; return <div key={b.id} role="columnheader">
-          <b>{earsLabel(values, i + 1)}</b>
+          <b>{i<model.monitorOutputs?earsLabel(values,i+1):`Bus ${i+1} interne`}</b>
           <span className="meter"><i className={db > -6 ? "hot" : ""} style={{ width: `${Math.max(0, Math.min(100, (db + 60) / 60 * 100))}%` }} /></span>
-          <span className="mono muted" style={{ fontSize: 11 }}>{db <= -90 ? "—" : `crête ${Math.round(db)} dB`} · {lim ? "limiteur ✓" : "sans limiteur"}</span>
+          <span className="mono muted" style={{ fontSize: 11 }}>{db <= -90 ? "—" : `crête ${Math.round(db)} dB`} · {lim ? "dynamique active" : "dynamique désactivée"}</span>
         </div>; })}
       </div>
       {rows.map(s => <div className="row" role="row" key={s.id}>
@@ -311,10 +318,11 @@ function EarsView({ values, set, writable, confirmed }: { values: Values; set: S
       </div>)}
     </div>
     <div className="xs2-cards3">
-      {limiterOff.length ? <div className="xs2-note"><b>{limiterOff.length} ear{limiterOff.length > 1 ? "s" : ""} sans limiteur</b><div>Un limiteur à −6 dB empêche qu’un pic abîme les oreilles.</div><div style={{ marginTop: 8 }}><button type="button" className="xs2-btn warn" disabled={!writable} onClick={addLimiters}>Ajouter la protection…</button></div></div>
-        : <div className="xs2-good"><b>Protection des oreilles active</b><div>Chaque ear nommé a son limiteur.</div></div>}
+      {limiterOff.length ? <div className="xs2-note"><b>{limiterOff.length} bus nommé{limiterOff.length > 1 ? "s" : ""} sans dynamique active</b><div>Un limiteur peut réduire les crêtes électriques. Le niveau acoustique dépend aussi du casque et de son amplificateur ; ce réglage ne garantit pas la protection auditive.</div><div style={{ marginTop: 8 }}><button type="button" className="xs2-btn warn" disabled={!writable} onClick={addLimiters}>Ajouter la protection…</button></div></div>
+        : <div className="xs2-good"><b>Dynamique active sur les bus nommés</b><div>Vérifie le mode, le ratio et le niveau d’écoute de chaque retour.</div></div>}
       <div className="xs2-card"><h3>Réverbération dans les ears</h3><div className="muted">Un peu de réverbération sur la voix aide le chanteur à se placer : règle la ligne de l’effet dans la colonne de chaque musicien.</div></div>
     </div>
+    </details>
   </>;
 }
 

@@ -1,60 +1,42 @@
-# BandPilot 2.2.1 — console, coach et répétitions / mixer, coach and rehearsals
-
-XR18 Studio devient **BandPilot**. L’application reste gratuite et open source, avec les identifiants de données historiques conservés.
-
-![BandPilot 2.2 — console en simulation](https://herve8940.github.io/BandPilot/images/bandpilot-2.2/console.png)
-
-## Correctif 2.2.1 / Hotfix
-
-Corrige la duplication du panneau de connexion lors des mises à jour d’état de la console : deux composants frères utilisaient la même clé React. Les droits locaux ne sont plus affichés comme restreints pendant leur chargement ; un échec de lecture propose une nouvelle tentative. Les contrôles serveur et les vrais rôles restreints restent inchangés.
-
-Fixes duplicated connection panels during mixer state updates caused by colliding React sibling keys. Permission loading and request errors now have explicit states and retry. Server authorization and genuine restricted roles are preserved.
-
-Validation : **137 tests backend + 4 régressions React**, avec reproduction de 17 panneaux avant correction contre un seul après 15 rafraîchissements. Le contrôle de démarrage des installateurs ouvre aussi la vraie page de connexion et vérifie ses commandes.
+# BandPilot 2.2.2 — ma console, mes retours et liaison REAPER
 
 ## Français
 
+- **Ma console** : tranches visibles au choix, largeur compacte/confortable, sorties et Master repliables. Disposition sauvegardée localement par modèle et classe d’écran. Masquer ne coupe aucun son.
+- **Régie des retours** : accès depuis Retours ou Expert/Ears ; sélection par musicien, instruments attribués surlignés, envois, EQ à six bandes et compression du bus dans le même espace. Réduction de gain lorsqu’une mesure récente est disponible.
+- **Parcours du signal** : source physique/USB et prélèvement avant/après EQ ou fader. La matrice complète et les bus internes restent disponibles.
+- **Pont REAPER 1.2.3** : échanges isolés entre instances, transport prioritaire, demandes d’état regroupées, réponse conservée lors d’un verrouillage temporaire de fichier, sans réexécuter REC. Stop reste utilisable après une perte de liaison ; les nouvelles formes d’onde attendent la fin de la prise.
+
+**Après installation, mettre à jour le pont dans Répéter, sauvegarder les projets et redémarrer REAPER.** La mise à jour de l’application seule ne recharge pas un script déjà actif.
+
+[Guide illustré des nouveautés](https://herve8940.github.io/BandPilot/WORKSPACES.html) · [Correctif REAPER](https://herve8940.github.io/BandPilot/hotfix-2.2.2.html)
+
+![Régie des retours — simulation](https://herve8940.github.io/BandPilot/images/bandpilot-2.2.2/regie-retours.png)
+
 ### Télécharger
 
-| Ordinateur | Installateur |
+| Plateforme | Installateur |
 |---|---|
-| Windows | `BandPilot-Windows-2.2.1.exe` |
-| Mac Intel | `BandPilot-macOS-2.2.1-x64.dmg` |
-| Mac Apple Silicon | `BandPilot-macOS-2.2.1-arm64.dmg` |
-| Ubuntu / Debian | `BandPilot-Linux-2.2.1-amd64.deb` |
-| Autre Linux | `BandPilot-Linux-2.2.1-x86_64.AppImage` |
+| Windows | `BandPilot-Windows-2.2.2.exe` |
+| Mac Intel | `BandPilot-macOS-2.2.2-x64.dmg` |
+| Mac Apple Silicon | `BandPilot-macOS-2.2.2-arm64.dmg` |
+| Debian / Ubuntu | `BandPilot-Linux-2.2.2-amd64.deb` |
+| Autres Linux | `BandPilot-Linux-2.2.2-x86_64.AppImage` |
 
-Les cinq installateurs et leurs sommes SHA-256 sont publiés ensemble après réussite des tests et des démarrages sur les plateformes de construction. Les installateurs peuvent ne pas être signés/notariés. Sauvegarde tes scènes et projets avant mise à jour.
+Les paquets et les sommes SHA-256 sont publiés ensemble après les contrôles du workflow. Installateurs potentiellement non signés/notariés. Sauvegarder scènes et projets avant mise à jour.
 
-### Nouveautés
+### Validation et compatibilité
 
-- Menu compact, nouvelle console Expert, traitements visuels, sorties et groupes ; adaptation aux tailles d’écran.
-- Tableau de bord Mon ingé son : étapes, instruments, état des mesures et prochain pas conseillé.
-- Répéter : lecteur adaptable, sections, prises valides, présence liée au projet ouvert, boucle confirmée et restitution des mutes après écoute Original.
-- Pont REAPER **1.2.2** : protection contre les prises vides et les changements de projet/REC. Installer depuis Répéter puis redémarrer REAPER après sauvegarde.
-- Notes et setlist active sauvegardées dans SQLite, indépendantes du port navigateur. Dates de session au calendrier local.
-- Téléphones déjà ouverts : mise à jour du contrôle sans rechargement. Simulation clairement indiquée ; rappel de scène avec exclusion explicite du 48 V.
-- Détection et profils par marque/modèle : XR12/XR18/X18, MR12/MR18, X32 et variantes. Contrôles bornés aux capacités.
-- Guides FR/EN, six nouvelles captures et vidéo illustrée de 42 secondes avec sous-titres.
+140 tests serveur et 7 tests React réussis en préparation ; compilation serveur/interface et vérification visuelle à 1280, 1024 et 390 pixels. Les tests couvrent le bon bus, la lecture seule, les dispositions par modèle/écran, les verrous de fichiers et les chemins Windows. Les captures sont en simulation, sans audio matériel inventé.
 
-### Compatibilité honnête
+La liaison REAPER corrigée a été testée sur le Mac avec une prise réelle et deux clients concurrents. Les verrous Windows sont simulés ; une validation sur le PC Windows concerné reste nécessaire.
 
-Les essais physiques ont été faits sur **XR18**. MR18/X18 et XR12/MR12 demandent encore une validation sur leurs appareils. XR12/MR12 disposent de 2 Aux physiques et d’un enregistreur USB stéréo sur clé, sans interface USB multipiste PC.
-
-**X32 : support partiel et expérimental.** Mélangeur, EQ, dynamique principale, envois, bus/DCA/matrices de base. Préamplis, routage complet, FX, vumètres, scènes complètes, coach, retours téléphone et USB complets restent indisponibles ou à adapter. Les fichiers X-Air ne sont pas envoyés comme scènes X32.
-
-La qualité acoustique, le concert complet et certaines intégrations externes restent à vérifier dans le contexte réel. [Matrice détaillée](https://herve8940.github.io/BandPilot/multi-model.html).
-
-### Vérifications
-
-**137 tests backend et 4 régressions React réussis** sur la préparation de cette version, compilation serveur/interface réussie ; contrôles de construction et lancement des installateurs dans le workflow de publication. Les tests Lua utilisent une doublure de l’API REAPER et ne constituent pas une certification acoustique. [Rapport manuel et corrections](https://herve8940.github.io/BandPilot/corrections-tests-manuels.html).
+XR18 validée matériellement. XR12/MR12 : deux sorties Aux physiques, pas d’interface USB multipiste PC. MR18/X18 et XR12/MR12 demandent encore leurs essais matériels. Cette nouvelle régie concerne X-Air/M-Air. **X32 reste partielle et expérimentale**, avec interface séparée ; pas d’extension implicite du coach, des FX, du routage complet ou des retours téléphone. [Matrice de compatibilité](https://herve8940.github.io/BandPilot/multi-model.html).
 
 ## English
 
-XR18 Studio is now **BandPilot 2.2.1**, retaining legacy data identifiers. New responsive Expert console, coach dashboard, rehearsal player, project-aware presence and original playback, verified loops, persistent notes/setlists, live phone permission updates and model-aware discovery.
+Personal layouts remember visible strips, widths and output/Master visibility per model and screen class. The monitor desk combines each musician’s sends, bus EQ and compression, with signal-path explanations and the existing full matrix retained. Read-only controls remain disabled. No automatic processing or dynamic EQ is added.
 
-Install the matching Windows, Intel Mac, Apple Silicon Mac, Debian/Ubuntu or AppImage package. Packages and SHA-256 checksums are released together after build/startup checks. Installers may be unsigned/unnotarized. Back up scenes and projects first. Update REAPER bridge to **1.2.2**, save projects and restart REAPER.
+**Update the REAPER bridge to 1.2.3, save projects and restart REAPER.** The bridge isolates concurrent exchanges, prioritizes transport and retries transient file writes without repeating Record. Stop remains available after a lost connection.
 
-Physical testing was performed on **XR18 only**. Other model profiles need hardware validation. XR12/MR12 have two physical Aux outputs and stereo USB-stick recording, not PC multitrack USB. **X32 remains partial and experimental**, with full preamp/routing/FX/meters/scenes/coach/phone-monitor/USB integration unavailable. See the [compatibility matrix](https://herve8940.github.io/BandPilot/multi-model.html).
-
-137 backend tests and 4 React regressions passed during preparation, including production Lua against a REAPER API double; real acoustic and complete concert validation remain necessary. Updated [English guide](https://herve8940.github.io/BandPilot/USER_GUIDE_EN.html) and captioned [video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html).
+140 backend and 7 React tests passed during preparation. Physical testing remains XR18-only; Windows file-lock behaviour is simulated and needs confirmation on the affected PC. X32 remains partial/experimental. [Illustrated guide](https://herve8940.github.io/BandPilot/WORKSPACES.html#english).
