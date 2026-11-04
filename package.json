@@ -70,13 +70,14 @@
   "main": "desktop/main.cjs",
   "build": {
     "appId": "be.xr18.studio",
-    "productName": "XR18 Studio",
+    "productName": "BandPilot",
     "directories": {
       "output": "release"
     },
     "files": [
       "desktop/**/*",
       "dist/src/**/*",
+      "dist/shared/**/*",
       "integrations/**/*",
       "node_modules/**/*",
       "package.json",
@@ -97,16 +98,16 @@
       "target": [
         "nsis"
       ],
-      "artifactName": "XR18-Studio-Windows-${version}.${ext}"
+      "artifactName": "BandPilot-Windows-${version}.${ext}"
     },
     "mac": {
       "target": [
         "dmg"
       ],
       "category": "public.app-category.music",
-      "artifactName": "XR18-Studio-macOS-${version}-${arch}.${ext}",
+      "artifactName": "BandPilot-macOS-${version}-${arch}.${ext}",
       "extendInfo": {
-        "NSLocalNetworkUsageDescription": "XR18 Studio communique avec ta table Behringer XR18 sur le réseau local (OSC/UDP) et partage les retours avec les téléphones des musiciens.",
+        "NSLocalNetworkUsageDescription": "BandPilot communique avec ta console compatible sur le réseau local (OSC/UDP) et partage les retours avec les téléphones des musiciens.",
         "NSBonjourServices": [
           "_osc._udp",
           "_http._tcp"
@@ -119,7 +120,7 @@
         "deb"
       ],
       "category": "AudioVideo",
-      "artifactName": "XR18-Studio-Linux-${version}-${arch}.${ext}",
+      "artifactName": "BandPilot-Linux-${version}-${arch}.${ext}",
       "maintainer": "Hervé Naessens"
     },
     "nsis": {

@@ -1,0 +1,38 @@
+.coach-overview{display:grid;grid-template-columns:minmax(230px,.8fr) minmax(0,1.4fr);gap:12px;margin:0 0 16px;min-width:0}
+.coach-next,.coach-live-summary{padding:16px 18px;border:1px solid #3c4b70;border-radius:14px;background:linear-gradient(135deg,#1c2541,#111b30)}
+.coach-next{background:radial-gradient(ellipse at 0 0,#6544ab44,transparent 80%),#151c31;border-color:#69519b}
+.coach-next.warn{border-color:#b0874c;background:linear-gradient(130deg,#392e2a,#1c2130)}
+.coach .coach-next>small{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:750;letter-spacing:.8px;color:#c9aeff}
+.coach .coach-next.warn>small{color:#f4ce89}
+.coach .coach-next h2{font-size:19px;margin:7px 0;line-height:1.25}
+.coach .coach-next p{font-size:12px;margin:0 0 12px;color:#bdc9df;line-height:1.5}
+.coach .coach-next button.primary{padding:8px 12px;min-height:38px;background:linear-gradient(135deg,#8657e9,#5134ae);border-color:#a785ef;color:#fff;font-size:12px}
+.coach-live-summary{display:flex;flex-direction:column;gap:10px;min-width:0}
+.coach-overview-status{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:5px 10px;font-size:10px;color:#aebdd4}
+.coach-overview-status>span:first-child{padding:3px 8px;border:1px solid #485a7a;border-radius:20px;background:#18253c;color:#b8cae5}
+.coach-overview-status>span.live{color:#79e7ba;border-color:#35775f;background:#12372e}
+.coach-overview-status>span.simulation{color:#d3b0ff;border-color:#725296;background:#302345}
+.coach-live-inputs{min-width:0}.coach-live-inputs summary{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;font-size:12px;color:#d9e5fc;list-style:none}.coach-live-inputs summary:after{content:'＋';color:#b698ef}.coach-live-inputs[open] summary:after{content:'−'}.coach-live-inputs summary>span{margin-left:auto;font-size:11px;color:#b6c3da}
+.coach-live-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:6px;margin-top:9px;min-width:0}
+.coach-live-input{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 32px;min-width:0;border:1px solid #344462;border-radius:8px;background:#0e182c;overflow:hidden}
+.coach .coach-live-input>button{min-height:36px;padding:7px 8px;border:0;border-radius:0;background:transparent;justify-content:flex-start;gap:7px;font-size:11px;min-width:0;color:#d6e3fa}
+.coach-live-input>button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}.coach-live-input>button>small{color:#879bbb;font-size:10px}.coach-live-input>button>span{margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:11px}.coach-live-input>button>span small{font-size:9px;color:#9aafcc}
+.coach .coach-live-input>button.coach-open-channel{padding:6px;justify-content:center;border-left:1px solid #334260;color:#c3a5ff}
+.coach-live-input.hot{border-color:#c67558}.coach-live-input.hot>button>span{color:#ffbd98}
+.coach-live-bar{position:absolute;bottom:0;left:0;right:32px;height:2px;background:#293951;pointer-events:none}.coach-live-bar i{display:block;height:100%;background:linear-gradient(90deg,#3dd8d4,#a77af8)}.coach-live-input.hot .coach-live-bar i{background:#ff9577}
+.coach .coach-live-inputs>p{font-size:12px;margin:6px 0}
+.coach-overview-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
+.coach-overview-foot>small{font-size:10px;line-height:1.4;color:#9aacc9;max-width:360px}
+.coach .coach-overview-foot button{flex:none;min-height:34px;padding:5px 9px;font-size:11px;border-color:#645188;background:#2c2549;color:#d5bdff}
+.studio.app2 .coach{padding:18px 22px 32px}
+.coach .coach-hero{gap:14px;margin-bottom:12px}.coach .coach-hero h1{font-size:26px;margin:4px 0 6px}.coach .coach-hero p{font-size:13px;margin-bottom:0}.coach .coach-avatar{width:58px;height:58px;background:radial-gradient(#7146bf,#28254d);border-color:#8663bf;color:#d1b6ff}
+.coach .coach-capability{padding:10px 14px;margin-bottom:12px;background:#152139;border-color:#364968}.coach .coach-capability p{font-size:12px}.coach .coach-glossary{background:#111c30;border-color:#354666;margin-bottom:12px}
+.coach .coach-panel{background:linear-gradient(145deg,#17223a,#10192c);border-color:#354767}.coach .coach-panel-title{background:linear-gradient(120deg,#27213e,#132239);border-color:#354767}.coach .coach-journey button.active{background:linear-gradient(130deg,#50318d,#252247);border-color:#8d6acf}.coach .coach-journey button.active>span{background:#9064e9;color:#fff}.coach .coach-journey{min-width:0}
+@media(max-width:1100px){.coach-overview{grid-template-columns:1fr}.coach-next{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;align-items:center}.coach-next>small,.coach-next h2,.coach-next p{grid-column:1}.coach-next>button{grid-column:2;grid-row:1/4}.coach .coach-next p{margin-bottom:0}}
+@media(max-width:650px){.studio.app2 .coach{padding:12px 10px 24px}.coach .coach-hero{align-items:flex-start}.coach .coach-hero h1{font-size:22px}.coach .coach-avatar{width:42px;height:42px;flex:none}.coach-next{display:block}.coach .coach-next p{margin-bottom:12px}.coach-overview-foot{flex-wrap:wrap}.coach-overview-foot>small{max-width:none}.coach-live-inputs summary{flex-wrap:wrap}.coach-live-inputs summary>span{font-size:10px}.coach .coach-live-input>button{min-height:44px}.coach .coach-overview-foot button{min-height:44px}.coach .coach-next button.primary{min-height:44px}.coach-live-grid{grid-template-columns:minmax(0,1fr)}}
+.coach .coach-hero{padding:14px 18px}.coach .coach-hero h1{font-size:23px}.coach .coach-hero .coach-eyebrow{font-size:9px}.coach .coach-panel{scroll-margin-top:100px}.coach .coach-live-inputs summary:focus-visible{outline:2px solid #52def5;outline-offset:4px;border-radius:4px}
+@media(min-width:1101px){.coach-next,.coach-live-summary{padding:14px 16px}.coach .coach-next h2{font-size:18px}}
+.coach-calibration-state{font-size:10px;color:#c7b5e5}.coach .coach-live-summary{gap:8px}
+.coach-calibration-state{display:flex;align-items:center;justify-content:space-between;gap:8px}.coach-calibration-state small{font-size:10px}.coach .coach-calibration-state button{padding:3px 7px;min-height:28px;font-size:10px;background:#1b2942;border-color:#435575}
+@media(max-width:650px){.coach .coach-calibration-state button{min-height:44px}}
+@media(max-width:650px){.coach .coach-hero>.coach-status{display:none}.coach .coach-hero p{font-size:12px;line-height:1.45}.coach .coach-hero .coach-eyebrow{display:none}.coach .coach-hero h1{font-size:21px}.coach .coach-hero{padding:12px}.coach .coach-capability{border-radius:12px}}

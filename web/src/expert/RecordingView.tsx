@@ -64,7 +64,7 @@ export function RecordingView({ embedded = false }: { embedded?: boolean }) {
           <button type="button" className="xs2-btn primary" disabled={!!busy || !chosen.length || !!status?.recording} onClick={() => void prepare()}>{busy === "session" ? "Préparation…" : "Créer et ouvrir dans Reaper"}</button>
           <p className="muted">Une session existante n’est jamais écrasée. La console n’est pas modifiée.</p>
         </div>
-        <div className="xs2-card"><h3>Carte son</h3><p className="muted">Une seule fois dans Reaper : Préférences › Audio › Device, choisis la XR18.</p></div>
+        <div className="xs2-card"><h3>Carte son</h3><p className="muted">Une seule fois dans Reaper : Préférences › Audio › Device, choisis la console.</p></div>
       </aside>
     </div>
   </div>;

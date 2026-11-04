@@ -26,7 +26,7 @@ test('a full capture survives a few addresses the console never answers',async()
  try{
   const scene=await new ConsoleControl(xr,library).capture();
   assert.deepEqual([...(scene.missing??[])].sort(),[...silent].sort());
-  assert.equal(Object.keys(scene.values).length,Object.keys(PARAMETERS).length-silent.size);
+  assert.equal(Object.keys(scene.values).length,xr.parameterAddresses().length-silent.size);
  }finally{xr.close();library.close();}
 });
 test('a value outside the known range is skipped and listed, not fatal (ch 16 input source)',async()=>{

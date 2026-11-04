@@ -32,7 +32,7 @@ test('UDP discovery and live switching, no mixer writes, persistence, failure an
  const initial={mode:'simulation' as const,host:'127.0.0.1',port,enableWrites:false};
  const xr=new XR18(initial),manager=new ConnectionManager(xr,path,initial);let resets=0;xr.on('reset',()=>resets++);
  try{
-  const found=await discoverXR18(70,['127.0.0.1'],port);assert.equal(found[0]?.name,'Repetition');
+  const found=await discoverXR18(300,['127.0.0.1'],port);assert.equal(found[0]?.name,'Repetition');
   xr.setFader(1,.9);
   const pending=manager.change({mode:'real',host:'127.0.0.1',port});
   await assert.rejects(()=>manager.change(initial),/déjà en cours/);
@@ -66,11 +66,11 @@ test('discovery retries dropped packets, accepts xinfo and records rejected iden
 test('physical XR18V2 firmware 1.23 identity captures are accepted',()=>{
  const info=Buffer.from('/info\0\0\0,ssss\0\0\0V0.04\0\0\0XR18-AA-BB-CC\0\0\0XR18V2\0\0'+'1.23\0\0\0\0','binary');
  const xinfo=Buffer.from('/xinfo\0\0,ssss\0\0\0'+'192.168.50.10\0\0\0XR18-AA-BB-CC\0\0\0XR18V2\0\0'+'1.23\0\0\0\0','binary');
- for(const packet of [info,xinfo])assert.deepEqual(parseIdentity(packet,'192.168.50.10',10024),{host:'192.168.50.10',port:10024,name:'XR18-AA-BB-CC',model:'XR18'});
+ for(const packet of [info,xinfo]){const found=parseIdentity(packet,'192.168.50.10',10024)!;assert.equal(found.model,'XR18');assert.equal(found.firmware,'1.23');assert.equal(found.name,'XR18-AA-BB-CC');}
  for(const model of ['XR16V2','XR18V3','XR18V2-other'])assert.equal(parseIdentity(encodeOsc('/info',['V','Other',model,'1']),'127.0.0.1',10024),null);
 });
 test('X18 and MR18 share the XR18 OSC map, as in X-AIR Edit 1.8.1',()=>{
- for(const model of ['X18','X18V2','MR18','MR18V2','xr18'])assert.equal(parseIdentity(encodeOsc('/info',['V0.04','Rack',model,'1.23']),'10.0.0.2',10024)?.model,'XR18');
+ for(const model of ['X18','X18V2','MR18','MR18V2','xr18'])assert.equal(parseIdentity(encodeOsc('/info',['V0.04','Rack',model,'1.23']),'10.0.0.2',10024)?.model,model.toUpperCase().replace(/V2$/,''));
 });
 test('unreachable network gets a plain explanation with the macOS Local Network fix',async()=>{
  const {unreachableMessage}=await import('../src/connection.js');

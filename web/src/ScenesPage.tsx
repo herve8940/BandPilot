@@ -75,7 +75,7 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
     if (file.size > 900000) throw Error("Fichier trop volumineux");
     const text = await file.text();
     if (file.name.toLowerCase().endsWith(".scn")) await api("/api/library", "POST", { kind: "native-scene", name: file.name, data: text });
-    else { const v = JSON.parse(text); if (v.kind !== "scene") throw Error("Ce fichier n’est pas une scène XR18 Studio"); await api("/api/library", "POST", { kind: v.kind, name: v.name, data: v.data }); }
+    else { const v = JSON.parse(text); if (v.kind !== "scene") throw Error("Ce fichier n’est pas une scène BandPilot"); await api("/api/library", "POST", { kind: v.kind, name: v.name, data: v.data }); }
     return `« ${file.name} » est importée. Clique sur « Rappeler… » pour l’envoyer à la console.`;
   });
 

@@ -11,6 +11,13 @@ for(const [node,fields] of Object.entries(SCENE_SCHEMA))for(const f of fields){
 }
 // Physical XR18 has 16 mic preamps plus stereo aux; larger headamp entries are not exposed.
 for(const a of Object.keys(PARAMETERS))if(/^\/headamp\/(1[7-9]|2\d)\//.test(a))delete PARAMETERS[a];
+export const AIR_PARAMETER_ADDRESSES=new Set(Object.keys(PARAMETERS));
+// Additional X32 core addresses. Each transport filters this catalog by its detected profile.
+for(let n=17;n<=32;n++)for(const [a,p] of Object.entries(PARAMETERS))if(a.startsWith('/ch/01/')){const address=a.replace('/ch/01/',`/ch/${String(n).padStart(2,'0')}/`);PARAMETERS[address]={...p,address};}
+for(let n=7;n<=16;n++)for(const [a,p] of Object.entries(PARAMETERS))if(a.startsWith('/bus/1/')){const address=a.replace('/bus/1/',`/bus/${n}/`);PARAMETERS[address]={...p,address};}
+for(let ch=1;ch<=32;ch++)for(let bus=7;bus<=16;bus++)for(const leaf of ['level','on','pan']){const base=PARAMETERS[`/ch/01/mix/01/${leaf}`];if(base){const address=`/ch/${String(ch).padStart(2,'0')}/mix/${String(bus).padStart(2,'0')}/${leaf}`;PARAMETERS[address]={...base,address};}}
+for(let n=5;n<=8;n++)for(const [a,p] of Object.entries(PARAMETERS))if(a.startsWith('/dca/1/')){const address=a.replace('/dca/1/',`/dca/${n}/`);PARAMETERS[address]={...p,address};}
+for(const prefix of [...Array.from({length:6},(_,i)=>`/mtx/${String(i+1).padStart(2,'0')}`),'/main/m'])for(const leaf of ['fader','on']){const base=PARAMETERS[`/lr/mix/${leaf}`]!;const address=`${prefix}/mix/${leaf}`;PARAMETERS[address]={...base,address};}
 /**
  * The XR18 quantizes every float to a fixed number of steps (as X-AIR Edit does):
  * faders 1024, send levels 161, pan 101, EQ frequency 201, HPF 101, Q 72, times 101…

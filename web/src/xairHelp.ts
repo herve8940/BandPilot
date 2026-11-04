@@ -120,7 +120,7 @@ export const HELP: Record<string, HelpPage> = {
   },
   fx: {
     title: "Effets — les 4 processeurs",
-    intro: "La XR18 a 4 emplacements d’effets partagés par tout le groupe. On y envoie des canaux (réverb, délai…) depuis les envois FX, ou on insère un effet dans un canal.",
+    intro: "La famille X-Air a 4 emplacements d’effets partagés par tout le groupe. On y envoie des canaux (réverb, délai…) depuis les envois FX, ou on insère un effet dans un canal.",
     items: [
       ["Type", "L’effet chargé dans l’emplacement. Changer de type remplace l’effet pour tous les canaux qui l’utilisent : une confirmation est demandée."],
       ["Réverbes (Hall, Room, Plate…)", "Donnent de l’espace : Hall = grande salle, Room = petite pièce, Plate = brillant, idéal pour la voix."],

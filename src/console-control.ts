@@ -4,21 +4,23 @@ import {randomUUID,createHash} from 'node:crypto';
 import {PARAMETERS,descriptor,validateWire,toWire,fromWire,defaultWire,type Value} from './parameters.js';
 import type {XR18} from './xr18.js';
 import type {LibraryStore} from './library-store.js';
-export type CompleteScene={version:2;scope:'console';values:Record<string,Value>;fx:Awaited<ReturnType<XR18['readFx']>>[];missing?:string[]};
+export type CompleteScene={model?:string;version:2;scope:'console';values:Record<string,Value>;fx:Awaited<ReturnType<XR18['readFx']>>[];missing?:string[]};
 export class ConsoleControl {
  private previews=new Map<string,{values:Record<string,Value>;before:Record<string,Value>;identity:string;expires:number}>();
  constructor(private xr:XR18,private library:LibraryStore){}
- identity(){const s=this.xr.status();return JSON.stringify([s.mode,s.host,s.port,s.writesEnabled]);}
- catalog(prefix:string){const state=this.xr.parameterState();return Object.values(PARAMETERS).filter(p=>p.address.startsWith(prefix)).map(p=>({...p,...(state[p.address]?{state:{...state[p.address]!,display:fromWire(p.address,state[p.address]!.value)}}:{})}));}
+ identity(){const s=this.xr.status();return JSON.stringify([s.model,s.mode,s.host,s.port,s.writesEnabled]);}
+ catalog(prefix:string){const state=this.xr.parameterState();return Object.values(PARAMETERS).filter(p=>this.xr.supports(p.address)&&p.address.startsWith(prefix)).map(p=>({...p,...(state[p.address]?{state:{...state[p.address]!,display:fromWire(p.address,state[p.address]!.value)}}:{})}));}
  validateScene(input:unknown):CompleteScene {
   const s=input as CompleteScene;
   if(!s||s.version!==2||s.scope!=='console'||!s.values||typeof s.values!=='object'||Array.isArray(s.values)||!Object.keys(s.values).length||!Array.isArray(s.fx)||s.fx.length!==4||s.fx.some((f,i)=>f.slot!==i+1))throw Error('Scène complète invalide');
-  for(const [a,v] of Object.entries(s.values))validateWire(a,v);
+  if(s.model?s.model!==this.xr.model().id:!['XR18','MR18','X18'].includes(this.xr.model().id))throw Error('Scène créée pour un autre modèle : conversion explicite nécessaire');
+  for(const [a,v] of Object.entries(s.values)){if(!this.xr.supports(a))throw Error('Paramètre absent sur ce modèle : '+a);validateWire(a,v);}
   for(const f of s.fx)if(!Number.isInteger(f.algorithm)||f.algorithm<0||f.algorithm>60||!Array.isArray(f.parameters)||f.parameters.length>64||f.parameters.some(p=>!['i','f'].includes(p.type)||!Number.isFinite(p.value)||(p.type==='f'&&(p.value<0||p.value>1))||(p.type==='i'&&(!Number.isInteger(p.value)||p.value<0||p.value>127))))throw Error('Vecteur FX invalide');
   return structuredClone(s);
  }
  async capture():Promise<CompleteScene>{
-  const identity=this.identity(),values:Record<string,Value>={};const addresses=Object.keys(PARAMETERS);
+  if(this.xr.model().family==='x32')throw Error('Capture complète X32 : routage et FX nécessitent leur adaptateur dédié. Aucun rappel X-Air ne sera envoyé.');
+  const identity=this.identity(),values:Record<string,Value>={};const addresses=this.xr.parameterAddresses();
   // A value the console does not answer is asked once more, then listed as missing: one silent
   // address (firmware difference, lost UDP packet) must not make the whole capture fail.
   const missing:string[]=[];
@@ -29,7 +31,7 @@ export class ConsoleControl {
   for(let i=0;i<addresses.length;i+=8){if(identity!==this.identity())throw Error('Connexion modifiée');await Promise.all(addresses.slice(i,i+8).map(read));await new Promise(r=>setTimeout(r,5));}
   if(missing.length>addresses.length*.05)throw Error(`La console n’a pas répondu pour ${missing.length} réglages : vérifie la connexion (câble ou Wi-Fi) puis recommence.`);
   const fx=[];for(let slot=1;slot<=4;slot++)fx.push(await this.xr.readFx(slot));
-  return missing.length?{version:2,scope:'console',values,fx,missing}:{version:2,scope:'console',values,fx};
+  return missing.length?{model:this.xr.model().id,version:2,scope:'console',values,fx,missing}:{model:this.xr.model().id,version:2,scope:'console',values,fx};
  }
  async preview(input:unknown,wire=false){
   if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length<1||Object.keys(input).length>1000)throw Error('1 à 1000 paramètres requis');

@@ -1,3 +1,4 @@
+import {DEFAULT_MIXER} from '../shared/mixer-models.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {SoundCoach,SOURCES,gainProposal,thresholdsFrom,GROUP_TEMPLATE,TEMPLATES,DRUM_KIT,MONITOR_RECIPES,OWN_LEVEL,suggestMusicians,consoleName,validateProfile,identifySymptom,levelReport} from '../src/sound-coach.js';
@@ -96,7 +97,7 @@ test('gain proposal aims at -6 dBFS peaks, in safe steps, never blind',()=>{
 });
 test('guided gain staging: measure, raise the preamp, re-measure, then thresholds follow the real signal',async()=>{
  const values=new Map<string,unknown>([['/ch/06/preamp/rtnsw',0],['/ch/06/config/insrc',5],['/headamp/06/gain',(20+12)/72]]);
- let level=-18;const xr=Object.assign(new EventEmitter(),{mode:'real',status:()=>({connected:true}),readParameter:async(a:string)=>values.get(a)??0});
+ let level=-18;const xr=Object.assign(new EventEmitter(),{mode:'real',model:()=>DEFAULT_MIXER,status:()=>({connected:true}),readParameter:async(a:string)=>values.get(a)??0});
  const previews:Record<string,unknown>[]=[];
  const control={identity:()=>'A',preview:async(v:Record<string,unknown>)=>{previews.push(v);return {token:'t',changes:Object.entries(v).map(([address,after])=>({address,before:0,after}))};}} as unknown as ConsoleControl;
  const library=new LibraryStore(':memory:'),coach=new SoundCoach(xr as unknown as XR18,control,library);

@@ -5,6 +5,7 @@ on:
     paths:
       - 'desktop/**'
       - 'src/**'
+      - 'shared/**'
       - 'web/**'
       - 'package.json'
       - '.github/workflows/desktop.yml'
@@ -41,9 +42,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $installer = Get-ChildItem release/XR18-Studio-Windows-*.exe | Select-Object -First 1
+          $installer = Get-ChildItem release/BandPilot-Windows-*.exe | Select-Object -First 1
           # Verify the actual packaged application independently of NSIS install layout.
-          $unpackedExe = Join-Path (Resolve-Path 'release/win-unpacked').Path 'XR18 Studio.exe'
+          $unpackedExe = Join-Path (Resolve-Path 'release/win-unpacked').Path 'BandPilot.exe'
           if (-not (Test-Path $unpackedExe)) { throw 'Packaged Windows executable is missing' }
           node desktop/smoke.cjs $unpackedExe
           if ($LASTEXITCODE -ne 0) { throw 'Packaged Windows application failed to start' }
@@ -52,16 +53,16 @@ jobs:
           $result = Start-Process -FilePath $installer.FullName -ArgumentList '/S' -Wait -PassThru
           if ($result.ExitCode -ne 0) { throw "Installation failed: $($result.ExitCode)" }
           $candidates = @(
-            (Join-Path $env:LOCALAPPDATA 'Programs/XR18 Studio/XR18 Studio.exe'),
-            (Join-Path $env:LOCALAPPDATA 'Programs/xr18-studio/XR18 Studio.exe'),
-            (Join-Path $env:LOCALAPPDATA 'XR18 Studio/XR18 Studio.exe'),
-            (Join-Path $env:ProgramFiles 'XR18 Studio/XR18 Studio.exe')
+            (Join-Path $env:LOCALAPPDATA 'Programs/BandPilot/BandPilot.exe'),
+            (Join-Path $env:LOCALAPPDATA 'Programs/xr18-studio/BandPilot.exe'),
+            (Join-Path $env:LOCALAPPDATA 'BandPilot/BandPilot.exe'),
+            (Join-Path $env:ProgramFiles 'BandPilot/BandPilot.exe')
           )
           $installedExe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
           if (-not $installedExe) {
             Write-Warning 'NSIS returned success, but the installed path was not found among known locations.'
             Write-Host 'Installed application discovery:'
-            Get-ChildItem $env:LOCALAPPDATA -Filter 'XR18 Studio.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 10 -ExpandProperty FullName
+            Get-ChildItem $env:LOCALAPPDATA -Filter 'BandPilot.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 10 -ExpandProperty FullName
             # The packaged app was already smoke-tested; report install discovery separately.
           } else {
             node desktop/smoke.cjs $installedExe

@@ -4,6 +4,11 @@ const { pathToFileURL } = require("node:url");
 const { mkdirSync, readFileSync, writeFileSync } = require("node:fs");
 const net = require("node:net");
 const {loadAI,saveAI}=require("./ai-config.cjs");
+// Keep the existing data/profile directory across the display-name change.
+if(!process.argv.includes('--smoke-test')){
+  const legacyData=path.join(app.getPath('appData'),'xr18-studio');
+  mkdirSync(legacyData,{recursive:true});app.setPath('userData',legacyData);
+}
 let win;
 app.whenReady().then(async () => {
   try {
@@ -23,8 +28,8 @@ app.whenReady().then(async () => {
     process.env.XR18_HOST=config.host;
     process.env.XR18_ENABLE_WRITES=String(config.enableWrites);
     Menu.setApplicationMenu(Menu.buildFromTemplate([{label:"Connexion",submenu:[
-      {label:"Détecter et connecter ma XR18",click:()=>{if(win)void win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");}},
-      {type:"separator"},{role:"about",label:"À propos de XR18 Studio"},{type:"separator"},{role:"quit",label:"Quitter"}
+      {label:"Détecter et connecter ma console",click:()=>{if(win)void win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");}},
+      {type:"separator"},{role:"about",label:"À propos de BandPilot"},{type:"separator"},{role:"quit",label:"Quitter"}
     ]},{label:"Affichage",submenu:[{role:"reload"},{role:"togglefullscreen"}]}]));
     const port = await new Promise((resolve,reject)=>{
       const probe=net.createServer();
@@ -44,7 +49,7 @@ app.whenReady().then(async () => {
       try{const response=await fetch(`http://127.0.0.1:${port}/api/auth`);if(response.ok){ready=true;break;}}catch{}
       await new Promise(resolve=>setTimeout(resolve,250));
     }
-    if(!ready)throw Error("Le serveur local XR18 n'a pas démarré.");
+    if(!ready)throw Error("Le serveur local BandPilot n'a pas démarré.");
     win=new BrowserWindow({
       show:!smoke,
       width:1440,height:900,minWidth:800,minHeight:600,
@@ -56,10 +61,10 @@ app.whenReady().then(async () => {
     const fromWindow=(event)=>event.sender===win.webContents&&event.senderFrame===win.webContents.mainFrame;
     ipcMain.on('xr18-confirm',(event,message)=>{
       if(!fromWindow(event)){event.returnValue=false;return;}
-      event.returnValue=dialog.showMessageBoxSync(win,{type:"question",icon:appIcon,title:"XR18 Studio",message:String(message).slice(0,2000),buttons:["Annuler","Confirmer"],defaultId:1,cancelId:0,noLink:true})===1;
+      event.returnValue=dialog.showMessageBoxSync(win,{type:"question",icon:appIcon,title:"BandPilot",message:String(message).slice(0,2000),buttons:["Annuler","Confirmer"],defaultId:1,cancelId:0,noLink:true})===1;
     });
     ipcMain.on('xr18-alert',(event,message)=>{
-      if(fromWindow(event))dialog.showMessageBoxSync(win,{type:"info",icon:appIcon,title:"XR18 Studio",message:String(message).slice(0,2000),buttons:["OK"],noLink:true});
+      if(fromWindow(event))dialog.showMessageBoxSync(win,{type:"info",icon:appIcon,title:"BandPilot",message:String(message).slice(0,2000),buttons:["OK"],noLink:true});
       event.returnValue=null;
     });
     ipcMain.handle('xr18-ai-configure',async(event,input)=>{
@@ -84,15 +89,15 @@ app.whenReady().then(async () => {
     await win.loadURL(`http://127.0.0.1:${port}/`);
     if(smoke){
       await new Promise(resolve=>setTimeout(resolve,1000));
-      const rendered=await win.webContents.executeJavaScript('document.body.textContent.includes("XR18")');
-      if(!rendered)throw Error("Interface XR18 non rendue");
+      const rendered=await win.webContents.executeJavaScript('document.body.textContent.includes("BandPilot")');
+      if(!rendered)throw Error("Interface BandPilot non rendue");
       const auth=await fetch(`http://127.0.0.1:${port}/api/auth`);
       if(!auth.ok)throw Error("Authentification locale indisponible");
       app.exit(0);
     }
   } catch(error) {
     if(process.argv.includes("--smoke-test")){console.error(error);app.exit(1);return;}
-    dialog.showErrorBox("XR18 Studio — démarrage impossible",String(error));
+    dialog.showErrorBox("BandPilot — démarrage impossible",String(error));
     app.quit();
   }
 });

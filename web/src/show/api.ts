@@ -23,11 +23,12 @@ export function useShow() {
 export const clock = (s: number) => { const v = Math.max(0, Math.floor(s)); const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60; return `${h ? `${h}:` : ""}${String(m).padStart(2, "0")}:${String(v % 60).padStart(2, "0")}`; };
 export const position = (show: Show, link: Link | null) => link && link.state !== "offline" ? link.clock : show.pos ?? 0;
 /** What still prevents a good recording, in plain words. Empty when everything is fine. */
-export function setupIssues(show: Show, consoleRate?: number) {
+export function setupIssues(show: Show, consoleRate?: number, expectedInputs=18, modelLabel='la console') {
   const out: string[] = [], a = show.audio; if (!a) return out;
   // No name and no inputs: Reaper has simply not opened its device yet, and it does so when recording starts.
   if (a.inputs === 0 && !a.device) return out;
-  if (a.inputs < 18) out.push(`Reaper ne voit que ${a.inputs} entrées : choisis la XR18 dans Préférences › Audio › Device, en 18×18.`);
+  if (expectedInputs===0) out.push(`${modelLabel} n’a pas d’interface USB multipiste vers l’ordinateur : l’enregistreur USB intégré est stéréo.`);
+  else if (a.inputs < expectedInputs) out.push(`Reaper ne voit que ${a.inputs} entrées : vérifie le périphérique ${modelLabel} dans Préférences › Audio › Device (${expectedInputs} entrées attendues).`);
   if (a.rate && consoleRate && a.rate !== consoleRate) out.push(`La console est à ${consoleRate / 1000} kHz et Reaper à ${a.rate / 1000} kHz : mets-les à la même valeur.`);
   return out;
 }

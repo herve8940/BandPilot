@@ -1,7 +1,8 @@
+import {useAirStrips} from './xair/model-strips';
 import { useState } from "react";
 import { faderToDb, formatDb, stripColor } from "./xairMath";
 import { Fader, Meter, num, useLiveMixer, usePersistentFlag } from "./xair/controls";
-import { BUSES, faderAddress, INPUTS, isInput, layerMaster, MAIN, onAddress, soloAddress, stripName, type Strip } from "./xair/strips";
+import { faderAddress, isInput, layerMaster, MAIN, onAddress, soloAddress, stripName, type Strip } from "./xair/strips";
 import "./simple-mixer.css";
 
 /**
@@ -9,6 +10,7 @@ import "./simple-mixer.css";
  * ou pour le retour d’un musicien. Tout le reste est dans le mode Expert.
  */
 export function SimpleMixer({ canWrite, onExpert }: { canWrite: boolean; onExpert: (channel?: number) => void }) {
+  const {INPUTS,BUSES,model}=useAirStrips();
   const { values, set, online, message, clearMessage } = useLiveMixer();
   const [layer, setLayer] = useState(0);
   const [showAll, setShowAll] = usePersistentFlag("xr18-simple-show-all", false);
@@ -54,7 +56,7 @@ export function SimpleMixer({ canWrite, onExpert }: { canWrite: boolean; onExper
     </div>
     <div className="sm-mixes" role="tablist" aria-label="Mix à régler">
       <button type="button" role="tab" aria-selected={layer === 0} className={layer === 0 ? "active" : ""} onClick={() => setLayer(0)}>Façade</button>
-      {BUSES.map((b, i) => <button key={b.id} type="button" role="tab" aria-selected={layer === i + 1} className={layer === i + 1 ? "active" : ""} style={{ "--c": stripColor(num(values, `${b.prefix}/config/color`)) } as React.CSSProperties} onClick={() => setLayer(i + 1)}>
+      {BUSES.slice(0,model.monitorOutputs).map((b, i) => <button key={b.id} type="button" role="tab" aria-selected={layer === i + 1} className={layer === i + 1 ? "active" : ""} style={{ "--c": stripColor(num(values, `${b.prefix}/config/color`)) } as React.CSSProperties} onClick={() => setLayer(i + 1)}>
         <span className="sm-dot" />{stripName(b, values)}</button>)}
     </div>
     {message && <div className="sm-message" role="status">{message}<button type="button" onClick={clearMessage} aria-label="Fermer">×</button></div>}

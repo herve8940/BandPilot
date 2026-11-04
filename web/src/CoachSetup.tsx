@@ -1,3 +1,4 @@
+import {useMixerModel} from './MixerModel';
 import {useEffect,useState} from 'react';
 import {Eraser,Check,Drum,Headphones,Plus,QrCode,Trash2,Users,Wand2} from 'lucide-react';
 
@@ -11,7 +12,7 @@ export type CoachData={sources:Source[];presets:Record<string,PresetCard>;roles:
 
 const COLORS=['#555','#e5534b','#57ab5a','#d4b106','#539bf5','#c96198','#39c5cf','#cdd9e5'];
 const swatch=(c:number)=>COLORS[c%8];
-const freeChannel=(inputs:Input[],after=0)=>Array.from({length:16},(_,i)=>i+1).find(n=>n>after&&!inputs.some(i=>i.channel===n));
+const freeChannel=(inputs:Input[],after=0,max=16)=>Array.from({length:max},(_,i)=>i+1).find(n=>n>after&&!inputs.some(i=>i.channel===n));
 /** Group the instrument list like a stage plot: voices, guitars, bass, drum kit, electronic drums, keys. */
 function InstrumentSelect({data,value,disabled,onChange}:{data:CoachData;value:string;disabled:boolean;onChange:(id:string)=>void}){
  const groups=[...new Set(data.sources.map(s=>s.group))];
@@ -21,6 +22,7 @@ function InstrumentSelect({data,value,disabled,onChange}:{data:CoachData;value:s
 export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyChannel,onApplyAll,onSave,notify,onNext,onBlank}:{
  data:CoachData;profile:Profile;setProfile:(p:Profile)=>void;admin:boolean;busy:boolean;canApply:boolean;
  onApplyChannel:(p:Profile,channel:number)=>void;onApplyAll:(p:Profile)=>void;onSave:(p:Profile)=>void;notify:(m:string)=>void;onNext:()=>void;onBlank:()=>void}){
+ const model=useMixerModel();
  const [open,setOpen]=useState<number|null>(null);
  const src=(id:string)=>data.sources.find(s=>s.id===id)!;
  const update=(next:Profile)=>setProfile({...next,musicians:next.musicians?.map(m=>({...m,channels:m.channels.filter(c=>next.inputs.some(i=>i.channel===c))}))});
@@ -30,11 +32,11 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
   const next={...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,source:id,name:keepName?v.name:src(id).name}:v)};
   setProfile(next);setOpen(current.channel);
   // Choosing an instrument proposes its complete best-practice setting right away.
-  if(canApply)onApplyChannel(next,current.channel);else notify('Instrument choisi. Connecte la XR18 (ou passe en simulation) pour appliquer sa configuration complète.');
+  if(canApply)onApplyChannel(next,current.channel);else notify('Instrument choisi. Connecte la console (ou passe en simulation) pour appliquer sa configuration complète.');
  };
  const addDrums=()=>{
   let inputs=[...profile.inputs],last=0;
-  for(const id of data.drumKit){if(inputs.some(i=>i.source===id))continue;const ch=freeChannel(inputs,last)??freeChannel(inputs);if(!ch){notify('Plus assez d’entrées libres pour toute la batterie (16 maximum).');break;}inputs.push({channel:ch,source:id,name:src(id).name});last=ch;}
+  for(const id of data.drumKit){if(inputs.some(i=>i.source===id))continue;const ch=freeChannel(inputs,last,model.channels)??freeChannel(inputs,0,model.channels);if(!ch){notify(`Plus assez d’entrées libres pour toute la batterie (${model.channels} maximum).`);break;}inputs.push({channel:ch,source:id,name:src(id).name});last=ch;}
   inputs=inputs.filter(i=>!i.source.startsWith('drum-module'));
   update({...profile,inputs:inputs.sort((a,b)=>a.channel-b.channel)});notify('Batterie détaillée ajoutée : kick, snare, tom 1, tom 2, tom 3, OH 1 et OH 2. Vérifie les numéros d’entrée puis applique.');
  };
@@ -47,7 +49,7 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
   <p className="coach-hint">Dès que tu choisis un instrument, je te propose sa <b>configuration complète</b> : coupe-bas, égaliseur, compresseur, gate, position stéréo, nom et couleur.</p>
   <div className="coach-inputs">{profile.inputs.map((input,index)=>{const s=src(input.source),card=data.presets[input.source];return <div className="coach-input2" key={input.channel+':'+index} style={{['--chip' as string]:swatch(s.color)}}>
    <div className="row">
-    <label>Prise<select disabled={!admin||busy} value={input.channel} onChange={e=>update({...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,channel:Number(e.target.value)}:v)})}>{Array.from({length:16},(_,i)=><option key={i+1} value={i+1} disabled={i+1!==input.channel&&profile.inputs.some(v=>v.channel===i+1)}>Entrée {i+1}</option>)}</select></label>
+    <label>Prise<select disabled={!admin||busy} value={input.channel} onChange={e=>update({...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,channel:Number(e.target.value)}:v)})}>{Array.from({length:model.channels},(_,i)=><option key={i+1} value={i+1} disabled={i+1!==input.channel&&profile.inputs.some(v=>v.channel===i+1)}>Entrée {i+1}</option>)}</select></label>
     <label>Instrument<InstrumentSelect data={data} value={input.source} disabled={!admin||busy} onChange={id=>choose(index,id)}/></label>
     <label>Nom sur la console<input disabled={!admin||busy} value={input.name} maxLength={12} onChange={e=>update({...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,name:e.target.value}:v)})}/></label>
     <div className="row-actions"><button className="apply" disabled={!admin||busy||!canApply} title="Appliquer la configuration complète de cet instrument" onClick={()=>onApplyChannel(profile,input.channel)}><Wand2 size={15}/> Appliquer</button><button disabled={!admin||busy} aria-label={'Retirer '+input.name} title="Retirer" onClick={()=>update({...profile,inputs:profile.inputs.filter((_,i)=>i!==index)})}><Trash2 size={15}/></button></div>
@@ -55,7 +57,7 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
    {card&&<details open={open===input.channel} onToggle={e=>{if((e.target as HTMLDetailsElement).open)setOpen(input.channel);}}><summary>Ce que je règle : {card.title}</summary><ul>{card.lines.map((l,n)=><li key={n}>{l}</li>)}</ul><p>{card.advice}</p></details>}
   </div>;})}</div>
   <div className="coach-actions">
-   <button disabled={!admin||busy||profile.inputs.length>=16} onClick={()=>{const ch=freeChannel(profile.inputs);if(ch)update({...profile,inputs:[...profile.inputs,{channel:ch,source:'lead-rock',name:'Micro '+ch}].sort((a,b)=>a.channel-b.channel)});}}><Plus size={15}/> Ajouter un instrument</button>
+   <button disabled={!admin||busy||profile.inputs.length>=model.channels} onClick={()=>{const ch=freeChannel(profile.inputs,0,model.channels);if(ch)update({...profile,inputs:[...profile.inputs,{channel:ch,source:'lead-rock',name:'Micro '+ch}].sort((a,b)=>a.channel-b.channel)});}}><Plus size={15}/> Ajouter un instrument</button>
    <button disabled={!admin||busy} onClick={()=>onSave(profile)}>Enregistrer mon groupe</button>
    <button className="primary" disabled={!admin||busy||!canApply||!profile.inputs.length} onClick={()=>onApplyAll(profile)}><Wand2 size={16}/> Appliquer à tout le groupe ({profile.inputs.length} instruments)</button>
    <button disabled={!profile.inputs.length} onClick={()=>{onSave(profile);onNext();}}>Étape suivante : régler les gains →</button>
@@ -67,20 +69,21 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
 export function EarsStep({data,profile,setProfile,admin,busy,canApply,onSuggest,onApply,onShare}:{
  data:CoachData;profile:Profile;setProfile:(p:Profile)=>void;admin:boolean;busy:boolean;canApply:boolean;
  onSuggest:()=>void;onApply:(p:Profile,bus?:number)=>void;onShare:(p:Profile)=>void}){
+ const model=useMixerModel();
  const musicians=profile.musicians??[];
  const src=(id:string)=>data.sources.find(s=>s.id===id)!;
  const set=(list:Musician[])=>setProfile({...profile,musicians:list});
  const edit=(i:number,patch:Partial<Musician>)=>set(musicians.map((m,n)=>n===i?{...m,...patch}:m));
  const level=(m:Musician,input:Input)=>{const family=src(input.source).family;return m.channels.includes(input.channel)&&!(m.role==='batterie'&&family!=='edrums')?data.ownLevel:data.recipes[m.role][family]!;};
- const freeBus=Array.from({length:6},(_,i)=>i+1).find(b=>!musicians.some(m=>m.bus===b));
+ const freeBus=Array.from({length:model.monitorOutputs},(_,i)=>i+1).find(b=>!musicians.some(m=>m.bus===b));
  return <div className="coach-section">
-  <div className="coach-checklist"><p><Headphones size={18}/> Chaque musicien a son propre bus (sortie Aux 1 à 6 de la XR18) : branche-y son boîtier in-ear ou son retour.</p><p><Check size={17}/> Je prépare un mix de départ <b>pré-fader</b> : ce que tu changes en façade ne bouge pas ses oreilles.</p><p><QrCode size={17}/> Ensuite, chacun scanne son QR code et ajuste son mix sur son téléphone.</p></div>
+  <div className="coach-checklist"><p><Headphones size={18}/> Chaque musicien a son propre bus (sortie Aux 1 à {model.monitorOutputs} de la console) : branche-y son boîtier in-ear ou son retour.</p><p><Check size={17}/> Je prépare un mix de départ <b>pré-fader</b> : ce que tu changes en façade ne bouge pas ses oreilles.</p><p><QrCode size={17}/> Ensuite, chacun scanne son QR code et ajuste son mix sur son téléphone.</p></div>
   <div className="coach-actions"><button disabled={!admin||busy} onClick={onSuggest}><Users size={15}/> Proposer les musiciens d’après mon groupe</button><button disabled={!admin||busy||!freeBus} onClick={()=>freeBus&&set([...musicians,{name:'Musicien '+freeBus,bus:freeBus,role:'chant',channels:[]}])}><Plus size={15}/> Ajouter un musicien</button></div>
   {!musicians.length&&<p className="coach-note">Aucun musicien pour l’instant : clique sur « Proposer les musiciens d’après mon groupe ».</p>}
   <div className="coach-musicians">{musicians.map((m,i)=>{const role=data.roles.find(r=>r.id===m.role)!;const rows=[...profile.inputs].map(input=>({input,db:level(m,input)})).sort((a,b)=>b.db-a.db);return <article className="coach-musician" key={i}>
    <div className="row">
     <label>Musicien<input disabled={!admin||busy} value={m.name} maxLength={12} onChange={e=>edit(i,{name:e.target.value})}/></label>
-    <label>Sortie / bus<select disabled={!admin||busy} value={m.bus} onChange={e=>edit(i,{bus:Number(e.target.value)})}>{Array.from({length:6},(_,b)=><option key={b+1} value={b+1} disabled={b+1!==m.bus&&musicians.some(x=>x.bus===b+1)}>Bus {b+1} (Aux {b+1})</option>)}</select></label>
+    <label>Sortie / bus<select disabled={!admin||busy} value={m.bus} onChange={e=>edit(i,{bus:Number(e.target.value)})}>{Array.from({length:model.monitorOutputs},(_,b)=><option key={b+1} value={b+1} disabled={b+1!==m.bus&&musicians.some(x=>x.bus===b+1)}>Bus {b+1} (Aux {b+1})</option>)}</select></label>
     <label>Rôle<select disabled={!admin||busy} value={m.role} onChange={e=>edit(i,{role:e.target.value as Role})}>{data.roles.map(r=><option key={r.id} value={r.id}>{r.label}</option>)}</select></label>
     <div className="row-actions"><button className="apply" disabled={!admin||busy||!canApply} onClick={()=>onApply(profile,m.bus)}><Wand2 size={15}/> Appliquer</button><button disabled={!admin||busy} aria-label={'Retirer '+m.name} onClick={()=>set(musicians.filter((_,n)=>n!==i))}><Trash2 size={15}/></button></div>
    </div>
@@ -109,20 +112,20 @@ function PeakBar({peak}:{peak:number}){
  const pos=(v:number)=>Math.max(0,Math.min(100,(v+60)/60*100));
  return <div className="peakbar" aria-label={'Crête '+db(peak)}><span className="zone" style={{left:pos(-9)+'%',width:(pos(-3)-pos(-9))+'%'}}/><i style={{width:pos(peak)+'%'}} className={peak>=-1?'clip':peak>=-9&&peak<=-3?'good':'off'}/><small style={{left:pos(-6)+'%'}}>−6</small></div>;
 }
-export function GainStep({profile,channel,setChannel,admin,busy,canApply,real,refresh,api,run,onPlan,onApplyChannel,onApplyAll}:{
+export function GainStep({profile,channel,setChannel,admin,busy,canApply,real,refresh,api,run,onPlan,onApplyChannel,onApplyAll,onMeasured}:{
  profile:Profile;channel:number;setChannel:(c:number)=>void;admin:boolean;busy:boolean;canApply:boolean;real:boolean;refresh:number;
- api:(path:string,data?:unknown)=>Promise<any>;run:(fn:()=>Promise<void>)=>void;onPlan:(plan:any)=>void;onApplyChannel:(p:Profile,ch:number)=>void;onApplyAll:(p:Profile)=>void}){
+ api:(path:string,data?:unknown)=>Promise<any>;run:(fn:()=>Promise<void>)=>void;onMeasured?:()=>void;onPlan:(plan:any)=>void;onApplyChannel:(p:Profile,ch:number)=>void;onApplyAll:(p:Profile)=>void}){
  const [status,setStatus]=useState<Cal[]>([]),[gain,setGain]=useState<GainResult|null>(null),[bleed,setBleed]=useState<BleedResult|null>(null),[measuring,setMeasuring]=useState<''|'gain'|'bleed'>('');
  useEffect(()=>{let live=true;api('/api/coach/calibration',{}).then(s=>{if(live)setStatus(s);}).catch(()=>{});return()=>{live=false;};},[refresh,channel,profile.inputs.length,gain,bleed]);
  useEffect(()=>{setGain(null);setBleed(null);},[channel]);
  const current=status.find(s=>s.channel===channel),input=profile.inputs.find(i=>i.channel===channel);
  const done=status.filter(s=>s.state==='ok').length,index=profile.inputs.findIndex(i=>i.channel===channel),next=profile.inputs[index+1];
- const measure=(kind:'gain'|'bleed')=>run(async()=>{setMeasuring(kind);try{if(kind==='gain'){const r=await api('/api/coach/gain',{channel}) as GainResult;setGain(r);setBleed(null);if(r.proposal)onPlan(r.proposal);}else setBleed(await api('/api/coach/bleed',{channel}));}finally{setMeasuring('');}});
+ const measure=(kind:'gain'|'bleed')=>run(async()=>{setMeasuring(kind);try{if(kind==='gain'){const r=await api('/api/coach/gain',{channel}) as GainResult;setGain(r);setBleed(null);if(r.proposal)onPlan(r.proposal);}else setBleed(await api('/api/coach/bleed',{channel}));}finally{setMeasuring('');onMeasured?.();}});
  const th=bleed?.thresholds??current?.thresholds??null;
  // The proposal belongs to the measure: once the gain has changed (applied here or on the console), it is out of date.
  const gainMoved=!!gain&&gain.gainDb!=null&&current?.gainDb!=null&&current.gainDb!==gain.gainDb;
  return <div className="coach-section gain-step">
-  {!real&&<p className="coach-message warn">La mesure a besoin de la vraie XR18 et des musiciens qui jouent. En simulation, aucun niveau n’est inventé : connecte la console pour régler les gains.</p>}
+  {!real&&<p className="coach-message warn">La mesure a besoin de la vraie console et des musiciens qui jouent. En simulation, aucun niveau n’est inventé : connecte la console pour régler les gains.</p>}
   <h3>Où en est chaque instrument <small>{done} / {profile.inputs.length} calés</small></h3>
   <div className="gain-table" role="table">
    <div role="row" className="head"><span>Instrument</span><span>Gain</span><span>Niveau max</span><span>Repisse</span><span>Compresseur</span><span>Gate</span><span>État</span></div>

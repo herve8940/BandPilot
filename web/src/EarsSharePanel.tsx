@@ -1,3 +1,4 @@
+import {useMixerModel} from './MixerModel';
 import { useCallback, useEffect, useState } from "react";
 import { Copy, Printer, QrCode, RefreshCw, Trash2, UserPlus, Wifi, WifiOff } from "lucide-react";
 import { stripColor } from "./xairMath";
@@ -35,6 +36,7 @@ function QrCard({ share, running, host, busLabel, busColor, onChange, onError }:
 }
 
 export function EarsSharePanel() {
+ const model=useMixerModel();
   const { values } = useLiveMixer();
   const [status, setStatus] = useState<Status | null>(null);
   const [message, setMessage] = useState("");
@@ -68,7 +70,7 @@ export function EarsSharePanel() {
     <form className="es-add" onSubmit={e => { e.preventDefault(); void run(() => api<Status>("/musicians", "POST", { name, bus })).then(() => setName("")); }}>
       <UserPlus size={18} />
       <input value={name} onChange={e => setName(e.target.value)} maxLength={40} placeholder="Prénom du musicien" aria-label="Prénom du musicien" required />
-      <select value={bus} onChange={e => setBus(Number(e.target.value))} aria-label="Retour du musicien">{BUSES.map((b, i) => <option key={b.id} value={i + 1}>Bus {i + 1} · {busLabel(i + 1)}</option>)}</select>
+      <select value={bus} onChange={e => setBus(Number(e.target.value))} aria-label="Retour du musicien">{BUSES.slice(0, model.monitorOutputs).map((b, i) => <option key={b.id} value={i + 1}>Bus {i + 1} · {busLabel(i + 1)}</option>)}</select>
       <button type="submit" className="btn primary" disabled={working || !name.trim()}>Ajouter</button>
     </form>
 
@@ -79,7 +81,7 @@ export function EarsSharePanel() {
       <summary>Comment ça marche ? Sécurité et réseau</summary>
       <ul>
         <li>L’ordinateur et les téléphones doivent être sur le <b>même Wi-Fi</b> (routeur du groupe ou de la salle). Le partage ne passe pas par Internet.</li>
-        <li>Au premier démarrage, le système peut demander d’autoriser XR18 Studio dans le pare-feu : accepte pour les réseaux privés.</li>
+        <li>Au premier démarrage, le système peut demander d’autoriser BandPilot dans le pare-feu : accepte pour les réseaux privés.</li>
         <li>Le lien est personnel : quiconque l’a peut régler ce retour. En cas de perte du téléphone, clique <b>Nouveau lien</b> : l’ancien QR cesse aussitôt de fonctionner.</li>
         <li>La connexion n’est pas chiffrée (HTTP local) : utilise un Wi-Fi privé protégé par mot de passe, pas un réseau public.</li>
         <li>Le contrôle doit être activé dans Réglages pour que les musiciens puissent agir ; sinon leur page est en lecture seule.</li>

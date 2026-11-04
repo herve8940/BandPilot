@@ -1,3 +1,4 @@
+import {useMixerModel} from '../MixerModel';
 import { useEffect, useRef, useState } from "react";
 import { BridgeInstall, needsBridge, Status } from "./Rehearse";
 import { call, clock, position, sectionName, setupIssues, songAt, useShow } from "./api";
@@ -10,13 +11,14 @@ function useTwoPress() {
   return { armed, press: (id: string, run: () => void) => { if (armed === id) { setArmed(""); run(); return; } setArmed(id); clearTimeout(timer.current); timer.current = setTimeout(() => setArmed(""), 3000); } };
 }
 export function Concert() {
+  const mixerModel=useMixerModel();
   const { show, link, error, setError, act } = useShow();
   const [unlocked, setUnlocked] = useState(false), [recordShow, setRecordShow] = useState(true), [checks, setChecks] = useState<{ warnings: string[]; hoursFree: number | null; sampleRate: number } | null>(null);
   const { armed, press } = useTwoPress();
   useEffect(() => { void call<{ warnings: string[]; hoursFree: number | null; sampleRate: number }>("/api/reaper/plan").then(setChecks).catch(e => setError(e.message)); }, []);
   const songs = show.songs ?? [], cursor = position(show, link), index = songAt(songs, cursor), song = songs[index], next = songs[index + 1];
   const recording = !!link?.recording, running = recording || !!link?.playing || link?.state === "starting";
-  const armedTracks = (show.tracks ?? []).filter(t => t.armed).length, issues = [...setupIssues(show, checks?.sampleRate), ...(checks?.warnings ?? [])];
+  const armedTracks = (show.tracks ?? []).filter(t => t.armed).length, issues = [...setupIssues(show, checks?.sampleRate,mixerModel.usbChannels,mixerModel.label), ...(checks?.warnings ?? [])];
   if (recordShow && !armedTracks) issues.unshift("Aucune piste armée : prépare Qui est là dans Répéter, ou passe Sans enregistrement.");
   const section = (show.regions ?? []).find(r => cursor >= r.start && cursor < r.stop);
   const start = () => { if (!song) return; if (recordShow) void act("/api/show/rec", { start: cursor > song.start + 1 ? cursor : song.countin, stop: song.stop }); else void act("/api/show/play"); };

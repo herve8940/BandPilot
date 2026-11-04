@@ -1,4 +1,4 @@
-import {PARAMETERS,type Value} from './parameters.js';
+import {PARAMETERS,AIR_PARAMETER_ADDRESSES,type Value} from './parameters.js';
 
 /**
  * "Start from a blank scene": every mixing setting back to neutral, in OSC wire values.
@@ -38,7 +38,7 @@ const RULES:[RegExp,Value][]=[
 ];
 export function blankSceneValues():Record<string,Value>{
  const values:Record<string,Value>={};
- for(const address of Object.keys(PARAMETERS)){
+ for(const address of [...AIR_PARAMETER_ADDRESSES]){
   if((/^\/(?:headamp|routing|fx)\//.test(address)&&!/^\/fx\/[1-4]\/insert$/.test(address))||/\/(?:phantom|insrc|rtnsrc)$/.test(address))continue;
   const rule=RULES.find(([r])=>r.test(address));if(!rule)continue;
   // Sends: level fully down, pan centred.

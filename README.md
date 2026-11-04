@@ -1,12 +1,12 @@
 <div align="center">
 
-# XR18 Studio
+# BandPilot
 
-**Ton ingé son de poche pour la Behringer XR18**
+**Ton ingé son de poche pour ton groupe et ta console**
 
 [![Dernière version](https://img.shields.io/github/v/release/herve8940/xr18-studio?label=version&color=3ee0e0)](https://github.com/herve8940/xr18-studio/releases/latest) [![Téléchargements](https://img.shields.io/github/downloads/herve8940/xr18-studio/total?color=2b7cf6)](https://github.com/herve8940/xr18-studio/releases) [![Licence MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE) [![Windows · macOS · Linux](https://img.shields.io/badge/Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-gratuit-555)](https://github.com/herve8940/xr18-studio/releases/latest)
 
-Application **gratuite** pour piloter une table de mixage **Behringer XR18, X18 ou MR18**, alternative à X-AIR Edit pensée pour les débutants : un assistant qui te guide pas à pas, une console claire où toutes les pistes tiennent à l’écran, et le retour in-ear de chaque musicien sur son téléphone.
+Application **gratuite** pour préparer la balance, piloter la console, les retours et les répétitions. Cette branche prépare la détection Behringer XR12/XR18/X18, Midas MR12/MR18 et X32. La X32 reste un **adaptateur partiel en validation**, et les nouveaux modèles X-Air nécessitent une validation matérielle : voir la [matrice de compatibilité](docs/multi-model.md). Les versions déjà publiées ne contiennent pas encore cette adaptation.
 
 🇫🇷 Français · [🇬🇧 English](README.en.md)
 

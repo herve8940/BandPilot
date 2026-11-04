@@ -75,7 +75,7 @@ export class EarsShare {
  list(){return [...this.shares.values()].sort((a,b)=>a.bus-b.bus||a.name.localeCompare(b.name));}
  create(name:unknown,bus:unknown){
   if(typeof name!=='string'||!name.trim()||name.trim().length>40)throw Error('Nom du musicien : 1 à 40 caractères');
-  if(typeof bus!=='number'||!Number.isInteger(bus)||bus<1||bus>6)throw Error('Bus 1 à 6');
+  if(typeof bus!=='number'||!Number.isInteger(bus)||bus<1||bus>this.xr.model().monitorOutputs)throw Error('Bus 1 à 6');
   const share:EarShare={id:randomUUID(),name:name.trim(),bus,token:randomBytes(18).toString('base64url'),createdAt:new Date().toISOString()};
   this.db.prepare('INSERT INTO ear_shares VALUES(?,?,?,?,?)').run(share.id,share.name,share.bus,share.token,share.createdAt);
   this.reload();diagnostic('ears.share_created',{bus});return share;
@@ -181,7 +181,7 @@ export class EarsShare {
   const profile=this.profiles(share.id).find(p=>p.id===id);if(!profile)throw Error('Profil introuvable');
   const blocked=this.guard();if(blocked)throw Error(blocked);
   const state=this.xr.parameterState(),start:Record<string,number>={};
-  for(const a of Object.keys(profile.values)){if(!earAddressKind(share.bus,a))delete profile.values[a];else start[a]=typeof state[a]?.value==='number'?state[a]!.value as number:0;}
+  for(const a of Object.keys(profile.values)){if(!earAddressKind(share.bus,a)||!this.xr.supports(a))delete profile.values[a];else start[a]=typeof state[a]?.value==='number'?state[a]!.value as number:0;}
   this.onWrite();
   for(let step=1;step<=10;step++){
    for(const [a,target] of Object.entries(profile.values)){
@@ -195,9 +195,10 @@ export class EarsShare {
  }
 
  // ---------- live (WebSocket) ----------
- private allowed(bus:number){return [`/bus/${bus}/mix/fader`,`/bus/${bus}/mix/on`,...EAR_SOURCES.map(s=>`${s.prefix}/mix/${pad(bus)}/level`)];}
+ private sources(){return EAR_SOURCES.filter(s=>this.xr.supports(`${s.prefix}/mix/01/level`));}
+ private allowed(bus:number){return [`/bus/${bus}/mix/fader`,`/bus/${bus}/mix/on`,...this.sources().map(s=>`${s.prefix}/mix/${pad(bus)}/level`)];}
  private visible(bus:number){
-  const extra=[`/bus/${bus}/config/name`,`/bus/${bus}/config/color`,...EAR_SOURCES.flatMap(s=>[`${s.prefix}/config/name`,`${s.prefix}/config/color`,`${s.prefix}/mix/on`])];
+  const extra=[`/bus/${bus}/config/name`,`/bus/${bus}/config/color`,...this.sources().flatMap(s=>[`${s.prefix}/config/name`,`${s.prefix}/config/color`,`${s.prefix}/mix/on`])];
   return new Set([...this.allowed(bus),...extra]);
  }
  private attach(ws:WebSocket,share:EarShare){
@@ -210,11 +211,11 @@ export class EarsShare {
  private sendSnapshot(ws:WebSocket){
   const c=this.sockets.get(ws);if(!c||ws.readyState!==WebSocket.OPEN)return;
   // Re-read the share: the token may have been regenerated or removed meanwhile.
-  const share=this.list().find(s=>s.id===c.share.id);if(!share){ws.close(4001,'Lien révoqué');return;}
+  const share=this.list().find(s=>s.id===c.share.id);if(!share||share.bus>this.xr.model().monitorOutputs||this.xr.model().family!=='xair'){ws.close(4001,'Lien indisponible sur cette console');return;}
   const state=this.xr.parameterState(),values:Record<string,unknown>={};
   for(const a of this.visible(share.bus))if(state[a])values[a]=state[a]!.value;
   const st=this.xr.status();
-  ws.send(JSON.stringify({type:'snapshot',share:{name:share.name,bus:share.bus},cap:EAR_CAP,sources:EAR_SOURCES,values,
+  ws.send(JSON.stringify({type:'snapshot',share:{name:share.name,bus:share.bus},cap:EAR_CAP,sources:this.sources(),values,
    control:st.mode==='simulation'||(st.connected&&st.writesEnabled),mode:st.mode}));
  }
  private onMessage(ws:WebSocket,raw:Buffer){
@@ -225,6 +226,7 @@ export class EarsShare {
   if(m.type!=='set'||typeof m.address!=='string')return;
   const reply=(data:unknown)=>{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(data));};
   try{
+   if(c.share.bus>this.xr.model().monitorOutputs||this.xr.model().family!=='xair')throw Error('Retour indisponible sur cette console');
    const kind=earAddressKind(c.share.bus,m.address);if(!kind)throw Error('Réglage non autorisé pour ton retour');
    const blocked=this.guard();if(blocked)throw Error(blocked);
    const current=this.xr.parameterState()[m.address]?.value;

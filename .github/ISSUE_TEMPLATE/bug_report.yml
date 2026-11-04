@@ -10,7 +10,7 @@ body:
     validations: {required: true}
   - type: input
     id: version
-    attributes: {label: Version de XR18 Studio / XR18 Studio version, placeholder: "2.0.0"}
+    attributes: {label: Version de BandPilot / BandPilot version, placeholder: "2.0.0"}
     validations: {required: true}
   - type: dropdown
     id: os

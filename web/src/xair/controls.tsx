@@ -70,7 +70,7 @@ const FADER_MARKS = [10, 5, 0, -5, -10, -20, -30, -50];
 export function Fader({ value, onChange, disabled, label, reset = .75, accent }: { value: number; onChange: (v: number) => void; disabled?: boolean; label: string; reset?: number; accent?: string }) {
   const track = useRef<HTMLDivElement>(null);
   const drag = useRef<{ y: number; v: number } | null>(null);
-  return <div className={disabled ? "xm-fader disabled" : "xm-fader"} role="slider" aria-label={label} aria-valuemin={0} aria-valuemax={1} aria-valuenow={value}
+  return <div className={disabled ? "xm-fader disabled" : "xm-fader"} role="slider" aria-disabled={!!disabled} aria-label={label} aria-valuemin={0} aria-valuemax={1} aria-valuenow={value}
     aria-valuetext={`${formatDb(faderToDb(value))} dB`} tabIndex={disabled ? -1 : 0} onKeyDown={keyStep(value, onChange, disabled)}
     onWheel={e => { if (!disabled) onChange(clamp01(value - Math.sign(e.deltaY) * (e.shiftKey ? .002 : .01))); }}
     onDoubleClick={() => { if (!disabled) onChange(reset); }}>
@@ -123,7 +123,7 @@ export function Knob({ value, onChange, label, display, disabled, reset, size = 
   const start = bipolar ? .5 : 0, [px, py] = point(value);
   const drag = useVerticalDrag(value, onChange, disabled, 160);
   return <div className={disabled ? "xm-knob disabled" : "xm-knob"} title={`${label} : ${display}${help ? " — " + help : ""}`}>
-    <svg width={size} height={size} role="slider" aria-label={label} aria-valuetext={display} tabIndex={disabled ? -1 : 0} onKeyDown={keyStep(value, onChange, disabled)} {...drag}
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="slider" aria-disabled={!!disabled} aria-valuemin={0} aria-valuemax={1} aria-valuenow={value} aria-label={label} aria-valuetext={display} tabIndex={disabled ? -1 : 0} onKeyDown={keyStep(value, onChange, disabled)} {...drag}
       onDoubleClick={() => { if (!disabled && reset !== undefined) onChange(reset); }}>
       <path d={arc(0, 1)} className="xm-knob-bg" />
       {Math.abs(value - start) > .002 && <path d={value > start ? arc(start, value) : arc(value, start)} className="xm-knob-val" />}

@@ -1,3 +1,4 @@
+import {MIXER_MODELS} from '../shared/mixer-models.js';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {Analyzer,familyFromName,type Instrument} from './analysis.js';
 import {ReaperLink,planSession,createSession,openInReaper,defaultSessionsFolder,freeHours,presenceCommands} from './reaper.js';
@@ -37,8 +38,13 @@ setDiagnosticLogger(diagnostics);
 const APP_VERSION=process.env.XR18_APP_VERSION??(()=>{try{return JSON.parse(readFileSync(new URL('../../package.json',import.meta.url),'utf8')).version as string;}catch{return 'source';}})();
 diagnostic('startup',{version:APP_VERSION,platform:process.platform,arch:process.arch,node:process.version});
 const configPath=process.env.XR18_CONNECTION_PATH??join(dirname(dbPath),'connection.json');
-const config=await loadConnection(configPath,{mode:process.env.XR18_MODE==='real'?'real':'simulation',host:process.env.XR18_HOST??'192.168.1.1',port:Number(process.env.XR18_PORT??10024),enableWrites:process.env.XR18_ENABLE_WRITES==='true'});
+let config=await loadConnection(configPath,{mode:process.env.XR18_MODE==='real'?'real':'simulation',host:process.env.XR18_HOST??'192.168.1.1',port:Number(process.env.XR18_PORT??10024),enableWrites:process.env.XR18_ENABLE_WRITES==='true'});
+if(config.mode==='real'){const devices=await discoverXR18(1500,[config.host],config.port).catch(()=>[]);const found=devices.find(d=>d.host===config.host);config=found?{...config,model:found.model}:{...config,enableWrites:false};}
 const xr18 = new XR18(config);
+type DynamicsFrame={gate:number[];comp:number[];bus:number[];lr:number;at:number};
+let dynamicsFrame:DynamicsFrame|null=null;
+xr18.on('dynamics',(frame:DynamicsFrame)=>{dynamicsFrame=frame;});
+xr18.on('reset',()=>{dynamicsFrame=null;});
 const connection=new ConnectionManager(xr18,configPath,config);
 let discoveryPending:ReturnType<typeof discoverXR18>|undefined;
 const access=new Access(dbPath), library=new LibraryStore(dbPath);
@@ -49,7 +55,7 @@ let aiRequestAt=0;
 // Live analysis: instruments named on the console, family from the coach when it knows the source.
 const instruments=():Instrument[]=>{
  const v=xr18.parameterState(),profile=coach.profile(),out:Instrument[]=[];
- for(let c=1;c<=16;c++){
+ for(let c=1;c<=xr18.model().channels;c++){
   const input=profile.inputs.find(i=>i.channel===c),name=String(v[`/ch/${String(c).padStart(2,'0')}/config/name`]?.value??'').trim()||input?.name||'';
   if(!name&&!input)continue;
   let family=null;try{family=input?coachSource(input.source).family:null;}catch{family=null;}
@@ -69,6 +75,7 @@ let planCache:{at:number;plan:ReturnType<typeof planSession>}|undefined;
 /** Reading the whole console takes seconds: screens reuse a recent read, a new session always reads again. */
 async function recentPlan(){if(!planCache||Date.now()-planCache.at>60000)planCache={at:Date.now(),plan:await reaperPlan()};return structuredClone(planCache.plan);}
 async function reaperPlan(){
+ if(xr18.model().usbRecorder!=='interface')throw Error(xr18.model().usbChannels===0?'Ce modèle enregistre en stéréo sur clé USB ; pas d’interface USB multipiste vers REAPER.':'La carte audio X32 et son routage doivent être validés avant de préparer une session multipiste.');
  const simulation=xr18.mode==='simulation';let sampleRate:number|null=simulation?48000:null,usbMode:'18x18'|'2x2'|null=null;
  if(!simulation){
   for(const prefix of ['/routing/usb','/config/chlink','/rtn/aux/config','/rtn/aux/mix'])await xr18.refreshParameters(prefix);
@@ -119,6 +126,8 @@ const handler: http.RequestListener = async (req, res) => {
     access.log(user!,`${req.method} ${path}`);
     if(!path.startsWith('/api/reacue')&&!path.startsWith('/api/library')&&!coachMetadata)show.manualOverride();
   }
+  if(req.method==='GET'&&path==='/api/models'){res.end(JSON.stringify(Object.values(MIXER_MODELS)));return;}
+  if(xr18.model().family==='x32'&&(path.startsWith('/api/ears-share')||path.startsWith('/api/coach')||path.startsWith('/api/mixer-sync')||path.startsWith('/api/reacue')||path.startsWith('/api/analysis')||path==='/api/rehearsal')){res.writeHead(409);res.end(JSON.stringify({error:'Cette fonction nécessite l’adaptateur avancé X32. Le mélangeur X32 reste disponible.'}));return;}
   if(path.startsWith('/api/ears-share')){
    try{
     const m=/^\/api\/ears-share(?:\/(start|stop|musicians)(?:\/([a-f0-9-]{36})(?:\/(regenerate|qr))?)?)?$/.exec(path);
@@ -314,7 +323,7 @@ const handler: http.RequestListener = async (req, res) => {
     try{const d=await body(req);res.end(JSON.stringify(await show.console.preview(d.values)));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path==='/api/console/blank'&&req.method==='POST'){
-    try{res.end(JSON.stringify({...await show.console.preview(blankSceneValues(),true),...BLANK_SCENE_TEXT,inputs:[]}));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+    try{res.end(JSON.stringify({...await show.console.preview(Object.fromEntries(Object.entries(blankSceneValues()).filter(([a])=>xr18.supports(a))),true),...BLANK_SCENE_TEXT,inputs:[]}));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path==='/api/console/restore'&&req.method==='POST'){
     // Preview going back to the values saved just before an apply (undo).
@@ -324,7 +333,7 @@ const handler: http.RequestListener = async (req, res) => {
     try{const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');res.end(JSON.stringify(await show.console.apply(d.token,d.allowPhantom===true,d.tolerant===true)));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path==='/api/console/mute-all'&&req.method==='POST'){
-    try{const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');const values:Record<string,Value>={};for(let i=1;i<=16;i++)values[`/ch/${String(i).padStart(2,'0')}/mix/on`]=0;const p=await show.console.preview(values,true);res.end(JSON.stringify(await show.console.apply(p.token)));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+    try{const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');const values:Record<string,Value>={};for(let i=1;i<=xr18.model().channels;i++)values[`/ch/${String(i).padStart(2,'0')}/mix/on`]=0;const p=await show.console.preview(values,true);res.end(JSON.stringify(await show.console.apply(p.token)));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
     const monitorProfiles=/^\/api\/monitor\/([1-6])\/profiles(?:\/([a-f0-9-]+)\/(apply))?$/.exec(path);
   if(monitorProfiles){
@@ -335,7 +344,7 @@ const handler: http.RequestListener = async (req, res) => {
         if(!monitorProfiles[2]){const levels=[];for(let channel=1;channel<=16;channel++)levels.push(await xr18.readParameter(`/ch/${String(channel).padStart(2,'0')}/mix/${String(bus).padStart(2,'0')}/level`));res.end(JSON.stringify(database.saveEarProfile({musician:data.name,bus,levels})));return;}
         if(data.confirm!==true)throw Error('Confirmation requise');
         const profile=database.listEarProfiles().find(p=>p.id===monitorProfiles[2]&&p.bus===bus);if(!profile||profile.levels.some(v=>v>.75))throw Error('Profil absent ou au-dessus du plafond');
-        const values:Record<string,Value>={};for(let channel=1;channel<=16;channel++)values[`/ch/${String(channel).padStart(2,'0')}/mix/${String(bus).padStart(2,'0')}/level`]=profile.levels[channel-1]!;
+        const values:Record<string,Value>={};for(let channel=1;channel<=xr18.model().channels;channel++)values[`/ch/${String(channel).padStart(2,'0')}/mix/${String(bus).padStart(2,'0')}/level`]=profile.levels[channel-1]!;
         const before:Record<string,Value>={};for(const a of Object.keys(values))before[a]=await xr18.readParameter(a);library.save('parameter-backup','Avant rappel retour',before);
         for(let step=1;step<=15;step++){const ramp=Object.fromEntries(Object.entries(values).map(([a,v])=>[a,Number(before[a])+(Number(v)-Number(before[a]))*step/15]));await xr18.applyParameters(ramp);await new Promise(r=>setTimeout(r,30));}
         res.end(JSON.stringify({ok:true}));return;
@@ -344,6 +353,11 @@ const handler: http.RequestListener = async (req, res) => {
   }
     if(user&&await studioApi.handle(req,res,path,user))return;
   if (req.method === "GET" && path === "/api/status") { res.end(JSON.stringify(xr18.status())); return; }
+  if(req.method==='GET'&&path==='/api/dynamics'){
+    xr18.subscribeAnalysis();
+    const frame=xr18.status().connected&&dynamicsFrame&&Date.now()-dynamicsFrame.at<2000?dynamicsFrame:null;
+    res.end(JSON.stringify({frame}));return;
+  }
   if (req.method === "GET" && path === "/api/meters") {res.end(JSON.stringify(xr18.meterState()));return;}
   if (req.method === "GET" && path === "/api/channels") { res.end(JSON.stringify(xr18.listChannels())); return; }
   if(req.method==="GET"&&path==="/api/main"){res.end(JSON.stringify(xr18.mainState()));return;}
@@ -511,7 +525,7 @@ xr18.on("connection", () => {const message=JSON.stringify({type:"status",status:
 xr18.on("warning", warning => {console.warn("[OSC]", warning);diagnostic("osc.warning",{message:String(warning).slice(0,500)}); });
 await xr18.start();
 const port = Number(process.env.HTTP_PORT ?? 3000);
-server.listen(port, listenHost, () => console.log(`XR18 Studio API on ${tls?"https":"http"}://${listenHost}:${port} (${xr18.mode})`));
+server.listen(port, listenHost, () => console.log(`BandPilot API on ${tls?"https":"http"}://${listenHost}:${port} (${xr18.mode})`));
 const statusTimer=setInterval(()=>{for(const ws of wss.clients){const req=wsRequests.get(ws);if(!req||!access.user(req))ws.terminate();}const message=JSON.stringify({type:"status",status:xr18.status()});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);},2000);
 statusTimer.unref();
 function shutdown(){clearInterval(statusTimer);ears.close();xr18.close();database.close();access.close();library.close();for(const ws of wss.clients)ws.terminate();wss.close();server.close();}

@@ -1,3 +1,4 @@
+import {useMixerModel} from '../MixerModel';
 import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
   clamp01, dbToFader, EQ_TYPES, faderToDb, formatDb, formatHz, formatMs, lin, linInv, logInv, logMap, qFromWire, qToWire, RATIOS, stripColor,
@@ -78,9 +79,10 @@ function HBar({ value, onChange, color, label, disabled, display }: { value: num
 
 // ---------- MIXER overview ----------
 export function MixerView({ values, open, strips }: ViewProps & { strips: Strip[] }) {
+  const model = useMixerModel();
   return <div className="xm-overview">{strips.map(strip => {
     const input = isInput(strip), p = strip.prefix;
-    const gain = gainControl(strip, values);
+    const gain = gainControl(strip, values, model.micPreamps);
     const gainDb = gain ? lin(num(values, gain.address, linInv(0, gain.lo, gain.hi)), gain.lo, gain.hi) : null;
     const phantom = gain?.headamp ? num(values, `${gain.headamp}/phantom`) === 1 : false;
     const pan = num(values, `${p}/mix/pan`, .5);
@@ -112,9 +114,10 @@ export function MixerView({ values, open, strips }: ViewProps & { strips: Strip[
 
 // ---------- CHANNEL summary ----------
 export function ChannelView(props: ViewProps) {
+  const model = useMixerModel();
   const { strip, values, set, canWrite, open } = props, p = strip.prefix;
   if (!isInput(strip)) return <NotAvailable>La vue Canal concerne les entrées. Pour un bus ou la façade, utilise EQ, Comp ou Main.</NotAvailable>;
-  const gain = gainControl(strip, values);
+  const gain = gainControl(strip, values, model.micPreamps);
   const gate = strip.kind === "ch" ? gateThumb(values, p) : null, eq = eqThumb(values, strip), comp = strip.kind === "ch" ? compThumb(values, p) : null;
   return <div className="xm-row-blocks">
     <Block title="Entrée" onTitle={() => open(strip, "input")}>
@@ -147,13 +150,14 @@ export const panText = (pan: number) => Math.abs(pan - .5) < .005 ? "Centre" : `
 
 // ---------- INPUT ----------
 export function InputView({ strip, values, set, canWrite, confirmed }: ViewProps) {
+  const model=useMixerModel();
   const p = strip.prefix;
   if (strip.kind !== "ch" && strip.kind !== "aux" && strip.kind !== "fxrtn") return <NotAvailable>Les réglages d’entrée concernent les canaux et retours.</NotAvailable>;
   const trimAddress = `${p}/preamp/rtntrim`, trim = num(values, trimAddress, .5);
-  const trimBar = <VBar label="USB Trim" help="Niveau de la source USB" disabled={!canWrite} value={trim} reset={.5} display={`${lin(trim, -18, 18) >= 0 ? "+" : ""}${lin(trim, -18, 18).toFixed(1)} dB`} scale={scaleDb(-18, 18, [-18, -12, -6, 0, 6, 12, 18])} onChange={v => set(trimAddress, v)} />;
+  const trimBar = <VBar label="USB Trim" help="Niveau de la source USB" disabled={!canWrite || (strip.kind === "ch" && !model.usbChannels)} value={trim} reset={.5} display={`${lin(trim, -18, 18) >= 0 ? "+" : ""}${lin(trim, -18, 18).toFixed(1)} dB`} scale={scaleDb(-18, 18, [-18, -12, -6, 0, 6, 12, 18])} onChange={v => set(trimAddress, v)} />;
   if (strip.kind !== "ch") return <div className="xm-row-blocks"><Block title="Niveau du retour">{trimBar}</Block><NotAvailable>Ce retour stéréo n’a pas de préampli : seul le trim s’applique.</NotAvailable></div>;
   const usb = num(values, `${p}/preamp/rtnsw`) === 1;
-  const source = num(values, `${p}/config/insrc`, Number(strip.short) - 1), headamp = source < 16 ? `/headamp/${pad(source + 1)}` : null;
+  const source = num(values, `${p}/config/insrc`, Number(strip.short) - 1), headamp = source >= 0 && source < model.micPreamps ? `/headamp/${pad(source + 1)}` : null;
   const gain = headamp ? num(values, `${headamp}/gain`, linInv(0, -12, 60)) : 0;
   const phantom = headamp ? num(values, `${headamp}/phantom`) === 1 : false;
   const pair = Math.floor((Number(strip.short) - 1) / 2) * 2 + 1, link = `/config/chlink/${pair}-${pair + 1}`;
@@ -162,11 +166,11 @@ export function InputView({ strip, values, set, canWrite, confirmed }: ViewProps
   return <div className="xm-row-blocks">
     <Block title="Source du canal">
       <div className="xm-stack">
-        <div className="xm-seg"><Toggle tone="green" disabled={!canWrite} on={!usb} onClick={() => set(`${p}/preamp/rtnsw`, 0)} title="Prise physique de la console">Mic/Line A/D</Toggle>
-          <Toggle tone="green" disabled={!canWrite} on={usb} onClick={() => set(`${p}/preamp/rtnsw`, 1)} title="Piste venant de l’ordinateur">USB</Toggle></div>
+        <div className="xm-seg"><Toggle tone="green" disabled={!canWrite||!model.usbChannels} on={!usb} onClick={() => set(`${p}/preamp/rtnsw`, 0)} title="Prise physique de la console">Mic/Line A/D</Toggle>
+          <Toggle tone="green" disabled={!canWrite||!model.usbChannels} on={usb} onClick={() => set(`${p}/preamp/rtnsw`, 1)} title="Piste venant de l’ordinateur">USB</Toggle></div>
         <Select label="Entrée analogique" disabled={!canWrite} value={source} options={insrcOptions} title="Quelle prise physique alimente ce canal"
           onChange={i => { if (confirm(`Brancher ce canal sur ${insrcOptions[i]} ? Le son du canal va changer immédiatement.`)) set(`${p}/config/insrc`, i); }} />
-        <Select label="Retour USB" disabled={!canWrite} value={num(values, `${p}/config/rtnsrc`, Number(strip.short) - 1)} options={Array.from({ length: 18 }, (_, i) => `USB ${pad(i + 1)}`)} onChange={i => set(`${p}/config/rtnsrc`, i)} title="Piste de l’ordinateur utilisée en mode USB" />
+        <Select label="Retour USB" disabled={!canWrite||!model.usbChannels} value={num(values, `${p}/config/rtnsrc`, Number(strip.short) - 1)} options={Array.from({ length: 18 }, (_, i) => `USB ${pad(i + 1)}`)} onChange={i => set(`${p}/config/rtnsrc`, i)} title="Piste de l’ordinateur utilisée en mode USB" />
       </div>
       <div className="xm-stack">
         <Toggle tone="red" disabled={!canWrite || !headamp} on={phantom} title="Alimentation fantôme (confirmation obligatoire)"
@@ -178,7 +182,7 @@ export function InputView({ strip, values, set, canWrite, confirmed }: ViewProps
     </Block>
     <Block title="Niveaux d’entrée">
       <div className="xm-bars">
-        {headamp ? <VBar label="Mic Gain" help="Amplification du préampli (agit sur la prise physique)" disabled={!canWrite} value={gain} reset={linInv(0, -12, 60)} display={`${lin(gain, -12, 60) >= 0 ? "+" : ""}${lin(gain, -12, 60).toFixed(1)} dB`} scale={scaleDb(-12, 60, [-12, 0, 12, 24, 36, 48, 60])} onChange={v => set(`${headamp}/gain`, v)} /> : <NotAvailable>Entrée OFF</NotAvailable>}
+        {headamp ? <VBar label="Mic Gain" help="Amplification du préampli (agit sur la prise physique)" disabled={!canWrite} value={gain} reset={linInv(0, -12, 60)} display={`${lin(gain, -12, 60) >= 0 ? "+" : ""}${lin(gain, -12, 60).toFixed(1)} dB`} scale={scaleDb(-12, 60, [-12, 0, 12, 24, 36, 48, 60])} onChange={v => set(`${headamp}/gain`, v)} /> : <NotAvailable>Pas de préampli micro pilotable pour cette source</NotAvailable>}
         {trimBar}
         <VBar label="Low Cut" help="Coupe le grave sous cette fréquence" disabled={!canWrite} value={hpf} display={`${formatHz(logMap(hpf, 20, 400))} Hz`} scale={freqScale(20, 400, [20, 40, 60, 90, 140, 230])} onChange={v => set(`${p}/preamp/hpf`, v)} />
       </div>
@@ -307,6 +311,7 @@ export function CompView({ strip, values, set, canWrite }: ViewProps) {
 const EQ_W = 1000, EQ_H = 300, BAND_COLORS = ["#2dd4bf", "#14b8a6", "#ec4899", "#f59e0b", "#3b82f6", "#a855f7"], BAND_NAMES4 = ["Low", "LoMid", "HiMid", "High"], BAND_NAMES6 = ["Low", "Low 2", "LoMid", "HiMid", "High 2", "High"];
 const xOf = (f: number) => logInv(f, 20, 20000) * EQ_W, yOf = (db: number) => EQ_H / 2 - db / 18 * (EQ_H / 2);
 export function EqView({ strip, values, set, canWrite }: ViewProps) {
+  const model=useMixerModel();
   const svg = useRef<SVGSVGElement>(null), drag = useRef<number | null>(null);
   const [active, setActive] = useState(0);
   const p = strip.prefix, count = strip.kind === "bus" || strip.kind === "lr" ? 6 : 4;

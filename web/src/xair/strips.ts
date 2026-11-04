@@ -32,12 +32,12 @@ export const onAddress = (strip: Strip) => strip.kind === "dca" ? `${strip.prefi
 export const soloAddress = (strip: Strip) => strip.kind === "ch" ? `/-stat/solosw/${strip.short}` : null;
 
 /** Gain control that really feeds this channel (analog preamp, or trim for USB / returns). */
-export function gainControl(strip: Strip, values: Values) {
+export function gainControl(strip: Strip, values: Values, micPreamps=16) {
   if (strip.kind === "aux" || strip.kind === "fxrtn") return { address: `${strip.prefix}/preamp/rtntrim`, lo: -18, hi: 18, label: "Trim", headamp: null as string | null };
   if (strip.kind !== "ch") return null;
   const usb = values[`${strip.prefix}/preamp/rtnsw`] === 1;
   const source = typeof values[`${strip.prefix}/config/insrc`] === "number" ? values[`${strip.prefix}/config/insrc`] as number : strip.meters[0]!;
   if (usb) return { address: `${strip.prefix}/preamp/rtntrim`, lo: -18, hi: 18, label: "Trim USB", headamp: null };
-  if (source >= 0 && source < 16) return { address: `/headamp/${pad(source + 1)}/gain`, lo: -12, hi: 60, label: `Gain IN ${source + 1}`, headamp: `/headamp/${pad(source + 1)}` };
+  if (source >= 0 && source < micPreamps) return { address: `/headamp/${pad(source + 1)}/gain`, lo: -12, hi: 60, label: `Gain IN ${source + 1}`, headamp: `/headamp/${pad(source + 1)}` };
   return null;
 }

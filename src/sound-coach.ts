@@ -64,7 +64,7 @@ export type Input={channel:number;source:string;name:string};
 export type Calibration={peakDb:number;gainDb:number|null;bleedDb?:number;at:string};
 export type CoachProfile={version:1;inputs:Input[];completed:string[];musicians?:Musician[];calibration?:Record<string,Calibration>};
 export const STEPS=[
- {id:'connect',title:'1. Brancher et connecter',text:'Relie le PC et la XR18 au même réseau. Vérifie tes branchements, puis connecte la console. Garde les volumes des enceintes et des in-ear bas pendant la préparation.'},
+ {id:'connect',title:'1. Brancher et connecter',text:'Relie le PC et la console au même réseau. Vérifie tes branchements, puis connecte la console. Garde les volumes des enceintes et des in-ear bas pendant la préparation.'},
  {id:'inputs',title:'2. Dire qui est branché où',text:'Choisis la prise utilisée par chaque instrument. Le modèle de groupe ci-dessous est une proposition : compare-le aux câbles avant de préparer les canaux.'},
  {id:'levels',title:'3. Régler le gain de chaque instrument',text:'Tout part du gain : le compresseur et le gate travaillent sur le signal qui sort du préampli. Un musicien à la fois joue son passage le plus fort ; je mesure et je propose le gain pour viser des crêtes vers −6 dB. Ensuite je cale les seuils du compresseur et du gate sur ce vrai signal.'},
  {id:'tone',title:'4. Écouter et corriger un problème',text:'Écoute avec tout le groupe, décris un seul problème et essaie une petite correction. Si le résultat est moins bon, annule le dernier réglage.'},
@@ -140,7 +140,7 @@ export function gainProposal(peakDb:number,gainDb:number|null,min=-12,max=60):Ga
  const wanted=TARGET_PEAK-peakDb;
  if(Math.abs(wanted)<=GAIN_OK_WINDOW)return {state:'ok',deltaDb:0,targetGainDb:gainDb,title:'Gain bien réglé',message:`Niveau max à ${fmt(half(peakDb))} : dans la bonne zone (−9 à −3 dB). Je m’en sers pour caler le compresseur et le gate.`};
  const delta=half(Math.max(-MAX_GAIN_DOWN,Math.min(MAX_GAIN_UP,wanted)));
- if(gainDb===null)return {state:wanted>0?'raise':'lower',deltaDb:delta,targetGainDb:null,title:wanted>0?'Signal trop faible':'Signal trop fort',message:'Cette tranche ne passe pas par un préampli de la XR18 (retour USB ou entrée coupée) : ajuste le niveau à la source.'};
+ if(gainDb===null)return {state:wanted>0?'raise':'lower',deltaDb:delta,targetGainDb:null,title:wanted>0?'Signal trop faible':'Signal trop fort',message:'Cette tranche ne passe pas par un préampli de la console (retour USB ou entrée coupée) : ajuste le niveau à la source.'};
  const target=Math.max(min,Math.min(max,half(gainDb+delta)));
  if(target===gainDb)return {state:'limit',deltaDb:0,targetGainDb:gainDb,title:'Gain en butée',message:wanted>0?'Le préampli est déjà au maximum. Monte le volume de l’instrument ou rapproche le micro ; une DI ou un micro dynamique éloigné peut être trop faible.':'Le préampli est déjà au minimum. Baisse la sortie de l’instrument ou active le pad de la DI.'};
  return {state:wanted>0?'raise':'lower',deltaDb:target-gainDb,targetGainDb:target,title:wanted>0?'Signal trop faible':'Signal trop fort',message:`Niveau max mesuré : ${fmt(half(peakDb))}. Je propose ${fmt(target-gainDb)} de gain (${fmt(gainDb)} → ${fmt(target)}), puis une nouvelle mesure.${Math.abs(wanted)>Math.abs(target-gainDb)?' On y va par étapes pour éviter un coup de volume dans les retours.':''}`};
@@ -178,7 +178,7 @@ export class SoundCoach {
   return p.musicians?p:{...p,musicians:suggestMusicians(p.inputs)};
  }
  /** Measurements belong to the server: a profile sent by the browser never overwrites them. */
- saveProfile(input:unknown,measurements=false){const p=validateProfile(input);if(!measurements){const stored=this.library.list('coach-profile')[0]?.data as CoachProfile|undefined;if(stored?.calibration)p.calibration=stored.calibration;else delete p.calibration;}const saved=this.library.save('coach-profile','Ma préparation',p);return {...p,id:saved.id};}
+ saveProfile(input:unknown,measurements=false){const p=validateProfile(input);if(p.inputs.some(i=>i.channel>this.xr.model().channels)||p.musicians?.some(m=>m.bus>this.xr.model().monitorOutputs))throw Error('Entrée ou sortie de retour absente sur '+this.xr.model().label);if(!measurements){const stored=this.library.list('coach-profile')[0]?.data as CoachProfile|undefined;if(stored?.calibration)p.calibration=stored.calibration;else delete p.calibration;}const saved=this.library.save('coach-profile','Ma préparation',p);return {...p,id:saved.id};}
  catalog(){return {sources:SOURCES,presets:this.presetSummaries(),roles:ROLES,recipes:MONITOR_RECIPES,ownLevel:OWN_LEVEL,templates:TEMPLATES,drumKit:DRUM_KIT,steps:STEPS,symptoms:SYMPTOMS,template:GROUP_TEMPLATE,profile:this.profile(),status:this.xr.status(),aiConfigured:Boolean(process.env.XR18_OPENAI_API_KEY&&process.env.XR18_OPENAI_MODEL)};}
  /** Plain-language card of what each instrument setting does. */
  presetSummaries(){
@@ -253,7 +253,7 @@ export class SoundCoach {
   const input=this.input(channel);if(!input)throw Error('Attribuer un instrument à ce canal');
   const advice=this.advice(channel,symptom),prefix=`/ch/${String(channel).padStart(2,'0')}`,values:Record<string,Value>={};
   if(symptom==='cutoff'){
-   const on=await this.xr.readParameter(prefix+'/gate/on');if(on!==1)return {advice,proposal:null,message:'Le gate de la XR18 est déjà désactivé. Vérifie le traitement en amont.'};values[prefix+'/gate/on']=0;
+   const on=await this.xr.readParameter(prefix+'/gate/on');if(on!==1)return {advice,proposal:null,message:'Le gate de la console est déjà désactivé. Vérifie le traitement en amont.'};values[prefix+'/gate/on']=0;
   }else if(['muddy','harsh','boomy'].includes(symptom)){
    if(await this.xr.readParameter(prefix+'/eq/on')!==1)return {advice,proposal:null,message:'L’égaliseur est désactivé. Prépare une base connue ou vérifie ses bandes avant de l’activer.'};
    const band=symptom==='harsh'?3:1,frequency=symptom==='harsh'?3200:symptom==='muddy'?280:(input.source==='bass-di'||input.source==='kick'||input.source==='drum-module'?120:180);
@@ -272,9 +272,9 @@ export class SoundCoach {
  /** The preamp feeding a channel (/headamp/NN/gain), or null for USB returns / input OFF. */
  async gainAddress(channel:number){
   const ch=String(channel).padStart(2,'0');
-  if(await this.xr.readParameter(`/ch/${ch}/preamp/rtnsw`)===1)return null;
+  if(this.xr.model().usbChannels&&await this.xr.readParameter(`/ch/${ch}/preamp/rtnsw`)===1)return null;
   const src=await this.xr.readParameter(`/ch/${ch}/config/insrc`);
-  return typeof src==='number'&&src>=0&&src<=15?`/headamp/${String(src+1).padStart(2,'0')}/gain`:null;
+  return typeof src==='number'&&src>=0&&src<this.xr.model().micPreamps?`/headamp/${String(src+1).padStart(2,'0')}/gain`:null;
  }
  private async currentGain(channel:number){const a=await this.gainAddress(channel);return {address:a,gainDb:a?Math.round(Number(fromWire(a,await this.xr.readParameter(a)))*2)/2:null};}
  private storeCalibration(channel:number,patch:Partial<Calibration>&{peakDb?:number}){
@@ -324,7 +324,7 @@ export class SoundCoach {
  }
  async measure(channel:number,durationMs=4500){
   if(!this.input(channel))throw Error('Attribuer un instrument à ce canal');
-  if(this.xr.mode!=='real'||!this.xr.status().connected)return {available:false,samples:0,state:'unknown',title:'Console réelle nécessaire',message:'Le test ne simule pas de son. Connecte la XR18 pour recevoir ses niveaux.'};
+  if(this.xr.mode!=='real'||!this.xr.status().connected)return {available:false,samples:0,state:'unknown',title:'Console réelle nécessaire',message:'Le test ne simule pas de son. Connecte la console pour recevoir ses niveaux.'};
   const identity=this.control.identity(),samples:MeterSample[]=[];
   const listener=(sample:MeterSample)=>{samples.push(structuredClone(sample));};this.xr.on('meters',listener);
   try{await new Promise(r=>setTimeout(r,Math.max(50,Math.min(durationMs,6000))));if(identity!==this.control.identity())throw Error('Connexion modifiée : recommencer le test');return levelReport(channel,samples);}

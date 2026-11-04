@@ -46,11 +46,11 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $installer = Get-ChildItem release/XR18-Studio-Windows-*.exe | Select-Object -First 1
+          $installer = Get-ChildItem release/BandPilot-Windows-*.exe | Select-Object -First 1
           $installDir = Join-Path $env:RUNNER_TEMP 'XR18SmokeInstall'
           $result = Start-Process -FilePath $installer.FullName -ArgumentList '/S', "/D=$installDir" -Wait -PassThru
           if ($result.ExitCode -ne 0) { throw "Installation failed: $($result.ExitCode)" }
-          node desktop/smoke.cjs (Join-Path $installDir 'XR18 Studio.exe')
+          node desktop/smoke.cjs (Join-Path $installDir 'BandPilot.exe')
           if ($LASTEXITCODE -ne 0) { throw 'Installed application failed to start' }
       - name: Test macOS disk image and launch
         if: runner.os == 'macOS'
@@ -62,7 +62,7 @@ jobs:
           mkdir -p "$mount"
           hdiutil attach "$image" -mountpoint "$mount" -nobrowse
           trap 'hdiutil detach "$mount"' EXIT
-          node desktop/smoke.cjs "$mount/XR18 Studio.app/Contents/MacOS/XR18 Studio"
+          node desktop/smoke.cjs "$mount/BandPilot.app/Contents/MacOS/BandPilot"
       - name: Test extracted Linux AppImage launch
         if: runner.os == 'Linux'
         shell: bash
@@ -101,7 +101,7 @@ jobs:
           import hashlib,json,pathlib
           root=pathlib.Path('installers')
           version=json.loads(pathlib.Path('package.json').read_text())['version']
-          expected=[f'XR18-Studio-Windows-{version}.exe',f'XR18-Studio-macOS-{version}-x64.dmg',f'XR18-Studio-macOS-{version}-arm64.dmg',f'XR18-Studio-Linux-{version}-x86_64.AppImage',f'XR18-Studio-Linux-{version}-amd64.deb']
+          expected=[f'BandPilot-Windows-{version}.exe',f'BandPilot-macOS-{version}-x64.dmg',f'BandPilot-macOS-{version}-arm64.dmg',f'BandPilot-Linux-{version}-x86_64.AppImage',f'BandPilot-Linux-{version}-amd64.deb']
           for name in expected:
               assert (root/name).is_file(), f'Missing package: {name}'
           files=sorted(p for p in root.iterdir() if p.is_file())
@@ -119,5 +119,5 @@ jobs:
             echo "Release already exists. Refusing to overwrite published installers."
             exit 1
           fi
-          gh release create "$tag" installers/* --target "$GITHUB_SHA" --title "XR18 Studio $version" --notes-file docs/RELEASE_NOTES.md --draft
+          gh release create "$tag" installers/* --target "$GITHUB_SHA" --title "BandPilot $version" --notes-file docs/RELEASE_NOTES.md --draft
           gh release edit "$tag" --draft=false --latest
