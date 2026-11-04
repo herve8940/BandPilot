@@ -1,4 +1,6 @@
-# Serveur MCP XR18 Studio — lecture seule
+> **BandPilot 2.2** : [guide illustré actuel](USER_GUIDE_FR.md), [vidéo](VIDEO_TOUR.md) et [limites par modèle](multi-model.md). Les descriptions détaillées X-Air ci-dessous ne signifient pas une compatibilité complète X32. Les éventuelles anciennes captures de référence ne montrent pas toutes la nouvelle interface.
+
+# Serveur MCP BandPilot — lecture seule
 
 Le serveur MCP utilise le SDK officiel Model Context Protocol et le transport stdio. Il donne accès aux données locales de répétition, sans communication OSC.
 
@@ -14,7 +16,7 @@ Le serveur MCP utilise le SDK officiel Model Context Protocol et le transport st
 npm install
 XR18_DB_PATH=./data/xr18-studio.db npm run mcp
 ```
-Le chemin SQLite doit pointer vers **la même base** que celle de l'application. Pour l'application Electron, le fichier se trouve dans le répertoire utilisateur propre à XR18 Studio ; utiliser son chemin exact dans `XR18_DB_PATH`.
+Le chemin SQLite doit pointer vers **la même base** que celle de l'application. Pour l'application Electron, le fichier se trouve dans le répertoire utilisateur propre à BandPilot ; utiliser son chemin exact dans `XR18_DB_PATH`.
 
 ## Exemple de configuration MCP (client compatible stdio)
 ```json

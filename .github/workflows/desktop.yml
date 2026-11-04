@@ -60,10 +60,10 @@ jobs:
           )
           $installedExe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
           if (-not $installedExe) {
-            Write-Warning 'NSIS returned success, but the installed path was not found among known locations.'
+            Write-Host 'NSIS returned success, but the installed path was not found among known locations.'
             Write-Host 'Installed application discovery:'
             Get-ChildItem $env:LOCALAPPDATA -Filter 'BandPilot.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 10 -ExpandProperty FullName
-            # The packaged app was already smoke-tested; report install discovery separately.
+            throw 'Installed application was not found; refusing to validate this installer'
           } else {
             node desktop/smoke.cjs $installedExe
             if ($LASTEXITCODE -ne 0) { throw 'Installed Windows application failed to start' }

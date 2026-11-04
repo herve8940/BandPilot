@@ -1,140 +1,40 @@
-<div align="center">
+# BandPilot
 
-# XR18 Studio
+**Your band. Your mixer. Your sound.**
 
-**A pocket sound engineer for the Behringer XR18**
+[Download](https://github.com/herve8940/xr18-studio/releases/latest) · [Website](https://herve8940.github.io/xr18-studio/en.html) · [Full guide](docs/USER_GUIDE_EN.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/xr18-studio/VIDEO_TOUR.html)
 
-[![Latest version](https://img.shields.io/github/v/release/herve8940/xr18-studio?label=version&color=3ee0e0)](https://github.com/herve8940/xr18-studio/releases/latest) [![Downloads](https://img.shields.io/github/downloads/herve8940/xr18-studio/total?color=2b7cf6)](https://github.com/herve8940/xr18-studio/releases) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Windows · macOS · Linux](https://img.shields.io/badge/Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-free-555)](https://github.com/herve8940/xr18-studio/releases/latest)
+BandPilot is the new name of XR18 Studio: a free local app for guided sound checks, visual mixer control, personal phone monitors and REAPER rehearsals. Windows, Intel/Apple Silicon macOS and Linux.
 
-A **free** app to control a **Behringer XR18, X18 or MR18** digital mixer: an X-AIR Edit alternative designed for beginners. It offers a step-by-step assistant, a clear console, and each musician's in-ear mix on their own phone.
+![BandPilot 2.2 Expert mixer in simulation](docs/images/bandpilot-2.2/console.png)
 
-[🇫🇷 Français](README.md) · 🇬🇧 English
+## Features
 
-[**⬇️ Download**](https://github.com/herve8940/xr18-studio/releases/latest) · [**🌐 Website**](https://herve8940.github.io/xr18-studio/en.html) · [**📘 “Mon ingé son” tutorial**](docs/TUTO_MON_INGE_SON_EN.md) · [Full guide](docs/USER_GUIDE_EN.md) · [Release notes](docs/RELEASE_NOTES.md)
+- Six-step coach: connect, configure inputs, measure gain, troubleshoot, prepare monitors and save. It reads measurements, not audio.
+- Simple and Expert mixer, compact sidebar, channel banks, EQ/gate/compression/sends/buses/DCAs/FX/routing as supported by the model.
+- Personal QR monitor links, bus-only controls, saved profiles and progressive capped levels.
+- REAPER songs/band rehearsal: sections, valid takes, waveforms, project-aware presence, original playback, loops and recording markers.
+- Show preparation, song library, setlists, persistent rehearsal notes, scene JSON import/export, previews and backups.
+- Model-aware discovery, read-only initial connection, optional accounts, diagnostics and optional connected AI with your own key.
 
-<img src="docs/images/hero.png" alt="XR18 Studio: the Mon ingé son assistant and a musician's monitor page on a phone" width="900">
+Local operation needs no account or internet; mixer, computer and phones share a network. REAPER is separate software with its own license. Connected AI is optional and requires internet.
 
-Windows · macOS (Intel and Apple Silicon) · Linux · also works with X18 and MR18
+## Compatibility is model-specific
 
-</div>
+**XR18** is the physically tested primary model. **X18/MR18** share profiles/protocol but still need their own hardware validation. **XR12/MR12** have adapted 12-input profiles, 4 mic preamps and 2 physical Aux outputs: stereo USB-stick recording, **no PC multitrack USB**. Hardware validation remains pending.
 
----
+**X32 variants are partial and experimental**: mixing, EQ, core dynamics and sends. Full preamp/routing/FX/meters/scenes/coach/phone-monitor/USB integration remains unavailable. Read the [matrix](docs/multi-model.md) before live use.
 
-## Who is it for?
+## Get started
 
-**Bands without a sound engineer**: rehearsals, small venues, bars, parties… You have an XR18, mics and musicians, and you want a good sound **without learning the jargon**.
+Back up scenes, install the matching package, explore simulation, discover hardware read-only, then pull **Mixer → PC** before enabling control. Follow the [illustrated coach tutorial](docs/TUTO_MON_INGE_SON_EN.md). Install bridge **1.2.2** from Rehearse, save projects and restart REAPER. Mixer simulation does not simulate REAPER audio inputs. Packages may be unsigned/unnotarized.
 
-XR18 Studio controls your console like X-AIR Edit, plus:
+[Illustrated video and transcript](docs/VIDEO_TOUR.md) · [Release notes](docs/RELEASE_NOTES.md) · [Manual fixes](docs/corrections-tests-manuels.md)
 
-| 🎧 **“Mon ingé son”** | 🎚️ **A clear console** | 📱 **Monitors on phones** |
-|---|---|---|
-| A 6-step assistant: it sets up each instrument with live best practice, sets the gains with you and prepares the monitor mixes. | A **Simple** mode with big faders for the show, and a full **Expert** mode with live analysis, every option explained. | Each musician scans their QR code and adjusts **their own** mix. No app to install, and nothing else they can touch. |
+## Development and validation
 
-## 🎧 “Mon ingé son” in 6 steps
+Node 20+ (CI/packages: Node 22). `npm ci`, `npm --prefix web ci`, `npm run studio`; checks: `npm test`, `npm run build:all`; packages: `npm run desktop:package`.
 
-| 1. Pick your instruments | 2. Set the gains | 3. Prepare the monitors |
-|---|---|---|
-| ![Pick instruments](docs/images/tuto-coach-batterie.png) | ![Set gains](docs/images/tuto-coach-gain.png) | ![Musicians' monitors](docs/images/tuto-coach-retours.png) |
-| Vocals, rhythm and lead guitar, bass, detailed drums (kick, snare, 3 toms, 2 overheads)… Picking an instrument offers its **complete setting**: high-pass, EQ, compressor, gate, stereo position. | Each musician plays loud, alone. The coach **measures**, proposes the right gain, then **fits compressor and gate to your real signal**. | One mix per musician based on their role: the bassist gets bass and kick locked together, and the drummer gets no cymbals since they are already loud. Then QR codes in one click. |
+137 automated tests cover OSC, scenes, FX, accounts, monitors, REAPER/Lua and model profiles. They do not certify acoustic results or every hardware model. Packages are published together after platform checks, with SHA-256 checksums. Legacy data identifiers and REAPER paths remain for compatibility.
 
-**Nothing changes without your OK.** Every change goes through a before/after window, a backup is made, and one button undoes it all.
-
-👉 **[The illustrated step-by-step tutorial for beginners](docs/TUTO_MON_INGE_SON_EN.md)**
-
-> The app's interface is in French; the guides and tutorial are available in English.
-
-## 🎚️ The console
-
-| Simple mode (show) | A musician's mix | Expert mode (X-AIR Edit style) |
-|---|---|---|
-| ![Simple console](docs/images/tuto-simple.png) | ![Monitor mix](docs/images/tuto-simple-retour.png) | ![Expert console](docs/images/tuto-expert.png) |
-
-| Live analysis | Check by ear | EQ |
-|---|---|---|
-| ![Live analysis](docs/images/tuto-analyse.png) | ![Check by ear](docs/images/tuto-analyse-valider.png) | ![EQ](docs/images/tuto-expert-eq.png) |
-
-- **6 views in Expert mode**: Console, Channel, Ears, Effects, Routing, Analysis.
-- **Live analysis**: mix spectrum, “Who plays where” map and recommendations to compare A / B before applying them. Nothing changes without your click.
-- **Rehearsal mode**: the Main stays muted and locked, you only work on the ears.
-- **Simple mode for the show**: every track on screen and the menu folds automatically. In Expert mode, the last strip may need a little scrolling at 1440 px.
-- **Start from a blank scene** in one click: the whole mixer goes back to neutral with levels down, without touching 48 V, gains or routing, and it can be undone.
-- **Each view explains** every control in plain words: see the [console guide](docs/GUIDE_CONSOLE.md) (in French).
-
-## 📱 Monitors on the phone
-
-| Musicians' QR codes | The musician's page |
-|---|---|
-| ![QR codes](docs/images/tuto-share.png) | <img src="docs/images/tuto-inge/17-telephone.png" alt="Musician page" width="260"> |
-
-Each link is **personal**: a musician only sees their own mix. Volume is capped to protect ears. A lost link is replaced in one click.
-
-## ⬇️ Install
-
-Download the file for your computer from the [**releases page**](https://github.com/herve8940/xr18-studio/releases/latest). Everything is included; there is nothing else to install.
-
-| Computer | File |
-|---|---|
-| Windows | `XR18-Studio-Windows-….exe` |
-| Apple Silicon Mac (M1, M2, M3…) | `XR18-Studio-macOS-…-arm64.dmg` |
-| Intel Mac | `XR18-Studio-macOS-…-x64.dmg` |
-| Ubuntu / Debian | `.deb` |
-| Other Linux | `.AppImage` |
-
-The installers are not signed with a commercial certificate:
-
-- **Mac**: the first time, **right-click › Open**. To find the console, then allow **Local Network** in *System Settings › Privacy & Security*.
-- **Windows**: if SmartScreen appears, click **More info › Run anyway**.
-
-Details: [installing the app](docs/USER_GUIDE_EN.md).
-
-## 🚀 Get started in 5 minutes
-
-1. Put the computer and the XR18 on the **same network** (the console's Wi-Fi or the band's router).
-2. Open XR18 Studio: the console is **found automatically**, like in X-AIR Edit.
-3. Go to **Jouer › Mon ingé son** and follow the steps.
-
-No console at hand? Explore everything in **simulation mode**.
-
-## 📚 Documentation
-
-| | |
-|---|---|
-| 📘 [“Mon ingé son” tutorial](docs/TUTO_MON_INGE_SON_EN.md) | The guided journey, fully illustrated, for beginners |
-| 📗 [Full guide](docs/USER_GUIDE_EN.md) | Install, connect, console, monitors, scenes, troubleshooting |
-| 🎚️ [Console guide](docs/GUIDE_CONSOLE.md) | Every option of every view (French) |
-| 🔧 [Coach technical details](docs/INGE_SON.md) | Per-instrument values, gain and threshold rules (French) |
-| 📝 [Release notes](docs/RELEASE_NOTES.md) | What changed |
-
-## ⚠️ Good to know
-
-- The coach reads the console's **settings and levels**, **not the audio**: listening advice comes from your description.
-- Proposed values are **starting points** from live best practice: your ears have the final say.
-- Always run a full test on your console **before a show**.
-
-<details>
-<summary><b>For developers</b></summary>
-
-```sh
-npm run setup      # dependencies
-npm run studio     # local server + interface
-npm test           # tests
-npm run build:all  # backend and interface
-npm run desktop:package
-```
-
-Installers are built by GitHub Actions: the “Desktop packages” workflow runs on every PR, and the “Release” workflow runs when the `package.json` version changes on `main`.
-
-- There is a single OSC engine: the interface, the musicians' pages and MCP all go through its API and permissions.
-- Connecting or reading never changes the mix.
-- Console gestures are sent immediately, then read back from the XR18.
-- 48 V, routing and effect types go through preview and confirmation.
-
-References: [X-AIR Edit alignment and OSC protocol](docs/XAIR_EDIT_PARITY.md) · [desktop app](docs/DESKTOP_MULTIPLATEFORME.md)
-
-</details>
-
----
-
-<div align="center">
-XR18 Studio is free software under the <a href="LICENSE">MIT License</a>, by Hervé Naessens.<br>Independent project, not affiliated with Behringer / Music Tribe. XR18, X18, MR18 and X-AIR are trademarks of their respective owners.
-</div>
+Independent MIT project, not affiliated with Behringer, Midas or Music Tribe. Trademarks belong to their owners.

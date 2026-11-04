@@ -1,6 +1,6 @@
 # BandPilot — état de l’adaptation multi-modèle
 
-Cette branche n’est pas une version publiée ni une certification de tous les matériels. **La compatibilité complète X32 n’est pas terminée.**
+BandPilot 2.2 publie cette adaptation avec des limites explicites ; ce n’est pas une certification de tous les matériels. **La compatibilité complète X32 n’est pas terminée.**
 
 ## État par famille
 
@@ -40,7 +40,7 @@ Les anciennes adresses X-Air restent un ensemble distinct des paramètres ajout�
 
 Le nom affiché devient **BandPilot** (interface, titre, menus de bureau et noms des installateurs). La marque et le modèle sont affichés séparément. L’appId, le dossier de données `xr18-studio`, les clés de stockage et les chemins du pont REAPER restent des identifiants de compatibilité : ils ne sont pas renommés à l’aveugle, pour préserver les réglages, scènes, comptes et intégrations. Les liens GitHub historiques et documents des versions déjà publiées restent historiques. Le packaging inclut maintenant `dist/shared`.
 
-Le dépôt et l’application installée ne sont ni publiés ni remplacés par cette préparation.
+La publication des installateurs est effectuée par le workflow de version après ses contrôles ; elle ne remplace pas automatiquement l’application déjà installée.
 
 ## Vérifications réalisées
 

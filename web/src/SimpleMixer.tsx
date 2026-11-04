@@ -9,7 +9,7 @@ import "./simple-mixer.css";
  * Mode Simple : volume, mute, solo et vumètre de chaque source, pour la façade
  * ou pour le retour d’un musicien. Tout le reste est dans le mode Expert.
  */
-export function SimpleMixer({ canWrite, onExpert }: { canWrite: boolean; onExpert: (channel?: number) => void }) {
+export function SimpleMixer({ canWrite, onExpert, simulation=false }: { simulation?:boolean; canWrite: boolean; onExpert: (channel?: number) => void }) {
   const {INPUTS,BUSES,model}=useAirStrips();
   const { values, set, online, message, clearMessage } = useLiveMixer();
   const [layer, setLayer] = useState(0);
@@ -52,7 +52,7 @@ export function SimpleMixer({ canWrite, onExpert }: { canWrite: boolean; onExper
         <h2>{layer === 0 ? "Je règle la façade" : <>Je règle le retour de <span>{stripName(master, values)}</span></>}</h2>
         <p>{layer === 0 ? "Ce que le public entend. Monte ou baisse chaque source, coupe-la avec Mute." : "Ce que ce musicien entend dans son retour. Le public n’est pas concerné."}</p>
       </div>
-      <span className={online ? (writable ? "sm-status ok" : "sm-status ro") : "sm-status"}>{online ? (writable ? "Contrôle actif" : "Lecture seule") : "Hors ligne"}</span>
+      <span className={online ? (writable ? "sm-status ok" : "sm-status ro") : "sm-status"}>{online ? (simulation ? "Simulation modifiable" : writable ? "Contrôle actif" : "Lecture seule") : "Hors ligne"}</span>
     </div>
     <div className="sm-mixes" role="tablist" aria-label="Mix à régler">
       <button type="button" role="tab" aria-selected={layer === 0} className={layer === 0 ? "active" : ""} onClick={() => setLayer(0)}>Façade</button>

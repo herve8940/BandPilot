@@ -2,140 +2,67 @@
 
 # BandPilot
 
-**Ton ingé son de poche pour ton groupe et ta console**
+**Ton groupe. Ta console. Ton son.**
 
-[![Dernière version](https://img.shields.io/github/v/release/herve8940/xr18-studio?label=version&color=3ee0e0)](https://github.com/herve8940/xr18-studio/releases/latest) [![Téléchargements](https://img.shields.io/github/downloads/herve8940/xr18-studio/total?color=2b7cf6)](https://github.com/herve8940/xr18-studio/releases) [![Licence MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE) [![Windows · macOS · Linux](https://img.shields.io/badge/Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-gratuit-555)](https://github.com/herve8940/xr18-studio/releases/latest)
+[![Version](https://img.shields.io/github/v/release/herve8940/xr18-studio)](https://github.com/herve8940/xr18-studio/releases/latest) [![CI](https://github.com/herve8940/xr18-studio/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/herve8940/xr18-studio/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
 
-Application **gratuite** pour préparer la balance, piloter la console, les retours et les répétitions. Cette branche prépare la détection Behringer XR12/XR18/X18, Midas MR12/MR18 et X32. La X32 reste un **adaptateur partiel en validation**, et les nouveaux modèles X-Air nécessitent une validation matérielle : voir la [matrice de compatibilité](docs/multi-model.md). Les versions déjà publiées ne contiennent pas encore cette adaptation.
+Application gratuite pour préparer la balance, piloter la console, donner les retours aux musiciens et répéter avec REAPER. **BandPilot est le nouveau nom de XR18 Studio.**
 
-🇫🇷 Français · [🇬🇧 English](README.en.md)
+[⬇ Télécharger](https://github.com/herve8940/xr18-studio/releases/latest) · [🌐 Site](https://herve8940.github.io/xr18-studio/) · [📘 Guide FR](docs/USER_GUIDE_FR.md) · [English](README.en.md) · [🎬 Visite vidéo](https://herve8940.github.io/xr18-studio/VIDEO_TOUR.html)
 
-[**⬇️ Télécharger**](https://github.com/herve8940/xr18-studio/releases/latest) · [**🌐 Site**](https://herve8940.github.io/xr18-studio/) · [**📘 Tuto « Mon ingé son »**](docs/TUTO_MON_INGE_SON.md) · [Guide complet](docs/USER_GUIDE_FR.md) · [Nouveautés](docs/RELEASE_NOTES.md)
+![Console BandPilot 2.2 en simulation](docs/images/bandpilot-2.2/console.png)
 
-<img src="docs/images/hero.png" alt="XR18 Studio : l’assistant Mon ingé son et la page retour d’un musicien sur son téléphone" width="900">
-
-Windows · macOS (Intel et Apple Silicon) · Linux · fonctionne aussi avec X18 et MR18
+Windows · Mac Intel et Apple Silicon · Linux
 
 </div>
 
----
+## Les fonctions
 
-## Pour qui ?
-
-Pour les **groupes sans ingé son** : répétitions, petites salles, bars, fêtes… Tu as une XR18, des micros, des musiciens, et tu veux que ça sonne **sans apprendre le jargon**.
-
-XR18 Studio se pose sur ta console comme X-AIR Edit, avec en plus :
-
-| 🎧 **Mon ingé son** | 🎚️ **Une console claire** | 📱 **Les retours au téléphone** |
-|---|---|---|
-| Un assistant en 6 étapes : il configure chaque instrument selon les bonnes pratiques, règle les gains avec toi et prépare les retours. | Un mode **Simple** avec de gros faders pour le concert, un mode **Expert** complet avec Analyse en direct, chaque option expliquée. | Chaque musicien scanne son QR code et règle **son** retour. Il n’a aucune application à installer et ne peut toucher à rien d’autre. |
-
-## 🎧 Mon ingé son, en 6 étapes
-
-| 1. Choisis tes instruments | 2. Règle les gains | 3. Prépare les retours |
-|---|---|---|
-| ![Choisir les instruments](docs/images/tuto-coach-batterie.png) | ![Régler les gains](docs/images/tuto-coach-gain.png) | ![Retours des musiciens](docs/images/tuto-coach-retours.png) |
-| Chant, guitare rythmique et solo, basse, batterie détaillée (kick, snare, 3 toms, 2 overheads)… Choisir un instrument propose sa **configuration complète** : coupe-bas, égaliseur, compresseur, gate, position stéréo. | Chaque musicien joue fort, seul. Le coach **mesure**, propose le bon gain, puis **cale le compresseur et le gate sur ton vrai signal**. | Un mix par musicien selon son rôle : le bassiste a basse et kick soudés, le batteur n’a pas les cymbales qu’il entend déjà. Puis les QR codes en un clic. |
-
-**Rien ne change sans ton accord.** Chaque réglage passe par une fenêtre « avant / après », une sauvegarde est faite, et un bouton annule tout.
-
-👉 **[Le tuto illustré pas à pas, pour débutants](docs/TUTO_MON_INGE_SON.md)**
-
-## 🎚️ La console
-
-| Mode Simple (concert) | Retour d’un musicien | Mode Expert (façon X-AIR Edit) |
-|---|---|---|
-| ![Console Simple](docs/images/tuto-simple.png) | ![Retour](docs/images/tuto-simple-retour.png) | ![Console Expert](docs/images/tuto-expert.png) |
-
-| Analyse en direct | Valider en écoutant | Égaliseur |
-|---|---|---|
-| ![Analyse en direct](docs/images/tuto-analyse.png) | ![Valider en écoutant](docs/images/tuto-analyse-valider.png) | ![Égaliseur](docs/images/tuto-expert-eq.png) |
-
-- **6 vues en mode Expert** : Console, Canal, Ears, Effets, Routage, Analyse.
-- **Analyse en direct** : spectre du mix, carte « Qui joue où » et recommandations à écouter en A / B avant de les appliquer. Rien ne change sans ton clic.
-- **Mode Répétition** : le Main est coupé et verrouillé, on ne travaille que les ears.
-- **Mode Simple pour le concert** : toutes les pistes à l’écran, le menu se replie tout seul. En mode Expert, la dernière tranche peut demander un léger défilement en 1440 px.
-- **Partir d’une scène vierge** en un clic : toute la console revient à neutre, volumes en bas, sans toucher au 48 V, aux gains ni au routage, avec retour en arrière.
-- **Chaque vue explique** en langage simple ce que fait chaque bouton : voir le [guide de la console](docs/GUIDE_CONSOLE.md).
-
-## 📱 Les retours sur le téléphone
-
-| Les QR codes des musiciens | La page du musicien |
+| Espace | Ce que tu peux préparer ou contrôler |
 |---|---|
-| ![QR codes](docs/images/tuto-share.png) | <img src="docs/images/tuto-inge/17-telephone.png" alt="Page du musicien" width="260"> |
+| Mon ingé son | Six étapes de balance, configuration du groupe, mesure des gains, conseils à vérifier, retours et sauvegarde. Le coach ne reçoit pas le flux audio. |
+| Console | Simple ou Expert, banques de canaux, EQ, gate, compresseur, envois, bus, DCA, FX et routage selon le modèle. Menu compact et interface adaptable. |
+| Retours | Lien QR par musicien, uniquement son bus, faders/mute, profils, plafonds et montée progressive. |
+| Répéter | Avec morceaux ou groupe seul : sections, prises, formes d’onde, présence, Original, boucle, REC/Stop et marqueurs via REAPER. |
+| Concert | Déroulement du set dans le projet préparé avec REAPER/ReaCue configurés. |
+| Préparer | Répertoire, setlists, répétitions, brouillon persistant, capture/export/import JSON de scènes et sauvegardes avant rappel. |
+| Réglages | Détection par modèle, lecture seule initiale, synchronisation, comptes facultatifs, diagnostic, IA connectée facultative et intégrations. |
 
-Chaque lien est **personnel** : le musicien ne voit que son propre retour. Le volume est plafonné pour protéger les oreilles. Un lien perdu se remplace en un clic.
+Le contrôle local ne demande ni compte ni Internet. Ordinateur, console et téléphones partagent le même réseau local. REAPER est un logiciel séparé avec sa propre licence ; l’IA connectée facultative nécessite Internet et une clé personnelle.
 
-## ⬇️ Installer
+## Consoles et limites
 
-Télécharge le fichier de ton ordinateur sur la [**page des versions**](https://github.com/herve8940/xr18-studio/releases/latest). Tout est inclus, il n’y a rien d’autre à installer.
-
-| Ordinateur | Fichier |
+| Modèle | État dans 2.2 |
 |---|---|
-| Windows | `XR18-Studio-Windows-….exe` |
-| Mac Apple Silicon (M1, M2, M3…) | `XR18-Studio-macOS-…-arm64.dmg` |
-| Mac Intel | `XR18-Studio-macOS-…-x64.dmg` |
-| Ubuntu / Debian | `.deb` |
-| Autre Linux | `.AppImage` |
+| Behringer XR18 | Famille principale ; essais physiques réalisés sur XR18. |
+| Behringer X18 / Midas MR18 | Profils et protocole commun ; validation physique de ces appareils restante. |
+| Behringer XR12 / Midas MR12 | Interface adaptée à 12 entrées, 4 préamplis micro et 2 Aux physiques. USB stéréo sur clé, **pas d’USB multipiste PC**. Validation physique restante. |
+| Behringer X32 et variantes | **Partiel et expérimental** : mixage, EQ, dynamique principale et envois. Préamplis, routage, FX, vumètres, scènes, coach, retours téléphone et USB complets restent à adapter. |
 
-Les installateurs ne sont pas signés par un certificat commercial :
+La détection ne constitue pas une certification de toutes les fonctions. [Matrice détaillée](docs/multi-model.md). Aucun fichier X-Air n’est présenté comme une scène X32 compatible.
 
-- **Mac** : la première fois, fais **clic droit › Ouvrir**. Pour trouver la console, autorise ensuite le **Réseau local** dans *Réglages Système › Confidentialité et sécurité*.
-- **Windows** : si SmartScreen s’affiche, clique **Informations complémentaires › Exécuter quand même**.
+## Bien démarrer
 
-Détails : [installer l’application](docs/USER_GUIDE_FR.md#2-installer-lapplication).
+1. Télécharge l’installateur de ton système et sauvegarde tes scènes avant une mise à jour.
+2. Explore la simulation, puis détecte ta console en lecture seule.
+3. Récupère **Table → PC** et conserve une sauvegarde avant d’activer le contrôle.
+4. Suis [Mon ingé son](docs/TUTO_MON_INGE_SON.md), puis vérifie le résultat à l’oreille.
+5. Pour répéter, installe le pont **REAPER 1.2.2**, sauvegarde tes projets et redémarre REAPER.
 
-## 🚀 Premiers pas en 5 minutes
+La simulation de console ne simule pas REAPER : REC capture ses véritables entrées audio. Les installateurs peuvent ne pas être signés/notariés.
 
-1. Relie l’ordinateur et la XR18 au **même réseau** (Wi-Fi de la console ou routeur du groupe).
-2. Ouvre XR18 Studio : la console est **trouvée toute seule**, comme dans X-AIR Edit.
-3. Va dans **Jouer › Mon ingé son** et suis les étapes.
+## Documentation et médias
 
-Pas de console sous la main ? Tout se découvre en **mode simulation**.
+- [Guide complet FR](docs/USER_GUIDE_FR.md) · [Full English guide](docs/USER_GUIDE_EN.md)
+- [Mon ingé son FR](docs/TUTO_MON_INGE_SON.md) · [English coach tutorial](docs/TUTO_MON_INGE_SON_EN.md)
+- [Visite vidéo et transcription](docs/VIDEO_TOUR.md) — montage de six captures en simulation, 42 secondes, sous-titres FR/EN.
+- [Nouveautés 2.2.0](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
+- [Contrôles X-Air détaillés](docs/GUIDE_CONSOLE.md) · [Architecture et API](docs/SQLITE_API.md)
 
-## 📚 Documentation
+## Développement
 
-| | |
-|---|---|
-| 📘 [Tuto « Mon ingé son »](docs/TUTO_MON_INGE_SON.md) | Le parcours guidé, très illustré, pour débutants |
-| 📗 [Guide complet](docs/USER_GUIDE_FR.md) | Installation, connexion, console, retours, scènes, dépannage |
-| 🎚️ [Guide de la console](docs/GUIDE_CONSOLE.md) | Chaque option de chaque vue expliquée |
-| 🔧 [Mon ingé son : détails techniques](docs/INGE_SON.md) | Valeurs par instrument, règles de calcul des gains et seuils |
-| 🔌 [Connexion à la XR18](docs/CONNEXION_XR18.md) | Réseau, découverte, dépannage |
-| 📝 [Nouveautés](docs/RELEASE_NOTES.md) · [État du projet](docs/ETAT_DU_PROJET.md) | Ce qui a changé, ce qui est vérifié |
+Node.js 20+ (CI et installateurs : Node 22). `npm ci`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test` et `npm run build:all`. Installateurs : `npm run desktop:package`.
 
-## ⚠️ À savoir
+137 tests automatisés couvrent notamment OSC, scènes, FX, comptes, retours, REAPER, Lua et profils de console. Ils ne remplacent pas une validation acoustique et un concert complet sur chaque matériel. La publication attend les contrôles des quatre plateformes de construction et conserve les sommes SHA-256.
 
-- Le coach lit les **réglages et les niveaux** de la console, **pas le son** : ses conseils d’écoute partent de ta description.
-- Les valeurs proposées sont des **points de départ** issus des bonnes pratiques du live : ton oreille a le dernier mot.
-- Fais toujours un essai complet sur ta console **avant un concert**.
-
-<details>
-<summary><b>Pour les développeurs</b></summary>
-
-```sh
-npm run setup      # dépendances
-npm run studio     # serveur + interface en local
-npm test           # tests
-npm run build:all  # backend et interface
-npm run desktop:package
-```
-
-Les installateurs sont produits par GitHub Actions : le workflow « Desktop packages » à chaque PR, et le workflow « Release » quand la version de `package.json` change sur `main`.
-
-- Le moteur OSC est unique : l’interface, les pages des musiciens et MCP passent par son API et ses droits.
-- Une connexion ou une lecture ne change jamais le mixage.
-- Les gestes de la console sont envoyés immédiatement, puis relus sur la XR18.
-- Le 48 V, le routage et les types d’effets passent par prévisualisation et confirmation.
-
-Références : [alignement sur X-AIR Edit et protocole OSC](docs/XAIR_EDIT_PARITY.md) · [fonctions, HTTPS, ReaCue et MCP](docs/FONCTIONS_0_2.md) · [installation de bureau](docs/INSTALLATION_CLE_EN_MAIN.md) · [application multiplateforme](docs/DESKTOP_MULTIPLATEFORME.md)
-
-</details>
-
----
-
-<div align="center">
-XR18 Studio est un logiciel libre sous <a href="LICENSE">licence MIT</a>, par Hervé Naessens.<br>Projet indépendant, non affilié à Behringer / Music Tribe. XR18, X18, MR18 et X-AIR sont des marques de leurs propriétaires.
-</div>
-
-Les essais manuels des 3–4 novembre et leurs corrections sont suivis dans [le bilan des corrections](docs/corrections-tests-manuels.md), avec [le rapport original](docs/tests-manuels-2026-11-04.md).
+Les anciens identifiants `xr18-studio`, le dépôt, les clés de données et les chemins REAPER restent pour préserver la compatibilité. Projet indépendant, non affilié à Behringer, Midas ou Music Tribe ; marques de leurs propriétaires. Licence [MIT](LICENSE).

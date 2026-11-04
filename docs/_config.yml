@@ -1,6 +1,6 @@
-# GitHub Pages site for XR18 Studio (Settings › Pages › Deploy from branch: main, folder /docs).
-title: XR18 Studio
-description: Free app for the Behringer XR18, X18 and MR18 mixer — guided sound engineer for beginners, X-AIR Edit style console, in-ear mixes on each musician's phone.
+# GitHub Pages site for BandPilot (Settings › Pages › Deploy from branch: main, folder /docs).
+title: BandPilot
+description: Free mixer control, guided sound checks, REAPER rehearsals and personal monitor mixes. Model capabilities and validation limits are documented.
 url: https://herve8940.github.io
 baseurl: /xr18-studio
 lang: fr

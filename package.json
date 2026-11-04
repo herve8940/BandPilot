@@ -1,7 +1,7 @@
 {
   "name": "xr18-studio",
-  "version": "2.2.0-dev.10",
-  "description": "Free app for the Behringer XR18 / X18 / MR18 mixer: guided sound engineer for beginners, X-AIR Edit style graphical console, in-ear monitors on each musician's phone.",
+  "version": "2.2.0",
+  "description": "BandPilot: free local mixer control, guided sound checks, personal monitors and REAPER rehearsals. Model-aware X-Air/M-Air support; partial X32 adapter.",
   "keywords": [
     "behringer",
     "xr18",
@@ -31,7 +31,7 @@
   },
   "license": "MIT",
   "author": {
-    "name": "Hervé Naessens"
+    "name": "Herv\u00e9 Naessens"
   },
   "private": true,
   "type": "module",
@@ -39,7 +39,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/server.js",
-    "test": "node --import tsx --test tests/*.test.ts",
+    "test": "node --import tsx --test --test-concurrency=4 --test-timeout=60000 tests/*.test.ts",
     "setup": "npm install && npm --prefix web install",
     "studio": "concurrently --kill-others -n API,WEB -c blue,green \"npm run dev\" \"npm --prefix web run dev\"",
     "build:all": "npm run build && npm --prefix web run build",
@@ -108,7 +108,7 @@
       "category": "public.app-category.music",
       "artifactName": "BandPilot-macOS-${version}-${arch}.${ext}",
       "extendInfo": {
-        "NSLocalNetworkUsageDescription": "BandPilot communique avec ta console compatible sur le réseau local (OSC/UDP) et partage les retours avec les téléphones des musiciens.",
+        "NSLocalNetworkUsageDescription": "BandPilot communique avec ta console compatible sur le r\u00e9seau local (OSC/UDP) et partage les retours avec les t\u00e9l\u00e9phones des musiciens.",
         "NSBonjourServices": [
           "_osc._udp",
           "_http._tcp"
@@ -122,7 +122,7 @@
       ],
       "category": "AudioVideo",
       "artifactName": "BandPilot-Linux-${version}-${arch}.${ext}",
-      "maintainer": "Hervé Naessens"
+      "maintainer": "Herv\u00e9 Naessens"
     },
     "nsis": {
       "oneClick": true,

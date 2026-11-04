@@ -1,4 +1,6 @@
-# Guide de la console XR18 Studio — chaque option expliquée simplement
+> **BandPilot 2.2** : [guide illustré actuel](USER_GUIDE_FR.md), [vidéo](VIDEO_TOUR.md) et [limites par modèle](multi-model.md). Les descriptions détaillées X-Air ci-dessous ne signifient pas une compatibilité complète X32. Les éventuelles anciennes captures de référence ne montrent pas toutes la nouvelle interface.
+
+# Guide de la console BandPilot — chaque option expliquée simplement
 
 [Guide utilisateur](USER_GUIDE_FR.md) · [Accueil](https://github.com/herve8940/xr18-studio)
 

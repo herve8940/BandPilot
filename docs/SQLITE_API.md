@@ -1,3 +1,5 @@
+> **BandPilot 2.2** : [guide illustré actuel](USER_GUIDE_FR.md), [vidéo](VIDEO_TOUR.md) et [limites par modèle](multi-model.md). Les descriptions détaillées X-Air ci-dessous ne signifient pas une compatibilité complète X32. Les éventuelles anciennes captures de référence ne montrent pas toutes la nouvelle interface.
+
 # API répétitions SQLite — étape backend
 
 Les données sont stockées par défaut dans `data/xr18-studio.db` (ignoré par Git). Définir `XR18_DB_PATH` pour choisir le chemin. Une sauvegarde du fichier SQLite doit être faite lorsque le serveur est arrêté ou via un mécanisme de backup SQLite cohérent.
