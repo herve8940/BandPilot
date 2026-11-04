@@ -5,7 +5,7 @@ local SEP = package.config:sub(1, 1)
 local DIR = r.GetResourcePath() .. SEP .. "XR18Studio"
 r.RecursiveCreateDirectory(DIR, 0)
 local REQ, RES, BEAT = DIR .. SEP .. "request.lua", DIR .. SEP .. "response.json", DIR .. SEP .. "heartbeat.txt"
-local VERSION = "1.2.3"
+local VERSION = "1.3.0"
 
 local function jstr(s)
   return '"' .. tostring(s):gsub('[%z\1-\31\\"]', function(c)
@@ -229,6 +229,9 @@ function H.apply_presence(a)
   r.Undo_EndBlock("XR18 Studio : qui est là", -1)
   return { ok = true }
 end
+
+local workshop_file = debug.getinfo(1, 'S').source:sub(2):gsub('[^/\\]+$', '') .. 'BandPilot_Workshop.lua'
+dofile(workshop_file)(H, r, {each_track=each_track, track_name=track_name})
 
 local function handle(src)
   local chunk = load("return " .. src, "request", "t", {})

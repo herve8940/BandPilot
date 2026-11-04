@@ -1,5 +1,6 @@
 import {MIXER_MODELS} from '../shared/mixer-models.js';
 import {readFileSync,writeFileSync} from 'node:fs';
+import {Workshop} from './workshop.js';
 import {Analyzer,familyFromName,type Instrument} from './analysis.js';
 import {ReaperLink,planSession,createSession,openInReaper,defaultSessionsFolder,freeHours,presenceCommands} from './reaper.js';
 import {ReaperBridge,BRIDGE_VERSION,saveLiveRoles} from './reaper-bridge.js';
@@ -66,6 +67,7 @@ const instruments=():Instrument[]=>{
 const analyzer=new Analyzer(xr18,instruments);
 const bridge=new ReaperBridge();
 const reaper=new ReaperLink({transport:()=>bridge.transport(),actions:ids=>bridge.actions(ids)});
+const workshop=new Workshop(xr18,bridge,library,resolve(dirname(dbPath),'workshops'));
 const SONG_TAIL_S=8;
 /** Reads the console fresh: a session built on stale routing would record the wrong inputs. */
 let planCache:{at:number;plan:ReturnType<typeof planSession>}|undefined;
@@ -115,6 +117,7 @@ const handler: http.RequestListener = async (req, res) => {
    else if(req.method==='PUT')res.end(JSON.stringify(database.saveWorkspace(await body(req))));
    else{res.writeHead(405);res.end('{}');}}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
+  if(workshop.blocksRecording()&&req.method!=='GET'&&(['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/show/presence','/api/show/original','/api/show/take','/api/show/track','/api/show/play','/api/show/loop','/api/show/goto','/api/mixer-sync/apply','/api/console/apply','/api/coach/apply','/api/analysis/listen','/api/reacue/event','/api/reacue/arm'].includes(path)||/^\/api\/library\/[^/]+\/apply$/.test(path))){res.writeHead(409);res.end(JSON.stringify({error:'Termine l’Atelier du son et restaure les sources avant cette action ; les réglages directs de canal restent disponibles dans Console'}));return;}
   if(path==='/api/reacue/stop'&&req.method==='POST'){show.arm(false);access.log(user!,'Arrêt ReaCue');res.end(JSON.stringify({ok:true}));return;}
   const readOnlyCoach=['/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
     // Analysis only changes what the console's analyser looks at, never the sound: no global lock.
@@ -174,6 +177,22 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/coach'&&req.method==='GET'){res.end(JSON.stringify({...coach.catalog(),role:user!.role}));return;}
   if(path==='/api/coach/advice'&&req.method==='GET'){
     try{const q=new URL(req.url!,'http://localhost').searchParams;res.end(JSON.stringify(coach.advice(Number(q.get('channel')),String(q.get('symptom')))));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path==='/api/workshop'&&req.method==='GET'){res.end(JSON.stringify(workshop.status()));return;}
+  if(path.startsWith('/api/workshop/')&&req.method==='POST'){
+   try{const d=await body(req);let result:unknown;
+   if(path==='/api/workshop/catalog')result=await workshop.catalog();
+   else if(path==='/api/workshop/create')result=await workshop.create({name:typeof d.name==='string'?d.name:undefined,source:String(d.source),start:Number(d.start),stop:Number(d.stop),mapping:d.mapping,confirm:d.confirm===true,rawConfirmed:d.rawConfirmed===true,deviceConfirmed:d.deviceConfirmed===true,token:String(d.token)});
+   else if(path==='/api/workshop/transport')result=await workshop.transport(String(d.action),d.start===undefined?undefined:Number(d.start));
+   else if(path==='/api/workshop/compare')result=await workshop.compare(d.side as 'A'|'B');
+   else if(path==='/api/workshop/save')result=await workshop.save(String(d.note??''),d.preference as 'A'|'B');
+   else if(path==='/api/workshop/finish')result=await workshop.finish(d.keep as 'A'|'B',d.confirm===true);
+   else if(path==='/api/workshop/analyze')result=await workshop.analyze();
+   else if(path==='/api/workshop/listen-analyze'){if(d.confirm!==true)throw Error('Confirme la lecture pour mesurer les traitements');result=await workshop.listenAnalyze();}
+   else if(path==='/api/workshop/cancel')result=workshop.cancelAnalysis();
+   else if(path==='/api/workshop/trial')result=await workshop.trial(String(d.id),d.action as 'try'|'keep'|'undo');
+   else throw Error('Action atelier inconnue');
+   res.end(JSON.stringify(result));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path.startsWith('/api/show')){
    try{

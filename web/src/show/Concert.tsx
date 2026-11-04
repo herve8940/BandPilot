@@ -30,7 +30,7 @@ export function Concert() {
       <Status show={show} link={link} />
       <button type="button" className="xs2-btn" onClick={() => setUnlocked(!unlocked)}>{unlocked ? "Verrouiller" : "Déverrouiller"}</button></div>
     {(error || link?.alert || wanted) && <div className="xs2-msg error" role="alert">{error || link?.alert || "Attention : ce morceau joue sans être enregistré."}<button type="button" aria-label="Fermer" onClick={() => { setError(""); if (link?.alert) void act("/api/reaper/dismiss"); }}>×</button></div>}
-    {show.rehearsal && <div className="xs2-msg error" role="alert">Le Main est coupé (Ears seulement) : la façade ne sort pas. Quitte ce mode dans la console Expert.</div>}
+    {show.rehearsal && <div className="xs2-msg error" role="alert">Le Main est coupé (Ears seulement) : la façade ne sort pas. Quitte ce mode dans Console → Expert.</div>}
     {!running && issues.length > 0 && <div className="xs2-msg" role="status">{issues[0]}</div>}
     {!running && checks?.hoursFree !== null && checks && checks.hoursFree < 3 && <div className="xs2-msg error" role="alert">Il reste environ {checks.hoursFree} h d’espace disque.</div>}
     <div className="sh-show">

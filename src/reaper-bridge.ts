@@ -11,7 +11,7 @@ export type Take={valid?:boolean;index:number;name:string;file:string;active:boo
 export type Item={pos:number;length:number;takes:Take[]};
 export type ShowTrack={index:number;name:string;rec:boolean;role:string|null;mute:boolean;solo:boolean;armed:boolean;items:Item[]};
 export type Song={title:string;start:number;countin:number;stop:number};
-export const BRIDGE_VERSION='1.2.3';
+export const BRIDGE_VERSION='1.3.0';
 export type ShowState={version:string;original?:boolean;project:string;setlist?:string;concert:string|null;songs:Song[];regions:{start:number;stop:number;name:string}[];tracks:ShowTrack[];pos:number;playing:boolean;recording:boolean;loop:{on:boolean;start:number;stop:number};length:number;audio?:{inputs:number;rate:number;device:string}};
 
 export function reaperResources(env=process.env,platform=process.platform,home=homedir()){
@@ -52,7 +52,7 @@ export class ReaperBridge{
   const read=(cmd==='state'||cmd==='transport')&&Object.keys(args).length===0;
   if(read&&this.reads.has(cmd))return this.reads.get(cmd) as Promise<T>;
   const next=new Promise<T>((resolve,reject)=>{
-   this.queue.push({priority:cmd==='peaks'?2:cmd==='state'?1:0,run:async()=>{
+   this.queue.push({priority:(cmd==='peaks'||cmd==='workshop_measure')?2:cmd==='state'?1:0,run:async()=>{
     try{resolve(await this.exchange<T>(cmd,args));}catch(e){reject(e);}
    }});
   });
@@ -71,7 +71,7 @@ export class ReaperBridge{
   const isolated=/^BandPilotBridge\/2\r?\n/.test(await readFile(join(this.dir,'heartbeat.txt'),'utf8'));
   const req=join(this.dir,isolated?`request-${id}.lua`:'request.lua'),res=join(this.dir,isolated?`response-${id}.json`:'response.json');
   await retry(()=>rm(res,{force:true}));await writeFile(req+'.tmp',toLua({id,cmd,args}));await retry(()=>rename(req+'.tmp',req));
-  const end=Date.now()+this.timeoutMs;
+  const end=Date.now()+(cmd==='workshop_create'?Math.max(15000,this.timeoutMs):this.timeoutMs);
   while(Date.now()<end){
    try{
     const data=JSON.parse(await readFile(res,'utf8'));
@@ -92,7 +92,7 @@ export class ReaperBridge{
  async install(source=defaultScript()){
   const scripts=join(this.resources,'Scripts'),target=join(scripts,'XR18 Studio','XR18_Studio_Bridge.lua'),startup=join(scripts,'__startup.lua');
   if(!existsSync(this.resources))throw Error('Dossier de Reaper introuvable : ouvre Reaper une première fois.');
-  await mkdir(dirname(target),{recursive:true});await copyFile(source,target);
+  await mkdir(dirname(target),{recursive:true});await copyFile(source,target);await copyFile(join(dirname(source),'BandPilot_Workshop.lua'),join(dirname(target),'BandPilot_Workshop.lua'));
   const line='dofile(reaper.GetResourcePath() .. "/Scripts/XR18 Studio/XR18_Studio_Bridge.lua") -- XR18 Studio';
   const current=existsSync(startup)?await readFile(startup,'utf8'):'';
   if(!current.includes('XR18_Studio_Bridge.lua'))await appendFile(startup,(current&&!current.endsWith('\n')?'\n':'')+line+'\n');

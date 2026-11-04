@@ -47,7 +47,7 @@ La détection ne constitue pas une certification de toutes les fonctions. [Matri
 2. Explore la simulation, puis détecte ta console en lecture seule.
 3. Récupère **Table → PC** et conserve une sauvegarde avant d’activer le contrôle.
 4. Suis [Mon ingé son](docs/TUTO_MON_INGE_SON.md), puis vérifie le résultat à l’oreille.
-5. Pour répéter, installe le pont **REAPER 1.2.2**, sauvegarde tes projets et redémarre REAPER.
+5. Pour répéter, installe le pont **REAPER fourni avec ta version**, sauvegarde tes projets et redémarre REAPER.
 
 La simulation de console ne simule pas REAPER : REC capture ses véritables entrées audio. Les installateurs peuvent ne pas être signés/notariés.
 
@@ -61,9 +61,11 @@ La simulation de console ne simule pas REAPER : REC capture ses véritables entr
 
 ## Développement
 
+Sur **DEV 2.3.0-dev.1**, l’[Atelier du son et les conseils mesurés](docs/ATELIER_DU_SON.md) ajoutent le travail sur un extrait REAPER, la comparaison A/B et la restauration des sources. Pont REAPER **1.3.0** requis ; validation acoustique encore nécessaire avant une version stable.
+
 Node.js 20+ (CI et installateurs : Node 22). `npm ci`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test`, `npm run test:web` et `npm run build:all`. Installateurs : `npm run desktop:package`.
 
-137 tests backend et 4 tests de régression React couvrent notamment OSC, scènes, FX, comptes, retours, REAPER, Lua et profils de console. Ils ne remplacent pas une validation acoustique et un concert complet sur chaque matériel. La publication attend les contrôles des quatre plateformes de construction et conserve les sommes SHA-256.
+155 tests backend et 10 tests de régression React couvrent notamment OSC, scènes, FX, comptes, retours, REAPER, Lua et profils de console. Ils ne remplacent pas une validation acoustique et un concert complet sur chaque matériel. La publication attend les contrôles des quatre plateformes de construction et conserve les sommes SHA-256.
 
 Les anciens identifiants `xr18-studio`, le dépôt, les clés de données et les chemins REAPER restent pour préserver la compatibilité. Projet indépendant, non affilié à Behringer, Midas ou Music Tribe ; marques de leurs propriétaires. Licence [MIT](LICENSE).
 

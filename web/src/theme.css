@@ -1,13 +1,5 @@
-/* XR18 Studio — thème « sombre pro ». Chargé en dernier : unifie toutes les pages. */
-:root{
-  --bg:#0b0d10; --surface:#12151a; --surface-2:#181c22; --surface-3:#20252d; --line:#262c35; --line-2:#323a45;
-  --text:#e8ecf1; --text-2:#8f9aa8; --text-3:#5f6976;
-  --accent:#3ee0e0; --accent-2:#1fb8c4; --accent-soft:#3ee0e01a;
-  --ok:#34d399; --ok-soft:#34d3991a; --warn:#f5b83d; --warn-soft:#f5b83d1a; --danger:#f0524f; --danger-soft:#f0524f1f;
-  --radius:10px; --radius-lg:16px; --shadow:0 10px 30px #0006;
-  --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  color-scheme:dark;
-}
+/* Base layout and shell. Shared palette: design-system.css. */
+
 html,body{background:var(--bg)}
 body{font-family:var(--font);-webkit-font-smoothing:antialiased}
 

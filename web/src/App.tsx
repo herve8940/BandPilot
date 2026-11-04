@@ -2,9 +2,10 @@ import {MixerModelContext} from './MixerModel';
 import {DEFAULT_MIXER,type MixerProfile} from '../../shared/mixer-models';
 import {X32Console} from './X32Console';
 import {SoundCoach,PlanDialog,type Plan} from "./SoundCoach";
-import {EarsSharePanel} from "./EarsSharePanel";
+import {ReturnsPage} from "./ReturnsPage";
 import {ConsolePanel} from "./ConsolePanel";
 import {ExpertStudio} from "./expert/ExpertStudio";
+import {WorkshopNotice} from './show/Workshop';
 import {Rehearse} from "./show/Rehearse";
 import {Concert} from "./show/Concert";
 import {SimpleMixer} from "./SimpleMixer";
@@ -26,6 +27,7 @@ import "./recording-v3.css";
 import "./show/rehearsal-responsive.css";
 import "./expert/desk.css";
 import "./visual-console.css";
+import "./design-system.css";
 
 type Channel = { channel: number; fader: number; on: boolean; updatedAt: string | null };
 type Status = { profile?:MixerProfile;model?:string;port?:number;mode: "simulation" | "real"; connected: boolean; writesEnabled: boolean; host?:string };
@@ -51,20 +53,20 @@ const MENU: { page: Page; name: string; icon: typeof AudioLines }[] = [
 ];
 type Space = "play" | "rehearse" | "show" | "prep" | "setup";
 const SPACES: { id: Space; name: string; hint: string; icon: typeof AudioLines; pages: Page[] }[] = [
-  { id:"play", name:"Jouer", hint:"Console, retours et coach", icon:SlidersHorizontal, pages:["console","ears","coach"] },
+  { id:"prep", name:"Préparer", hint:"Morceaux, setlists et scènes", icon:ListMusic, pages:["setlists","rehearsals","scenes"] },
+  { id:"play", name:"Régler le son", hint:"Coach, console et retours", icon:SlidersHorizontal, pages:["coach","console","ears"] },
   { id:"rehearse", name:"Répéter", hint:"Enregistrer et réécouter", icon:Music2, pages:["rehearse"] },
   { id:"show", name:"Concert", hint:"Dérouler le set", icon:ListMusic, pages:["concert"] },
-  { id:"prep", name:"Préparer", hint:"Setlists, répétitions, scènes", icon:ListMusic, pages:["setlists","rehearsals","scenes"] },
   { id:"setup", name:"Réglages", hint:"Connexion et système", icon:Settings2, pages:["settings"] },
 ];
 const PAGE_INFO: Record<Page, { name: string; hint: string; icon: typeof AudioLines }> = {
   console: { name:"Console", hint:"Volumes, mutes et réglages de chaque source", icon:SlidersHorizontal },
   rehearse: { name:"Répéter", hint:"Avec tes morceaux ReaCue ou le groupe seul", icon:Music2 },
   concert: { name:"Concert", hint:"Écran de scène : peu de boutons, gros affichage", icon:ListMusic },
-  ears: { name:"Retours", hint:"Chaque musicien règle son retour sur son téléphone (QR code)", icon:Headphones },
+  ears: { name:"Retours", hint:"Choisir un musicien · mixer · traiter · partager", icon:Headphones },
   coach: { name:"Mon ingé son", hint:"Préparer, écouter et corriger pas à pas", icon:Zap },
   setlists: { name:"Setlists", hint:"Répertoire et ordre de passage", icon:ListMusic },
-  rehearsals: { name:"Répétitions", hint:"Objectifs et notes de répétition", icon:BookOpen },
+  rehearsals: { name:"Notes de répète", hint:"Objectifs et notes de répétition", icon:BookOpen },
   scenes: { name:"Scènes", hint:"Sauvegarder et rappeler les réglages", icon:Disc3 },
   settings: { name:"Connexion & système", hint:"Trouver la console, comptes et sécurité", icon:Wrench },
 };
@@ -91,7 +93,8 @@ export default function App() {
   const [channels, setChannels] = useState<Channel[]>(INITIAL);
   const [mainState,setMainState]=useState<Channel>({channel:0,fader:.5,on:true,updatedAt:null});
   const [status, setStatus] = useState<Status>({ mode:"simulation", connected:false, writesEnabled:false });
-  useEffect(()=>{if(status.mode==='real'&&status.connected)setPage('settings');},[status.mode,status.connected]);
+  const initialConnectionShown=useRef(false);
+  useEffect(()=>{if(status.mode==='real'&&status.connected&&!initialConnectionShown.current){initialConnectionShown.current=true;setPage('settings');}},[status.mode,status.connected]);
   const [socketOk, setSocketOk] = useState(false);
   const [lastOscUpdate,setLastOscUpdate]=useState<string|null>(null);
   const [meterState,setMeterState]=useState<{channels:number[];updatedAt:string|null;available:boolean}>({channels:[],updatedAt:null,available:false});
@@ -336,8 +339,8 @@ export default function App() {
     <aside className="rail" aria-label="Navigation principale">
       <div className="rail-logo"><span className="logo-mark"><AudioLines size={20}/></span><div><b>Band<em>Pilot</em></b><small>Ton ingé son de poche</small></div></div>
       <nav className="rail-nav">{SPACES.map(sp=><div key={sp.id} className={space===sp.id?"rail-space active":"rail-space"}>
-        <button type="button" className="rail-space-btn" aria-label={`${sp.name} ${sp.hint}`} title={sp.name} onClick={()=>setPage(sp.pages[0]!)} aria-current={space===sp.id?"true":undefined}><sp.icon size={20}/><span><b>{sp.name}</b><small>{sp.hint}</small></span></button>
-        {space===sp.id&&sp.pages.length>1&&<div className="rail-pages">{sp.pages.map(pg=>{const P=PAGE_INFO[pg];return <button key={pg} type="button" className={page===pg?"active":""} onClick={()=>setPage(pg)}><P.icon size={16}/>{P.name}</button>;})}</div>}
+        <button type="button" className="rail-space-btn" aria-label={`${sp.name} ${sp.hint}`} title={sp.name} onClick={()=>setPage(sp.pages[0]!)} aria-current={space===sp.id?"true":undefined}><sp.icon size={20}/><span className="rail-short-label" aria-hidden="true">{sp.id==="play"?"Son":sp.name}</span><span><b>{sp.name}</b><small>{sp.hint}</small></span></button>
+
       </div>)}</nav>
       <div className="rail-foot">
         <button type="button" className="rail-toggle" onClick={toggleRail} title={railCompact ? "Agrandir le menu" : "Réduire le menu pour gagner de la place"} aria-label={railCompact ? "Agrandir le menu" : "Réduire le menu"}>{railCompact ? <PanelLeftOpen size={18}/> : <><PanelLeftClose size={18}/><span>Réduire le menu</span></>}</button>
@@ -363,9 +366,10 @@ export default function App() {
         </div>
         {SPACES.find(sp=>sp.id===space)!.pages.length>1&&<nav className="subnav" aria-label="Pages">{SPACES.find(sp=>sp.id===space)!.pages.map(pg=><button key={pg} type="button" className={page===pg?"active":""} onClick={()=>setPage(pg)}>{PAGE_INFO[pg].name}</button>)}</nav>}
       </header>
+      <WorkshopNotice onOpen={()=>{sessionStorage.setItem("bandpilot-workshop-view","true");setPage("rehearse");}}/>
       {blankPlan && <PlanDialog plan={blankPlan} busy={blankBusy} canApply={canWrite} mode={isSim ? "simulation" : "real"} onClose={() => setBlankPlan(null)} onApply={() => void applyBlank()}/>}
       {notice && <div className="studio-alert" role="alert"><CircleAlert size={16}/><span>{notice}</span><button onClick={()=>setNotice("")}>Fermer</button></div>}
-      {unsupportedX32 ? <section className="model-blocked"><h2>{model.label} · adaptation en cours</h2><p>Le mélangeur 32 canaux, 16 bus, 8 DCA et 6 matrices est disponible. Les fonctions guidées, scènes complètes et retours sur téléphone nécessitent encore leur adaptateur X32.</p><button onClick={()=>setPage("console")}>Ouvrir le mélangeur {model.label}</button></section> : page==="console"&&model.family==="x32" ? <div className="studio-work"><X32Console canWrite={canWrite}/></div> : page==="rehearse" ? <Rehearse/> : page==="concert" ? <Concert/> : page==="coach" ? <SoundCoach status={status} online={socketOk} meters={meterState} onConnect={()=>setPage("settings")} onMonitors={()=>setPage("ears")} onExpert={(ch,view)=>{if(ch)setSelected(ch);try{localStorage.setItem("xr18-expert-view",view??"channel");}catch{}setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="console" ? consoleMode==="simple" ? <div className="content"><SimpleMixer simulation={isSim} canWrite={canWrite} onExpert={ch=>{if(ch)setSelected(ch);setExpertTab(ch?"eq":"mixer");setTab("mixer");setConsoleMode("expert");}}/></div> : <>
+      {unsupportedX32 ? <section className="model-blocked"><h2>{model.label} · adaptation en cours</h2><p>Le mélangeur 32 canaux, 16 bus, 8 DCA et 6 matrices est disponible. Les fonctions guidées, scènes complètes et retours sur téléphone nécessitent encore leur adaptateur X32.</p><button onClick={()=>setPage("console")}>Ouvrir le mélangeur {model.label}</button></section> : page==="console"&&model.family==="x32" ? <div className="studio-work"><X32Console canWrite={canWrite}/></div> : page==="rehearse" ? <Rehearse onExpert={ch=>{setSelected(ch);localStorage.setItem("xr18-expert-view","channel");setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="concert" ? <Concert/> : page==="coach" ? <SoundCoach onWorkshop={()=>{sessionStorage.setItem("bandpilot-workshop-view","true");setPage("rehearse");}} status={status} online={socketOk} meters={meterState} onConnect={()=>setPage("settings")} onMonitors={()=>setPage("ears")} onExpert={(ch,view)=>{if(ch)setSelected(ch);try{localStorage.setItem("xr18-expert-view",view??"channel");}catch{}setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="console" ? consoleMode==="simple" ? <div className="content"><SimpleMixer simulation={isSim} canWrite={canWrite} onExpert={ch=>{if(ch)setSelected(ch);setExpertTab(ch?"eq":"mixer");setTab("mixer");setConsoleMode("expert");}}/></div> : <>
 
         <div className="studio-work">
           {model.usbChannels===0&&<p className="model-note">{model.label} : {model.channels} entrées, {model.micPreamps} préamplis micro et {model.monitorOutputs} sorties Aux physiques. Enregistrement USB stéréo sur clé ; pas d’interface USB multipiste vers l’ordinateur.</p>}
@@ -376,8 +380,8 @@ export default function App() {
           </section>}
         </div>
       </> : <div className="studio-work other-page content">
-        
-        {page==="ears" && <><section className="studio-panel pad"><h2>Régie des retours</h2><p>Règle le mix, l’égaliseur et le compresseur de chaque musicien depuis la console.</p><button type="button" className="btn primary" onClick={()=>{try{localStorage.setItem("xr18-expert-view","ears");}catch{}setTab("mixer");setConsoleMode("expert");setPage("console");}}>Ouvrir la régie des retours</button></section><EarsSharePanel/></>}
+
+        {page==="ears" && <ReturnsPage canWrite={canWrite}/>}
         {page==="rehearsals" && <section className="studio-panel pad"><div className="panel-title"><div><b>Préparation de répétition</b><small role="status">{draftStatus}</small></div><BookOpen size={18}/></div><label className="field">Objectifs et notes<textarea rows={9} value={store.notes} onChange={e=>setStore(s=>({...s,notes:e.target.value}))} placeholder="Ex. travailler le refrain de Plug In Baby, préparer le mix sans chanteur..."/></label><div className="rehearsal-form"><input placeholder="Nom de la répétition" value={rehearsalTitle} onChange={e=>setRehearsalTitle(e.target.value)}/><input aria-label="Date et heure" type="datetime-local" value={rehearsalDate} onChange={e=>setRehearsalDate(e.target.value)}/><button onClick={()=>void saveRehearsal()}><Save size={15}/> Enregistrer</button></div><div className="song-list">{rehearsals.map(r=><div key={r.id}><div><b>{r.title}</b><small>{new Date(r.startsAt).toLocaleString("fr-BE")} · {r.notes.slice(0,100)}</small></div></div>)}</div><span className="disclaimer">Les répétitions sont enregistrées sur cet ordinateur. Le brouillon de notes et la setlist active sont conservés même si le port de l’application change.</span></section>}
         {page==="setlists" && <div className="two-panels"><section className="studio-panel pad"><div className="panel-title"><div><b>Répertoire</b><small>{store.songs.length} morceaux</small></div><Music2 size={18}/></div><div className="song-form"><input placeholder="Titre du morceau" value={songTitle} onChange={e=>setSongTitle(e.target.value)}/><input placeholder="Artiste" value={songArtist} onChange={e=>setSongArtist(e.target.value)}/><input type="number" min="20" max="300" value={songBpm} onChange={e=>setSongBpm(Number(e.target.value))}/><button disabled={!songTitle.trim()} title={!songTitle.trim()?"Renseigne le titre du morceau":undefined} onClick={addSong}><Plus size={16}/> Ajouter</button></div><div className="song-list">{store.songs.map(song=><div key={song.id}><div><b>{song.title}</b><small>{song.artist} · {song.bpm} BPM</small></div><button onClick={()=>setStore(s=>({...s,setlist:[...s.setlist,song.id]}))}>+ Setlist</button><button title="Supprimer" onClick={()=>void deleteSong(song.id)}><Trash2 size={15}/></button></div>)}</div></section><section className="studio-panel pad"><div className="panel-title"><div><b>Setlist active</b><small>{setlist.length} morceaux</small></div><ListMusic size={18}/></div><div className="song-list">{setlist.map((song,i)=><div key={i}><span className="song-order">{i+1}</span><div><b>{song.title}</b><small>{song.artist}</small></div><button onClick={()=>setStore(s=>({...s,setlist:s.setlist.filter((_,j)=>j!==i)}))}><Trash2 size={15}/></button></div>)}{setlist.length===0&&<p>Ajoute des morceaux depuis le répertoire.</p>}</div><div className="rehearsal-form"><input placeholder="Nom de la setlist" value={setlistName} onChange={e=>setSetlistName(e.target.value)}/><button onClick={()=>void saveSetlist()}><Save size={15}/> Sauvegarder</button></div><div className="song-list">{savedSetlists.map(s=><div key={s.id}><div><b>{s.name}</b><small>{s.songIds.length} morceaux</small></div><button onClick={()=>setStore(old=>({...old,setlist:s.songIds}))}>Charger</button><button title="Supprimer" onClick={async()=>{if(!window.confirm("Supprimer la setlist enregistrée ?"))return;try{await api("/api/setlists/"+s.id,"DELETE");await refreshLibrary();}catch(e){setNotice((e as Error).message);}}}><Trash2 size={15}/></button></div>)}</div></section></div>}
         {page==="scenes" && <ScenesPage mode={isSim ? "simulation" : "real"} canWrite={canWrite}/>}
@@ -387,7 +391,7 @@ export default function App() {
       </div>}
 
     </div>
-    <nav className="bottombar" aria-label="Espaces">{SPACES.map(sp=><button key={sp.id} type="button" className={space===sp.id?"active":""} onClick={()=>setPage(sp.pages[0]!)}><sp.icon size={22}/><span>{sp.name}</span></button>)}</nav>
+    <nav className="bottombar" aria-label="Espaces">{SPACES.map(sp=><button key={sp.id} type="button" className={space===sp.id?"active":""} aria-label={sp.name} onClick={()=>setPage(sp.pages[0]!)}><sp.icon size={22}/><span>{sp.id==="play"?"Son":sp.name}</span></button>)}</nav>
   </div></MixerModelContext.Provider>;
 }
 

@@ -7,6 +7,7 @@ export class LibraryStore {
  list(kind:string):Entry[]{return (this.db.prepare('SELECT id,kind,name,data,created_at AS createdAt FROM studio_library WHERE kind=? ORDER BY created_at DESC,rowid DESC').all(kind) as (Omit<Entry,'data'>&{data:string})[]).map(e=>({...e,data:JSON.parse(e.data)}));}
  get(id:string){const row=this.db.prepare('SELECT id,kind,name,data,created_at AS createdAt FROM studio_library WHERE id=?').get(id) as (Omit<Entry,'data'>&{data:string})|undefined;if(!row)throw Error('Élément introuvable');return {...row,data:JSON.parse(row.data)} as Entry;}
  save(kind:string,name:unknown,data:unknown){if(typeof name!=='string'||!name.trim()||name.length>120)throw Error('Nom requis (120 caractères maximum)');const entry:Entry={id:randomUUID(),kind,name:name.trim(),data,createdAt:new Date().toISOString()};this.db.prepare('INSERT INTO studio_library VALUES(?,?,?,?,?)').run(entry.id,kind,entry.name,JSON.stringify(data),entry.createdAt);return entry;}
+ update(id:string,data:unknown){if(!this.db.prepare('UPDATE studio_library SET data=? WHERE id=?').run(JSON.stringify(data),id).changes)throw Error('Élément introuvable');}
  delete(id:string){return this.db.prepare('DELETE FROM studio_library WHERE id=?').run(id).changes>0;}
  close(){this.db.close();}
 }

@@ -1,7 +1,7 @@
 {
   "name": "xr18-studio-web",
   "private": true,
-  "version": "2.2.2",
+  "version": "2.3.0-dev.1",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",

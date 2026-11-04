@@ -1,10 +1,11 @@
-import {useEffect, useState, type ReactNode} from 'react';
+import {useEffect, useState} from 'react';
 import {useAirStrips} from '../xair/model-strips';
 import {Fader, Meter, num, pad, type Values, type SetFn} from '../xair/controls';
 import {faderToDb, formatDb, stripColor} from '../xairMath';
 import {stripName, type Strip} from '../xair/strips';
 import {CompView, EqView, type ViewProps} from '../xair/views';
 import './workspace.css';
+import {VisualCompressor} from './DynamicsControls';
 
 type Layout={hidden:string[];outputs:boolean;density:'compact'|'comfortable'};
 const defaults:Layout={hidden:[],outputs:true,density:'compact'};
@@ -41,7 +42,7 @@ export function SignalPath({source,bus,values}:{source:Strip;bus?:Strip;values:V
 }
 
 type Musician={name:string;bus:number;channels:number[]};
-export function MonitorDesk({values,set,writable,confirmed,reduction}:{values:Values;set:SetFn;writable:boolean;confirmed:ViewProps['confirmed'];reduction:(bus:Strip)=>ReactNode}){
+export function MonitorDesk({values,set,writable,confirmed}:{values:Values;set:SetFn;writable:boolean;confirmed:ViewProps['confirmed']}){
  const {BUSES,INPUTS,model}=useAirStrips();
  const buses=BUSES.slice(0,model.monitorOutputs);
  const [selected,setSelected]=useState(1),[musicians,setMusicians]=useState<Musician[]>([]),[page,setPage]=useState<'mix'|'eq'|'comp'>('mix');
@@ -53,14 +54,14 @@ export function MonitorDesk({values,set,writable,confirmed,reduction}:{values:Va
  const title=(n:number)=>musicians.find(m=>m.bus===n)?.name||stripName(BUSES[n-1]!,values);
  const props:ViewProps={strip:bus,values,set,canWrite:writable,confirmed,open:()=>undefined};
  return <section className="monitor-desk" aria-label="Régie des retours">
-  <header><div><small>RÉGIE DES RETOURS</small><h2>Les ears du groupe</h2><p>Choisis un musicien : ses envois et les traitements de son bus sont réunis ici.</p></div><span className="desk-readonly">{writable?'Contrôle actif':'Lecture seule'}</span></header>
+  <header><div><small>RÉGIE DES RETOURS</small><h2>Les retours du groupe</h2><p>Choisis un musicien : ses envois et les traitements de son bus sont réunis ici.</p></div><span className="desk-readonly">{writable?'Contrôle actif':'Lecture seule'}</span></header>
   {profileError&&<p role="status">Les noms du coach sont indisponibles. Les noms et réglages des bus restent accessibles.</p>}
   <div className="monitor-people" role="group" aria-label="Choisir le retour">{buses.map((b,i)=><button type="button" key={b.id} aria-pressed={number===i+1} onClick={()=>setSelected(i+1)}><b>{title(i+1)}</b><small>Aux {i+1} · EQ {values[`${b.prefix}/eq/on`]===1?'ON':'OFF / ?'} · Comp {values[`${b.prefix}/dyn/on`]===1?'ON':'OFF / ?'}</small><Meter indexes={b.meters}/></button>)}</div>
   <div className="monitor-target"><div><h3>Retour de {title(number)}</h3><span>Bus {number} · sortie à vérifier dans Routage · {formatDb(faderToDb(num(values,`${bus.prefix}/mix/fader`)))} dB</span></div><label>Volume de ce retour<input type="range" min="0" max="1" step=".005" aria-label={`Volume du retour ${title(number)}`} disabled={!writable} value={num(values,`${bus.prefix}/mix/fader`)} onChange={e=>set(`${bus.prefix}/mix/fader`,Number(e.target.value))}/></label><button type="button" disabled={!writable} aria-pressed={num(values,`${bus.prefix}/mix/on`,1)===0} onClick={()=>set(`${bus.prefix}/mix/on`,num(values,`${bus.prefix}/mix/on`,1)?0:1)}>Couper ce retour</button></div>
   <nav className="monitor-tabs" aria-label="Réglages du retour">{([['mix','Mix personnel'],['eq','Égaliseur du retour'],['comp','Compression du retour']] as const).map(([id,label])=><button type="button" key={id} aria-pressed={page===id} onClick={()=>setPage(id)}>{label}</button>)}</nav>
   {page==='mix'&&<><p>Les faders ci-dessous règlent uniquement les envois vers <strong>{title(number)}</strong>. Les traitements des pistes restent accessibles dans Canal.</p><div className="monitor-sends">{INPUTS.map(s=>{const address=`${s.prefix}/mix/${pad(number)}/level`,own=s.kind==='ch'&&musician?.channels.includes(Number(s.short));return <div className={`monitor-source${own?' own':''}`} key={s.id}><b>{stripName(s,values)}</b><small>{own?'Son instrument':s.kind==='fxrtn'?'Retour d’effet':s.kind==='aux'?'Entrée auxiliaire':'Instrument / micro'}</small><Fader label={`${stripName(s,values)} vers ${title(number)}`} value={num(values,address)} disabled={!writable} onChange={v=>set(address,v)}/><output>{formatDb(faderToDb(num(values,address)))} dB</output></div>;})}</div></>}
   {page==='eq'&&<><p>Cette égalisation agit sur tout le mix de {title(number)}. Elle ne modifie pas les EQ des instruments ni ceux des autres bus.</p><div className="xm monitor-processing"><EqView key={bus.id} {...props}/></div></>}
-  {page==='comp'&&<><p>Cette compression agit sur tout ce retour. Une forte réduction peut faire reculer la voix à chaque coup de grosse caisse.</p><div className="xm monitor-processing"><CompView key={bus.id} {...props}/></div>{reduction(bus)}</>}
+  {page==='comp'&&<><p>Cette compression agit sur tout ce retour. Une forte réduction peut faire reculer la voix à chaque coup de grosse caisse.</p><div className="xm monitor-processing"><VisualCompressor key={bus.id} {...props}/></div></>}
   <details className="monitor-route"><summary>Comprendre le trajet vers ce retour</summary>{INPUTS.filter(s=>s.kind==='ch').map(s=><SignalPath key={s.id} source={s} bus={bus} values={values}/>)}</details>
  </section>;
 }
