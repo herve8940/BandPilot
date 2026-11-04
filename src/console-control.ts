@@ -55,8 +55,10 @@ export class ConsoleControl {
   try{const {failed}=await this.xr.applyParameters(p.values,allowPhantom,tolerant);return {ok:failed.length===0,backupId:backup.id,readbackCompared:this.xr.mode==='real',written:Object.keys(p.values).length-failed.length,failed};}
   catch(e){throw Error(`Modification potentiellement partielle ; sauvegarde ${backup.id} : ${(e as Error).message}`);}
  }
- async recall(input:unknown,allowPhantom=false){
+ async recall(input:unknown,allowPhantom=false,excludePhantom=false){
   const desired=this.validateScene(input);
+  // By default a full recall leaves phantom power untouched, including in simulation.
+  if(excludePhantom)for(const a of Object.keys(desired.values))if(a.endsWith("/phantom"))delete desired.values[a];
   if(Object.keys(desired.values).some(a=>a.endsWith('/phantom'))&&!allowPhantom)throw Error('Confirmation 48 V requise');
   const operation=this.xr.operationId();
   const backup=this.library.save('scene','Sauvegarde complète avant rappel',await this.capture());

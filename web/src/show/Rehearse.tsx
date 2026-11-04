@@ -23,10 +23,11 @@ export function Rehearse() {
   const mixerModel=useMixerModel();
   const { show, link, error, setError, act } = useShow();
   const [mode, setMode] = useState<"songs" | "band">(() => { try { return localStorage.getItem("xr18-rehearse") === "band" ? "band" : "songs"; } catch { return "songs"; } });
-  const [picked, setPicked] = useState(0), [plan, setPlan] = useState<Plan | null>(null), [original, setOriginal] = useState(false), [present, setPresent] = useState<string[] | null>(null);
+  const [picked, setPicked] = useState(0), [plan, setPlan] = useState<Plan | null>(null);
+  const present=show.presence, original=show.original===true;
+  useEffect(()=>{setPicked(0);},[show.project]);
   const go = (m: "songs" | "band") => { setMode(m); try { localStorage.setItem("xr18-rehearse", m); } catch { /* convenience */ } };
   useEffect(() => { void call<Plan>("/api/reaper/plan").then(setPlan).catch(e => setError(e.message)); }, []);
-  useEffect(() => { if (present === null && show.presence.length) setPresent(show.presence); }, [show.presence]);
   const songs = useMemo(() => show.songs?.length ? show.songs : show.length ? [{ title: "Projet ouvert", start: 0, countin: 0, stop: show.length }] : [], [show.songs, show.length]);
   const cursor = position(show, link), recording = !!link?.recording, busy = recording || link?.state === "starting";
   const playingSong = link?.playing && songs.length ? songAt(songs, cursor) : -1;
@@ -36,12 +37,14 @@ export function Rehearse() {
   const rec = (show.tracks ?? []).filter(t => t.rec && t.items.length);
   const firstRec = mode === "band" ? (show.tracks ?? []).find(t => t.armed && t.items.length) : rec[0];
   const items = firstRec?.items.filter(i => i.pos < range.stop && i.pos + i.length > range.start) ?? [];
-  const takes = mode === "songs" ? Math.max(0, ...items.map(i => i.takes.length)) : items.length;
-  const activeTake = mode === "songs" ? items[0]?.takes.findIndex(t => t.active) ?? -1 : -1;
+  const allRecItems=(show.tracks??[]).filter(t=>t.rec||t.armed).flatMap(t=>t.items).filter(i=>i.pos<range.stop&&i.pos+i.length>range.start);
+  const takeIndices=mode==="songs"?[...new Set(allRecItems.flatMap(i=>i.takes.filter(t=>t.valid!==false).map(t=>t.index)))].sort((a,b)=>a-b):items.map((_,i)=>i);
+  const takes=takeIndices.length;
+  const activeTake = mode === "songs" ? items[0]?.takes.find(t => t.active)?.index ?? -1 : -1;
   const pick = (i: number) => { setPicked(i); const s = songs[i]; if (s && !busy) void act("/api/show/goto", { pos: s.start }); };
   const onTrack = (t: ShowTrack, solo: boolean) => void act("/api/show/track", { name: t.name, solo, on: solo ? !t.solo : !t.mute });
-  const toggle = (id: string) => { const list = present ?? []; const next = list.includes(id) ? list.filter(x => x !== id) : [...list, id]; setPresent(next); void act("/api/show/presence", { present: next }); };
-  const useTake = (i: number) => { setOriginal(false); if (mode === "band") { const it = items[i]; if (it) void act("/api/show/goto", { pos: it.pos }); } else void act("/api/show/take", { take: i, start: range.start, stop: range.stop }); };
+  const toggle = (id: string) => { const list = present ?? []; const next = list.includes(id) ? list.filter(x => x !== id) : [...list, id]; void act("/api/show/presence", { present: next, project:show.project }); };
+  const useTake = (i: number) => { if (mode === "band") { const it = items[i]; if (it) void act("/api/show/goto", { pos: it.pos }); } else void act("/api/show/take", { project:show.project, take: i, start: range.start, stop: range.stop }); };
   const startRec = () => { if (mode === "songs" && song) void act("/api/show/rec", { start: song.countin ?? song.start, stop: song.stop }); else void act("/api/reaper/rec"); };
   const armed = (show.tracks ?? []).filter(t => t.armed).length, canRec = armed > 0;
   const issues = [...setupIssues(show, plan?.sampleRate,mixerModel.usbChannels,mixerModel.label), ...(plan?.warnings ?? [])];
@@ -70,11 +73,11 @@ export function Rehearse() {
         {needsBridge(show) ? <BridgeInstall act={act} show={show} /> : (mode === "songs" || firstRec) && <div className={`sh-grid ${mode === "band" ? "band" : ""}`}>
       {mode === "songs" && <aside className="xs2-card sh-songs" aria-label="Morceaux"><h3>{show.concert || "Morceaux"}</h3><div className="sh-song-list">{songs.length ? songs.map((s, i) => <button key={s.start} type="button" className={`sh-song ${s === song ? "on" : ""}`} disabled={busy} onClick={() => pick(i)}><b>{s.title}</b><small>{clock(s.stop - s.start)}</small></button>) : <p className="muted">Ouvre un projet ReaCue dans Reaper.</p>}</div></aside>}
       <main className="xs2-card sh-main"><Player show={show} band={mode === "band"} cursor={cursor} range={range} disabled={busy} onSeek={t => void act("/api/show/goto", { pos: t })} onTrack={onTrack} />
-        <div className="sh-tools">{mode === "songs" && section && <button type="button" className={`xs2-btn ${loop ? "primary" : ""}`} onClick={() => void act("/api/show/loop", { on: !loop, start: section.start, stop: section.stop })}>{loop ? "Arrêter la boucle" : "Boucler cette section"}</button>}</div></main>
+        <div className="sh-tools">{mode === "songs" && loop && !section && <button type="button" className="xs2-btn primary" disabled={busy} onClick={()=>void act("/api/show/loop",{on:false,project:show.project})}>Arrêter la boucle</button>}{mode === "songs" && section && <button type="button" className={`xs2-btn ${loop ? "primary" : ""}`} disabled={busy} onClick={() => void act("/api/show/loop", { project:show.project, on: !loop, start: section.start, stop: section.stop })}>{loop ? "Arrêter la boucle" : "Boucler cette section"}</button>}</div></main>
       <aside className="sh-side">
-        {mode === "songs" && <div className="xs2-card"><h3>Qui est là aujourd’hui ?</h3><p className="muted">Un absent : sa piste ReaCue le remplace.</p>{plan?.tracks.filter(t => t.selected).map(t => <label key={t.id} className="sh-check"><input type="checkbox" disabled={busy} checked={(present ?? []).includes(t.id)} onChange={() => toggle(t.id)} /><span>{t.name}<small>{(present ?? []).includes(t.id) ? "Enregistré" : "Absent"}</small></span></label>)}</div>}
-        <div className="xs2-card"><h3>Prises</h3>{takes ? Array.from({ length: takes }, (_, i) => <button key={i} type="button" className={`sh-song ${i === activeTake && !original ? "on" : ""}`} disabled={busy} onClick={() => useTake(i)}><b>Prise {i + 1}</b>{mode === "band" && items[i] && <small>{clock(items[i]!.length)}</small>}</button>) : <p className="muted">Pas encore de prise.</p>}
-          {mode === "songs" && takes > 0 && <button type="button" className={`sh-song ${original ? "on" : ""}`} disabled={busy} onClick={() => { const on = !original; setOriginal(on); void act("/api/show/original", { on }); }}><b>Original ReaCue</b></button>}</div>
+        {mode === "songs" && <div className="xs2-card"><h3>Qui est là aujourd’hui ?</h3><p className="muted">Les cases reflètent les pistes REC armées du projet ouvert. Cocher prépare l’enregistrement et coupe la piste ReaCue correspondante.</p>{plan?.tracks.filter(t => t.selected).map(t => <label key={t.id} className="sh-check"><input type="checkbox" disabled={busy} checked={(present ?? []).includes(t.id)} onChange={() => toggle(t.id)} /><span>{t.name}<small>{(present ?? []).includes(t.id) ? "Prêt à enregistrer" : "Absent"}</small></span></label>)}</div>}
+        <div className="xs2-card"><h3>Prises</h3>{takes ? takeIndices.map(i => <button key={i} type="button" className={`sh-song ${i === activeTake && !original ? "on" : ""}`} disabled={busy} onClick={() => useTake(i)}><b>Prise {i + 1}</b>{mode === "band" && items[i] && <small>{clock(items[i]!.length)}</small>}</button>) : <p className="muted">Pas encore de prise.</p>}
+          {mode === "songs" && takes > 0 && <button type="button" className={`sh-song ${original ? "on" : ""}`} disabled={busy} onClick={() => { const on = !original; void act("/api/show/original", { on, project:show.project }); }}><b>Original ReaCue</b></button>}</div>
       </aside>
     </div>}
   </section>;

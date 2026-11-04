@@ -5,7 +5,7 @@ local SEP = package.config:sub(1, 1)
 local DIR = r.GetResourcePath() .. SEP .. "XR18Studio"
 r.RecursiveCreateDirectory(DIR, 0)
 local REQ, RES, BEAT = DIR .. SEP .. "request.lua", DIR .. SEP .. "response.json", DIR .. SEP .. "heartbeat.txt"
-local VERSION = "1.2.1"
+local VERSION = "1.2.2"
 
 local function jstr(s)
   return '"' .. tostring(s):gsub('[%z\1-\31\\"]', function(c)
@@ -77,7 +77,7 @@ local function items_of(tr)
       local t = r.GetTake(it, k)
       local file = ""
       if t and not r.TakeIsMIDI(t) then file = r.GetMediaSourceFileName(r.GetMediaItemTake_Source(t), "") end
-      takes[#takes + 1] = { index = k, name = t and r.GetTakeName(t) or "", file = file, active = t == active }
+      takes[#takes + 1] = { index = k, name = t and r.GetTakeName(t) or "", file = file, valid = t ~= nil and r.ValidatePtr2(0, t, "MediaItem_Take*"), active = t ~= nil and t == active }
     end
     out[#out + 1] = { pos = r.GetMediaItemInfo_Value(it, "D_POSITION"), length = r.GetMediaItemInfo_Value(it, "D_LENGTH"), takes = takes }
   end
@@ -85,6 +85,35 @@ local function items_of(tr)
 end
 
 local H = {}
+local original_mixes = {}
+local function project_id() local _, project = r.EnumProjects(-1, ""); return project end
+local function editable(a)
+  assert((r.GetPlayState() & 4) == 0, "Arrête l’enregistrement avant cette modification")
+  assert(not a.project or a.project == project_id(), "Projet changé : actualise la page")
+end
+function H.listen_original(a)
+  editable(a)
+  local project = project_id()
+  local original_mutes = original_mixes[project]
+  if a.on and not original_mutes then
+    original_mutes = {}
+    each_track(function(tr)
+      local name = track_name(tr)
+      if is_rec(name) or role_of(name) then
+        original_mutes[tr] = r.GetMediaTrackInfo_Value(tr, "B_MUTE")
+        r.SetMediaTrackInfo_Value(tr, "B_MUTE", is_rec(name) and 1 or 0)
+      end
+    end)
+  elseif not a.on and original_mutes then
+    for tr, mute in pairs(original_mutes) do
+      if r.ValidatePtr2(0, tr, "MediaTrack*") then r.SetMediaTrackInfo_Value(tr, "B_MUTE", mute) end
+    end
+    original_mutes = nil
+  end
+  r.UpdateArrange()
+  original_mixes[project] = original_mutes
+  return { on = original_mutes ~= nil }
+end
 function H.state()
   local _, project = r.EnumProjects(-1, "")
   local tracks = {}
@@ -98,7 +127,7 @@ function H.state()
   if c then for i, s in ipairs(c.songs) do songs[i] = { title = s.title or s.name or ("Morceau " .. i), start = s.start, countin = s.countin or s.start, stop = s.stop } end end
   local play = r.GetPlayState()
   local a, b = r.GetSet_LoopTimeRange(false, true, 0, 0, false)
-  return { version = VERSION, project = project, setlist = c and c.setlist or nil, concert = c and (c.name or "") or nil, songs = songs, regions = regions(), tracks = tracks,
+  return { version = VERSION, original = original_mixes[project] ~= nil, project = project, setlist = c and c.setlist or nil, concert = c and (c.name or "") or nil, songs = songs, regions = regions(), tracks = tracks,
     pos = (play & 1) == 1 and r.GetPlayPosition() or r.GetCursorPosition(), playing = (play & 1) == 1, recording = (play & 4) == 4,
     loop = { on = r.GetSetRepeat(-1) == 1, start = a, stop = b }, length = r.GetProjectLength(0),
     audio = { inputs = r.GetNumAudioInputs(), rate = tonumber(select(2, r.GetAudioDeviceInfo("SRATE", ""))) or 0, device = select(2, r.GetAudioDeviceInfo("IDENT_IN", "")) or "" } }
@@ -129,9 +158,16 @@ function H.peaks(a)
 end
 function H.goto_pos(a) r.SetEditCurPos(a.pos, true, true); return { pos = a.pos } end
 function H.set_loop(a)
-  if a.on then r.GetSet_LoopTimeRange(true, true, a.start, a.stop, false) end
+  editable(a)
+  if a.on then
+    assert(type(a.start) == "number" and type(a.stop) == "number" and a.start >= 0 and a.stop > a.start and a.stop < math.huge, "Section invalide")
+    r.GetSet_LoopTimeRange(true, true, a.start, a.stop, false)
+  end
   r.GetSetRepeat(a.on and 1 or 0)
-  return { on = a.on == true }
+  local first, last = r.GetSet_LoopTimeRange(false, true, 0, 0, false)
+  local on = r.GetSetRepeat(-1) == 1
+  assert(on == (a.on == true) and (not on or (math.abs(first-a.start) < .001 and math.abs(last-a.stop) < .001)), "Boucle non confirmée par REAPER")
+  return { on = on, start = first, stop = last }
 end
 function H.track_mute(a)
   local t = assert(find_track(a.name), "piste introuvable")
@@ -140,7 +176,11 @@ function H.track_mute(a)
 end
 -- Choisit la prise n sur toutes les pistes REC, dans la plage donnée. Possible pendant la lecture.
 function H.select_take(a)
-  local changed = 0
+  editable(a)
+  assert(type(a.take) == "number" and a.take >= 0 and a.take % 1 == 0, "Numéro de prise invalide")
+  assert(type(a.start) == "number" and type(a.stop) == "number" and a.stop > a.start, "Plage invalide")
+  local changed, skipped = 0, 0
+  local selected = {}
   each_track(function(tr)
     -- Une session « groupe seul » a des pistes armées sans préfixe REC.
     if is_rec(track_name(tr)) or r.GetMediaTrackInfo_Value(tr, "I_RECARM") == 1 then
@@ -148,13 +188,18 @@ function H.select_take(a)
         local it = r.GetTrackMediaItem(tr, i)
         local p = r.GetMediaItemInfo_Value(it, "D_POSITION")
         if p + r.GetMediaItemInfo_Value(it, "D_LENGTH") > a.start and p < a.stop and a.take < r.CountTakes(it) then
-          r.SetActiveTake(r.GetTake(it, a.take)); changed = changed + 1
+          local take = r.GetTake(it, a.take)
+          if take and r.ValidatePtr2(0, take, "MediaItem_Take*") then selected[#selected + 1] = take
+          else skipped = skipped + 1 end
         end
       end
     end
   end)
+  assert(#selected > 0, "Cette prise est vide ou absente sur les pistes de cette plage")
+  H.listen_original({on=false, project=a.project})
+  for _, take in ipairs(selected) do r.SetActiveTake(take); changed = changed + 1 end
   r.UpdateArrange()
-  return { changed = changed }
+  return { changed = changed, skipped = skipped }
 end
 -- Écoute « original » : pistes REC coupées, stems rallumés. Sinon retour à la présence du jour.
 function H.apply_mutes(a)
@@ -168,6 +213,8 @@ function H.apply_mutes(a)
 end
 -- Ajoute les pistes REC manquantes en fin de projet, sans jamais toucher aux pistes ReaCue.
 function H.apply_presence(a)
+  editable(a)
+  H.listen_original({on=false, project=a.project})
   r.Undo_BeginBlock()
   for _, t in ipairs(a.rec) do
     local tr = find_track(t.name)

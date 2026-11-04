@@ -7,12 +7,12 @@ import {dirname,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import type {Transport} from './reaper.js';
 
-export type Take={index:number;name:string;file:string;active:boolean};
+export type Take={valid?:boolean;index:number;name:string;file:string;active:boolean};
 export type Item={pos:number;length:number;takes:Take[]};
 export type ShowTrack={index:number;name:string;rec:boolean;role:string|null;mute:boolean;solo:boolean;armed:boolean;items:Item[]};
 export type Song={title:string;start:number;countin:number;stop:number};
-export const BRIDGE_VERSION='1.2.1';
-export type ShowState={version:string;project:string;setlist?:string;concert:string|null;songs:Song[];regions:{start:number;stop:number;name:string}[];tracks:ShowTrack[];pos:number;playing:boolean;recording:boolean;loop:{on:boolean;start:number;stop:number};length:number;audio?:{inputs:number;rate:number;device:string}};
+export const BRIDGE_VERSION='1.2.2';
+export type ShowState={version:string;original?:boolean;project:string;setlist?:string;concert:string|null;songs:Song[];regions:{start:number;stop:number;name:string}[];tracks:ShowTrack[];pos:number;playing:boolean;recording:boolean;loop:{on:boolean;start:number;stop:number};length:number;audio?:{inputs:number;rate:number;device:string}};
 
 export function reaperResources(env=process.env,platform=process.platform,home=homedir()){
  if(env.REAPER_RESOURCE_PATH)return env.REAPER_RESOURCE_PATH;

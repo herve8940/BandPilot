@@ -137,3 +137,5 @@ Références : [alignement sur X-AIR Edit et protocole OSC](docs/XAIR_EDIT_PARIT
 <div align="center">
 XR18 Studio est un logiciel libre sous <a href="LICENSE">licence MIT</a>, par Hervé Naessens.<br>Projet indépendant, non affilié à Behringer / Music Tribe. XR18, X18, MR18 et X-AIR sont des marques de leurs propriétaires.
 </div>
+
+Les essais manuels des 3–4 novembre et leurs corrections sont suivis dans [le bilan des corrections](docs/corrections-tests-manuels.md), avec [le rapport original](docs/tests-manuels-2026-11-04.md).

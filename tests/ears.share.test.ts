@@ -77,3 +77,24 @@ test("phone: a saved monitor profile can be deleted (and only by its own link)",
   assert.deepEqual(await (await fetch(`${base}/${mine.token}/profiles`)).json(),[]);
  }finally{await ears.stop();ears.close();xr.close();}
 });
+
+test('an already open phone updates control permissions on connection changes without reloading',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'ears-permissions-'));
+ const xr=new XR18({mode:'simulation',host:'127.0.0.1',port:10024,enableWrites:false});
+ const base=xr.status.bind(xr);let enabled=false;
+ xr.status=()=>({...base(),mode:'real',connected:true,writesEnabled:enabled});
+ const ears=new EarsShare(join(dir,'db.sqlite'),xr,()=>undefined,()=>null,()=>{});
+ let ws:WebSocket|undefined;
+ try{
+  const share=ears.create('Test',1),{port}=await ears.start(0);
+  const snapshots:{type:string;control:boolean}[]=[];
+  ws=new WebSocket(`ws://127.0.0.1:${port}/ears-ws?token=${share.token}`);
+  ws.on('message',raw=>snapshots.push(JSON.parse(String(raw))));
+  await new Promise(r=>ws!.once('open',r));await waitFor(()=>snapshots.length>0);
+  assert.equal(snapshots.at(-1)?.control,false);
+  enabled=true;xr.emit('connection');await waitFor(()=>snapshots.at(-1)?.control===true);
+  assert.equal(snapshots.at(-1)?.control,true);
+  enabled=false;xr.emit('connection');await waitFor(()=>snapshots.at(-1)?.control===false);
+  assert.equal(snapshots.at(-1)?.control,false);
+ }finally{ws?.terminate();await ears.stop();ears.close();xr.close();}
+});

@@ -67,9 +67,6 @@ const analyzer=new Analyzer(xr18,instruments);
 const bridge=new ReaperBridge();
 const reaper=new ReaperLink({transport:()=>bridge.transport(),actions:ids=>bridge.actions(ids)});
 const SONG_TAIL_S=8;
-const presencePath=join(dirname(configPath),'presence.json');
-const loadPresence=():string[]=>{try{const v=JSON.parse(readFileSync(presencePath,'utf8'));return Array.isArray(v)?v.map(String):[];}catch{return [];}};
-const savePresence=(v:string[])=>writeFileSync(presencePath,JSON.stringify(v));
 /** Reads the console fresh: a session built on stale routing would record the wrong inputs. */
 let planCache:{at:number;plan:ReturnType<typeof planSession>}|undefined;
 /** Reading the whole console takes seconds: screens reuse a recent read, a new session always reads again. */
@@ -113,6 +110,11 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/auth/logout'&&req.method==='POST'){access.logout(req);res.setHeader('Set-Cookie','xr18_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');for(const ws of wss.clients)ws.terminate();res.end(JSON.stringify({ok:true}));return;}
   const user=access.user(req);
   if(path.startsWith('/api/')&&(!user||!permitted(user,req.method??'GET',path))){res.writeHead(user?403:401);res.end(JSON.stringify({error:user?'Droits insuffisants':'Connexion requise'}));return;}
+  if(path==='/api/workspace'){
+   try{if(req.method==='GET')res.end(JSON.stringify(database.workspace()));
+   else if(req.method==='PUT')res.end(JSON.stringify(database.saveWorkspace(await body(req))));
+   else{res.writeHead(405);res.end('{}');}}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
   if(path==='/api/reacue/stop'&&req.method==='POST'){show.arm(false);access.log(user!,'Arrêt ReaCue');res.end(JSON.stringify({ok:true}));return;}
   const readOnlyCoach=['/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
     // Analysis only changes what the console's analyser looks at, never the sound: no global lock.
@@ -176,7 +178,12 @@ const handler: http.RequestListener = async (req, res) => {
   if(path.startsWith('/api/show')){
    try{
     const q=new URL(req.url??'/','http://localhost').searchParams;let result:unknown;
-    if(path==='/api/show'&&req.method==='GET'){result={alive:bridge.alive(),installed:bridge.installed(),bridgeCurrent:BRIDGE_VERSION,rehearsal:xr18.isRehearsal(),presence:loadPresence(),...(bridge.alive()?await bridge.state():{})};}
+    if(path==='/api/show'&&req.method==='GET'){
+     const state=bridge.alive()?await bridge.state():null;
+     const plan=state?(planCache?.plan??planSession({values:Object.fromEntries(Object.entries(xr18.parameterState()).map(([a,v])=>[a,v.value])),instruments:instruments(),sampleRate:48000,usbMode:'18x18',simulation:true})):null;
+     const presence=plan?.tracks.filter(t=>state?.tracks.some(r=>r.name===`REC ${t.name}`&&r.armed)).map(t=>t.id)??[];
+     result={alive:!!state,installed:bridge.installed(),bridgeCurrent:BRIDGE_VERSION,rehearsal:xr18.isRehearsal(),presence,...state};
+    }
     else if(path==='/api/show/peaks'&&req.method==='GET'){
      const track=Number(q.get('track')),item=Number(q.get('item')),take=Number(q.get('take')),buckets=Math.min(1200,Number(q.get('buckets'))||600);
      const state=await bridge.state(),file=state.tracks.find(t=>t.index===track)?.items[item]?.takes[take]?.file;
@@ -190,9 +197,9 @@ const handler: http.RequestListener = async (req, res) => {
      const d=await body(req);
      if(path==='/api/show/install'){if(d.confirm!==true)throw Error('Confirmation requise');access.log(user!,'Installation du pont Reaper');result=await bridge.install();}
      else if(path==='/api/show/goto'){if(reaper.status().recording)throw Error('Enregistrement en cours : arrête-le avant de changer de morceau.');result=await bridge.call('goto_pos',{pos:Number(d.pos)});}
-     else if(path==='/api/show/loop')result=await bridge.call('set_loop',{on:d.on===true,start:Number(d.start),stop:Number(d.stop)});
+     else if(path==='/api/show/loop')result=await bridge.call('set_loop',{project:d.project,on:d.on===true,start:Number(d.start),stop:Number(d.stop)});
      else if(path==='/api/show/take'){
-      const done=await bridge.call<{changed:number}>('select_take',{take:Number(d.take),start:Number(d.start),stop:Number(d.stop)});
+      const done=await bridge.call<{changed:number}>('select_take',{project:d.project,take:Number(d.take),start:Number(d.start),stop:Number(d.stop)});
       if(!done.changed)throw Error('Cette prise n’existe pas sur ces pistes');
       result=done;
      }
@@ -203,17 +210,14 @@ const handler: http.RequestListener = async (req, res) => {
      else if(path==='/api/show/presence'){
       const plan=await recentPlan(),present=(Array.isArray(d.present)?d.present:[]).map(String),rec=plan.tracks.filter(t=>t.selected);
       const {rec:add,unarm,roles}=presenceCommands(rec,present);
-      savePresence(present);await bridge.call('apply_presence',{rec:add,unarm,roles});
+      await bridge.call('apply_presence',{project:d.project,rec:add,unarm,roles});
       const state=await bridge.state();
       // ReaCue applies this itself when its window is open. The mutes above already cover the case where it is closed.
       if(state.setlist)await saveLiveRoles(state.setlist,Object.keys(roles).filter(r=>roles[r])).catch(e=>diagnostic('reacue-live',{error:(e as Error).message}));
       result={present};
      }
      else if(path==='/api/show/original'){
-      const state=await bridge.state(),names:Record<string,boolean>={},roles:Record<string,boolean>={};
-      for(const t of state.tracks){if(t.rec)names[t.name]=d.on===true;else if(t.role)roles[t.role]=false;}
-      if(d.on!==true){const plan=await recentPlan();Object.assign(roles,presenceCommands(plan.tracks.filter(t=>t.selected),loadPresence()).roles);}
-      result=await bridge.call('apply_mutes',{names,roles});
+      result=await bridge.call('listen_original',{on:d.on===true,project:d.project});
      }
      else if(path==='/api/show/rec'){
       if(!Number.isFinite(d.start))throw Error('Morceau requis');

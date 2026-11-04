@@ -36,7 +36,7 @@ export function RecordingView({ embedded = false }: { embedded?: boolean }) {
       <span className={`xs2-pill ${PILL[state]}`}><span className="xs2-dot" />{LABEL[state]}</span>
       {status?.recording && <b className="xs2-rec-clock">{clock(status.elapsed)}</b>}
       <div className="xs2-spacer" />
-      <button type="button" className="xs2-btn xs2-rec-btn" disabled={!!busy || state !== "ready"} onClick={() => void act("rec", "/api/reaper/rec")}>{busy === "rec" ? "Attente de Reaper…" : "● Rec"}</button>
+      <button type="button" className="xs2-btn xs2-rec-btn" disabled={!!busy || (state !== "ready" || !status?.session)} onClick={() => void act("rec", "/api/reaper/rec")}>{busy === "rec" ? "Attente de Reaper…" : "● Rec"}</button>
       <button type="button" className="xs2-btn" disabled={busy === "stop" || !["recording", "starting", "lost"].includes(state)} onClick={() => void act("stop", "/api/reaper/stop")}>{busy === "stop" ? "Arrêt…" : "■ Stop"}</button>
       <button type="button" className="xs2-btn" disabled={!status?.recording} onClick={() => void act("marker", "/api/reaper/marker")}>Marqueur{status?.markers ? ` (${status.markers})` : ""}</button>
     </div>}
@@ -62,7 +62,7 @@ export function RecordingView({ embedded = false }: { embedded?: boolean }) {
           <label className="xs2-rec-field">Dossier<input value={folder} placeholder={status?.defaultFolder ?? ""} onChange={e => setFolder(e.target.value)} /></label>
           <p className="muted">{chosen.length} piste{chosen.length > 1 ? "s" : ""} · WAV 24 bits · réglages par instrument · {plan ? plan.sampleRate / 1000 : "—"} kHz{plan?.hoursFree != null ? ` · environ ${plan.hoursFree} h d’espace disque` : ""}{alerts.length ? ` · ${alerts.length} à vérifier` : ""}</p>
           <button type="button" className="xs2-btn primary" disabled={!!busy || !chosen.length || !!status?.recording} onClick={() => void prepare()}>{busy === "session" ? "Préparation…" : "Créer et ouvrir dans Reaper"}</button>
-          <p className="muted">Une session existante n’est jamais écrasée. La console n’est pas modifiée.</p>
+          <p className="muted">Une session existante n’est jamais écrasée. La console n’est pas modifiée. Même si la console est simulée, REAPER enregistre les véritables entrées audio.</p>
         </div>
         <div className="xs2-card"><h3>Carte son</h3><p className="muted">Une seule fois dans Reaper : Préférences › Audio › Device, choisis la console.</p></div>
       </aside>

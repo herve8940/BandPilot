@@ -46,7 +46,7 @@ export function Player({ show, band = false, cursor, range, disabled, onSeek, on
   const cursorLeft = `${Math.max(0, Math.min(100, (cursor - range.start) / span * 100))}%`;
   return <div className="sh-player">
     {sections.length > 0 && <div className="sh-row sh-section-row"><span className="sh-tag">Sections</span><div className="sh-sections" role="group" aria-label="Sections du morceau">{sections.map(s => <button key={s.start} type="button" disabled={disabled} className={cursor >= s.start && cursor < s.stop ? "on" : ""} title={sectionName(s.name)} aria-pressed={cursor >= s.start && cursor < s.stop} onClick={() => onSeek(s.start)}>{sectionName(s.name)}</button>)}</div></div>}
-    {lanes.length ? lanes.map(t => <div className="sh-row" key={t.index}>
+    {lanes.length ? lanes.map(t => <div className="sh-row" key={`${show.project}:${t.index}`}>
       <div className="sh-lane"><div><b>{t.name.replace(/^REC /, "")}</b><small>{t.rec || band ? "Prise du groupe" : "Piste ReaCue"}</small></div>
         <button type="button" className={t.mute ? "warn" : ""} aria-pressed={t.mute} aria-label={`Couper ${t.name}`} onClick={() => onTrack(t, false)}>M</button>
         <button type="button" className={t.solo ? "on" : ""} aria-pressed={t.solo} aria-label={`Écouter ${t.name} seule`} onClick={() => onTrack(t, true)}>S</button></div>

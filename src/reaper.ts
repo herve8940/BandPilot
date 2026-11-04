@@ -144,11 +144,12 @@ export async function freeHours(folder:string,plan:SessionPlan){
  try{const s=await statfs(folder),rate=bytesPerSecond(plan);return rate?Math.round(Number(s.bavail)*Number(s.bsize)/rate/360)/10:null;}catch{return null;}
 }
 /** Never overwrites: an existing session keeps its takes, a new folder is made beside it. */
+export function localSessionDate(date=new Date()){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;}
 export async function createSession(plan:SessionPlan,options:{name?:unknown;folder?:unknown}={}){
  if(!plan.tracks.some(t=>t.selected))throw Error('Choisis au moins une piste à enregistrer.');
  const parent=String(options.folder??'').trim()||defaultSessionsFolder();
  if(!isAbsolute(parent))throw Error('Dossier de session invalide : indique un chemin complet.');
- const name=`${safeName(options.name)} ${new Date().toISOString().slice(0,10)}`;
+ const name=`${safeName(options.name)} ${localSessionDate()}`;
  await mkdir(parent,{recursive:true});
  for(let attempt=1;attempt<100;attempt++){
   const title=attempt===1?name:`${name} (${attempt})`,folder=join(parent,title);

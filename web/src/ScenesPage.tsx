@@ -48,8 +48,8 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
       return;
     }
     // Simulation, or a .scn file: recall through the library (48 V only with an explicit yes).
-    const p = await api<{ token: string }>(`/api/library/${e.id}/preview`, "POST", {});
-    setPending({ plan: { token: p.token, title: `Rappeler « ${e.name} »`, explanation: `Toute la console reprend ${e.kind === "native-scene" ? "ce fichier .scn" : "cette scène"}. Baisse le son de la sono avant : volumes, mutes et routages peuvent bouger.`, inputs: [], changes: [], detailsUnavailable: true },
+    const p = await api<{ token: string }>(`/api/library/${e.id}/preview`, "POST", {excludePhantom:true});
+    setPending({ plan: { token: p.token, title: `Rappeler « ${e.name} »`, explanation: `Le 48 V reste inchangé pour les scènes BandPilot. Toute la console reprend ${e.kind === "native-scene" ? "ce fichier .scn" : "cette scène"}. Baisse le son de la sono avant : volumes, mutes et routages peuvent bouger.`, inputs: [], changes: [], detailsUnavailable: true },
       apply: async () => {
         const native = e.kind === "native-scene";
         const allowPhantom = native && confirm("Ce fichier .scn contient aussi l’alimentation 48 V des micros. L’appliquer peut faire claquer la sono : vérifie que les sorties sont basses. Continuer ?");

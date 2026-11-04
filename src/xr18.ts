@@ -63,7 +63,10 @@ export class XR18 extends EventEmitter {
       const c=/^\/ch\/(\d{2})\/mix\/(fader|on)$/.exec(address);
       if(c){const state=this.channels.get(Number(c[1]))!;return c[2]==='fader'?state.fader:state.on?1:0;}
       if(address==='/lr/mix/fader')return this.main.fader;if(address==='/lr/mix/on')return this.main.on?1:0;
-      return this.parameterValues.get(address)?.value??defaultWire(p);
+      if(this.parameterValues.has(address))return this.parameterValues.get(address)!.value;
+      const source=/^\/ch\/(\d{2})\/config\/(?:insrc|rtnsrc)$/.exec(address);if(source)return Number(source[1])-1;
+      const usb=/^\/routing\/usb\/(\d{2})\/src$/.exec(address);if(usb)return Number(usb[1])-1;
+      return defaultWire(p);
     }
     const reply=await this.query(address);const value=validateWire(address,reply.args[0]);this.remember(address,value);return value;
   }

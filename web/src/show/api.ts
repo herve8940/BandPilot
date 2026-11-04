@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 
-export type Take = { index: number; name: string; file: string; active: boolean };
+export type Take = { valid?:boolean; index: number; name: string; file: string; active: boolean };
 export type Item = { pos: number; length: number; takes: Take[] };
 export type ShowTrack = { index: number; name: string; rec: boolean; role: string | null; mute: boolean; solo: boolean; armed: boolean; items: Item[] };
 export type Song = { title: string; start: number; countin: number; stop: number };
-export type Show = { alive: boolean; installed?: boolean; rehearsal?: boolean; audio?: { inputs: number; rate: number; device: string }; bridgeCurrent?: string; version?: string; presence: string[]; project?: string; concert?: string | null; songs?: Song[]; regions?: { start: number; stop: number; name: string }[]; tracks?: ShowTrack[]; pos?: number; playing?: boolean; recording?: boolean; loop?: { on: boolean; start: number; stop: number }; length?: number };
+export type Show = { original?:boolean; alive: boolean; installed?: boolean; rehearsal?: boolean; audio?: { inputs: number; rate: number; device: string }; bridgeCurrent?: string; version?: string; presence: string[]; project?: string; concert?: string | null; songs?: Song[]; regions?: { start: number; stop: number; name: string }[]; tracks?: ShowTrack[]; pos?: number; playing?: boolean; recording?: boolean; loop?: { on: boolean; start: number; stop: number }; length?: number };
 export type Link = { state: "offline" | "ready" | "starting" | "recording" | "stopping" | "lost"; playing: boolean; recording: boolean; elapsed: number; clock: number; autoStopIn: number | null; markers: number; alert: string; session: { title: string } | null };
 
 export async function call<T = unknown>(path: string, data?: unknown): Promise<T> {

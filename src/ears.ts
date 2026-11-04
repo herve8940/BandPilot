@@ -66,6 +66,7 @@ export class EarsShare {
   this.reload();
   xr.on('parameter',(state:{address:string;value:unknown;updatedAt:string})=>this.pushParameter(state));
   xr.on('meters',()=>this.pushMeters());
+  xr.on('connection',()=>{for(const ws of this.sockets.keys())this.sendSnapshot(ws);});
   xr.on('reset',()=>{for(const ws of this.sockets.keys())this.sendSnapshot(ws);});
  }
  private reload(){

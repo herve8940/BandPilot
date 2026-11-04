@@ -35,7 +35,7 @@ function eqPath(values: Values, prefix: string) {
   return d;
 }
 
-export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { canWrite: boolean; selectedChannel?: number; onSelectChannel?: (n: number) => void }) {
+export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel, simulation = false }: { simulation?: boolean; canWrite: boolean; selectedChannel?: number; onSelectChannel?: (n: number) => void }) {
   const {ALL,MAIN,OUTPUTS,INPUTS,BUSES,FXSENDS,model}=useAirStrips();
   const live = useLiveMixer();
   const { values, set, confirmed, online, message, clearMessage } = live;
@@ -60,7 +60,7 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
   const channelProps = { ...props, canWrite: writable && !(rehearsal && strip.kind === "lr") };
 
   return <section className="xs2 xs3 xs-expert-desk" aria-label="Mode Expert">
-    <div className="xs3-intro"><div className="xs3-emblem">◈</div><div><h1>Mode Expert</h1><p>Contrôle des traitements de canal · Préampli · Gate · Compresseur · EQ · Envois · Routage</p></div><div className="xs3-intro-status"><span className={online ? "live" : "off"}>● {online ? "Console connectée" : "Console hors ligne"}</span></div></div>
+    <div className="xs3-intro"><div className="xs3-emblem">◈</div><div><h1>Mode Expert</h1><p>{simulation ? "Noms et réglages du simulateur · la configuration du groupe se prépare séparément dans Mon ingé son." : "Contrôle des traitements de canal · Préampli · Gate · Compresseur · EQ · Envois · Routage"}</p></div><div className="xs3-intro-status"><span className={online ? "live" : "off"}>● {simulation ? "Simulation · aucune console pilotée" : online ? "Console connectée" : "Console hors ligne"}</span></div></div>
     <header className="xs2-head">
       <nav className="xs2-tabs" aria-label="Vues du mode Expert">
         {VIEWS.map(v => <button key={v.id} type="button" className={view === v.id ? "on" : ""} aria-current={view === v.id ? "page" : undefined} onClick={() => go(v.id)}>
@@ -71,7 +71,7 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel }: { c
       <button type="button" className={`xs2-pill ${rehearsal ? "rehearsal" : "foh"}`} onClick={() => void toggleRehearsal()} disabled={!canWrite} title="En Ears seulement, le Main est coupé et verrouillé : on ne règle que les ears">
         {rehearsal ? <><Lock /> Ears seulement · Main coupé</> : "Façade active"}
       </button>
-      <span className={`xs2-pill ${online ? "live" : "off"}`}><span className="xs2-dot" />{online ? (writable ? "Contrôle actif" : "Lecture seule") : "Hors ligne"}</span>
+      <span className={`xs2-pill ${online ? "live" : "off"}`}><span className="xs2-dot" />{online ? (simulation ? "Simulation modifiable" : writable ? "Contrôle actif" : "Lecture seule") : "Hors ligne"}</span>
     </header>
     {(message || notice || error) && <div className={`xs2-msg${error || message ? " error" : ""}`} role="status">{error || message || notice}<button type="button" aria-label="Fermer" onClick={() => { clearMessage(); setNotice(""); setError(""); }}>×</button></div>}
     {view === "channel" && <ChannelRail strip={strip} values={values} select={select} />}

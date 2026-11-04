@@ -75,5 +75,15 @@ export class StudioDatabase {
    return this.listEarProfiles().find(p=>p.id===id)!;
  }
  deleteEarProfile(id:string){return this.db.prepare("DELETE FROM ear_profiles WHERE id=?").run(id).changes>0;}
+ workspace():{notes:string;setlist:string[]}|null{
+  this.db.exec("CREATE TABLE IF NOT EXISTS workspace_draft(id INTEGER PRIMARY KEY CHECK(id=1),data TEXT NOT NULL)");
+  const row=this.db.prepare('SELECT data FROM workspace_draft WHERE id=1').get() as {data:string}|undefined;
+  return row?JSON.parse(row.data):null;
+ }
+ saveWorkspace(input:Record<string,unknown>){
+  if(typeof input.notes!=='string'||input.notes.length>10000||!Array.isArray(input.setlist)||input.setlist.length>100||input.setlist.some(v=>typeof v!=='string'||v.length>120))throw Error('Brouillon invalide');
+  this.workspace();const draft={notes:input.notes,setlist:input.setlist as string[]};
+  this.db.prepare('INSERT INTO workspace_draft VALUES(1,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data').run(JSON.stringify(draft));return draft;
+ }
  close(){this.db.close();}
 }
