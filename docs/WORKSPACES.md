@@ -9,7 +9,7 @@ lang: fr
 
 Dans **Console → Expert → Mélangeur**, ouvre **Ma console**. Choisis les tranches à afficher, la largeur compacte ou confortable et la visibilité des sorties/Master. « Garder les entrées nommées » sélectionne les pistes dont le nom diffère du nom par défaut ; ce bouton ne détecte pas automatiquement une activité audio.
 
-![Console personnelle en simulation](images/bandpilot-2.2.2/console-personnelle.png)
+![Console personnelle en simulation](images/bandpilot-2.2.4/console-personnelle.jpg)
 
 Masquer ne coupe pas le son et ne change aucun paramètre de console. « Tout afficher » restaure les tranches. Le panneau des sorties possède toujours un bouton pour le rouvrir. Les paramètres complets du canal sélectionné restent accessibles sous le mélangeur.
 
@@ -25,7 +25,7 @@ Depuis **Retours → Ouvrir la régie des retours**, ou **Console → Expert →
 4. **Compression du retour** : accède aux paramètres existants et à la réduction de gain si la console fournit une mesure récente. « — » signifie qu’aucune mesure n’est disponible.
 5. Ouvre **Comprendre le trajet vers ce retour** pour lire la source physique/USB et le point de prélèvement de chaque canal : entrée, avant/après EQ, avant/après fader ou sous-groupe. La sortie physique effective dépend du routage.
 
-![Régie des retours en simulation](images/bandpilot-2.2.2/regie-retours.png)
+![Régie des retours en simulation](images/bandpilot-2.2.4/regie-retours.jpg)
 
 Les vumètres des captures ne représentent pas un signal matériel. Les réglages restent désactivés en lecture seule. La nouvelle régie ne modifie ni la façade ni les autres bus lorsqu’on règle l’EQ ou la compression du bus sélectionné. Aucun préréglage n’est appliqué à l’ouverture.
 

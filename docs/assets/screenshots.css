@@ -1,0 +1,15 @@
+.screenshot-link{display:block;border-radius:16px;cursor:zoom-in;text-decoration:none}
+.screenshot-link img{aspect-ratio:16/9;object-fit:contain}
+.screenshot-link:focus-visible{outline:3px solid #b895ff;outline-offset:5px}
+.console-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:28px}
+.console-gallery figure{min-width:0}
+.console-gallery img{border:1px solid #394866}
+.console-gallery figcaption strong{display:block;color:#eff3ff;font-size:17px;margin-bottom:4px}
+.screenshot-viewer{width:min(1480px,96vw);max-width:96vw;max-height:94dvh;padding:16px;border:1px solid #8265ba;border-radius:16px;background:#10182b;color:#eff3ff;box-shadow:0 24px 100px #000b;overflow:auto}
+.screenshot-viewer::backdrop{background:#030714e8}
+.screenshot-viewer header{display:flex;align-items:center;justify-content:space-between;gap:16px;background:none;border:0;margin-bottom:12px}
+.screenshot-viewer p{margin:0;font-size:14px}
+.screenshot-viewer button{font:inherit;color:#fff;background:#35245b;border:1px solid #9e7cde;border-radius:10px;padding:9px 14px;cursor:pointer;flex-shrink:0}
+.screenshot-viewer img{margin:0;max-height:78dvh;object-fit:contain;border:0;box-shadow:none;border-radius:8px}
+html:has(.screenshot-viewer[open]){overflow:hidden}
+@media(max-width:800px){.console-gallery{grid-template-columns:1fr;gap:20px}.screenshot-viewer{padding:10px}.screenshot-viewer header{align-items:flex-start}.screenshot-viewer img{border-radius:4px}}

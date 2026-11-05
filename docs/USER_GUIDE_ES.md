@@ -34,7 +34,7 @@ Los buses internos no implican enchufes de salida físicos. Lea la [matriz de co
 
 En **Réglages / Settings**, elija un modelo simulado y active la simulación. La insignia de simulación permanece visible y no se envían comandos de la mesa de mezclas de hardware. Las etiquetas de la interfaz en las capturas de pantalla son francesas; Esta guía en inglés explica las acciones correspondientes.
 
-![Conexión y perfil de modelo en simulación](images/bandpilot-2.2/connexion.png)
+![Conexión y perfil de modelo en simulación](images/bandpilot-2.2.4/connexion.jpg)
 
 Para el hardware, coloque la computadora y la mesa de mezclas en la misma red local y use el descubrimiento automático. La identidad devuelta determina la marca, el modelo y el puerto. Elija cuándo responden varios dispositivos. Las conexiones comienzan como de solo lectura. La entrada manual de IP sondea ambos puertos de protocolo.
 
@@ -48,7 +48,7 @@ Comience con **Mesa de mezclas → PC** para leer y guardar el estado de la mesa
 
 Utilice el [tutorial de entrenador de seis pasos](TUTO_MON_INGE_SON_ES.md): conecte, describa entradas, mida la ganancia, solucione problemas, prepare monitores y guarde.
 
-![Panel de prueba de sonido](images/bandpilot-2.2/coach.png)
+![Panel de prueba de sonido](images/bandpilot-2.2.4/coach.jpg)
 
 El entrenador lee la configuración y las mediciones disponibles, no su transmisión de audio. Mida a cada músico en su nivel más alto esperado. Revisa sugerencias y escucha antes de aceptar. La medición de ganancia real requiere hardware. La IA conectada opcional necesita su propia clave e Internet; el asesor local permanece disponible sin él.
 
@@ -56,11 +56,11 @@ El entrenador lee la configuración y las mediciones disponibles, no su transmis
 
 Simple ofrece selección principal/monitor, volumen, silencio y solo. Haga clic en el nombre de una fuente para obtener configuraciones detalladas. Los nombres pertenecen al mesa de mezclas o simulador; La preparación del perfil de entrenador no cambia silenciosamente el nombre del hardware.
 
-![Mesa de mezclas compacta](images/bandpilot-2.2/console.png)
+![Mesa de mezclas compacta](images/bandpilot-2.2.4/console.jpg)
 
 Expert proporciona vistas de mesa de mezclas y canal con preamplificador, puerta, compresor, ecualizador, envíos y salida. Los bancos exponen buses, Aux, FX y DCA según lo respalda el modelo. Los ajustes de simulación son datos de entrenamiento, no resultados acústicos.
 
-![Procesamiento de canal](images/bandpilot-2.2/expert-canal.png)
+![Procesamiento de canal](images/bandpilot-2.2.4/expert-canal.jpg)
 
 **Solo in-ear** silencia y bloquea principal; salir de este modo no lo activa automáticamente. Los cambios guiados y la preparación de escenas en blanco utilizan vistas previas y copias de seguridad. Los atenuadores directos actúan inmediatamente cuando el control está habilitado.
 
@@ -68,7 +68,7 @@ Expert proporciona vistas de mesa de mezclas y canal con preamplificador, puerta
 
 Prepare buses pre-fader y elija las salidas físicas disponibles en su mesa de mezclas. Crea a cada músico con su bus, comienza a compartir localmente y haz que escaneen su código QR personal en la misma red. El enlace otorga el control de su bus: no lo publique. Los niveles están limitados y los aumentos son progresivos; aún así mantenga niveles de escucha razonables.
 
-![Matriz de monitores](images/bandpilot-2.2/retours.png)
+![Matriz de monitores](images/bandpilot-2.2.4/regie-retours.jpg)
 
 Los teléfonos ya abiertos siguen cambios de control/solo lectura sin recarga. Los perfiles almacenan mezclas de monitores. La regeneración de un enlace revoca el anterior. Deja de compartir cuando no lo uses. Los monitores de teléfono X32 no son compatibles con esta versión.
 
@@ -90,7 +90,7 @@ REAPER es un software independiente con su propia instalación y licencia. Insta
 
 Una canción necesita un título. Agregue canciones a la lista de canciones activa y guarde una lista de canciones con nombre. Las notas y la lista de configuración activa se almacenan en la base de datos de la aplicación incluso cuando cambia su puerto local. Espere el estado de borrador guardado antes de cerrar. Los ensayos nombrados siguen siendo registros separados.
 
-![Notas persistentes y estado de guardado](images/bandpilot-2.2/notes.png)
+![Notas persistentes y estado de guardado](images/bandpilot-2.2.4/notes.jpg)
 
 Capture escenas e importe/exporte JSON. Los retiros mantienen una copia de seguridad y requieren una vista previa válida; La recuperación guiada excluye la alimentación fantasma de forma predeterminada. Las escenas entre modelos no se convierten automáticamente. La recuperación nativa de `.scn` es una ruta experimental separada con límites de FX y confirmaciones adicionales. Las escenas X32 completas no están disponibles.
 

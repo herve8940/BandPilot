@@ -14,7 +14,7 @@ Application gratuite pour préparer la balance, piloter la console, donner les r
 
 [Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
-![Console BandPilot 2.2 en simulation](docs/images/bandpilot-2.2/console.png)
+![Console BandPilot 2.2.4 en simulation](docs/images/bandpilot-2.2.4/expert-canal.jpg)
 
 Windows · Mac Intel et Apple Silicon · Linux
 

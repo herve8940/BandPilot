@@ -10,7 +10,7 @@ BandPilot is the new name of XR18 Studio: a free local app for guided sound chec
 
 [Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
-![BandPilot 2.2 Expert mixer in simulation](docs/images/bandpilot-2.2/console.png)
+![BandPilot 2.2.4 Expert mixer in simulation](docs/images/bandpilot-2.2.4/expert-canal-en.jpg)
 
 ## Features
 

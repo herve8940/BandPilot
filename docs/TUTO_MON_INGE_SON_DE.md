@@ -6,13 +6,13 @@
 
 Der Coach unterstützt Sie beim Soundcheck. Es empfängt kein Audio und ersetzt auch nicht das Zuhören. Dieser Workflow gilt für unterstützte X-Air/M-Air-Modelle, **nicht X32** in dieser Version. Neue Screenshots zeigen Simulation. Überprüfen Sie die [Hardware-Grenzwerte](multi-model.md). UI-Beschriftungen in den Aufnahmen sind französisch.
 
-![Soundcheck-Dashboard](images/bandpilot-2.2/coach.png)
+![Soundcheck-Dashboard](images/bandpilot-2.2.4/coach.jpg)
 
 ## 1. Verbinden
 
 Halten Sie Ausgänge und Kopfhörer niedrig. Verbinden Sie Computer und Mischpult mit einem lokalen Netzwerk. Entdecken Sie das Mischpult in den Einstellungen, überprüfen Sie sein Modell und starten Sie ihn schreibgeschützt. Ziehen Sie **Mischpult → PC** und speichern Sie eine Backup-Szene. Aktivieren Sie die Kontrolle nur für beabsichtigte Änderungen. Die Simulation dient der Erkundung und liefert keine realen Messungen.
 
-![Verbindung und Simulation](images/bandpilot-2.2/connexion.png)
+![Verbindung und Simulation](images/bandpilot-2.2.4/connexion.jpg)
 
 ## 2. Beschreiben Sie Ihre Eingaben
 
@@ -28,7 +28,7 @@ Lassen Sie einen Musiker die lauteste erwartete Passage spielen. Messung starten
 
 Beschreiben Sie, was Sie hören, und ändern Sie jeweils eine Sache. Wenn ein Vorschlag mit einem EQ-Filtertyp nicht kompatibel ist, überprüfen Sie den Kanal im Expertenmodus, anstatt ihn zu erzwingen.
 
-![Kompressor- und EQ-Übersicht](images/bandpilot-2.2/expert-canal.png)
+![Kompressor- und EQ-Übersicht](images/bandpilot-2.2.4/expert-canal.jpg)
 
 Direktfader wirken sofort, wenn die Steuerung aktiviert wird. Geführte Änderungen nutzen Vorschau, Sicherung und Rückgängigmachen. Das Rückgängigmachen der letzten geführten Änderung ist keine universelle Geschichte manueller Aktionen. Analysen und A/B-Vergleiche erfordern verfügbare Hardwaremessungen und menschliches Zuhören. Die optionale vernetzte KI erfordert Ihren eigenen Schlüssel und Internet; Beratung vor Ort bleibt weiterhin verfügbar.
 
@@ -36,7 +36,7 @@ Direktfader wirken sofort, wenn die Steuerung aktiviert wird. Geführte Änderun
 
 Fügen Sie jeden Musiker, jede Rolle, jede Quelle und jeden Bus hinzu. Überprüfen Sie die physischen Buchsen: XR18/MR18/X18 verfügen über sechs Aux-Ausgänge; XR12/MR12 haben trotz ihrer internen Busse zwei. Starten Sie vor dem Fader, damit die Hauptfader-Änderungen nicht automatisch in ihre Ohren übertragen werden.
 
-![Monitormatrix](images/bandpilot-2.2/retours.png)
+![Monitormatrix](images/bandpilot-2.2.4/regie-retours.jpg)
 
 Wenden Sie einen Startmix auf niedrigen Ebenen an, erstellen Sie persönliche Links, starten Sie die lokale Freigabe und scannen Sie jeden QR im selben Netzwerk. Jeder Musiker kontrolliert nur seinen Bus. Speichern Sie bei Bedarf ein Profil und beenden Sie anschließend die Freigabe. Pegelobergrenzen und -begrenzer allein garantieren keine sicheren Hörpegel.
 
@@ -46,6 +46,6 @@ Speichern Sie eine benannte Szene und exportieren Sie JSON als Backup. Überprü
 
 Notizen und aktive Setlists bleiben in der Anwendungsdatenbank, auch wenn sich der lokale Port ändert.
 
-![Notizen und Speicherbestätigung](images/bandpilot-2.2/notes.png)
+![Notizen und Speicherbestätigung](images/bandpilot-2.2.4/notes.jpg)
 
 Befolgen Sie für die Aufnahme und Wiedergabe die [REAPER-Proben](USER_GUIDE_DE.md#reaper). Die Mischpult-Simulation simuliert kein REAPER-Audio.

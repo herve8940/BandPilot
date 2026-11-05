@@ -6,13 +6,13 @@
 
 The coach supports your sound check. It does not receive audio or replace listening. This workflow is for supported X-Air/M-Air models, **not X32** in this release. New screenshots show simulation. Check the [hardware limits](multi-model.md). UI labels in the captures are French.
 
-![Sound-check dashboard](images/bandpilot-2.2/coach.png)
+![Sound-check dashboard](images/bandpilot-2.2.4/coach.jpg)
 
 ## 1. Connect
 
 Keep outputs and headphones low. Connect computer and mixer to one local network. Discover the mixer in Settings, verify its model and start read-only. Pull **Mixer → PC** and save a backup scene. Enable control only for intended changes. Simulation is for exploration and does not produce real measurements.
 
-![Connection and simulation](images/bandpilot-2.2/connexion.png)
+![Connection and simulation](images/bandpilot-2.2.4/connexion.jpg)
 
 ## 2. Describe your inputs
 
@@ -28,7 +28,7 @@ Have one musician play their loudest expected passage. Start measurement. Repeat
 
 Describe what you hear and change one thing at a time. If a proposal is incompatible with an EQ filter type, review the channel in Expert instead of forcing it.
 
-![Compressor and EQ overview](images/bandpilot-2.2/expert-canal.png)
+![Compressor and EQ overview](images/bandpilot-2.2.4/expert-canal.jpg)
 
 Direct faders act immediately when control is enabled. Guided changes use preview, backup and undo. Undoing the last guided change is not a universal history of manual actions. Analysis and A/B comparisons require available hardware measurements and human listening. Optional connected AI requires your own key and internet; local advice remains available.
 
@@ -36,7 +36,7 @@ Direct faders act immediately when control is enabled. Guided changes use previe
 
 Add each musician, role, sources and bus. Verify physical sockets: XR18/MR18/X18 have six Aux outputs; XR12/MR12 have two despite their internal buses. Start pre-fader so main fader changes do not follow automatically into their ears.
 
-![Monitor matrix](images/bandpilot-2.2/retours.png)
+![Monitor matrix](images/bandpilot-2.2.4/regie-retours.jpg)
 
 Apply a starting mix at low levels, create personal links, start local sharing and scan each QR on the same network. Each musician controls only their bus. Save a profile if useful and stop sharing afterwards. Level caps and limiters do not by themselves guarantee safe listening levels.
 
@@ -46,6 +46,6 @@ Save a named scene and export JSON as a backup. Verify model and synchronization
 
 Notes and active setlists stay in the application database even when the local port changes.
 
-![Notes and save confirmation](images/bandpilot-2.2/notes.png)
+![Notes and save confirmation](images/bandpilot-2.2.4/notes.jpg)
 
 For recording and playback, follow [REAPER rehearsals](USER_GUIDE_EN.md#reaper). Mixer simulation does not simulate REAPER audio.

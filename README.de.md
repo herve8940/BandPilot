@@ -10,7 +10,7 @@ BandPilot ist der neue Name von XR18 Studio: eine kostenlose lokale App für gef
 
 [Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
-![BandPilot 2.2 Expert Mischpult in Simulation](docs/images/bandpilot-2.2/console.png)
+![BandPilot 2.2.4 Expert Mischpult in Simulation](docs/images/bandpilot-2.2.4/expert-canal-de.jpg)
 
 ## Funktionen
 - Sechs-Schritte-Coach: Anschließen, Eingänge konfigurieren, Verstärkung messen, Fehler beheben, Monitore vorbereiten und speichern. Es liest Messungen, keine Audiodaten.

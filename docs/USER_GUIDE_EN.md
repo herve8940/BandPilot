@@ -34,7 +34,7 @@ Internal buses do not imply physical output sockets. Read the [compatibility mat
 
 In **Réglages / Settings**, choose a simulated model and activate simulation. The Simulation badge stays visible and no hardware mixer commands are sent. Interface labels in the screenshots are French; this English guide explains the corresponding actions.
 
-![Connection and model profile in simulation](images/bandpilot-2.2/connexion.png)
+![Connection and model profile in simulation](images/bandpilot-2.2.4/connexion.jpg)
 
 For hardware, put computer and mixer on the same local network and use automatic discovery. The returned identity determines brand, model and port. Choose when several devices respond. Connections start read-only. Manual IP entry probes both protocol ports.
 
@@ -48,7 +48,7 @@ Start with **Mixer → PC** to read and save the existing mixer state. **PC → 
 
 Use the [six-step coach tutorial](TUTO_MON_INGE_SON_EN.md): connect, describe inputs, measure gain, troubleshoot, prepare monitors and save.
 
-![Sound-check dashboard](images/bandpilot-2.2/coach.png)
+![Sound-check dashboard](images/bandpilot-2.2.4/coach.jpg)
 
 The coach reads settings and available measurements, not your audio stream. Measure each musician at their loudest expected level. Review suggestions and listen before accepting. Real gain measurement requires hardware. Optional connected AI needs your own key and internet; the local advisor remains available without it.
 
@@ -56,11 +56,11 @@ The coach reads settings and available measurements, not your audio stream. Meas
 
 Simple offers main/monitor selection, volume, mute and solo. Click a source name for detailed settings. Names belong to the mixer or simulator; preparing the coach profile does not silently rename hardware.
 
-![Compact mixer](images/bandpilot-2.2/console.png)
+![Compact mixer](images/bandpilot-2.2.4/console.jpg)
 
 Expert provides mixer and channel views with preamp, gate, compressor, EQ, sends and output. Banks expose buses, Aux, FX and DCAs as supported by the model. Simulation settings are training data, not acoustic results.
 
-![Channel processing](images/bandpilot-2.2/expert-canal.png)
+![Channel processing](images/bandpilot-2.2.4/expert-canal.jpg)
 
 **Ears only** mutes and locks Main; leaving this mode does not automatically unmute it. Guided changes and blank-scene preparation use previews and backups. Direct faders act immediately when control is enabled.
 
@@ -68,7 +68,7 @@ Expert provides mixer and channel views with preamp, gate, compressor, EQ, sends
 
 Prepare pre-fader buses and choose physical outputs available on your mixer. Create each musician with their bus, start local sharing and have them scan their personal QR code on the same network. The link grants control of their bus: do not publish it. Levels are capped and raises progressive; still keep listening levels sensible.
 
-![Monitor matrix](images/bandpilot-2.2/retours.png)
+![Monitor matrix](images/bandpilot-2.2.4/regie-retours.jpg)
 
 Already open phones follow read-only/control changes without a reload. Profiles store monitor mixes. Regenerating a link revokes the old one. Stop sharing when unused. X32 phone monitors are not supported in this release.
 
@@ -90,7 +90,7 @@ REAPER is separate software with its own installation and license. Install bridg
 
 A song needs a title. Add songs to the active setlist and save a named setlist. Notes and the active setlist are stored in the application database even when its local port changes. Wait for the saved-draft status before closing. Named rehearsals remain separate records.
 
-![Persistent notes and save status](images/bandpilot-2.2/notes.png)
+![Persistent notes and save status](images/bandpilot-2.2.4/notes.jpg)
 
 Capture scenes and import/export JSON. Recalls keep a backup and require a valid preview; guided recall excludes phantom power by default. Cross-model scenes are not automatically converted. Native `.scn` recall is a separate experimental path with FX limits and additional confirmations. Complete X32 scenes are unavailable.
 

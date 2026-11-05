@@ -4,15 +4,15 @@
 
 [English](TUTO_MON_INGE_SON_EN.md) · [Guide complet](USER_GUIDE_FR.md) · [Visite vidéo](VIDEO_TOUR.md)
 
-Le coach accompagne la balance ; il ne reçoit pas le son, ne remplace pas ton écoute et ne décide pas seul d’une bonne qualité acoustique. Ce parcours concerne les modèles X-Air/M-Air pris en charge, **pas la X32** dans cette version. Les captures 2.2 sont réalisées en simulation. Lis les [limites matérielles](multi-model.md).
+Le coach accompagne la balance ; il ne reçoit pas le son, ne remplace pas ton écoute et ne décide pas seul d’une bonne qualité acoustique. Ce parcours concerne les modèles X-Air/M-Air pris en charge, **pas la X32** dans cette version. Les captures 2.2.4 sont réalisées en simulation. Lis les [limites matérielles](multi-model.md).
 
-![Le tableau de bord Mon ingé son](images/bandpilot-2.2/coach.png)
+![Le tableau de bord Mon ingé son](images/bandpilot-2.2.4/coach.jpg)
 
 ## 1. Brancher et connecter
 
 Garde les sorties et écouteurs bas. Relie ordinateur et console au même réseau. Dans Réglages, détecte la console, vérifie son modèle et commence en lecture seule. Récupère l’état **Table → PC**, puis garde une scène de sauvegarde. Active le contrôle seulement pour appliquer une modification voulue. En simulation, tu peux explorer mais aucune mesure réelle n’est produite.
 
-![Connexion en lecture seule ou simulation explicite](images/bandpilot-2.2/connexion.png)
+![Connexion en lecture seule ou simulation explicite](images/bandpilot-2.2.4/connexion.jpg)
 
 ## 2. Dire qui est branché où
 
@@ -28,7 +28,7 @@ Demande au musicien de jouer son passage le plus fort. Lance sa mesure ; si elle
 
 Décris ce qui gêne : brouillon, agressif, trop sourd, voix masquée… Lis l’explication et change une chose à la fois. Le coach peut refuser une proposition incompatible avec le type de filtre : vérifie le canal dans Expert au lieu de forcer une écriture.
 
-![Compresseur et aperçu EQ dans le canal Expert](images/bandpilot-2.2/expert-canal.png)
+![Compresseur et aperçu EQ dans le canal Expert](images/bandpilot-2.2.4/expert-canal.jpg)
 
 Les faders directs modifient immédiatement le mix lorsque le contrôle est actif. Les propositions guidées utilisent aperçu, sauvegarde et annulation. **Annuler le dernier réglage guidé** ne constitue pas un historique universel de tous les gestes manuels. L’analyse et les comparaisons A/B demandent des mesures matérielles disponibles et une écoute humaine.
 
@@ -36,7 +36,7 @@ Les faders directs modifient immédiatement le mix lorsque le contrôle est acti
 
 Ajoute chaque musicien, son rôle, ses sources et son bus. Vérifie la vraie sortie physique : XR18/MR18/X18 ont six Aux ; XR12/MR12 en ont deux malgré leurs bus internes. Commence pré-fader pour que les réglages de façade ne suivent pas automatiquement dans les oreilles.
 
-![Envois et retours dans le mode Expert](images/bandpilot-2.2/retours.png)
+![Envois et retours dans le mode Expert](images/bandpilot-2.2.4/regie-retours.jpg)
 
 Applique une proposition de départ à faible volume. Crée les liens personnels, démarre le partage local et fais scanner chaque QR sur le même réseau. Le musicien ne règle que son bus. Contrôle les niveaux, sauvegarde un profil si utile et arrête le partage après usage. Le plafond et les limiteurs ne garantissent pas à eux seuls un niveau d’écoute sûr.
 
@@ -46,6 +46,6 @@ Enregistre une scène nommée et exporte le JSON pour sauvegarde. Avant un rappe
 
 Prépare aussi tes notes et la setlist active : elles sont conservées sur l’ordinateur, indépendamment du port utilisé au prochain démarrage.
 
-![Notes et confirmation de sauvegarde](images/bandpilot-2.2/notes.png)
+![Notes et confirmation de sauvegarde](images/bandpilot-2.2.4/notes.jpg)
 
 Pour enregistrer ou rejouer les morceaux, suis [Répéter avec REAPER](USER_GUIDE_FR.md#reaper). La simulation de console ne transforme pas REAPER en simulateur audio.

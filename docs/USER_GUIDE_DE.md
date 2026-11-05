@@ -34,7 +34,7 @@ Interne Busse implizieren keine physischen Ausgangssockets. Lesen Sie vor dem Li
 
 Wählen Sie unter **Einstellungen / Einstellungen** ein simuliertes Modell aus und aktivieren Sie die Simulation. Das Simulations-Badge bleibt sichtbar und es werden keine Hardware-Mischpult-Befehle gesendet. Die Schnittstellenbezeichnungen in den Screenshots sind französisch; In dieser englischsprachigen Anleitung werden die entsprechenden Aktionen erläutert.
 
-![Verbindungs- und Modellprofil in der Simulation](images/bandpilot-2.2/connexion.png)
+![Verbindungs- und Modellprofil in der Simulation](images/bandpilot-2.2.4/connexion.jpg)
 
 Für die Hardware stellen Sie Computer und Mischpult in dasselbe lokale Netzwerk und verwenden Sie die automatische Erkennung. Die zurückgegebene Identität bestimmt Marke, Modell und Port. Wählen Sie, wann mehrere Geräte reagieren. Verbindungen beginnen schreibgeschützt. Bei der manuellen IP-Eingabe werden beide Protokollports geprüft.
 
@@ -48,7 +48,7 @@ Beginnen Sie mit **Mischpult → PC**, um den aktuellen Mischpult-Status auszule
 
 Verwenden Sie das [Sechs-Schritte-Coach-Tutorial](TUTO_MON_INGE_SON_DE.md): Anschließen, Eingänge beschreiben, Verstärkung messen, Fehler beheben, Monitore vorbereiten und speichern.
 
-![Soundcheck-Dashboard](images/bandpilot-2.2/coach.png)
+![Soundcheck-Dashboard](images/bandpilot-2.2.4/coach.jpg)
 
 Der Coach liest Einstellungen und verfügbare Messungen, nicht Ihren Audiostream. Messen Sie jeden Musiker bei seinem lautesten erwarteten Pegel. Überprüfen Sie Vorschläge und hören Sie zu, bevor Sie sie annehmen. Für die echte Verstärkungsmessung ist Hardware erforderlich. Die optionale vernetzte KI benötigt Ihren eigenen Schlüssel und Internet; Der lokale Berater bleibt auch ohne ihn verfügbar.
 
@@ -56,11 +56,11 @@ Der Coach liest Einstellungen und verfügbare Messungen, nicht Ihren Audiostream
 
 Simple bietet Haupt-/Monitorauswahl, Lautstärke, Stummschaltung und Solo. Klicken Sie auf einen Quellennamen, um detaillierte Einstellungen anzuzeigen. Namen gehören zum Mischpult oder Simulator; Beim Vorbereiten des Coach-Profils wird die Hardware nicht stillschweigend umbenannt.
 
-![Kompaktmischer](images/bandpilot-2.2/console.png)
+![Kompaktmischer](images/bandpilot-2.2.4/console.jpg)
 
 Expert bietet Mischpult- und Kanalansichten mit Vorverstärker, Gate, Kompressor, EQ, Sends und Ausgang. Banken stellen Busse, Aux, FX und DCAs zur Verfügung, wie sie vom Modell unterstützt werden. Simulationseinstellungen sind Trainingsdaten, keine akustischen Ergebnisse.
 
-![Kanalverarbeitung](images/bandpilot-2.2/expert-canal.png)
+![Kanalverarbeitung](images/bandpilot-2.2.4/expert-canal.jpg)
 
 **Nur In-Ears** schaltet den Hauptlautsprecher stumm und sperrt ihn; Wenn Sie diesen Modus verlassen, wird die Stummschaltung nicht automatisch aufgehoben. Geführte Änderungen und die Vorbereitung leerer Szenen nutzen Vorschauen und Backups. Direktfader wirken sofort, wenn die Steuerung aktiviert wird.
 
@@ -68,7 +68,7 @@ Expert bietet Mischpult- und Kanalansichten mit Vorverstärker, Gate, Kompressor
 
 Bereiten Sie Pre-Fader-Busse vor und wählen Sie die auf Ihrem Mischpult verfügbaren physischen Ausgänge aus. Erstellen Sie jeden Musiker mit seinem Bus, starten Sie die lokale Freigabe und lassen Sie ihn seinen persönlichen QR-Code im selben Netzwerk scannen. Der Link gewährt die Kontrolle über ihren Bus: Veröffentlichen Sie ihn nicht. Die Level sind begrenzt und steigen progressiv an; Halten Sie den Hörpegel immer noch auf einem vernünftigen Niveau.
 
-![Monitormatrix](images/bandpilot-2.2/retours.png)
+![Monitormatrix](images/bandpilot-2.2.4/regie-retours.jpg)
 
 Bereits geöffnete Telefone folgen schreibgeschützten/kontrollierten Änderungen ohne Neuladen. Profile speichern Monitormischungen. Durch die Neugenerierung eines Links wird der alte Link widerrufen. Hören Sie auf zu teilen, wenn es nicht verwendet wird. X32-Monitorsteuerung am Telefon werden in dieser Version nicht unterstützt.
 
@@ -90,7 +90,7 @@ REAPER ist eine separate Software mit eigener Installation und Lizenz. Installie
 
 Ein Lied braucht einen Titel. Fügen Sie Songs zur aktiven Setlist hinzu und speichern Sie eine benannte Setlist. Notizen und die aktive Setlist werden in der Anwendungsdatenbank gespeichert, auch wenn sich der lokale Port ändert. Warten Sie vor dem Schließen auf den Status „Gespeicherter Entwurf“. Benannte Proben bleiben separate Aufzeichnungen.
 
-![Persistente Notizen und Speicherstatus](images/bandpilot-2.2/notes.png)
+![Persistente Notizen und Speicherstatus](images/bandpilot-2.2.4/notes.jpg)
 
 Erfassen Sie Szenen und importieren/exportieren Sie JSON. Rückrufe führen ein Backup durch und erfordern eine gültige Vorschau; Der geführte Rückruf schließt Phantomspeisung standardmäßig aus. Modellübergreifende Szenen werden nicht automatisch konvertiert. Der native `.scn`-Rückruf ist ein separater experimenteller Pfad mit FX-Limits und zusätzlichen Bestätigungen. Vollständige X32-Szenen sind nicht verfügbar.
 

@@ -10,7 +10,7 @@ BandPilot es el nuevo nombre de XR18 Studio: una aplicación local gratuita para
 
 [Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
-![BandPilot 2.2 Mesa de mezclas experto en simulación](docs/images/bandpilot-2.2/console.png)
+![BandPilot 2.2.4 Mesa de mezclas experto en simulación](docs/images/bandpilot-2.2.4/expert-canal-es.jpg)
 
 ## Características
 

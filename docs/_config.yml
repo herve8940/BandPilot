@@ -5,7 +5,7 @@ url: https://herve8940.github.io
 baseurl: /BandPilot
 lang: fr
 author: Hervé Naessens
-image: /images/bandpilot-2.2/console.png
+image: /images/bandpilot-2.2.4/expert-canal.jpg
 theme: jekyll-theme-primer
 plugins:
   - jekyll-sitemap

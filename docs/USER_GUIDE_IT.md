@@ -34,7 +34,7 @@ I bus interni non implicano prese di uscita fisiche. Leggere la [matrice di comp
 
 In **Réglages / Impostazioni**, scegli un modello simulato e attiva la simulazione. Il badge Simulazione rimane visibile e non vengono inviati comandi del mixer hardware. Le etichette dell'interfaccia negli screenshot sono francesi; questa guida spiega le azioni corrispondenti.
 
-![Connessione e profilo del modello in simulazione](images/bandpilot-2.2/connexion.png)
+![Connessione e profilo del modello in simulazione](images/bandpilot-2.2.4/connexion.jpg)
 
 Per l'hardware, metti computer e mixer sulla stessa rete locale e utilizza il rilevamento automatico. L'identità restituita determina marca, modello e porta. Scegli quando rispondono più dispositivi. Le connessioni iniziano in sola lettura. L'immissione manuale dell'IP sonda entrambe le porte del protocollo.
 
@@ -48,7 +48,7 @@ Inizia con **Mixer → PC** per leggere e salvare lo stato del mixer esistente. 
 
 Utilizza il [tutorial in sei fasi](TUTO_MON_INGE_SON_IT.md): collega, descrivi gli ingressi, misura il guadagno, risolvi i problemi, prepara i monitor e salva.
 
-![Dashboard controllo audio](images/bandpilot-2.2/coach.png)
+![Dashboard controllo audio](images/bandpilot-2.2.4/coach.jpg)
 
 Il coach legge le impostazioni e le misurazioni disponibili, non il tuo flusso audio. Misura ciascun musicista al livello più alto previsto. Esamina i suggerimenti e ascolta prima di accettare. La misurazione del guadagno reale richiede hardware. L'intelligenza artificiale connessa opzionale richiede la tua chiave e Internet; il consulente locale rimane disponibile senza di essa.
 
@@ -56,11 +56,11 @@ Il coach legge le impostazioni e le misurazioni disponibili, non il tuo flusso a
 
 Simple offre selezione principale/monitor, volume, mute e solo. Fare clic sul nome di una fonte per le impostazioni dettagliate. I nomi appartengono al mixer o al simulatore; la preparazione del profilo delil coach non rinomina silenziosamente l'hardware.
 
-![Mixer compatto](images/bandpilot-2.2/console.png)
+![Mixer compatto](images/bandpilot-2.2.4/console.jpg)
 
 Expert fornisce visualizzazioni di mixer e canali con preamplificatore, gate, compressore, EQ, mandate e uscita. Le banche espongono bus, Aux, FX e DCA come supportati dal modello. Le impostazioni della simulazione sono dati di allenamento, non risultati acustici.
 
-![Elaborazione canale](images/bandpilot-2.2/expert-canal.png)
+![Elaborazione canale](images/bandpilot-2.2.4/expert-canal.jpg)
 
 **Solo in-ear** disattiva e blocca l'audio Principale; l'uscita da questa modalità non ne riattiva automaticamente l'audio. Le modifiche guidate e la preparazione delle scene vuote utilizzano anteprime e backup. I fader diretti agiscono immediatamente quando il controllo è abilitato.
 
@@ -68,7 +68,7 @@ Expert fornisce visualizzazioni di mixer e canali con preamplificatore, gate, co
 
 Prepara i bus pre-fader e scegli le uscite fisiche disponibili sul tuo mixer. Crea ogni musicista con il suo bus, avvia la condivisione locale e fagli scansionare il suo codice QR personale sulla stessa rete. Il collegamento garantisce il controllo del proprio bus: non pubblicarlo. I livelli sono limitati e gli aumenti sono progressivi; mantenere comunque i livelli di ascolto ragionevoli.
 
-![Matrice monitor](images/bandpilot-2.2/retours.png)
+![Matrice monitor](images/bandpilot-2.2.4/regie-retours.jpg)
 
 I telefoni già aperti seguono le modifiche di sola lettura/controllo senza ricaricare. I profili memorizzano i mix di monitor. La rigenerazione di un collegamento revoca quello vecchio. Interrompi la condivisione quando non viene utilizzato. I monitor dei telefoni X32 non sono supportati in questa versione.
 
@@ -90,7 +90,7 @@ REAPER è un software separato con la propria installazione e licenza. Installa 
 
 Una canzone ha bisogno di un titolo. Aggiungi brani alla setlist attiva e salva una setlist con nome. Le note e la setlist attiva vengono archiviate nel database dell'applicazione anche quando cambia la porta locale. Attendi lo stato di bozza salvata prima di chiudere. Le prove con nome rimangono registrazioni separate.
 
-![Note persistenti e stato di salvataggio](images/bandpilot-2.2/notes.png)
+![Note persistenti e stato di salvataggio](images/bandpilot-2.2.4/notes.jpg)
 
 Cattura scene e importa/esporta JSON. I richiami mantengono un backup e richiedono un'anteprima valida; il richiamo guidato esclude l'alimentazione phantom per impostazione predefinita. Le scene tra modelli diversi non vengono convertite automaticamente. Il richiamo nativo `.scn` è un percorso sperimentale separato con limiti FX e conferme aggiuntive. Le scene complete di X32 non sono disponibili.
 
