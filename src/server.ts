@@ -1,6 +1,8 @@
 import {MIXER_MODELS} from '../shared/mixer-models.js';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {Workshop} from './workshop.js';
+import type {GateReference} from '../shared/workshop-envelope.js';
+import {VocalFx} from './vocal-fx.js';
 import {Analyzer,familyFromName,type Instrument} from './analysis.js';
 import {ReaperLink,planSession,createSession,openInReaper,defaultSessionsFolder,freeHours,presenceCommands} from './reaper.js';
 import {ReaperBridge,BRIDGE_VERSION,saveLiveRoles} from './reaper-bridge.js';
@@ -52,6 +54,7 @@ const access=new Access(dbPath), library=new LibraryStore(dbPath);
 const show=new ShowControl(xr18,processing,library);
 const mixerSync=new MixerSync(xr18,show.console,library);
 const coach=new SoundCoach(xr18,show.console,library);
+const vocalFx=new VocalFx(xr18,library,()=>coach.profile());
 let aiRequestAt=0;
 // Live analysis: instruments named on the console, family from the coach when it knows the source.
 const instruments=():Instrument[]=>{
@@ -117,14 +120,14 @@ const handler: http.RequestListener = async (req, res) => {
    else if(req.method==='PUT')res.end(JSON.stringify(database.saveWorkspace(await body(req))));
    else{res.writeHead(405);res.end('{}');}}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
-  if(workshop.blocksRecording()&&req.method!=='GET'&&(['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/show/presence','/api/show/original','/api/show/take','/api/show/track','/api/show/play','/api/show/loop','/api/show/goto','/api/mixer-sync/apply','/api/console/apply','/api/coach/apply','/api/analysis/listen','/api/reacue/event','/api/reacue/arm'].includes(path)||/^\/api\/library\/[^/]+\/apply$/.test(path))){res.writeHead(409);res.end(JSON.stringify({error:'Termine l’Atelier du son et restaure les sources avant cette action ; les réglages directs de canal restent disponibles dans Console'}));return;}
+  if(workshop.blocksRecording()&&req.method!=='GET'&&(['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/show/presence','/api/show/original','/api/show/take','/api/show/track','/api/show/play','/api/show/loop','/api/show/goto','/api/mixer-sync/apply','/api/console/apply','/api/coach/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo','/api/coach/vocal-fx/keep','/api/analysis/listen','/api/reacue/event','/api/reacue/arm'].includes(path)||/^\/api\/library\/[^/]+\/apply$/.test(path))){res.writeHead(409);res.end(JSON.stringify({error:'Termine l’Atelier du son et restaure les sources avant cette action ; les réglages directs de canal restent disponibles dans Console'}));return;}
   if(path==='/api/reacue/stop'&&req.method==='POST'){show.arm(false);access.log(user!,'Arrêt ReaCue');res.end(JSON.stringify({ok:true}));return;}
   const readOnlyCoach=['/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
     // Analysis only changes what the console's analyser looks at, never the sound: no global lock.
     '/api/reaper/plan','/api/reaper/session','/api/reaper/rec','/api/reaper/stop','/api/reaper/marker','/api/reaper/dismiss','/api/show/install','/api/show/goto','/api/show/loop','/api/show/take','/api/show/track','/api/show/play','/api/show/stop','/api/show/continue','/api/show/presence','/api/show/original','/api/show/rec',
     '/api/analysis/start','/api/analysis/stop','/api/analysis/target','/api/analysis/scan','/api/analysis/dismiss','/api/analysis/release'].includes(path);
   if(path.startsWith('/api/')&&req.method!=='GET'&&!readOnlyCoach){
-    const coachMetadata=(path.startsWith('/api/coach/')&&path!=='/api/coach/apply')||(path.startsWith('/api/mixer-sync')&&path!=='/api/mixer-sync/apply')||path.startsWith('/api/ears-share');
+    const coachMetadata=(path.startsWith('/api/coach/')&&!['/api/coach/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo'].includes(path))||(path.startsWith('/api/mixer-sync')&&path!=='/api/mixer-sync/apply')||path.startsWith('/api/ears-share');
     if(studioApi.busy&&!path.startsWith('/api/reacue')&&!coachMetadata){show.manualOverride();}
     if(studioApi.busy){res.writeHead(409);res.end(JSON.stringify({error:'Une opération est déjà en cours'}));return;}
     studioApi.busy=true;ownsWriteLock=true;
@@ -187,6 +190,7 @@ const handler: http.RequestListener = async (req, res) => {
    else if(path==='/api/workshop/compare')result=await workshop.compare(d.side as 'A'|'B');
    else if(path==='/api/workshop/save')result=await workshop.save(String(d.note??''),d.preference as 'A'|'B');
    else if(path==='/api/workshop/finish')result=await workshop.finish(d.keep as 'A'|'B',d.confirm===true);
+   else if(path==='/api/workshop/gate-reference')result=await workshop.gateReference(Number(d.channel),d.reference as GateReference,d.confirm===true);
    else if(path==='/api/workshop/analyze')result=await workshop.analyze();
    else if(path==='/api/workshop/listen-analyze'){if(d.confirm!==true)throw Error('Confirme la lecture pour mesurer les traitements');result=await workshop.listenAnalyze();}
    else if(path==='/api/workshop/cancel')result=workshop.cancelAnalysis();
@@ -306,6 +310,10 @@ const handler: http.RequestListener = async (req, res) => {
       else{res.writeHead(404);res.end(JSON.stringify({error:'Action inconnue'}));return;}
       res.end(JSON.stringify(result));
     }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path==='/api/coach/vocal-fx'&&req.method==='GET'){res.end(JSON.stringify(vocalFx.status()));return;}
+  if(path.startsWith('/api/coach/vocal-fx/')&&req.method==='POST'){
+    try{const d=await body(req);const result=path==='/api/coach/vocal-fx/read-doses'?await vocalFx.readDoses():path==='/api/coach/vocal-fx/preview'?await vocalFx.preview(d):path==='/api/coach/vocal-fx/apply'?await vocalFx.apply(d.token,d.confirm):path==='/api/coach/vocal-fx/keep'?await vocalFx.keep():path==='/api/coach/vocal-fx/undo'?await vocalFx.undo(d.all===true,d.confirm===true):null;if(!result)throw Error('Action d’ambiance inconnue');res.end(JSON.stringify(result));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path.startsWith('/api/coach/')&&req.method==='POST'){
     try{const d=await body(req);let result:unknown;

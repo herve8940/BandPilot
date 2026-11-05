@@ -16,9 +16,10 @@ test('interrupted workshop blocks competing recording, routing and scene routes 
  try{
   let ready=false;for(let i=0;i<120;i++){try{if((await fetch(url+'/api/auth')).ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,50));}assert.ok(ready,logs);
   const state=await (await fetch(url+'/api/workshop')).json() as any;assert.equal(state.active.phase,'recovery');assert.equal(state.active.a,undefined);
-  for(const path of ['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/mixer-sync/apply','/api/console/apply','/api/reacue/event','/api/library/abc/apply']){
+  for(const path of ['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/mixer-sync/apply','/api/console/apply','/api/reacue/event','/api/library/abc/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo']){
    const res=await post(path);assert.equal(res.status,409);assert.match((await res.json() as any).error,/Atelier du son/);
   }
+  for(const action of ['apply','undo']){const invalid=await post('/api/coach/vocal-fx/nested/'+action);assert.equal(invalid.status,400);assert.match((await invalid.json() as any).error,/Action d’ambiance inconnue/);}
   const stop=await post('/api/reaper/stop');assert.doesNotMatch((await stop.json() as any).error??'',/Atelier du son/,'Stop still reaches REAPER, even when its bridge is offline');
  }finally{child.kill('SIGTERM');await new Promise(r=>child.once('exit',r));await rm(dir,{recursive:true,force:true});}
 });

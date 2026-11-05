@@ -138,6 +138,8 @@ return function(H, r, helpers)
     local ok,result=pcall(function()
       local channels=a.channels or 2;assert(channels==1 or channels==2,'Format mono/stéréo invalide')
       local frames=math.floor(rate*a.duration);local peak,sum,count,clipped=0,0,0,0
+      local envelope={step=.02,peak={},rms={}};local envsum,envpeak={},{}
+      local envframes=math.floor(rate*envelope.step)
       local bands={};for i=1,28 do bands[i]=0 end
       local left,right,cross,sl,sr=0,0,0,0,0;local blocks=0
       for offset=0,frames-1,8192 do
@@ -147,15 +149,24 @@ return function(H, r, helpers)
         count=count+n*channels
         if got>0 then
           local samples=buffer.table()
-          for _,v in ipairs(samples) do local x=math.abs(v);peak=math.max(peak,x);sum=sum+v*v;if x>=.999 then clipped=clipped+1 end end
+          for i,v in ipairs(samples) do
+            local x=math.abs(v);peak=math.max(peak,x);sum=sum+v*v;if x>=.999 then clipped=clipped+1 end
+            local bin=math.floor((offset+math.floor((i-1)/channels))/envframes)+1
+            envsum[bin]=(envsum[bin] or 0)+v*v;envpeak[bin]=math.max(envpeak[bin] or 0,x)
+          end
           if channels==2 then for i=1,n do local l,rr=samples[2*i-1],samples[2*i];left=left+l*l;right=right+rr*rr;cross=cross+l*rr;sl=sl+l;sr=sr+rr end end
           -- Partial blocks retain their correct duration when spectra are aggregated.
           local spec=spectrum(samples,n,channels,rate);for i,v in ipairs(spec) do bands[i]=bands[i]+v*n/frames end
           blocks=blocks+1
         end
       end
+      local function db(x)return x>0 and math.max(-120,20*math.log(x)/math.log(10)) or -120 end
+      for i=1,math.ceil(a.duration/envelope.step) do
+        local n=math.max(1,math.min(envframes,frames-(i-1)*envframes)*channels)
+        envelope.peak[i]=db(envpeak[i] or 0);envelope.rms[i]=db(math.sqrt((envsum[i] or 0)/n))
+      end
       local stereo=channels==2 and {left=math.max(0,left-sl*sl/frames),right=math.max(0,right-sr*sr/frames),cross=cross-sl*sr/frames,frames=frames} or nil
-      return {start=a.start,duration=a.duration,peak=peak,sumSquares=sum,samples=count,clipped=clipped,rate=rate,spectrum=bands,stereo=stereo}
+      return {start=a.start,duration=a.duration,peak=peak,sumSquares=sum,samples=count,clipped=clipped,rate=rate,spectrum=bands,stereo=stereo,envelope=envelope}
     end)
     r.DestroyAudioAccessor(accessor);assert(ok,result);return result
   end

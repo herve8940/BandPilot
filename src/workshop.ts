@@ -7,14 +7,16 @@ import {BRIDGE_VERSION} from './reaper-bridge.js';
 import type {LibraryStore} from './library-store.js';
 import {spectralEvidence,inferWorkshopFamily,WORKSHOP_FAMILIES,type SpectralWindow,type SpectralEvidence,type WorkshopFamily} from '../shared/workshop-spectrum.js';
 import {spectralAdvice,advicePriority} from './workshop-spectral-advice.js';
+import {temporalEvidence,type Envelope,type TemporalEvidence,type GateReference} from '../shared/workshop-envelope.js';
+import {dynamicsAdvice} from './workshop-dynamics-advice.js';
 import {PARAMETERS,toWire,fromWire,readbackTolerance,type Value} from './parameters.js';
 
 export type Mapping={index:number;guid:string;name:string;channel:number;channels:number;family?:WorkshopFamily};
-export type AudioWindow=SpectralWindow & {start:number;duration:number;peak:number;sumSquares:number;samples:number;clipped:number;rate:number};
-export type Evidence={channel:number;name:string;windows:AudioWindow[];peakDb:number;rmsDb:number;crestDb:number;clipped:number;spectral?:SpectralEvidence};
-export type Advice={kind?:'level'|'eq'|'phase'|'dynamics';unavailableReason?:string;id:string;channel:number;title:string;fact:string;hypothesis:string;start:number;stop:number;changes:Record<string,Value>;impact:string;baseline?:Values};
+export type AudioWindow=SpectralWindow & {start:number;duration:number;peak:number;sumSquares:number;samples:number;clipped:number;rate:number;envelope?:Envelope};
+export type Evidence={channel:number;name:string;windows:AudioWindow[];peakDb:number;rmsDb:number;crestDb:number;clipped:number;spectral?:SpectralEvidence;temporal?:TemporalEvidence};
+export type Advice={kind?:'level'|'eq'|'phase'|'dynamics'|'gate';unavailableReason?:string;id:string;channel:number;title:string;fact:string;hypothesis:string;start:number;stop:number;changes:Record<string,Value>;impact:string;baseline?:Values};
 type Values=Record<string,Value>;
-export type WorkshopSession={id:string;name:string;identity:string;model:string;source:string;project:string;start:number;stop:number;mapping:Mapping[];phase:'preparing'|'active'|'recovery'|'finished';route:Values;virtual:Values;a:Values;b:Values;side:'A'|'B';note:string;createdAt:string;report?:Evidence[];dynamics?:{channel:number;name:string;maxReduction:number;strongPercent:number;start:number;stop:number;samples:number}[];advice?:Advice[];preference?:'A'|'B';error?:string;trial?:{id:string;before:Values;after:Values};};
+export type WorkshopSession={id:string;name:string;identity:string;model:string;source:string;project:string;start:number;stop:number;mapping:Mapping[];phase:'preparing'|'active'|'recovery'|'finished';route:Values;virtual:Values;a:Values;b:Values;side:'A'|'B';note:string;createdAt:string;report?:Evidence[];dynamics?:{channel:number;name:string;maxReduction:number;strongPercent:number;start:number;stop:number;samples:number}[];advice?:Advice[];preference?:'A'|'B';error?:string;gateReferences?:Record<string,GateReference>;trial?:{id:string;before:Values;after:Values};};
 export type Catalog={project:string;outputs:number;device:string;rate:number;tracks:{index:number;guid:string;name:string;channels:number;family?:WorkshopFamily;items:{pos:number;length:number;file:string;take:string}[]}[]};
 const prefix=(c:number)=>`/ch/${String(c).padStart(2,'0')}`;
 const db=(v:number)=>v>0?Math.max(-120,20*Math.log10(v)):-120;
@@ -33,7 +35,7 @@ export function evidence(channel:number,name:string,windows:AudioWindow[]):Evide
  if(!windows.length||windows.some(w=>![w.peak,w.sumSquares,w.samples,w.clipped,w.start,w.duration,w.rate].every(Number.isFinite)||w.samples<0||w.sumSquares<0||w.peak<0||w.clipped<0))throw Error('Mesure audio invalide');
  const samples=windows.reduce((n,w)=>n+w.samples,0);if(!samples)throw Error('Aucun audio mesurable pour '+name);
  const peakDb=db(Math.max(...windows.map(w=>w.peak))),rmsDb=db(Math.sqrt(windows.reduce((n,w)=>n+w.sumSquares,0)/samples));
- return {channel,name,windows,peakDb:round(peakDb),rmsDb:round(rmsDb),crestDb:round(peakDb-rmsDb),clipped:windows.reduce((n,w)=>n+w.clipped,0),spectral:spectralEvidence(windows)};
+ return {channel,name,windows,peakDb:round(peakDb),rmsDb:round(rmsDb),crestDb:round(peakDb-rmsDb),clipped:windows.reduce((n,w)=>n+w.clipped,0),spectral:spectralEvidence(windows),temporal:temporalEvidence(windows)};
 }
 export function measuredAdvice(report:Evidence[],values:Values):Advice[]{
  const result:Advice[]=[];
@@ -42,11 +44,11 @@ export function measuredAdvice(report:Evidence[],values:Values):Advice[]{
   const base={channel:e.channel,start:loud.start,stop:loud.start+loud.duration,kind:'level' as const,impact:'Traitement du canal : façade et retours prélevés après ce traitement. Les autres canaux ne changent pas.'};
   if(e.clipped>0)result.push({...base,id:`clip-${e.channel}`,title:`${e.name} : vérifier la prise`,fact:`${e.clipped} échantillons atteignent au moins −0,01 dBFS ; crête ${e.peakDb} dBFS.`,hypothesis:'Proximité du plafond numérique, pas une preuve suffisante de saturation. Écoute le passage. Un EQ ou un compresseur ne répare pas une prise déjà écrêtée ; vérifie le niveau à la source pour la suivante.',changes:{}});
   else if(e.peakDb< -42)result.push({...base,id:`quiet-${e.channel}`,title:`${e.name} : signal faible`,fact:`Crête ${e.peakDb} dBFS sur le passage analysé.`,hypothesis:'Vérifie que le musicien joue dans cet extrait et que la bonne piste est affectée, avant toute hausse de gain.',changes:{}});
-  else if(e.crestDb>16 && Number(values[`${p}/dyn/on`])===0){
+  else if(!e.temporal&&e.crestDb>16 && Number(values[`${p}/dyn/on`])===0){
    const units:Values={[`${p}/dyn/on`]:1,[`${p}/dyn/mode`]:0,[`${p}/dyn/thr`]:Math.max(-40,Math.min(-6,e.peakDb-8)),[`${p}/dyn/ratio`]:4,[`${p}/dyn/attack`]:20,[`${p}/dyn/release`]:150,[`${p}/dyn/mgain`]:0};
    // Ratio index is resolved from the console catalog, never guessed from a display ratio.
    const ratio=PARAMETERS[`${p}/dyn/ratio`]?.options?.findIndex(x=>Number.parseFloat(x)===2);if(ratio===undefined||ratio<0)continue;units[`${p}/dyn/ratio`]=ratio;
-   result.push({...base,id:`crest-${e.channel}`,title:`${e.name} : essayer une compression légère`,fact:`Crête ${e.peakDb} dBFS ; niveau RMS ${e.rmsDb} dBFS ; écart ${e.crestDb} dB sur la prise avant les traitements de console.`,hypothesis:'Cet écart peut être musical, notamment pour une batterie. Un essai à 2:1 peut rapprocher les niveaux ; garde-le uniquement si le résultat te plaît. Le gain de compensation reste à zéro.',changes:units});
+   result.push({...base,kind:'dynamics',id:`crest-${e.channel}`,title:`${e.name} : essayer une compression légère`,fact:`Crête ${e.peakDb} dBFS ; niveau RMS ${e.rmsDb} dBFS ; écart ${e.crestDb} dB sur la prise avant les traitements de console.`,hypothesis:'Cet écart peut être musical, notamment pour une batterie. Un essai à 2:1 peut rapprocher les niveaux ; garde-le uniquement si le résultat te plaît. Le gain de compensation reste à zéro.',changes:units});
   }
  }
  return result.map(a=>({...a,baseline:Object.fromEntries(Object.keys(a.changes).map(k=>[k,values[k]!]))})).sort((a,b)=>(a.id.startsWith('clip')?0:a.id.startsWith('quiet')?1:2)-(b.id.startsWith('clip')?0:b.id.startsWith('quiet')?1:2));
@@ -65,7 +67,7 @@ export class Workshop{
  private persist(){if(this.active&&this.entryId)this.library.update(this.entryId,this.active);}
  status(){
   const view=(s:WorkshopSession)=>{const {route,virtual,a,b,identity,...visible}=s;return {...visible,report:s.report?.map(({windows,...e})=>e),advice:s.advice?.map(({baseline,...advice})=>advice)};};
-  return {active:this.active?view(this.active):null,job:this.job,history:this.library.list('workshop').slice(0,20).map(e=>{const s=e.data as WorkshopSession;return {id:s.id,name:s.name,model:s.model,source:s.source,project:s.project,start:s.start,stop:s.stop,phase:s.phase,side:s.side,note:s.note,createdAt:s.createdAt,preference:s.preference,findings:s.advice?.map(({title,fact,start,kind})=>({title,fact,start,kind}))};}),supported:this.xr.model().usbRecorder==='interface'&&this.xr.model().family!=='x32'};
+  return {active:this.active?view(this.active):null,job:this.job,history:this.library.list('workshop',20).map(e=>{const s=e.data as WorkshopSession;return {id:s.id,name:s.name,model:s.model,source:s.source,project:s.project,start:s.start,stop:s.stop,phase:s.phase,side:s.side,note:s.note,createdAt:s.createdAt,preference:s.preference,findings:s.advice?.map(({title,fact,start,kind})=>({title,fact,start,kind}))};}),supported:this.xr.model().usbRecorder==='interface'&&this.xr.model().family!=='x32'};
  }
  blocksRecording(){return !!this.active;}
  private identity(){const s=this.xr.status();return JSON.stringify([s.mode,s.model,s.host??'',s.port]);}
@@ -80,7 +82,7 @@ export class Workshop{
  private async settings(mapping:Mapping[]){const channels=this.channels(mapping);return this.read(Object.keys(PARAMETERS).filter(a=>channels.some(c=>a.startsWith(prefix(c)+'/'))&&/\/(eq|dyn|gate)\/|\/preamp\/(hpon|hpf|invert)$/.test(a)));}
  private async adviceFor(s:WorkshopSession,report:Evidence[],settings:Values){
   const links:Values={};for(const m of s.mapping.filter(m=>m.channels===2)){for(const c of [m.channel,m.channel+1]){const odd=c%2?c:c-1,key=`/config/chlink/${odd}-${odd+1}`;if(!(key in links))links[key]=await this.xr.readParameter(key);}}
-  return [...measuredAdvice(report,settings).filter(a=>!Object.keys(a.changes).length||s.mapping.find(m=>m.channel===a.channel)?.channels===1),...spectralAdvice(report,s.mapping,{...settings,...links})].sort((a,b)=>advicePriority(a)-advicePriority(b));
+  return [...measuredAdvice(report,settings).filter(a=>!Object.keys(a.changes).length||s.mapping.find(m=>m.channel===a.channel)?.channels===1),...dynamicsAdvice(report,s.mapping,settings,s.gateReferences),...spectralAdvice(report,s.mapping,{...settings,...links})].sort((a,b)=>advicePriority(a)-advicePriority(b));
  }
  private async stopped(s:WorkshopSession){const state=await this.bridge.state();if(state.project!==s.project||state.playing||state.recording)throw Error('Reviens au projet atelier et arrête la lecture avant de modifier ou analyser');}
  private async serial<T>(fn:()=>Promise<T>){if(this.busy||this.job?.running)throw Error('Une opération atelier est en cours');this.busy=true;try{return await fn();}finally{this.busy=false;}}
@@ -131,7 +133,7 @@ export class Workshop{
   s.phase='finished';s.side=keep;s.preference=keep;delete s.error;this.persist();this.active=null;this.entryId=null;return this.status();
  });}
  async analyze(){return this.serial(async()=>{const s=this.requireActive();await this.stopped(s);if(s.phase!=='active'||s.trial)throw Error('Termine la récupération ou l’essai');
-  this.cancelled=false;this.job={running:true,progress:0,error:''};delete s.report;delete s.advice;delete s.dynamics;this.persist();void this.runAnalysis(s);return this.status();});}
+  this.cancelled=false;this.job={running:true,progress:0,error:''};delete s.report;delete s.advice;delete s.dynamics;delete s.gateReferences;this.persist();void this.runAnalysis(s);return this.status();});}
  private async runAnalysis(s:WorkshopSession){
   try{
    const revision=await this.bridge.call<{revision:number}>('workshop_revision',{id:s.id,project:s.project});
@@ -187,7 +189,7 @@ export class Workshop{
     const strongPercent=Math.round(points.filter(p=>p.value < -8).length/points.length*100);
     measured.push({channel,name,maxReduction:round(-strongest.value),strongPercent,start:strongest.pos,stop:Math.min(end,strongest.pos+1),samples:points.length});
     if(strongPercent>=20&&Number(settings[`${p}/dyn/on`])===1&&Number(settings[`${p}/dyn/mode`])===0){const address=`${p}/dyn/thr`,threshold=Number(fromWire(address,settings[address]!));
-     advice.push({id:`gr-${channel}`,channel,title:`${name} : compression à comparer`,fact:`La console retire jusqu’à ${round(-strongest.value)} dB ; plus de 8 dB sur ${strongPercent} % des relevés du passage.`,hypothesis:'Cela peut être voulu. Essaie un seuil 3 dB plus haut pour conserver davantage de dynamique, puis compare à l’oreille.',start:strongest.pos,stop:Math.min(end,strongest.pos+1),impact:'Compresseur du canal : agit aussi sur les retours prélevés après ce traitement.',changes:{[address]:Math.min(0,threshold+3)},baseline:Object.fromEntries(Object.entries(settings).filter(([k])=>k.startsWith(p+'/dyn/')))});
+     advice.push({id:`gr-${channel}`,kind:'dynamics',channel,title:`${name} : compression à comparer`,fact:`La console retire jusqu’à ${round(-strongest.value)} dB ; plus de 8 dB sur ${strongPercent} % des relevés du passage.`,hypothesis:'Cela peut être voulu. Essaie un seuil 3 dB plus haut pour conserver davantage de dynamique, puis compare à l’oreille.',start:strongest.pos,stop:Math.min(end,strongest.pos+1),impact:'Compresseur du canal : agit aussi sur les retours prélevés après ce traitement.',changes:{[address]:Math.min(0,threshold+3)},baseline:Object.fromEntries(Object.entries(settings).filter(([k])=>k.startsWith(p+'/dyn/')))});
     }
    }
    if(!measured.length)throw Error('Aucune réduction de gain récente reçue de la console ; aucune valeur inventée');
@@ -196,13 +198,25 @@ export class Workshop{
   finally{this.xr.off('dynamics',listener);try{await this.bridge.call('workshop_transport',{id:s.id,project:s.project,action:'stop',start:s.start});}catch(e){if(this.job)this.job.error+=' · Arrête REAPER manuellement : '+(e as Error).message;}if(this.job)this.job.running=false;}
  }
  cancelAnalysis(){this.cancelled=true;return this.status();}
+ async gateReference(channel:number,input:GateReference,confirmed:boolean){return this.serial(async()=>{
+  const s=this.requireActive();await this.stopped(s);if(s.phase!=='active'||s.trial)throw Error('Termine la récupération ou l’essai');
+  if(!s.mapping.some(m=>m.channel===channel)||!s.report?.find(e=>e.channel===channel)?.temporal)throw Error('Analyse d’abord la prise de cet instrument');
+  if(confirmed!==true)throw Error('Écoute et identifie le repos puis une note faible');
+  const keys=['quietStart','quietStop','softStart','softStop'] as const;
+  if(!input||keys.some(k=>!Number.isFinite(input[k])))throw Error('Passages de référence invalides');
+  const end=Math.min(s.stop,s.start+30);
+  for(const [a,b] of [[input.quietStart,input.quietStop],[input.softStart,input.softStop]])if(a!<s.start||b!>end||b!-a!<.2)throw Error('Choisis au moins 0,2 seconde dans le passage analysé');
+  if(input.quietStart<input.softStop&&input.softStart<input.quietStop)throw Error('Le repos et la note faible doivent être deux passages distincts');
+  s.gateReferences={...s.gateReferences,[String(channel)]:Object.fromEntries(keys.map(k=>[k,input[k]])) as GateReference};
+  s.advice=await this.adviceFor(s,s.report!,await this.settings(s.mapping));this.persist();return this.status();
+ });}
  async trial(id:string,action:'try'|'keep'|'undo'){return this.serial(async()=>{
   const s=this.requireActive();await this.stopped(s);if(s.phase!=='active')throw Error('Restaure d’abord cet atelier');
   if(action==='try'){
    if(s.trial)throw Error('Un conseil est déjà en comparaison');
    const advice=s.advice?.find(a=>a.id===id);if(!advice||!Object.keys(advice.changes).length)throw Error('Conseil sans correction automatique');
    const pairs=new Set(Object.keys(advice.changes).map(a=>{const c=Number(a.split('/')[2]);return c%2?c:c-1;}));
-   for(const odd of pairs)if(Number(await this.xr.readParameter(`/config/chlink/${odd}-${odd+1}`))===1){const stereo=s.mapping.find(m=>m.channel===odd&&m.channels===2);const mirrored=stereo&&advice.kind==='eq'&&Object.entries(advice.changes).every(([key,value])=>advice.changes[key.replace(prefix(odd)+'/',prefix(odd+1)+'/')]===value&&advice.changes[key.replace(prefix(odd+1)+'/',prefix(odd)+'/')]===value);if(!mirrored)throw Error('Canaux liés : ajuste cette paire dans la Console, puis compare A/B dans l’atelier');}
+   for(const odd of pairs)if(Number(await this.xr.readParameter(`/config/chlink/${odd}-${odd+1}`))===1){const stereo=s.mapping.find(m=>m.channel===odd&&m.channels===2);const mirrored=stereo&&['eq','dynamics'].includes(advice.kind??'')&&Object.entries(advice.changes).every(([key,value])=>advice.changes[key.replace(prefix(odd)+'/',prefix(odd+1)+'/')]===value&&advice.changes[key.replace(prefix(odd+1)+'/',prefix(odd)+'/')]===value);if(!mirrored)throw Error('Canaux liés : ajuste cette paire dans la Console, puis compare A/B dans l’atelier');}
    if(s.side!=='B')throw Error('Passe sur B pour essayer un conseil');
    const after=Object.fromEntries(Object.entries(advice.changes).map(([a,v])=>[a,toWire(a,v)])),current=await this.read([...new Set([...Object.keys(after),...Object.keys(advice.baseline??{})])]),before=Object.fromEntries(Object.keys(after).map(k=>[k,current[k]!]));
    // Proposals about an inactive compressor cease to apply as soon as another controller enables it.

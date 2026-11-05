@@ -1,6 +1,6 @@
 {
   "name": "xr18-studio",
-  "version": "2.3.0-dev.2",
+  "version": "2.3.0-dev.3",
   "description": "BandPilot: free local mixer control, guided sound checks, personal monitors and REAPER rehearsals. Model-aware X-Air/M-Air support; partial X32 adapter.",
   "keywords": [
     "behringer",

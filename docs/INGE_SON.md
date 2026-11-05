@@ -107,3 +107,25 @@ Il ne reçoit pas les signaux audio par OSC et ne prétend pas entendre le mixag
 Conseils de placement, feedback et écoute : [Shure — How do I fix my feedback problem?](https://service.shure.com/articles/en_US/Knowledge/how-do-i-fix-my-feedback-problem), [Shure — Basics of equalization and feedback](https://service.shure.com/articles/en_US/Knowledge/basics-of-equalization-and-feedback), [Yamaha — How to use a compressor](https://hub.yamaha.com/proaudio/livesound/tools-of-the-trade-how-to-use-a-compressor/), [Yamaha — Band PA beginners guide](https://europe.yamaha.com/en/audio/portable-pa/explore/pa-beginners-guide/setting/band-pa.html).
 
 Interface de dialogue : [OpenAI — Structured model outputs](https://developers.openai.com/api/docs/guides/structured-outputs). Les valeurs de départ sont des suggestions éditables ; elles ne sont pas des presets officiels Behringer.
+
+## Ambiances vocales guidées — DEV 2.3
+
+Dans **Mon ingé son → Écouter et corriger → Ambiance de voix**, la boîte à outils **Une ambiance, chacun son dosage** propose :
+
+1. Choisir le chant ou les chœurs déjà déclarés dans le groupe.
+2. Choisir **Naturelle**, **Pop**, **Rock**, **Ample** ou **Écho court**. Ce sont des points de départ créatifs, pas des corrections déduites d’une analyse.
+3. Choisir le dosage pour chaque musicien, de **Sec** à **Ample** ; **Discret pour tous** prépare un départ commun.
+4. Cliquer sur **Préparer mon ambiance**, lire les destinataires et confirmer **Essayer dans les ears**.
+5. Écouter quelques phrases, puis **Garder cette ambiance** ou **Revenir avant l’essai**.
+
+Le type d’effet et ses paramètres sont communs ; la quantité est indépendante dans chaque retour. Le musicien utilise le fader **Voix FX** sur son téléphone. **Relire les dosages des musiciens** récupère ces changements dans la préparation. L’annulation d’un changement de style conserve les nouveaux dosages personnels ; **Retirer l’ambiance** restaure les réglages précédant sa création.
+
+La boîte utilise un seul processeur FX libre, alimenté par une voix à la fois. Elle évite les effets déjà alimentés, insérés ou reliés à d’autres effets. Une voix liée en stéréo reste à configurer dans la console. Les deux côtés d’un retour stéréo lié doivent avoir le même dosage. Aucun volume de canal sec, master de retour, préampli ou 48 V n’est modifié. L’effet est envoyé en pré-fader aux seuls retours préparés et son affectation façade est désactivée ; la voix sèche conserve son chemin existant.
+
+La proposition expire après dix minutes et devient invalide si la console change. Une sauvegarde durable précède les commandes ; après une panne partielle, le retour aux réglages précédents reste explicite. Si quelqu’un change le processeur, le routage ou ajoute un instrument dans son envoi, l’application refuse de remplacer ces changements. Pendant l’Atelier du son, terminer/restaurer l’Atelier avant d’essayer ou retirer une ambiance. L’annulation vocale est indépendante de **Annuler le dernier réglage guidé** du conseiller historique.
+
+Ce parcours vise X-Air / M-Air ; l’adaptation X32 n’est pas activée. Les programmes utilisent Hall, Plate et Stereo Delay (signal traité uniquement pour le délai), avec une correspondance indépendante des faits de protocole documentés dans [XAir_fxparse1.c de Patrick-Gilles Maillot](https://github.com/pmaillot/X32-Behringer/blob/master/XAir_fxparse1.c). Les programmes et leurs sauvegardes sont testés en simulation ; leur rendu acoustique doit encore être écouté sur le matériel réel.
+
+Validation du 5 novembre 2026 (DEV.3) : 179 tests serveur/Lua et 14 tests d’interface passent. L’essai et la conservation d’une ambiance ont été vérifiés dans Chrome sur une console simulée isolée. L’écran vocal tient à 390 et 1 280 pixels sans débordement horizontal. Aucun nouvel essai sonore sur la console réelle n’est inclus dans cette validation.
+
+![Boîte à outils vocale DEV.3, en simulation](images/dev-vocal-ambience.png)

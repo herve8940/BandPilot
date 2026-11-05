@@ -58,8 +58,10 @@ assert(#m.spectrum==28 and m.stereo.left==0,'DC rejected from stereo correlation
 local mono={};for k,v in pairs(request)do mono[k]=v end;mono.channels=1
 local oldSamples=r.GetAudioAccessorSamples;r.GetAudioAccessorSamples=function(_,_,channels,_,n,b)for i=1,n*channels do b[i]=.5 end;return 1 end
 local mm=H.workshop_measure(mono);assert(mm.samples==480 and mm.sumSquares==120 and mm.stereo==nil,'mono not duplicated')
+assert(mm.envelope.step==.02 and #mm.envelope.peak==1 and math.abs(mm.envelope.peak[1]+6.0206)<.001 and math.abs(mm.envelope.rms[1]+6.0206)<.001,'short mono envelope correctly normalized')
 r.GetAudioAccessorSamples=oldSamples
 r.GetAudioAccessorSamples=function()return 0 end;local silence=H.workshop_measure(request);assert(silence.samples==960 and silence.sumSquares==0,'silent gaps count toward the passage RMS')
+assert(silence.envelope.peak[1]==-120 and silence.envelope.rms[1]==-120,'missing audio is explicit silence, never a fake transient')
 r.GetAudioAccessorSamples=function()return -1 end;assert(not pcall(H.workshop_measure,request));assert(closed==4,'accessor cleaned up after errors')
 H.workshop_transport({id='abcd',project='/atelier.rpp',action='play',start=7});assert(playing==1 and t.values.B_MUTE==0)
 assert(not pcall(H.workshop_measure,request))

@@ -5,7 +5,7 @@ local SEP = package.config:sub(1, 1)
 local DIR = r.GetResourcePath() .. SEP .. "XR18Studio"
 r.RecursiveCreateDirectory(DIR, 0)
 local REQ, RES, BEAT = DIR .. SEP .. "request.lua", DIR .. SEP .. "response.json", DIR .. SEP .. "heartbeat.txt"
-local VERSION = "1.4.0"
+local VERSION = "1.5.0"
 
 local function jstr(s)
   return '"' .. tostring(s):gsub('[%z\1-\31\\"]', function(c)

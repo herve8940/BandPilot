@@ -48,7 +48,7 @@ test('clipping advice does not pretend to repair recorded clipping; every findin
 });
 test('only inactive compressors receive a bounded crest-factor proposal; no gain, route or phantom change',()=>{
  const e=evidence(2,'Basse',[{start:1,duration:1,peak:.8,sumSquares:1,samples:10000,clipped:0,rate:48000}]);
- const advice=measuredAdvice([e],{'/ch/02/dyn/on':0});assert.equal(advice.length,1);assert.equal(advice[0]!.changes['/ch/02/dyn/ratio'],3);assert.equal(advice[0]!.changes['/ch/02/dyn/mgain'],0);
+ const advice=measuredAdvice([e],{'/ch/02/dyn/on':0});assert.equal(advice.length,1);assert.equal(advice[0]!.kind,'dynamics');assert.equal(advice[0]!.changes['/ch/02/dyn/ratio'],3);assert.equal(advice[0]!.changes['/ch/02/dyn/mgain'],0);
  assert.ok(Object.keys(advice[0]!.changes).every(k=>k.startsWith('/ch/02/dyn/')));assert.equal(measuredAdvice([e],{'/ch/02/dyn/on':1}).length,0);
 });
 test('workshop preserves a USB backing source and trim, keeps chosen B processing, never changes source project',async()=>{
@@ -85,6 +85,18 @@ test('analysis is asynchronous, bounded and persisted; stale trial rejected; tri
 test('workshop history and actions are restricted to the administrator',()=>{
  for(const role of ['guest','musician'] as const)for(const method of ['GET','POST'])assert.equal(permitted({id:'x',name:'x',role,buses:[1]},method,'/api/workshop'),false);
 });
+test('gate reference is explicit, bounded and reversible with the existing A/B workflow',async()=>{
+ const f=await fixture();try{
+  const original=f.bridge.call;f.bridge.call=async(cmd,args={})=>cmd==='workshop_measure_batch'?{windows:[0,1].map(i=>({start:i,duration:1,rate:48000,samples:48000,peak:i?.2:.002,sumSquares:i?100:1,clipped:0,envelope:{step:.02,peak:Array(50).fill(i?-20:-55),rms:Array(50).fill(i?-23:-58)}}))}:original(cmd,args);
+  await f.xr.writeParameter('/ch/02/gate/keysrc',0);await f.xr.writeParameter('/ch/02/gate/filter/on',0);
+  await f.create();await f.workshop.analyze();while(f.workshop.status().job?.running)await new Promise(r=>setTimeout(r,5));
+  const ref={quietStart:0,quietStop:.5,softStart:1,softStop:1.5};
+  await assert.rejects(f.workshop.gateReference(2,ref,false),/identifie/);await assert.rejects(f.workshop.gateReference(2,{...ref,softStart:0},true),/distincts/);
+  await f.workshop.gateReference(2,ref,true);const advice=f.workshop.status().active!.advice!.find(a=>a.kind==='gate')!;assert.ok(Object.keys(advice.changes).length);
+  const before=await f.xr.readParameter('/ch/02/gate/thr');await f.workshop.trial(advice.id,'try');assert.notEqual(await f.xr.readParameter('/ch/02/gate/thr'),before);await f.workshop.trial(advice.id,'undo');assert.equal(await f.xr.readParameter('/ch/02/gate/thr'),before);
+  await f.xr.writeParameter('/ch/02/gate/keysrc',1);await assert.rejects(f.workshop.trial(advice.id,'try'),/modifiés/);
+ }finally{f.close();}
+});
 
 test('live compressor evidence is tied to actual playback and measured frames',async()=>{
  const f=await fixture();let timer:ReturnType<typeof setInterval>|undefined;try{
@@ -93,7 +105,7 @@ test('live compressor evidence is tied to actual playback and measured frames',a
  f.bridge.state=async()=>({...f.state,pos:f.state.playing?(Date.now()-started)/1000:0});
  timer=setInterval(()=>f.xr.emit('dynamics',{comp:Array(16).fill(-12),at:Date.now()}),40);
  await f.workshop.listenAnalyze();for(let i=0;i<1000&&f.workshop.status().job?.running;i++)await new Promise(r=>setTimeout(r,5));
- assert.equal(f.workshop.status().job!.error,'');assert.equal(f.workshop.status().active!.dynamics![0]!.maxReduction,12);assert.match(f.workshop.status().active!.advice![0]!.fact,/console retire/);assert.equal(f.state.playing,false);
+ assert.equal(f.workshop.status().job!.error,'');assert.equal(f.workshop.status().active!.dynamics![0]!.maxReduction,12);assert.match(f.workshop.status().active!.advice![0]!.fact,/console retire/);assert.equal(f.workshop.status().active!.advice![0]!.kind,'dynamics');assert.equal(f.state.playing,false);
  }finally{clearInterval(timer);f.close();}
 });
 

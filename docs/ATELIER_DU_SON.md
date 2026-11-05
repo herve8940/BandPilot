@@ -1,6 +1,6 @@
-# Atelier du son et conseils mesurés — DEV 2.3.0-dev.2
+# Atelier du son et conseils mesurés — DEV 2.3.0-dev.3
 
-Cette version de développement ajoute un parcours dans **Répéter → Atelier du son**, également accessible depuis **Mon ingé son**. Le pont REAPER passe à **1.4.0**. Les corrections de concurrence et de verrouillage Windows de 1.2.3 sont conservées.
+Cette version de développement ajoute un parcours dans **Répéter → Atelier du son**, également accessible depuis **Mon ingé son**. Le pont REAPER passe à **1.5.0**. Les corrections de concurrence et de verrouillage Windows de 1.2.3 sont conservées.
 
 ## Préparer un atelier
 
@@ -85,3 +85,19 @@ Sur six pistes synthétiques de 30 secondes, mesure native REAPER : environ 32 s
 Dans l’application installée, les sept constats attendus sont accessibles. Sur la vraie XR18, les essais −3 dB à 250 Hz / Q 1,2, coupe-bas 80 Hz et inversion du seul canal droit ont chacun été vérifiés par relecture : essai, annulation, conservation et rappel A/B. L’inversion n’est proposée que sur le passage 20–30 s où l’opposition est constante. Les canaux 9–13 et 15–16 sont restés coupés pendant les essais ; 679 paramètres ont ensuite été restaurés et vérifiés, REAPER arrêté sur le projet source. Les résultats tiennent à 390 et 1024 pixels sans débordement horizontal. L’analyse complète dans l’application avec plusieurs interfaces et les tests en parallèle dépasse une minute sur ce Mac ; les 32 secondes ci-dessus correspondent à la mesure native isolée.
 
 Le pont conserve la précision des faibles énergies lors de l’échange JSON, tolère le remplacement atomique de son fichier de présence, et donne régulièrement la main à l’analyse même lorsque l’interface interroge le transport. REC et Stop restent prioritaires. Le test de fin de boucle couvre le retour de 29,36 s à 0,38 s sans échantillon exactement sur la frontière.
+
+## Évolution DEV.3 : gate et compression par instrument
+
+Après **Analyser la prise**, choisir **Je travaille sur → instrument**. Les constats et leurs filtres sont limités à cet instrument ; un essai en cours reste toujours accessible. Le parcours demeure : analyser, comprendre, proposer, essayer sur B, écouter A/B, garder ou revenir avant l’essai.
+
+Pour le gate, ouvrir **Gate · nettoyer les pauses**. Écouter les deux repères et les ajuster : un repos réel de l’instrument (bruit/repisse seulement), puis une note faible à préserver. Chaque mesure couvre une demi-seconde. La lecture démarre au repère et continue dans le passage : appuyer sur **Stop** avant de proposer. Les repères automatiques sont des suggestions de niveau, pas une reconnaissance de l’intention musicale. La case d’identification doit être cochée avant de préparer le conseil.
+
+La proposition utilise le bruit au 95e percentile et les notes faibles au 20e percentile. Si leur séparation est inférieure à 10 dB, si le repos est déjà presque silencieux, si le détecteur utilise une autre source/un filtre, ou si la prise est stéréo, elle explique la limite sans appliquer de gate. Sinon, un expandeur doux 2:1 est proposé avec seuil, atténuation limitée, attaque, maintien et relâchement. La réduction est limitée à 6 dB pour la voix et les chœurs, 12 dB pour les fûts et 8 dB pour les autres familles. Les fins de mots et de notes restent à écouter avant de garder.
+
+Le pont mesure désormais des enveloppes de crête et RMS toutes les 20 ms. La proposition de compression exclut les pauses du calcul de dynamique et réutilise les familles de presets de **Mon ingé son**. Elle estime les attaques et décroissances, borne les réglages et laisse la compensation à zéro. Une résolution de 20 ms ne mesure pas précisément les transitoires très courtes : les temps proposés restent des points de départ. Cette proposition concerne les compresseurs désactivés ; les mesures de réduction de gain et le réglage manuel restent disponibles pour un compresseur déjà actif. Une paire stéréo reçoit des réglages symétriques, sans changer sa liaison.
+
+Les références musicales appartiennent à l’analyse courante et sont effacées à la prochaine analyse. Tout changement du détecteur ou des paramètres concernés après la proposition invalide celle-ci. Les protections de sauvegarde, A/B, essai et restauration s’appliquent aussi à ces nouveaux conseils. Les ambiances créatives de voix se trouvent dans **Mon ingé son**, hors de l’Atelier ; voir [le parcours vocal](INGE_SON.md#ambiances-vocales-guidées--dev-23).
+
+### Validation de cette évolution
+
+Les nouveaux calculs, les enveloppes Lua (y compris silence et dernière fenêtre incomplète), l’essai/annulation du gate, les propositions périmées et les interfaces sont couverts par des tests automatisés. Les tests matériels de la section précédente concernent DEV.2 : ils ne valident pas à eux seuls les nouveaux réglages gate, compression et ambiances de DEV.3. L’écoute sur la console et dans les ears reste à réaliser avant d’en faire une version stable.

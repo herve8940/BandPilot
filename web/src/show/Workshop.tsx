@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react';
 import {call,clock} from './api';
 import './workshop.css';
+import {WorkshopGate} from './WorkshopGate';
 import {WorkshopMeasurements,settingLabel,type WorkshopMeasure} from './WorkshopMeasurements';
 import {type WorkshopFamily} from '../../../shared/workshop-spectrum';
 const families:Record<WorkshopFamily,string>={guitar:'Guitare',voice:'Chant',backing:'Chœurs',bass:'Basse',drums:'Batterie',keys:'Claviers',other:'Autre / inconnu'};
@@ -13,14 +14,16 @@ type Catalog={token:string;project:string;device:string;outputs:number;rate:numb
 export function Workshop({onExpert}:{onExpert?:(channel:number)=>void}){
  const [status,setStatus]=useState<Status|null>(null),[catalog,setCatalog]=useState<Catalog|null>(null),[mapping,setMapping]=useState<Mapping[]>([]);
  const [start,setStart]=useState(0),[stop,setStop]=useState(30),[name,setName]=useState('Atelier du son'),[note,setNote]=useState(''),[raw,setRaw]=useState(false),[device,setDevice]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [focusChannel,setFocusChannel]=useState(0);
  const [filter,setFilter]=useState('priorities'),[familyChoices,setFamilyChoices]=useState<Record<string,WorkshopFamily>>({});
  const refresh=()=>call<Status>('/api/workshop').then(setStatus);
  useEffect(()=>{let active=true;const poll=()=>void call<Status>('/api/workshop').then(s=>{if(active)setStatus(s);}).catch(e=>{if(active)setError(e.message);});poll();const timer=setInterval(poll,1500);return()=>{active=false;clearInterval(timer);};},[]);
- const s=status?.active;useEffect(()=>{setNote(s?.note??'');},[s?.id]);
+ const s=status?.active;useEffect(()=>{setNote(s?.note??'');setFocusChannel(0);setFilter('priorities');},[s?.id]);
  const run=async(path:string,data:unknown={})=>{setBusy(true);setError('');try{const r=await call('/api/workshop/'+path,data);await refresh();return r;}catch(e){setError((e as Error).message);return null;}finally{setBusy(false);}};
  const load=async()=>{const c=await run('catalog') as Catalog|null;if(c){setCatalog(c);setFamilyChoices({});setRaw(false);setDevice(false);setMapping([]);const first=Math.min(...c.tracks.flatMap(t=>t.items.map(i=>i.pos)));setStart(Number.isFinite(first)?first:0);setStop((Number.isFinite(first)?first:0)+30);}};
  const working=busy||status?.job?.running;
- const visibleAdvice=s?.advice?.filter((a,i)=>filter==='all'||(filter==='priorities'&&(i<3||a.id===s.trial?.id))||a.kind===filter);
+ const instrumentAdvice=s?.advice?.filter(a=>!focusChannel||a.channel===focusChannel||a.id===s.trial?.id);
+ const visibleAdvice=instrumentAdvice?.filter((a,i)=>filter==='all'||(filter==='priorities'&&(i<3||a.id===s?.trial?.id))||a.kind===filter||a.id===s?.trial?.id);
  return <section className="bp-workshop" aria-label="Atelier du son">
   <header className="workshop-intro"><div><span className="workshop-eyebrow">ÉCOUTER · COMPARER · RETROUVER</span><h2>Atelier du son</h2><p>Travaille le son du groupe sur une vraie prise. Le même passage, les mêmes instruments, deux versions à écouter.</p></div><span className="xs2-badge">{s?'Atelier ouvert':'REAPER + USB multipiste'}</span></header>
   {error&&<p className="xs2-msg error" role="alert">{error}</p>}
@@ -40,10 +43,10 @@ export function Workshop({onExpert}:{onExpert?:(channel:number)=>void}){
     <p className="muted">Analyse locale des 30 premières secondes au maximum, avant les traitements de console. Aucun audio envoyé à un service IA. Les mesures décrivent le fichier, pas le niveau acoustique dans les ears.</p>
     {status?.job?.running&&<div role="status"><progress max="100" value={status.job.progress}/><span> Analyse {status.job.progress} % </span><button type="button" className="xs2-btn" onClick={()=>void run('cancel')}>Annuler</button></div>}
     {status?.job?.error&&<p role="alert" className="xs2-msg error">{status.job.error}</p>}
-    {s.report&&<WorkshopMeasurements rows={s.report}/>}
+    {s.report&&<><label className="workshop-instrument">Je travaille sur<select aria-label="Instrument à travailler" value={focusChannel} onChange={e=>setFocusChannel(Number(e.target.value))}><option value={0}>Tout le groupe</option>{s.mapping.map(m=><option key={m.channel} value={m.channel}>{m.name}</option>)}</select></label><WorkshopMeasurements rows={s.report.filter(e=>!focusChannel||e.channel===focusChannel)}/>{s.report.filter(e=>e.temporal&&e.channel===focusChannel).map(e=><WorkshopGate key={e.channel} channel={e.channel} name={e.name} start={s.start} stop={s.stop} temporal={e.temporal!} busy={!!working||!!s.trial||s.phase!=='active'} onListen={at=>void run('transport',{action:'play',start:at})} onPropose={reference=>{setFilter('gate');void run('gate-reference',{channel:e.channel,reference,confirm:true});}}/>)}{!focusChannel&&s.report.some(e=>e.temporal)&&<p className="muted">Choisis un instrument pour préparer son gate avec deux repères d’écoute.</p>}</>}
     {s.dynamics&&<div className="workshop-measures">{s.dynamics.map(e=><article key={e.channel}><b>{e.name} · console</b><span>Réduction maximale <strong>{e.maxReduction} dB</strong></span><span>Relevés au-delà de 8 dB <strong>{e.strongPercent} %</strong></span></article>)}</div>}
     {s.advice?.length===0&&<p role="status">Aucune priorité détectée avec les mesures disponibles. Cela ne garantit pas un équilibre sonore idéal : compare aussi à l’oreille.</p>}
-    {!!s.advice?.length&&<div className="workshop-filters" role="group" aria-label="Filtrer les conseils">{[['priorities','Priorités'],['eq','EQ'],['phase','Phase'],['all',`Tous (${s.advice.length})`]].map(([key,label])=><button type="button" key={key} className={`xs2-btn ${filter===key?'primary':''}`} aria-pressed={filter===key} onClick={()=>setFilter(key!)}>{label}</button>)}{filter==='priorities'&&s.advice.length>3&&<span className="muted">Les 3 premières priorités · tous les constats restent accessibles</span>}</div>}
+    {!!s.advice?.length&&<div className="workshop-filters" role="group" aria-label="Filtrer les conseils">{[['priorities','Priorités'],['eq','EQ'],['gate','Gate'],['dynamics','Compression'],['phase','Phase'],['all',`Tous (${instrumentAdvice?.length??0})`]].map(([key,label])=><button type="button" key={key} className={`xs2-btn ${filter===key?'primary':''}`} aria-pressed={filter===key} onClick={()=>setFilter(key!)}>{label}</button>)}{filter==='priorities'&&(instrumentAdvice?.length??0)>3&&<span className="muted">Les 3 premières priorités · tous les constats restent accessibles</span>}</div>}
     {!!s.advice?.length&&visibleAdvice?.length===0&&<p role="status">Aucun constat dans cette catégorie.</p>}
     {visibleAdvice?.map(a=><article className="workshop-advice" key={a.id}><h4>{a.title}</h4>{a.unavailableReason&&<span className="workshop-manual">À vérifier dans la prise ou la console</span>}<p><b>Mesure : </b>{a.fact}</p><p><b>À vérifier à l’écoute : </b>{a.hypothesis}</p>{a.unavailableReason&&a.unavailableReason!==a.hypothesis&&<p className="xs2-msg">{a.unavailableReason}</p>}<p className="muted">{a.impact}</p><div className="workshop-actions"><button type="button" className="xs2-btn" disabled={working} onClick={()=>void run('transport',{action:'play',start:a.start})}>▶ Écouter à {clock(a.start)}</button>{Object.keys(a.changes).length>0&&<>
       <details><summary>Voir les réglages proposés</summary><ul>{Object.entries(a.changes).map(([k,v])=><li key={k}>{settingLabel(k,v)}</li>)}</ul></details>
