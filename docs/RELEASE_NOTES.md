@@ -1,42 +1,45 @@
-# BandPilot 2.2.2 — ma console, mes retours et liaison REAPER
+# BandPilot 2.2.3 — français / English
 
 ## Français
 
-- **Ma console** : tranches visibles au choix, largeur compacte/confortable, sorties et Master repliables. Disposition sauvegardée localement par modèle et classe d’écran. Masquer ne coupe aucun son.
-- **Régie des retours** : accès depuis Retours ou Expert/Ears ; sélection par musicien, instruments attribués surlignés, envois, EQ à six bandes et compression du bus dans le même espace. Réduction de gain lorsqu’une mesure récente est disponible.
-- **Parcours du signal** : source physique/USB et prélèvement avant/après EQ ou fader. La matrice complète et les bus internes restent disponibles.
-- **Pont REAPER 1.2.3** : échanges isolés entre instances, transport prioritaire, demandes d’état regroupées, réponse conservée lors d’un verrouillage temporaire de fichier, sans réexécuter REC. Stop reste utilisable après une perte de liaison ; les nouvelles formes d’onde attendent la fin de la prise.
+BandPilot devient multilingue : **français et anglais**, avec un sélecteur dans **Réglages → Options · Langue**. Le changement est immédiat et le choix reste mémorisé après redémarrage, même si le port local de l’application change.
 
-**Après installation, mettre à jour le pont dans Répéter, sauvegarder les projets et redémarrer REAPER.** La mise à jour de l’application seule ne recharge pas un script déjà actif.
+- Console Simple/Expert, préparation, retours, répétitions, enregistrement, aides et confirmations traduits.
+- Langue indépendante sur le téléphone de chaque musicien ; choix également disponible à la connexion.
+- Menus et confirmations de l’application de bureau adaptés à la langue choisie.
+- Conseiller local capable de reconnaître les problèmes décrits en anglais ; conseiller connecté invité à répondre dans la langue sélectionnée.
+- Les noms personnels, projets REAPER, adresses OSC et valeurs audio restent inchangés.
+- **D’autres langues peuvent être ajoutées suivant la demande.**
 
-[Guide illustré des nouveautés](https://herve8940.github.io/BandPilot/WORKSPACES.html) · [Correctif REAPER](https://herve8940.github.io/BandPilot/hotfix-2.2.2.html)
-
-![Régie des retours — simulation](https://herve8940.github.io/BandPilot/images/bandpilot-2.2.2/regie-retours.png)
-
-### Télécharger
-
-| Plateforme | Installateur |
-|---|---|
-| Windows | `BandPilot-Windows-2.2.2.exe` |
-| Mac Intel | `BandPilot-macOS-2.2.2-x64.dmg` |
-| Mac Apple Silicon | `BandPilot-macOS-2.2.2-arm64.dmg` |
-| Debian / Ubuntu | `BandPilot-Linux-2.2.2-amd64.deb` |
-| Autres Linux | `BandPilot-Linux-2.2.2-x86_64.AppImage` |
-
-Les paquets et les sommes SHA-256 sont publiés ensemble après les contrôles du workflow. Installateurs potentiellement non signés/notariés. Sauvegarder scènes et projets avant mise à jour.
-
-### Validation et compatibilité
-
-140 tests serveur et 7 tests React réussis en préparation ; compilation serveur/interface et vérification visuelle à 1280, 1024 et 390 pixels. Les tests couvrent le bon bus, la lecture seule, les dispositions par modèle/écran, les verrous de fichiers et les chemins Windows. Les captures sont en simulation, sans audio matériel inventé.
-
-La liaison REAPER corrigée a été testée sur le Mac avec une prise réelle et deux clients concurrents. Les verrous Windows sont simulés ; une validation sur le PC Windows concerné reste nécessaire.
-
-XR18 validée matériellement. XR12/MR12 : deux sorties Aux physiques, pas d’interface USB multipiste PC. MR18/X18 et XR12/MR12 demandent encore leurs essais matériels. Cette nouvelle régie concerne X-Air/M-Air. **X32 reste partielle et expérimentale**, avec interface séparée ; pas d’extension implicite du coach, des FX, du routage complet ou des retours téléphone. [Matrice de compatibilité](https://herve8940.github.io/BandPilot/multi-model.html).
+Cette version part de la branche stable 2.2.2, sans intégration de la branche `dev`. Elle conserve la régie des retours, les dispositions personnalisées et le correctif de liaison **REAPER 1.2.3**. Si ce pont n’est pas encore installé, mets-le à jour dans Répéter, sauvegarde tes projets et redémarre REAPER.
 
 ## English
 
-Personal layouts remember visible strips, widths and output/Master visibility per model and screen class. The monitor desk combines each musician’s sends, bus EQ and compression, with signal-path explanations and the existing full matrix retained. Read-only controls remain disabled. No automatic processing or dynamic EQ is added.
+BandPilot is now multilingual: **English and French**, selectable in **Settings → Options · Language**. Switching is immediate and the choice survives a restart, including changes to the desktop app’s local port.
 
-**Update the REAPER bridge to 1.2.3, save projects and restart REAPER.** The bridge isolates concurrent exchanges, prioritizes transport and retries transient file writes without repeating Record. Stop remains available after a lost connection.
+- Translated Simple/Expert mixer, setup, monitors, rehearsals, recording, help and confirmations.
+- Each musician can choose a language on their phone; selection is also available at sign-in.
+- Native desktop menus and confirmations follow the selected language.
+- The local adviser understands English problem descriptions; connected advice uses the selected language.
+- Personal names, REAPER projects, OSC addresses and audio values remain unchanged.
+- **More languages can be added on request.**
 
-140 backend and 7 React tests passed during preparation. Physical testing remains XR18-only; Windows file-lock behaviour is simulated and needs confirmation on the affected PC. X32 remains partial/experimental. [Illustrated guide](https://herve8940.github.io/BandPilot/WORKSPACES.html#english).
+Based on stable 2.2.2, without merging `dev`. Includes the monitor desk, personal layouts and the **REAPER 1.2.3** connection fix. If that bridge is not installed yet, update it from Rehearse, save projects and restart REAPER.
+
+## Installers / Installateurs
+
+| Platform | Package |
+|---|---|
+| Windows | `BandPilot-Windows-2.2.3.exe` |
+| macOS Intel | `BandPilot-macOS-2.2.3-x64.dmg` |
+| macOS Apple Silicon | `BandPilot-macOS-2.2.3-arm64.dmg` |
+| Debian / Ubuntu | `BandPilot-Linux-2.2.3-amd64.deb` |
+| Other Linux | `BandPilot-Linux-2.2.3-x86_64.AppImage` |
+
+Packages and SHA-256 checksums are published together after platform tests and native startup checks. Packages may be unsigned/unnotarised. Back up scenes before updating.
+
+## Compatibilité / Compatibility
+
+Essais physiques sur XR18. X18, MR18, XR12 et MR12 : profils testés, validation physique propre à chaque appareil restante. X32 : prise en charge **partielle et expérimentale**. XR12/MR12 : USB stéréo sur clé, pas d’interface USB multipiste vers le PC.
+
+Hardware testing has been performed on XR18. Other model profiles still need their own physical validation. X32 support is **partial and experimental**. XR12/MR12 offer stereo USB-drive recording, not a PC multitrack USB interface. See the [compatibility matrix](https://herve8940.github.io/BandPilot/multi-model.html).

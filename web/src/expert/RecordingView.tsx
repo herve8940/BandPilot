@@ -1,3 +1,4 @@
+import {tx, getLocale} from "../i18n";
 import { useEffect, useState } from "react";
 
 type Track = { id: string; usb: number; stereo: boolean; name: string; presetLabel: string; source: string; tap: string; selected: boolean; warning?: string };
@@ -33,38 +34,38 @@ export function RecordingView({ embedded = false }: { embedded?: boolean }) {
 
   return <div className="xs2-page xs2-rec">
     {!embedded && <div className={`xs2-card xs2-rec-transport ${state === "recording" ? "on" : ""}`}>
-      <span className={`xs2-pill ${PILL[state]}`}><span className="xs2-dot" />{LABEL[state]}</span>
-      {status?.recording && <b className="xs2-rec-clock">{clock(status.elapsed)}</b>}
+      <span className={`xs2-pill ${PILL[state]}`}><span className="xs2-dot" />{tx(LABEL[state])}</span>
+      {status?.recording && <b className="xs2-rec-clock">{tx(clock(status.elapsed))}</b>}
       <div className="xs2-spacer" />
-      <button type="button" className="xs2-btn xs2-rec-btn" disabled={!!busy || (state !== "ready" || !status?.session)} onClick={() => void act("rec", "/api/reaper/rec")}>{busy === "rec" ? "Attente de Reaper…" : "● Rec"}</button>
-      <button type="button" className="xs2-btn" disabled={busy === "stop" || !["recording", "starting", "lost"].includes(state)} onClick={() => void act("stop", "/api/reaper/stop")}>{busy === "stop" ? "Arrêt…" : "■ Stop"}</button>
-      <button type="button" className="xs2-btn" disabled={!status?.recording} onClick={() => void act("marker", "/api/reaper/marker")}>Marqueur{status?.markers ? ` (${status.markers})` : ""}</button>
+      <button type="button" className="xs2-btn xs2-rec-btn" disabled={!!busy || (state !== "ready" || !status?.session)} onClick={() => void act("rec", "/api/reaper/rec")}>{tx(busy === "rec" ? "Attente de Reaper…" : "● Rec")}</button>
+      <button type="button" className="xs2-btn" disabled={busy === "stop" || !["recording", "starting", "lost"].includes(state)} onClick={() => void act("stop", "/api/reaper/stop")}>{tx(busy === "stop" ? "Arrêt…" : "■ Stop")}</button>
+      <button type="button" className="xs2-btn" disabled={!status?.recording} onClick={() => void act("marker", "/api/reaper/marker")}>{tx("Marqueur")}{tx(status?.markers ? ` (${status.markers})` : "")}</button>
     </div>}
-    {status?.alert && <div className="xs2-msg error" role="alert" style={{ margin: "12px 0 0" }}>{status.alert}<button type="button" aria-label="Fermer" onClick={() => void act("dismiss", "/api/reaper/dismiss")}>×</button></div>}
-    {error && <div className="xs2-msg error" role="alert" style={{ margin: "12px 0 0" }}>{error}<button type="button" aria-label="Fermer" onClick={() => setError("")}>×</button></div>}
-    {status?.session && <p className="muted">Session préparée ici : <b>{status.session.title}</b> · {status.session.tracks} pistes{status.session.hoursFree !== null ? ` · environ ${status.session.hoursFree} h d’espace disque` : ""}. Vérifie que c’est bien elle qui est ouverte dans Reaper avant d’appuyer sur Rec.</p>}
+    {status?.alert && <div className="xs2-msg error" role="alert" style={{ margin: "12px 0 0" }}>{tx(status.alert)}<button type="button" aria-label={tx("Fermer")} onClick={() => void act("dismiss", "/api/reaper/dismiss")}>{tx("×")}</button></div>}
+    {error && <div className="xs2-msg error" role="alert" style={{ margin: "12px 0 0" }}>{tx(error)}<button type="button" aria-label={tx("Fermer")} onClick={() => setError("")}>{tx("×")}</button></div>}
+    {status?.session && <p className="muted">{tx("Session préparée ici : ")}<b>{status.session.title}</b> · {tx(status.session.tracks)}{tx(" pistes")}{tx(status.session.hoursFree !== null ? ` · environ ${status.session.hoursFree} h d’espace disque` : "")}{tx(". Vérifie que c’est bien elle qui est ouverte dans Reaper avant d’appuyer sur Rec.")}</p>}
 
     <div className="xs2-split" style={{ marginTop: 14 }}>
       <div className="main xs2-card">
-        <div className="xs2-rec-head"><h3>Pistes à enregistrer</h3><button type="button" className="xs2-btn" disabled={!!busy} onClick={() => void load()}>{busy === "plan" ? "Lecture…" : "Relire la console"}</button></div>
-        {plan?.warnings.map(w => <p key={w} className="xs2-rec-warn">{w}</p>)}
-        {plan ? <table className="xs2-rec-table"><thead><tr><th /><th>Piste</th><th>Entrée USB</th><th>Format</th><th>Réglages Reaper</th><th>Prélèvement</th></tr></thead><tbody>
+        <div className="xs2-rec-head"><h3>{tx("Pistes à enregistrer")}</h3><button type="button" className="xs2-btn" disabled={!!busy} onClick={() => void load()}>{tx(busy === "plan" ? "Lecture…" : "Relire la console")}</button></div>
+        {plan?.warnings.map(w => <p key={w} className="xs2-rec-warn">{tx(w)}</p>)}
+        {plan ? <table className="xs2-rec-table"><thead><tr><th /><th>{tx("Piste")}</th><th>{tx("Entrée USB")}</th><th>{tx("Format")}</th><th>{tx("Réglages Reaper")}</th><th>{tx("Prélèvement")}</th></tr></thead><tbody>
           {plan.tracks.map(t => <tr key={t.id} className={selected.has(t.id) ? "" : "off"}>
-            <td><input type="checkbox" aria-label={`Enregistrer ${t.name}`} checked={selected.has(t.id)} onChange={() => toggle(t.id)} /></td>
-            <td><b>{t.name}</b>{selected.has(t.id) && t.warning && <small className="xs2-rec-warn">{t.warning}</small>}</td>
-            <td>{t.stereo ? `${t.usb}-${t.usb + 1}` : t.usb}</td><td>{t.stereo ? "Stéréo" : "Mono"}</td><td>{t.presetLabel}</td><td>{t.tap}</td>
-          </tr>)}</tbody></table> : <div className="xs2-empty">Lecture de la console…</div>}
+            <td><input type="checkbox" aria-label={tx(`Enregistrer ${t.name}`)} checked={selected.has(t.id)} onChange={() => toggle(t.id)} /></td>
+            <td><b>{t.name}</b>{selected.has(t.id) && t.warning && <small className="xs2-rec-warn">{tx(t.warning)}</small>}</td>
+            <td>{tx(t.stereo ? `${t.usb}-${t.usb + 1}` : t.usb)}</td><td>{tx(t.stereo ? "Stéréo" : "Mono")}</td><td>{tx(t.presetLabel)}</td><td>{tx(t.tap)}</td>
+          </tr>)}</tbody></table> : <div className="xs2-empty">{tx("Lecture de la console…")}</div>}
       </div>
       <aside className="side">
         <div className="xs2-card">
-          <h3>Préparer la session</h3>
-          <label className="xs2-rec-field">Nom<input value={name} maxLength={60} placeholder="Répétition" onChange={e => setName(e.target.value)} /></label>
-          <label className="xs2-rec-field">Dossier<input value={folder} placeholder={status?.defaultFolder ?? ""} onChange={e => setFolder(e.target.value)} /></label>
-          <p className="muted">{chosen.length} piste{chosen.length > 1 ? "s" : ""} · WAV 24 bits · réglages par instrument · {plan ? plan.sampleRate / 1000 : "—"} kHz{plan?.hoursFree != null ? ` · environ ${plan.hoursFree} h d’espace disque` : ""}{alerts.length ? ` · ${alerts.length} à vérifier` : ""}</p>
-          <button type="button" className="xs2-btn primary" disabled={!!busy || !chosen.length || !!status?.recording} onClick={() => void prepare()}>{busy === "session" ? "Préparation…" : "Créer et ouvrir dans Reaper"}</button>
-          <p className="muted">Une session existante n’est jamais écrasée. La console n’est pas modifiée. Même si la console est simulée, REAPER enregistre les véritables entrées audio.</p>
+          <h3>{tx("Préparer la session")}</h3>
+          <label className="xs2-rec-field">{tx("Nom")}<input value={name} maxLength={60} placeholder={tx("Répétition")} onChange={e => setName(e.target.value)} /></label>
+          <label className="xs2-rec-field">{tx("Dossier")}<input value={folder} placeholder={tx(status?.defaultFolder ?? "")} onChange={e => setFolder(e.target.value)} /></label>
+          <p className="muted">{tx(chosen.length)}{tx(" piste")}{tx(chosen.length > 1 ? "s" : "")}{tx(" · WAV 24 bits · réglages par instrument · ")}{tx(plan ? plan.sampleRate / 1000 : "—")}{tx(" kHz")}{tx(plan?.hoursFree != null ? ` · environ ${plan.hoursFree} h d’espace disque` : "")}{tx(alerts.length ? ` · ${alerts.length} à vérifier` : "")}</p>
+          <button type="button" className="xs2-btn primary" disabled={!!busy || !chosen.length || !!status?.recording} onClick={() => void prepare()}>{tx(busy === "session" ? "Préparation…" : "Créer et ouvrir dans Reaper")}</button>
+          <p className="muted">{tx("Une session existante n’est jamais écrasée. La console n’est pas modifiée. Même si la console est simulée, REAPER enregistre les véritables entrées audio.")}</p>
         </div>
-        <div className="xs2-card"><h3>Carte son</h3><p className="muted">Une seule fois dans Reaper : Préférences › Audio › Device, choisis la console.</p></div>
+        <div className="xs2-card"><h3>{tx("Carte son")}</h3><p className="muted">{tx("Une seule fois dans Reaper : Préférences › Audio › Device, choisis la console.")}</p></div>
       </aside>
     </div>
   </div>;

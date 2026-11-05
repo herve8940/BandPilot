@@ -1,3 +1,4 @@
+import {tx, getLocale} from "../i18n";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
 import { bandResponse, clamp01, dbToFader, faderToDb, formatDb, lin, logMap, RATIOS } from "../xairMath";
 import type { HelpPage } from "../xairHelp";
@@ -30,7 +31,7 @@ export function Meter({ indexes, wide = false }: { indexes: number[]; wide?: boo
     const peak = peaks.current[i];
     if (!peak || db > peak.value || Date.now() - peak.at > 1500) peaks.current[i] = { value: db, at: Date.now() };
     const peakPos = meterPos(peaks.current[i]!.value);
-    return <div key={index} className="xm-meter-bar" title={`${db.toFixed(1)} dBFS`}>
+    return <div key={index} className="xm-meter-bar" title={tx(`${db.toFixed(1)} dBFS`)}>
       <div className="xm-meter-fill" style={{ clipPath: `inset(${(1 - meterPos(db)) * 100}% 0 0 0)` }} />
       {peakPos > 0 && <div className="xm-meter-peak" style={{ bottom: `${peakPos * 100}%` }} />}
       {db > -0.5 && <div className="xm-meter-clip" />}
@@ -41,9 +42,9 @@ export function Meter({ indexes, wide = false }: { indexes: number[]; wide?: boo
 /** Big meter with a dB scale, as on the left/right of X-AIR Edit views. */
 export function ScaledMeter({ indexes, label }: { indexes: number[]; label?: string }) {
   return <div className="xm-scaled-meter">
-    <div className="xm-scale">{[0, -5, -10, -20, -30, -40, -50].map(d => <span key={d} style={{ bottom: `${meterPos(d) * 100}%` }}>{d}</span>)}</div>
+    <div className="xm-scale">{[0, -5, -10, -20, -30, -40, -50].map(d => <span key={d} style={{ bottom: `${meterPos(d) * 100}%` }}>{tx(d)}</span>)}</div>
     <Meter indexes={indexes} wide />
-    {label && <small>{label}</small>}
+    {label && <small>{tx(label)}</small>}
   </div>;
 }
 
@@ -70,11 +71,11 @@ const FADER_MARKS = [10, 5, 0, -5, -10, -20, -30, -50];
 export function Fader({ value, onChange, disabled, label, reset = .75, accent }: { value: number; onChange: (v: number) => void; disabled?: boolean; label: string; reset?: number; accent?: string }) {
   const track = useRef<HTMLDivElement>(null);
   const drag = useRef<{ y: number; v: number } | null>(null);
-  return <div className={disabled ? "xm-fader disabled" : "xm-fader"} role="slider" aria-disabled={!!disabled} aria-label={label} aria-valuemin={0} aria-valuemax={1} aria-valuenow={value}
-    aria-valuetext={`${formatDb(faderToDb(value))} dB`} tabIndex={disabled ? -1 : 0} onKeyDown={keyStep(value, onChange, disabled)}
+  return <div className={disabled ? "xm-fader disabled" : "xm-fader"} role="slider" aria-disabled={!!disabled} aria-label={tx(label)} aria-valuemin={0} aria-valuemax={1} aria-valuenow={value}
+    aria-valuetext={tx(`${formatDb(faderToDb(value))} dB`)} tabIndex={disabled ? -1 : 0} onKeyDown={keyStep(value, onChange, disabled)}
     onWheel={e => { if (!disabled) onChange(clamp01(value - Math.sign(e.deltaY) * (e.shiftKey ? .002 : .01))); }}
     onDoubleClick={() => { if (!disabled) onChange(reset); }}>
-    <div className="xm-fader-scale">{FADER_MARKS.map(db => <span key={db} style={{ bottom: `${dbToFader(db) * 100}%` }}>{db > 0 ? db : Math.abs(db)}</span>)}</div>
+    <div className="xm-fader-scale">{FADER_MARKS.map(db => <span key={db} style={{ bottom: `${dbToFader(db) * 100}%` }}>{tx(db > 0 ? db : Math.abs(db))}</span>)}</div>
     <div className="xm-fader-track" ref={track}
       onPointerDown={e => {
         if (disabled || !track.current) return;
@@ -95,11 +96,11 @@ export function Fader({ value, onChange, disabled, label, reset = .75, accent }:
 export function VBar({ value, onChange, label, display, disabled, reset, scale, help, height = 150 }: { value: number; onChange: (v: number) => void; label: string; display: string; disabled?: boolean; reset?: number; scale?: [number, string][]; help?: string; height?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const drag = useVerticalDrag(value, onChange, disabled, height);
-  return <div className={disabled ? "xm-vbar disabled" : "xm-vbar"} title={help ? `${label} — ${help}` : label}>
-    <b className="xm-vbar-value">{display}</b>
+  return <div className={disabled ? "xm-vbar disabled" : "xm-vbar"} title={tx(help ? `${label} — ${help}` : label)}>
+    <b className="xm-vbar-value">{tx(display)}</b>
     <div className="xm-vbar-body" style={{ height }}>
-      {scale && <div className="xm-vbar-scale">{scale.map(([pos, text]) => <span key={text} style={{ bottom: `${pos * 100}%` }}>{text}</span>)}</div>}
-      <div ref={ref} className="xm-vbar-track" role="slider" aria-label={label} aria-valuetext={display} tabIndex={disabled ? -1 : 0} onKeyDown={keyStep(value, onChange, disabled)}
+      {scale && <div className="xm-vbar-scale">{scale.map(([pos, text]) => <span key={text} style={{ bottom: `${pos * 100}%` }}>{tx(text)}</span>)}</div>}
+      <div ref={ref} className="xm-vbar-track" role="slider" aria-label={tx(label)} aria-valuetext={tx(display)} tabIndex={disabled ? -1 : 0} onKeyDown={keyStep(value, onChange, disabled)}
         onDoubleClick={() => { if (!disabled && reset !== undefined) onChange(reset); }}
         {...drag}
         onPointerDown={e => {
@@ -111,7 +112,7 @@ export function VBar({ value, onChange, label, display, disabled, reset, scale, 
         <div className="xm-vbar-fill" style={{ height: `${value * 100}%` }} />
       </div>
     </div>
-    <small>{label}</small>
+    <small>{tx(label)}</small>
   </div>;
 }
 
@@ -122,39 +123,39 @@ export function Knob({ value, onChange, label, display, disabled, reset, size = 
   const arc = (from: number, to: number) => { const [x0, y0] = point(from), [x1, y1] = point(to); return `M${x0} ${y0} A${r} ${r} 0 ${Math.abs(to - from) * 270 > 180 ? 1 : 0} 1 ${x1} ${y1}`; };
   const start = bipolar ? .5 : 0, [px, py] = point(value);
   const drag = useVerticalDrag(value, onChange, disabled, 160);
-  return <div className={disabled ? "xm-knob disabled" : "xm-knob"} title={`${label} : ${display}${help ? " — " + help : ""}`}>
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="slider" aria-disabled={!!disabled} aria-valuemin={0} aria-valuemax={1} aria-valuenow={value} aria-label={label} aria-valuetext={display} tabIndex={disabled ? -1 : 0} onKeyDown={keyStep(value, onChange, disabled)} {...drag}
+  return <div className={disabled ? "xm-knob disabled" : "xm-knob"} title={tx(`${label} : ${display}${help ? " — " + help : ""}`)}>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="slider" aria-disabled={!!disabled} aria-valuemin={0} aria-valuemax={1} aria-valuenow={value} aria-label={tx(label)} aria-valuetext={tx(display)} tabIndex={disabled ? -1 : 0} onKeyDown={keyStep(value, onChange, disabled)} {...drag}
       onDoubleClick={() => { if (!disabled && reset !== undefined) onChange(reset); }}>
       <path d={arc(0, 1)} className="xm-knob-bg" />
       {Math.abs(value - start) > .002 && <path d={value > start ? arc(start, value) : arc(value, start)} className="xm-knob-val" />}
       <circle cx={c} cy={c} r={r - 5} className="xm-knob-body" />
       <line x1={c} y1={c} x2={c + (px - c) * .62} y2={c + (py - c) * .62} className="xm-knob-dot" />
     </svg>
-    <small>{label}</small><b>{display}</b>
+    <small>{tx(label)}</small><b>{tx(display)}</b>
   </div>;
 }
 
 export function Toggle({ on, onClick, children, tone = "cyan", disabled, title }: { on: boolean; onClick: () => void; children: ReactNode; tone?: "red" | "yellow" | "cyan" | "green" | "orange"; disabled?: boolean; title?: string }) {
-  return <button type="button" title={title} aria-pressed={on} disabled={disabled} className={`xm-toggle ${tone}${on ? " on" : ""}`} onClick={onClick}>{children}</button>;
+  return <button type="button" title={tx(title)} aria-pressed={on} disabled={disabled} className={`xm-toggle ${tone}${on ? " on" : ""}`} onClick={onClick}>{tx(children)}</button>;
 }
 
 export function Radio({ options, value, onChange, disabled, label }: { options: string[]; value: number; onChange: (i: number) => void; disabled?: boolean; label: string }) {
-  return <div className="xm-radio" role="radiogroup" aria-label={label}>{options.map((o, i) => <label key={o} className={value === i ? "on" : ""}>
-    <input type="radio" disabled={disabled} checked={value === i} onChange={() => onChange(i)} /><span>{o}</span></label>)}</div>;
+  return <div className="xm-radio" role="radiogroup" aria-label={tx(label)}>{options.map((o, i) => <label key={o} className={value === i ? "on" : ""}>
+    <input type="radio" disabled={disabled} checked={value === i} onChange={() => onChange(i)} /><span>{tx(o)}</span></label>)}</div>;
 }
 
 export function Select({ label, value, options, onChange, disabled, title }: { label: string; value: number; options: string[]; onChange: (i: number) => void; disabled?: boolean; title?: string }) {
-  return <label className="xm-select" title={title}>{label}<select disabled={disabled} value={value} onChange={e => onChange(Number(e.target.value))}>{options.map((o, i) => <option key={i} value={i}>{o}</option>)}</select></label>;
+  return <label className="xm-select" title={tx(title)}>{tx(label)}<select disabled={disabled} value={value} onChange={e => onChange(Number(e.target.value))}>{options.map((o, i) => <option key={i} value={i}>{tx(o)}</option>)}</select></label>;
 }
 
 // ---------- help ----------
 export function HelpPanel({ page, open, onToggle }: { page: HelpPage; open: boolean; onToggle: () => void }) {
   return <aside className={open ? "xm-help open" : "xm-help"}>
-    <button type="button" className="xm-help-toggle" onClick={onToggle} aria-expanded={open}>{open ? "Masquer les explications" : "? Explications"}</button>
+    <button type="button" className="xm-help-toggle" onClick={onToggle} aria-expanded={open}>{tx(open ? "Masquer les explications" : "? Explications")}</button>
     {open && <div className="xm-help-body">
-      <h4>{page.title}</h4><p>{page.intro}</p>
-      <dl>{page.items.map(([label, text]) => <div key={label}><dt>{label}</dt><dd>{text}</dd></div>)}</dl>
-      {page.tip && <p className="xm-help-tip">💡 {page.tip}</p>}
+      <h4>{tx(page.title)}</h4><p>{tx(page.intro)}</p>
+      <dl>{page.items.map(([label, text]) => <div key={label}><dt>{tx(label)}</dt><dd>{tx(text)}</dd></div>)}</dl>
+      {page.tip && <p className="xm-help-tip">💡 {tx(page.tip)}</p>}
     </div>}
   </aside>;
 }
@@ -264,10 +265,10 @@ export function useLiveMixer() {
    * `values` are display values: enum index, 0/1, or physical unit.
    */
   const confirmed = useCallback(async (values: Record<string, Value>, question: string) => {
-    if (!confirm(question)) return false;
+    if (!confirm(tx(question))) return false;
     try {
       const preview = await api("/api/console/preview", { values });
-      const allowPhantom = preview.phantom ? confirm("Confirmer le changement de l’alimentation 48 V ? Vérifie le micro branché (un micro à ruban peut être endommagé).") : false;
+      const allowPhantom = preview.phantom ? confirm(tx("Confirmer le changement de l’alimentation 48 V ? Vérifie le micro branché (un micro à ruban peut être endommagé).")) : false;
       if (preview.phantom && !allowPhantom) return false;
       const result = await api("/api/console/apply", { token: preview.token, confirm: true, allowPhantom });
       setMessage(`Appliqué. Sauvegarde : ${result.backupId}`);

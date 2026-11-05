@@ -1,3 +1,4 @@
+import {tx, getLocale} from "./i18n";
 import { useEffect, useState } from 'react';
 import { Activity, ArrowRight, BarChart3, SlidersHorizontal } from 'lucide-react';
 import type { Profile } from './CoachSetup';
@@ -37,25 +38,25 @@ export function CoachOverview({meters:snapshot,refresh,profile,simulation,connec
   const received = meters.filter(m=>m.db !== null).length;
   const high = meters.filter(m=>m.db !== null && m.db >= -1);
   const go = () => next.step === 'connect' ? onConnect() : onStep(next.step,next.channel);
-  return <section className="coach-overview" aria-label="Tableau de bord de la balance">
+  return <section className="coach-overview" aria-label={tx("Tableau de bord de la balance")}>
     <div className={`coach-next ${next.tone}`}>
-      <small><Activity size={14}/> PROCHAIN PAS CONSEILLÉ</small>
-      <h2>{next.title}</h2><p>{next.why}</p>
-      <button type="button" className="primary" disabled={busy} onClick={go}>{next.action}<ArrowRight size={16}/></button>
+      <small><Activity size={14}/>{tx(" PROCHAIN PAS CONSEILLÉ")}</small>
+      <h2>{tx(next.title)}</h2><p>{tx(next.why)}</p>
+      <button type="button" className="primary" disabled={busy} onClick={go}>{tx(next.action)}<ArrowRight size={16}/></button>
     </div>
     <div className="coach-live-summary">
-      <div className="coach-overview-status"><span className={simulation?'simulation':fresh?'live':'pending'}>{simulation?'Simulation':fresh?'Mesures reçues':'Mesures en attente'}</span><span>{canApply?'Application des réglages disponible':'Consultation · application désactivée'}</span></div>
+      <div className="coach-overview-status"><span className={simulation?'simulation':fresh?'live':'pending'}>{tx(simulation?'Simulation':fresh?'Mesures reçues':'Mesures en attente')}</span><span>{tx(canApply?'Application des réglages disponible':'Consultation · application désactivée')}</span></div>
       <details className="coach-live-inputs" open={profile.inputs.length > 0 && profile.inputs.length <= 6}>
-        <summary><b>{profile.inputs.length} instrument{profile.inputs.length>1?'s':''}</b><span>{simulation?'Aucun niveau réel':high.length?`${high.length} niveau${high.length>1?'x':''} proche${high.length>1?'s':''} de 0 dBFS`:`${received} niveau${received>1?'x':''} reçu${received>1?'s':''}`}</span></summary>
+        <summary><b>{tx(profile.inputs.length)}{tx(" instrument")}{tx(profile.inputs.length>1?'s':'')}</b><span>{tx(simulation?'Aucun niveau réel':high.length?`${high.length} niveau${high.length>1?'x':''} proche${high.length>1?'s':''} de 0 dBFS`:`${received} niveau${received>1?'x':''} reçu${received>1?'s':''}`)}</span></summary>
         <div className="coach-live-grid">{meters.map(m => <div className={`coach-live-input${m.db !== null && m.db >= -1?' hot':''}`} key={m.channel}>
-          <button type="button" disabled={busy} onClick={()=>onStep('levels',m.channel)} title={`Contrôler les niveaux de ${m.name}`}><small>{String(m.channel).padStart(2,'0')}</small><b>{m.name}</b><span>{m.db === null?'—':m.db <= -90?'Sous −90':`${m.db.toFixed(1)}`}<small>{m.db !== null?' dBFS':''}</small></span></button>
+          <button type="button" disabled={busy} onClick={()=>onStep('levels',m.channel)} title={tx(`Contrôler les niveaux de ${m.name}`)}><small>{tx(String(m.channel).padStart(2,'0'))}</small><b>{m.name}</b><span>{tx(m.db === null?'—':m.db <= -90?'Sous −90':`${m.db.toFixed(1)}`)}<small>{tx(m.db !== null?' dBFS':'')}</small></span></button>
           <div className="coach-live-bar" aria-hidden="true"><i style={{width:`${m.db === null?0:Math.max(0,Math.min(100,(m.db+60)/60*100))}%`}}/></div>
-          <button type="button" className="coach-open-channel" disabled={busy} aria-label={`Ouvrir ${m.name} dans la console Expert`} onClick={()=>onExpert(m.channel,'channel')}><SlidersHorizontal size={15}/></button>
+          <button type="button" className="coach-open-channel" disabled={busy} aria-label={tx(`Ouvrir ${m.name} dans la console Expert`)} onClick={()=>onExpert(m.channel,'channel')}><SlidersHorizontal size={15}/></button>
         </div>)}</div>
-        {!meters.length&&<p>Les entrées apparaîtront après la préparation du groupe.</p>}
+        {!meters.length&&<p>{tx("Les entrées apparaîtront après la préparation du groupe.")}</p>}
       </details>
-      {!simulation&&profile.inputs.length>0&&<div className="coach-calibration-state"><small>{calibration?`${calibration.filter(c=>c.state==='ok'&&profile.inputs.some(i=>i.channel===c.channel)).length} / ${profile.inputs.length} mesures de gain valides`:calibrationIssue?'Mesures enregistrées indisponibles · vérification dans Niveaux':'Vérification des mesures enregistrées…'}</small><button type="button" disabled={busy||!online||!connected} onClick={()=>setManualRefresh(n=>n+1)}>Actualiser</button></div>}
-      <div className="coach-overview-foot"><small>Niveaux instantanés reçus de la console. Pour régler le gain, utilise la mesure du passage fort.</small><button type="button" disabled={busy} onClick={()=>onExpert(undefined,'analysis')}><BarChart3 size={15}/> Analyse du mix</button></div>
+      {!simulation&&profile.inputs.length>0&&<div className="coach-calibration-state"><small>{tx(calibration?`${calibration.filter(c=>c.state==='ok'&&profile.inputs.some(i=>i.channel===c.channel)).length} / ${profile.inputs.length} mesures de gain valides`:calibrationIssue?'Mesures enregistrées indisponibles · vérification dans Niveaux':'Vérification des mesures enregistrées…')}</small><button type="button" disabled={busy||!online||!connected} onClick={()=>setManualRefresh(n=>n+1)}>{tx("Actualiser")}</button></div>}
+      <div className="coach-overview-foot"><small>{tx("Niveaux instantanés reçus de la console. Pour régler le gain, utilise la mesure du passage fort.")}</small><button type="button" disabled={busy} onClick={()=>onExpert(undefined,'analysis')}><BarChart3 size={15}/>{tx(" Analyse du mix")}</button></div>
     </div>
   </section>;
 }

@@ -6,6 +6,12 @@
 
 BandPilot est le nouveau nom de XR18 Studio. Il réunit console, balance guidée, retours personnels, préparation de concert et répétitions avec REAPER. Les captures ci-dessous proviennent de la version 2.2 en **simulation** ; ce ne sont pas des mesures audio réelles.
 
+
+## Choisir la langue
+
+Ouvre **Réglages → Options · Langue**, puis choisis **Français** ou **English**. Le changement est immédiat, sans redémarrage ni modification des réglages audio. Le choix reste mémorisé sur cet appareil, y compris après redémarrage de l’application de bureau. Sur un téléphone, le sélecteur se trouve en haut du retour personnel. Les noms de morceaux, scènes et musiciens ne sont pas traduits. D’autres langues peuvent être ajoutées suivant la demande.
+
+
 ## 1. Installer et conserver ses données
 
 Télécharge la version de ton ordinateur dans [les versions officielles](https://github.com/herve8940/BandPilot/releases/latest) : Windows `.exe`, Mac Intel `x64.dmg`, Mac Apple Silicon `arm64.dmg`, Linux `.deb` ou `.AppImage`. Ferme l’ancienne application avant d’installer. Les identifiants de données de XR18 Studio sont conservés : exporte tout de même tes scènes importantes avant la mise à jour. Aucun projet REAPER n’est converti automatiquement.

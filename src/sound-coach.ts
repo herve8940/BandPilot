@@ -161,7 +161,7 @@ export function thresholdsFrom(src:Source,peakDb:number,bleedDb?:number){
 }
 export function identifySymptom(text:string){
  const t=text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
- const patterns:[string,RegExp][]=[['feedback',/larsen|siffl/],['clipping',/satur|gresill|distors|rouge/],['cutoff',/coup|fin.*mot|fin.*note/],['noise',/souffle|bourdonn|bruit|buzz/],['harsh',/agress|pique|strident|criard/],['boomy',/grave|resonn|boom/],['muddy',/brouill|etouff|sourd|boueu/],['buried',/entend|disting|masqu|disparai|noye/],['uneven',/ecart|fort.*faible|irreguli|dynamique/],['dry',/reverb|sech|seche|echo/]];
+ const patterns:[string,RegExp][]=[['feedback',/larsen|siffl|feedback|whistl/],['clipping',/satur|gresill|distors|rouge|clipp|crackl|distort/],['cutoff',/coup|fin.*mot|fin.*note|cut.?off|cutting|chopp/],['noise',/souffle|bourdonn|bruit|buzz|hiss|humming|noise/],['harsh',/agress|pique|strident|criard|harsh|piercing|shrill/],['boomy',/grave|resonn|boom|resonan|too much bass/],['muddy',/brouill|etouff|sourd|boueu|muddy|muffled/],['buried',/entend|disting|masqu|disparai|noye|buried|mask|disappear|cannot hear|can.t hear/],['uneven',/ecart|fort.*faible|irreguli|dynamique|uneven|inconsistent|loud.*quiet/],['dry',/reverb|sech|seche|echo|\bdry\b/]];
  return patterns.find(([,r])=>r.test(t))?.[0]??null;
 }
 type MeterSample={updatedAt:string;channels:number[];available:boolean};

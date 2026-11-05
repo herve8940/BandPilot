@@ -6,6 +6,8 @@
 
 BandPilot is the new name of XR18 Studio: a free local app for guided sound checks, visual mixer control, personal phone monitors and REAPER rehearsals. Windows, Intel/Apple Silicon macOS and Linux.
 
+**Multilingual app: English and French.** Select your language in **Settings → Options · Language**; your choice is saved on this device. Musicians can choose their own language on their phones. More languages can be added on request.
+
 ![BandPilot 2.2 Expert mixer in simulation](docs/images/bandpilot-2.2/console.png)
 
 ## Features
@@ -27,7 +29,7 @@ Local operation needs no account or internet; mixer, computer and phones share a
 
 ## Get started
 
-Back up scenes, install the matching package, explore simulation, discover hardware read-only, then pull **Mixer → PC** before enabling control. Follow the [illustrated coach tutorial](docs/TUTO_MON_INGE_SON_EN.md). Install bridge **1.2.2** from Rehearse, save projects and restart REAPER. Mixer simulation does not simulate REAPER audio inputs. Packages may be unsigned/unnotarized.
+Back up scenes, install the matching package, explore simulation, discover hardware read-only, then pull **Mixer → PC** before enabling control. Follow the [illustrated coach tutorial](docs/TUTO_MON_INGE_SON_EN.md). Install bridge **1.2.3** from Rehearse, save projects and restart REAPER. Mixer simulation does not simulate REAPER audio inputs. Packages may be unsigned/unnotarized.
 
 [Illustrated video and transcript](docs/VIDEO_TOUR.md) · [Release notes](docs/RELEASE_NOTES.md) · [Manual fixes](docs/corrections-tests-manuels.md)
 
@@ -35,7 +37,7 @@ Back up scenes, install the matching package, explore simulation, discover hardw
 
 Node 20+ (CI/packages: Node 22). `npm ci`, `npm --prefix web ci`, `npm run studio`; checks: `npm test`, `npm run test:web`, `npm run build:all`; packages: `npm run desktop:package`.
 
-137 backend tests and 4 React regressions cover OSC, scenes, FX, accounts, monitors, REAPER/Lua and model profiles. They do not certify acoustic results or every hardware model. Packages are published together after platform checks, with SHA-256 checksums. Legacy data identifiers and REAPER paths remain for compatibility.
+142 backend tests and 11 React regressions cover OSC, scenes, FX, accounts, monitors, REAPER/Lua and model profiles. They do not certify acoustic results or every hardware model. Packages are published together after platform checks, with SHA-256 checksums. Legacy data identifiers and REAPER paths remain for compatibility.
 
 Independent MIT project, not affiliated with Behringer, Midas or Music Tribe. Trademarks belong to their owners.
 

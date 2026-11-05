@@ -1,6 +1,6 @@
 # GitHub Pages site for BandPilot (Settings › Pages › Deploy from branch: main, folder /docs).
 title: BandPilot
-description: Free mixer control, guided sound checks, REAPER rehearsals and personal monitor mixes. Model capabilities and validation limits are documented.
+description: "BandPilot — free multilingual mixer app in French and English. More languages on request. Windows, macOS, Linux; REAPER and personal monitors. Model-specific compatibility."
 url: https://herve8940.github.io
 baseurl: /BandPilot
 lang: fr

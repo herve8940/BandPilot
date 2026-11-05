@@ -6,6 +6,12 @@
 
 BandPilot is the new name of XR18 Studio. It brings together mixer control, guided sound checks, personal monitors, show preparation and REAPER rehearsals. These new screenshots show **simulation**, not real audio measurements.
 
+
+## Choose your language
+
+Open **Settings → Options · Language** and select **English** or **Français**. The change is immediate, without restarting or changing audio settings. Your choice is saved on this device, including across desktop restarts. On a phone, the selector is at the top of the personal monitor page. Song, scene and musician names are not translated. More languages can be added on request.
+
+
 ## 1. Install and preserve your data
 
 Use the [official releases](https://github.com/herve8940/BandPilot/releases/latest): Windows `.exe`, Intel Mac `x64.dmg`, Apple Silicon Mac `arm64.dmg`, Linux `.deb` or `.AppImage`. Close the old app before installing. Legacy XR18 Studio data identifiers are retained; export important scenes before updating. Existing REAPER projects are not automatically converted.

@@ -1,3 +1,4 @@
+import {tx, getLocale} from "./i18n";
 import "./studio-control.css";
 import { useEffect, useState } from "react";
 import { PlanDialog, type Plan } from "./SoundCoach";
@@ -12,7 +13,7 @@ async function api<T = any>(path: string, method = "GET", data?: unknown): Promi
   if (!r.ok) throw Error(value.error || "Erreur serveur");
   return value as T;
 }
-const when = (iso: string) => new Date(iso).toLocaleString("fr-BE", { dateStyle: "short", timeStyle: "short" });
+const when = (iso: string) => new Date(iso).toLocaleString(getLocale(), { dateStyle: "short", timeStyle: "short" });
 // Saves made by the app itself before a change ("Avant …") are kept apart so they don't drown the user's scenes.
 const isAuto = (e: Entry) => e.kind === "parameter-backup" || (e.kind === "scene" && /^Avant /.test(e.name));
 const KIND_LABEL: Record<string, string> = { scene: "Scène complète", "native-scene": "Fichier .scn", "parameter-backup": "Sauvegarde automatique" };
@@ -52,7 +53,7 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
     setPending({ plan: { token: p.token, title: `Rappeler « ${e.name} »`, explanation: `Le 48 V reste inchangé pour les scènes BandPilot. Toute la console reprend ${e.kind === "native-scene" ? "ce fichier .scn" : "cette scène"}. Baisse le son de la sono avant : volumes, mutes et routages peuvent bouger.`, inputs: [], changes: [], detailsUnavailable: true },
       apply: async () => {
         const native = e.kind === "native-scene";
-        const allowPhantom = native && confirm("Ce fichier .scn contient aussi l’alimentation 48 V des micros. L’appliquer peut faire claquer la sono : vérifie que les sorties sont basses. Continuer ?");
+        const allowPhantom = native && confirm(tx("Ce fichier .scn contient aussi l’alimentation 48 V des micros. L’appliquer peut faire claquer la sono : vérifie que les sorties sont basses. Continuer ?"));
         if (native && !allowPhantom) return "Rappel annulé : rien n’a changé.";
         const r = await api<{ ok?: boolean }>(`/api/library/${e.id}/apply`, "POST", { token: p.token, confirm: true, allowPhantom });
         return r.ok === false ? "Rappel envoyé, mais certaines valeurs relues diffèrent : vérifie la console." : `« ${e.name} » est rappelée.`;
@@ -63,8 +64,8 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
     if (!pending) return; setApplying(true);
     try { const done = await pending.apply(); setPending(null); setMessage(done); await refresh(); } catch (e) { setPending(null); setError((e as Error).message); } finally { setApplying(false); }
   };
-  const remove = (e: Entry) => { if (confirm(`Supprimer « ${e.name} » ?`)) void run(`del-${e.id}`, async () => { await api(`/api/library/${e.id}`, "DELETE"); }); };
-  const removeOldAutos = () => { const old = autos.slice(10); if (old.length && confirm(`Supprimer les ${old.length} sauvegardes automatiques les plus anciennes ? Les 10 plus récentes sont gardées.`)) void run("clean", async () => { for (const e of old) await api(`/api/library/${e.id}`, "DELETE"); return `${old.length} anciennes sauvegardes supprimées.`; }); };
+  const remove = (e: Entry) => { if (confirm(tx(`Supprimer « ${e.name} » ?`))) void run(`del-${e.id}`, async () => { await api(`/api/library/${e.id}`, "DELETE"); }); };
+  const removeOldAutos = () => { const old = autos.slice(10); if (old.length && confirm(tx(`Supprimer les ${old.length} sauvegardes automatiques les plus anciennes ? Les 10 plus récentes sont gardées.`))) void run("clean", async () => { for (const e of old) await api(`/api/library/${e.id}`, "DELETE"); return `${old.length} anciennes sauvegardes supprimées.`; }); };
   const download = (e: Entry) => {
     const native = e.kind === "native-scene";
     const blob = new Blob([native ? String(e.data) : JSON.stringify(e, null, 2)], { type: native ? "text/plain" : "application/json" });
@@ -80,34 +81,34 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
   });
 
   const row = (e: Entry) => <div key={e.id} className="scene-row">
-    <div><b>{e.name}</b><small>{KIND_LABEL[e.kind] ?? e.kind} · {when(e.createdAt)}</small></div>
+    <div><b>{e.name}</b><small>{tx(KIND_LABEL[e.kind] ?? e.kind)} · {tx(when(e.createdAt))}</small></div>
     <div className="scene-actions">
-      {admin && <button type="button" className="primary" disabled={!!busy || !canWrite} title={canWrite ? "Voir ce qui va changer, puis confirmer" : "Active le contrôle de la console dans Réglages"} onClick={() => void recall(e)}>{busy === `recall-${e.id}` ? "Lecture de la console…" : "Rappeler…"}</button>}
-      <button type="button" disabled={!!busy} onClick={() => download(e)}>Exporter</button>
-      {admin && <button type="button" disabled={!!busy} onClick={() => remove(e)}>Supprimer</button>}
+      {admin && <button type="button" className="primary" disabled={!!busy || !canWrite} title={tx(canWrite ? "Voir ce qui va changer, puis confirmer" : "Active le contrôle de la console dans Réglages")} onClick={() => void recall(e)}>{tx(busy === `recall-${e.id}` ? "Lecture de la console…" : "Rappeler…")}</button>}
+      <button type="button" disabled={!!busy} onClick={() => download(e)}>{tx("Exporter")}</button>
+      {admin && <button type="button" disabled={!!busy} onClick={() => remove(e)}>{tx("Supprimer")}</button>}
     </div>
   </div>;
 
   return <section className="studio-panel pad studio-control scenes-page">
-    <h2>Scènes</h2>
-    <p>Une scène, c’est une photo de toute la console : volumes, égaliseurs, effets, retours… Garde une bonne balance pour la retrouver au prochain concert.</p>
+    <h2>{tx("Scènes")}</h2>
+    <p>{tx("Une scène, c’est une photo de toute la console : volumes, égaliseurs, effets, retours… Garde une bonne balance pour la retrouver au prochain concert.")}</p>
     {admin && <fieldset disabled={!!busy} className="scene-save">
-      <label>Nom de la scène<input value={name} maxLength={120} onChange={e => setName(e.target.value)} placeholder="Ex. : Concert salle des fêtes" /></label>
-      <button type="button" className="primary" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library", "POST", { kind: "scene", name: name.trim(), complete: true }); setName(""); return `Scène « ${name.trim()} » sauvegardée.`; })}>{busy === "save" ? "Lecture de toute la console…" : "Sauvegarder l’état actuel"}</button>
-      <details className="scene-more"><summary>Plus d’options</summary>
-        <button type="button" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library", "POST", { kind: "scene", name: name.trim(), complete: true, excludePhantom: true }); setName(""); return `Scène « ${name.trim()} » sauvegardée sans le 48 V.`; })}>Sauvegarder sans le 48 V (pour ReaCue)</button>
-        <button type="button" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library/capture-native", "POST", { name: name.trim() }); setName(""); return `Fichier .scn « ${name.trim()} » créé : tu peux l’exporter et l’ouvrir dans X-AIR Edit.`; })}>Créer un fichier .scn (compatible X-AIR Edit)</button>
-        <label className="scene-import">Importer une scène (.json ou .scn)<input type="file" accept=".json,.scn" onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void importFile(f); }} /></label>
+      <label>{tx("Nom de la scène")}<input value={name} maxLength={120} onChange={e => setName(e.target.value)} placeholder={tx("Ex. : Concert salle des fêtes")} /></label>
+      <button type="button" className="primary" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library", "POST", { kind: "scene", name: name.trim(), complete: true }); setName(""); return `Scène « ${name.trim()} » sauvegardée.`; })}>{tx(busy === "save" ? "Lecture de toute la console…" : "Sauvegarder l’état actuel")}</button>
+      <details className="scene-more"><summary>{tx("Plus d’options")}</summary>
+        <button type="button" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library", "POST", { kind: "scene", name: name.trim(), complete: true, excludePhantom: true }); setName(""); return `Scène « ${name.trim()} » sauvegardée sans le 48 V.`; })}>{tx("Sauvegarder sans le 48 V (pour ReaCue)")}</button>
+        <button type="button" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library/capture-native", "POST", { name: name.trim() }); setName(""); return `Fichier .scn « ${name.trim()} » créé : tu peux l’exporter et l’ouvrir dans X-AIR Edit.`; })}>{tx("Créer un fichier .scn (compatible X-AIR Edit)")}</button>
+        <label className="scene-import">{tx("Importer une scène (.json ou .scn)")}<input type="file" accept=".json,.scn" onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void importFile(f); }} /></label>
       </details>
     </fieldset>}
-    {(message || error) && <p className={error ? "scene-msg error" : "scene-msg"} role={error ? "alert" : "status"}>{error || message}</p>}
-    <h3>Tes scènes ({scenes.length})</h3>
-    {scenes.length ? <div className="scene-list">{scenes.map(row)}</div> : <p className="scene-empty">Aucune scène pour l’instant. Donne un nom ci-dessus et sauvegarde l’état actuel de la console.</p>}
+    {(message || error) && <p className={error ? "scene-msg error" : "scene-msg"} role={error ? "alert" : "status"}>{tx(error || message)}</p>}
+    <h3>{tx("Tes scènes (")}{tx(scenes.length)})</h3>
+    {scenes.length ? <div className="scene-list">{tx(scenes.map(row))}</div> : <p className="scene-empty">{tx("Aucune scène pour l’instant. Donne un nom ci-dessus et sauvegarde l’état actuel de la console.")}</p>}
     <details className="scene-autos">
-      <summary>Sauvegardes automatiques ({autos.length}) — faites par l’appli juste avant chaque changement</summary>
-      <p>Elles servent à revenir en arrière. Les 10 plus récentes sont affichées.</p>
-      <div className="scene-list">{autos.slice(0, 10).map(row)}</div>
-      {admin && autos.length > 10 && <button type="button" disabled={!!busy} onClick={removeOldAutos}>Supprimer les {autos.length - 10} plus anciennes</button>}
+      <summary>{tx("Sauvegardes automatiques (")}{tx(autos.length)}{tx(") — faites par l’appli juste avant chaque changement")}</summary>
+      <p>{tx("Elles servent à revenir en arrière. Les 10 plus récentes sont affichées.")}</p>
+      <div className="scene-list">{tx(autos.slice(0, 10).map(row))}</div>
+      {admin && autos.length > 10 && <button type="button" disabled={!!busy} onClick={removeOldAutos}>{tx("Supprimer les ")}{tx(autos.length - 10)}{tx(" plus anciennes")}</button>}
     </details>
     {pending && <PlanDialog plan={pending.plan} busy={applying} canApply={canWrite} mode={mode} onClose={() => setPending(null)} onApply={() => void applyPending()} />}
   </section>;

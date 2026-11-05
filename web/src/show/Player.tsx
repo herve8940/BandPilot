@@ -1,3 +1,4 @@
+import {tx, getLocale} from "../i18n";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { call, clock, sectionName, type Item, type Show, type ShowTrack } from "./api";
 
@@ -45,13 +46,13 @@ export function Player({ show, band = false, cursor, range, disabled, onSeek, on
   const seek = (e: React.MouseEvent<HTMLDivElement>) => { if (disabled) return; const b = e.currentTarget.getBoundingClientRect(); onSeek(range.start + (e.clientX - b.left) / b.width * span); };
   const cursorLeft = `${Math.max(0, Math.min(100, (cursor - range.start) / span * 100))}%`;
   return <div className="sh-player">
-    {sections.length > 0 && <div className="sh-row sh-section-row"><span className="sh-tag">Sections</span><div className="sh-sections" role="group" aria-label="Sections du morceau">{sections.map(s => <button key={s.start} type="button" disabled={disabled} className={cursor >= s.start && cursor < s.stop ? "on" : ""} title={sectionName(s.name)} aria-pressed={cursor >= s.start && cursor < s.stop} onClick={() => onSeek(s.start)}>{sectionName(s.name)}</button>)}</div></div>}
+    {sections.length > 0 && <div className="sh-row sh-section-row"><span className="sh-tag">{tx("Sections")}</span><div className="sh-sections" role="group" aria-label={tx("Sections du morceau")}>{sections.map(s => <button key={s.start} type="button" disabled={disabled} className={cursor >= s.start && cursor < s.stop ? "on" : ""} title={tx(sectionName(s.name))} aria-pressed={cursor >= s.start && cursor < s.stop} onClick={() => onSeek(s.start)}>{sectionName(s.name)}</button>)}</div></div>}
     {lanes.length ? lanes.map(t => <div className="sh-row" key={`${show.project}:${t.index}`}>
-      <div className="sh-lane"><div><b>{t.name.replace(/^REC /, "")}</b><small>{t.rec || band ? "Prise du groupe" : "Piste ReaCue"}</small></div>
-        <button type="button" className={t.mute ? "warn" : ""} aria-pressed={t.mute} aria-label={`Couper ${t.name}`} onClick={() => onTrack(t, false)}>M</button>
-        <button type="button" className={t.solo ? "on" : ""} aria-pressed={t.solo} aria-label={`Écouter ${t.name} seule`} onClick={() => onTrack(t, true)}>S</button></div>
+      <div className="sh-lane"><div><b>{t.name.replace(/^REC /, "")}</b><small>{tx(t.rec || band ? "Prise du groupe" : "Piste ReaCue")}</small></div>
+        <button type="button" className={t.mute ? "warn" : ""} aria-pressed={t.mute} aria-label={tx(`Couper ${t.name}`)} onClick={() => onTrack(t, false)}>{tx("M")}</button>
+        <button type="button" className={t.solo ? "on" : ""} aria-pressed={t.solo} aria-label={tx(`Écouter ${t.name} seule`)} onClick={() => onTrack(t, true)}>{tx("S")}</button></div>
       <div className="sh-track" onClick={seek}><Wave track={t.index} items={t.items} range={range} muted={t.mute} rec={t.rec || band} cursor={cursor} paused={disabled} /><i style={{ left: cursorLeft }} /></div>
-    </div>) : <div className="xs2-empty">Rien à afficher pour l’instant : lance une prise.</div>}
-    <div className="sh-time">{clock(cursor - range.start)} / {clock(span)}</div>
+    </div>) : <div className="xs2-empty">{tx("Rien à afficher pour l’instant : lance une prise.")}</div>}
+    <div className="sh-time">{tx(clock(cursor - range.start))} / {tx(clock(span))}</div>
   </div>;
 }

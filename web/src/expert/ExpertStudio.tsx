@@ -1,3 +1,4 @@
+import {tx, getLocale} from "../i18n";
 import {useAirStrips} from '../xair/model-strips';
 import { Drum, Guitar, Piano, MicVocal, Headphones, Sparkles, SlidersHorizontal, Music2, Speaker } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -53,28 +54,28 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel, simul
   useEffect(() => { const t = setInterval(() => { void api<{ recommendations: unknown[] }>("/api/analysis").then(a => setRecoCount(a.recommendations.length)).catch(() => undefined); }, 5000); return () => clearInterval(t); }, []);
   const toggleRehearsal = async () => {
     const next = !rehearsal;
-    if (!confirm(next ? "Passer en Ears seulement ? Le Main (façade) est coupé et reste coupé : on ne travaille que les ears des musiciens." : "Quitter Ears seulement ? Le Main reste coupé tant que tu ne le rallumes pas toi-même.")) return;
+    if (!confirm(tx(next ? "Passer en Ears seulement ? Le Main (façade) est coupé et reste coupé : on ne travaille que les ears des musiciens." : "Quitter Ears seulement ? Le Main reste coupé tant que tu ne le rallumes pas toi-même."))) return;
     try { const r = await api<{ on: boolean }>("/api/rehearsal", { on: next }); setRehearsal(r.on); setNotice(r.on ? "Ears seulement : Main coupé, analyse sur les ears." : "Ears seulement quitté."); } catch (e) { setError((e as Error).message); }
   };
   const props: ViewProps = { strip, values, set, canWrite: writable, confirmed, open: (s) => { select(s); go("channel"); } };
 
   const channelProps = { ...props, canWrite: writable && !(rehearsal && strip.kind === "lr") };
 
-  return <section className="xs2 xs3 xs-expert-desk" aria-label="Mode Expert">
-    <div className="xs3-intro"><div className="xs3-emblem">◈</div><div><h1>Mode Expert</h1><p>{simulation ? "Noms et réglages du simulateur · la configuration du groupe se prépare séparément dans Mon ingé son." : "Contrôle des traitements de canal · Préampli · Gate · Compresseur · EQ · Envois · Routage"}</p></div><div className="xs3-intro-status"><span className={online ? "live" : "off"}>● {simulation ? "Simulation · aucune console pilotée" : online ? "Console connectée" : "Console hors ligne"}</span></div></div>
+  return <section className="xs2 xs3 xs-expert-desk" aria-label={tx("Mode Expert")}>
+    <div className="xs3-intro"><div className="xs3-emblem">◈</div><div><h1>{tx("Mode Expert")}</h1><p>{tx(simulation ? "Noms et réglages du simulateur · la configuration du groupe se prépare séparément dans Mon ingé son." : "Contrôle des traitements de canal · Préampli · Gate · Compresseur · EQ · Envois · Routage")}</p></div><div className="xs3-intro-status"><span className={online ? "live" : "off"}>● {tx(simulation ? "Simulation · aucune console pilotée" : online ? "Console connectée" : "Console hors ligne")}</span></div></div>
     <header className="xs2-head">
-      <nav className="xs2-tabs" aria-label="Vues du mode Expert">
+      <nav className="xs2-tabs" aria-label={tx("Vues du mode Expert")}>
         {VIEWS.map(v => <button key={v.id} type="button" className={view === v.id ? "on" : ""} aria-current={view === v.id ? "page" : undefined} onClick={() => go(v.id)}>
-          {v.label}{v.id === "analysis" && recoCount > 0 && <span className="xs2-badge">{recoCount}</span>}
+          {tx(v.label)}{v.id === "analysis" && recoCount > 0 && <span className="xs2-badge">{tx(recoCount)}</span>}
         </button>)}
       </nav>
       <div className="xs2-spacer" />
-      <button type="button" className={`xs2-pill ${rehearsal ? "rehearsal" : "foh"}`} onClick={() => void toggleRehearsal()} disabled={!canWrite} title="En Ears seulement, le Main est coupé et verrouillé : on ne règle que les ears">
-        {rehearsal ? <><Lock /> Ears seulement · Main coupé</> : "Façade active"}
+      <button type="button" className={`xs2-pill ${rehearsal ? "rehearsal" : "foh"}`} onClick={() => void toggleRehearsal()} disabled={!canWrite} title={tx("En Ears seulement, le Main est coupé et verrouillé : on ne règle que les ears")}>
+        {rehearsal ? <><Lock />{tx(" Ears seulement · Main coupé")}</> : tx("Façade active")}
       </button>
-      <span className={`xs2-pill ${online ? "live" : "off"}`}><span className="xs2-dot" />{online ? (simulation ? "Simulation modifiable" : writable ? "Contrôle actif" : "Lecture seule") : "Hors ligne"}</span>
+      <span className={`xs2-pill ${online ? "live" : "off"}`}><span className="xs2-dot" />{tx(online ? (simulation ? "Simulation modifiable" : writable ? "Contrôle actif" : "Lecture seule") : "Hors ligne")}</span>
     </header>
-    {(message || notice || error) && <div className={`xs2-msg${error || message ? " error" : ""}`} role="status">{error || message || notice}<button type="button" aria-label="Fermer" onClick={() => { clearMessage(); setNotice(""); setError(""); }}>×</button></div>}
+    {(message || notice || error) && <div className={`xs2-msg${error || message ? " error" : ""}`} role="status">{tx(error || message || notice)}<button type="button" aria-label={tx("Fermer")} onClick={() => { clearMessage(); setNotice(""); setError(""); }}>{tx("×")}</button></div>}
     {view === "channel" && <ChannelRail strip={strip} values={values} select={select} />}
     <div className="xs2-body" ref={bodyRef}>
       {view === "console" && <ConsoleView values={values} set={set} writable={writable} rehearsal={rehearsal} strip={strip} select={select} />}
@@ -104,54 +105,54 @@ function ConsoleView({ values, set, writable, rehearsal, strip, select }: { valu
   const color = (s: Strip) => stripColor(num(values, `${s.prefix}/config/color`));
   return <div className={`expert-console density-${desk.layout.density}`}>
     <DeskLayoutTools strips={INPUTS} values={values} desk={desk}/>
-    <button type="button" className="desk-output-toggle" aria-expanded={desk.layout.outputs} onClick={()=>desk.update({outputs:!desk.layout.outputs})}>{desk.layout.outputs?"Replier les sorties et le Master":"Afficher les sorties et le Master"}</button>
+    <button type="button" className="desk-output-toggle" aria-expanded={desk.layout.outputs} onClick={()=>desk.update({outputs:!desk.layout.outputs})}>{tx(desk.layout.outputs?"Replier les sorties et le Master":"Afficher les sorties et le Master")}</button>
     <div className="main">
-      <div className="expert-bankbar"><div role="group" aria-label="Banque de tranches"><button type="button" aria-pressed={bank === "inputs"} onClick={() => setBank("inputs")}>Entrées 1–{model.channels}</button><button type="button" aria-pressed={bank === "returns"} onClick={() => setBank("returns")}>Aux + retours FX</button></div><button type="button" className="xs2-btn" onClick={() => document.getElementById("expert-channel-parameters")?.scrollIntoView({ block: "start" })}>Paramètres de {stripName(strip, values)} ↓</button></div>
+      <div className="expert-bankbar"><div role="group" aria-label={tx("Banque de tranches")}><button type="button" aria-pressed={bank === "inputs"} onClick={() => setBank("inputs")}>{tx("Entrées 1–")}{tx(model.channels)}</button><button type="button" aria-pressed={bank === "returns"} onClick={() => setBank("returns")}>{tx("Aux + retours FX")}</button></div><button type="button" className="xs2-btn" onClick={() => document.getElementById("expert-channel-parameters")?.scrollIntoView({ block: "start" })}>{tx("Paramètres de ")}{stripName(strip, values)} ↓</button></div>
       <div className="xs2-bar">
-        <span className="label">Les faders règlent</span>
-        <button type="button" className={`xs2-chip${layer === 0 ? " on" : ""}${rehearsal ? " locked" : ""}`} disabled={rehearsal} onClick={() => setLayer(0)} title={rehearsal ? "Main coupé en répétition" : "Le mix de la façade"}>{rehearsal && <Lock />} Façade</button>
-        {BUSES.map((b, i) => <button key={b.id} type="button" className={`xs2-chip${layer === i + 1 ? " on" : ""}`} onClick={() => setLayer(i + 1)}>{i < model.monitorOutputs ? earsLabel(values, i + 1) : `Bus ${i + 1} interne`}</button>)}
-        {FXSENDS.map((f, i) => <button key={f.id} type="button" className={`xs2-chip${layer === i + 7 ? " on" : ""}`} onClick={() => setLayer(i + 7)}>FX {i + 1}</button>)}
+        <span className="label">{tx("Les faders règlent")}</span>
+        <button type="button" className={`xs2-chip${layer === 0 ? " on" : ""}${rehearsal ? " locked" : ""}`} disabled={rehearsal} onClick={() => setLayer(0)} title={tx(rehearsal ? "Main coupé en répétition" : "Le mix de la façade")}>{rehearsal && <Lock />}{tx(" Façade")}</button>
+        {BUSES.map((b, i) => <button key={b.id} type="button" className={`xs2-chip${layer === i + 1 ? " on" : ""}`} onClick={() => setLayer(i + 1)}>{i < model.monitorOutputs ? earsLabel(values, i + 1) : tx(`Bus ${i + 1} interne`)}</button>)}
+        {FXSENDS.map((f, i) => <button key={f.id} type="button" className={`xs2-chip${layer === i + 7 ? " on" : ""}`} onClick={() => setLayer(i + 7)}>{tx("FX ")}{tx(i + 1)}</button>)}
       </div>
-      <div className="xs2-strips" role="list" aria-label="Tranches">
+      <div className="xs2-strips" role="list" aria-label={tx("Tranches")}>
         {INPUTS.filter(s => (bank === "inputs" ? s.kind === "ch" : s.kind !== "ch") && !desk.layout.hidden.includes(s.id)).map(s => {
           const fa = faderAddress(s, layer), oa = onAddress(s), so = soloAddress(s), on = num(values, oa, 1) === 1;
           const gain = gainControl(s, values,model.micPreamps);
           const comp = s.kind === "ch" && num(values, `${s.prefix}/dyn/on`) === 1;
           return <div key={s.id} role="listitem" className={`xs2-strip${s.id === strip.id ? " sel" : ""}${used(s) ? "" : " idle"}`} onClick={() => select(s)}>
             <i className="tag" style={{ background: color(s) }} />
-            <button type="button" className="name" onClick={() => { select(s); document.getElementById("expert-channel-parameters")?.scrollIntoView({ block: "start" }); }} title={`Paramètres de ${stripName(s, values)}`}>{stripName(s, values)}</button>
-            <span className="ch">{s.short}</span>
-            <div className="expert-strip-overview"><span>{gain ? `${gain.label.split(" ")[0]} ${(gain.lo + num(values, gain.address) * (gain.hi - gain.lo)).toFixed(0)} dB` : "—"}</span>{s.kind === "ch" && <span>Gate {num(values, `${s.prefix}/gate/on`) === 1 ? "ON" : "OFF"}</span>}</div>
+            <button type="button" className="name" onClick={() => { select(s); document.getElementById("expert-channel-parameters")?.scrollIntoView({ block: "start" }); }} title={tx(`Paramètres de ${stripName(s, values)}`)}>{stripName(s, values)}</button>
+            <span className="ch">{tx(s.short)}</span>
+            <div className="expert-strip-overview"><span>{tx(gain ? `${gain.label.split(" ")[0]} ${(gain.lo + num(values, gain.address) * (gain.hi - gain.lo)).toFixed(0)} dB` : "—")}</span>{s.kind === "ch" && <span>{tx("Gate ")}{tx(num(values, `${s.prefix}/gate/on`) === 1 ? "ON" : "OFF")}</span>}</div>
             <svg className="eq" viewBox="0 0 60 26" aria-hidden="true"><path d="M0 13 H60" stroke="#222A34" /><path d={eqPath(values, s.prefix)} fill="none" stroke={color(s)} strokeWidth="1.6" /></svg>
-            <span className="dyn" title="Compresseur"><span className={comp ? "on" : ""}>{s.kind === "ch" ? (comp ? `${Number(RATIOS[num(values, `${s.prefix}/dyn/ratio`)])}:1` : "—") : ""}</span></span>
-            <div className="fz"><Fader label={`${layer ? "Envoi" : "Fader"} ${stripName(s, values)}`} value={num(values, fa)} disabled={!writable} reset={layer ? 0 : .75} accent={color(s)} onChange={v => set(fa, v)} /><Meter indexes={s.meters} /></div>
-            <span className="db">{dbText(num(values, fa))}</span>
+            <span className="dyn" title={tx("Compresseur")}><span className={comp ? "on" : ""}>{tx(s.kind === "ch" ? (comp ? `${Number(RATIOS[num(values, `${s.prefix}/dyn/ratio`)])}:1` : "—") : "")}</span></span>
+            <div className="fz"><Fader label={tx(`${layer ? "Envoi" : "Fader"} ${stripName(s, values)}`)} value={num(values, fa)} disabled={!writable} reset={layer ? 0 : .75} accent={color(s)} onChange={v => set(fa, v)} /><Meter indexes={s.meters} /></div>
+            <span className="db">{tx(dbText(num(values, fa)))}</span>
             <span className="ms">
-              <button type="button" className={on ? "" : "mute"} disabled={!writable} aria-label={`Mute ${stripName(s, values)}`} aria-pressed={!on} onClick={e => { e.stopPropagation(); set(oa, on ? 0 : 1); }}>M</button>
-              {so && <button type="button" className={values[so] === 1 ? "solo" : ""} disabled={!writable} aria-label={`Solo ${stripName(s, values)}`} aria-pressed={values[so] === 1} onClick={e => { e.stopPropagation(); set(so, values[so] === 1 ? 0 : 1); }}>S</button>}
+              <button type="button" className={on ? "" : "mute"} disabled={!writable} aria-label={tx(`Mute ${stripName(s, values)}`)} aria-pressed={!on} onClick={e => { e.stopPropagation(); set(oa, on ? 0 : 1); }}>{tx("M")}</button>
+              {so && <button type="button" className={values[so] === 1 ? "solo" : ""} disabled={!writable} aria-label={tx(`Solo ${stripName(s, values)}`)} aria-pressed={values[so] === 1} onClick={e => { e.stopPropagation(); set(so, values[so] === 1 ? 0 : 1); }}>{tx("S")}</button>}
             </span>
           </div>;
         })}
       </div>
     </div>
-    {desk.layout.outputs&&<section className="expert-output-bank" aria-label="Faders des sorties et groupes">
-      <h3>Sorties et groupes <small>Bus 1–{model.buses} · Départs FX · DCA · Main LR</small></h3>
-      <div className="xs2-strips expert-output-strips" role="list" aria-label="Sorties et groupes">
+    {desk.layout.outputs&&<section className="expert-output-bank" aria-label={tx("Faders des sorties et groupes")}>
+      <h3>{tx("Sorties et groupes ")}<small>{tx("Bus 1–")}{tx(model.buses)}{tx(" · Départs FX · DCA · Main LR")}</small></h3>
+      <div className="xs2-strips expert-output-strips" role="list" aria-label={tx("Sorties et groupes")}>
         {[...OUTPUTS, MAIN].map(output => {
           const address = faderAddress(output, 0), mute = onAddress(output);
           const locked = !writable || (rehearsal && output.kind === "lr");
           return <div role="listitem" key={output.id} className={`xs2-strip${output.id === strip.id ? " sel" : ""}`}>
-            <button type="button" className="name" onClick={() => { select(output); document.getElementById("expert-channel-parameters")?.scrollIntoView({ block: "start" }); }} title={`Paramètres de ${stripName(output, values)}`}>{stripName(output, values)}</button>
-            <span className="ch">{output.short}</span>
-            <div className="fz"><Fader label={`Volume sortie ${stripName(output, values)}`} value={num(values, address)} disabled={locked} reset={.75} onChange={v => set(address, v)} /><Meter indexes={output.meters} /></div>
-            <span className="db">{dbText(num(values, address))}</span>
-            <span className="ms"><button type="button" aria-label={`Mute sortie ${stripName(output, values)}`} disabled={locked} aria-pressed={num(values, mute, 1) === 0} className={num(values, mute, 1) === 0 ? "mute" : ""} onClick={() => set(mute, num(values, mute, 1) === 1 ? 0 : 1)}>M</button></span>
+            <button type="button" className="name" onClick={() => { select(output); document.getElementById("expert-channel-parameters")?.scrollIntoView({ block: "start" }); }} title={tx(`Paramètres de ${stripName(output, values)}`)}>{stripName(output, values)}</button>
+            <span className="ch">{tx(output.short)}</span>
+            <div className="fz"><Fader label={tx(`Volume sortie ${stripName(output, values)}`)} value={num(values, address)} disabled={locked} reset={.75} onChange={v => set(address, v)} /><Meter indexes={output.meters} /></div>
+            <span className="db">{tx(dbText(num(values, address)))}</span>
+            <span className="ms"><button type="button" aria-label={tx(`Mute sortie ${stripName(output, values)}`)} disabled={locked} aria-pressed={num(values, mute, 1) === 0} className={num(values, mute, 1) === 0 ? "mute" : ""} onClick={() => set(mute, num(values, mute, 1) === 1 ? 0 : 1)}>{tx("M")}</button></span>
           </div>;
         })}
       </div>
     </section>}
-    {!INPUTS.some(s=>(bank==="inputs"?s.kind==="ch":s.kind!=="ch")&&!desk.layout.hidden.includes(s.id))&&<p role="status">Aucune tranche visible dans cette banque. Utilise « Ma console » pour les réafficher.</p>}
+    {!INPUTS.some(s=>(bank==="inputs"?s.kind==="ch":s.kind!=="ch")&&!desk.layout.hidden.includes(s.id))&&<p role="status">{tx("Aucune tranche visible dans cette banque. Utilise « Ma console » pour les réafficher.")}</p>}
   </div>;
 }
 
@@ -176,14 +177,14 @@ function ChannelPage(props: ViewProps & { select: (s: Strip) => void }) {
     b.id === "sends" ? ["ch", "aux", "fxrtn"].includes(strip.kind) :
     b.id === "eq" ? !["dca", "fxsend"].includes(strip.kind) :
     b.id === "comp" ? ["ch", "bus", "lr"].includes(strip.kind) : true);
-  return <section id="expert-channel-parameters" className="expert-parameters" aria-label={`Tous les paramètres de ${stripName(strip, values)}`}>
+  return <section id="expert-channel-parameters" className="expert-parameters" aria-label={tx(`Tous les paramètres de ${stripName(strip, values)}`)}>
     <div className="expert-parameter-head">
-      <div><small>CANAL SÉLECTIONNÉ · {strip.short}</small><h2>{stripName(strip, values)}</h2><p>Tous les traitements ci-dessous. Choisis une tranche pour changer de canal.</p></div>
-      <div className="expert-selected-level"><label>Volume de {stripName(strip, values)} · {dbText(num(values, faderAddress(strip, 0)))} dB<input type="range" min="0" max="1" step=".005" aria-label={`Volume du canal sélectionné ${stripName(strip, values)}`} value={num(values, faderAddress(strip, 0))} disabled={!canWrite} onChange={e => set(faderAddress(strip, 0), Number(e.target.value))}/></label><button type="button" className="xs2-btn" aria-label="Canal précédent" disabled={i <= 0} onClick={() => select(ALL[i - 1]!)}>‹</button><button type="button" className="xs2-btn" aria-label="Canal suivant" disabled={i >= ALL.length - 1} onClick={() => select(ALL[i + 1]!)}>›</button></div>
+      <div><small>{tx("CANAL SÉLECTIONNÉ · ")}{tx(strip.short)}</small><h2>{stripName(strip, values)}</h2><p>{tx("Tous les traitements ci-dessous. Choisis une tranche pour changer de canal.")}</p></div>
+      <div className="expert-selected-level"><label>{tx("Volume de ")}{stripName(strip, values)} · {tx(dbText(num(values, faderAddress(strip, 0))))}{tx(" dB")}<input type="range" min="0" max="1" step=".005" aria-label={tx(`Volume du canal sélectionné ${stripName(strip, values)}`)} value={num(values, faderAddress(strip, 0))} disabled={!canWrite} onChange={e => set(faderAddress(strip, 0), Number(e.target.value))}/></label><button type="button" className="xs2-btn" aria-label={tx("Canal précédent")} disabled={i <= 0} onClick={() => select(ALL[i - 1]!)}>‹</button><button type="button" className="xs2-btn" aria-label={tx("Canal suivant")} disabled={i >= ALL.length - 1} onClick={() => select(ALL[i + 1]!)}>›</button></div>
     </div>
-    {strip.kind === "dca" && <p className="muted">Ce DCA commande le niveau des canaux qui lui sont affectés. Leurs traitements se règlent sur chaque canal.</p>}
-    <>{["ch","aux","fxrtn"].includes(strip.kind)&&<SignalPath source={strip} values={values}/>}</><nav className="expert-parameter-jumps" aria-label="Accès direct aux traitements">{applicable.map(b => <button key={b.id} type="button" onClick={() => document.getElementById(`expert-block-${b.id}`)?.scrollIntoView({ block: "start" })}>{b.title.split(" · ")[0]} ↓</button>)}</nav>
-    <div className="expert-parameter-grid">{applicable.map(b => <section key={b.id} id={`expert-block-${b.id}`} className={`expert-parameter-block block-${b.id}`} aria-label={b.title}><h3>{b.title}</h3><div className="xm xs2-legacy">{b.content}</div></section>)}</div>
+    {strip.kind === "dca" && <p className="muted">{tx("Ce DCA commande le niveau des canaux qui lui sont affectés. Leurs traitements se règlent sur chaque canal.")}</p>}
+    <>{["ch","aux","fxrtn"].includes(strip.kind)&&<SignalPath source={strip} values={values}/>}</><nav className="expert-parameter-jumps" aria-label={tx("Accès direct aux traitements")}>{applicable.map(b => <button key={b.id} type="button" onClick={() => document.getElementById(`expert-block-${b.id}`)?.scrollIntoView({ block: "start" })}>{tx(b.title.split(" · ")[0])} ↓</button>)}</nav>
+    <div className="expert-parameter-grid">{applicable.map(b => <section key={b.id} id={`expert-block-${b.id}`} className={`expert-parameter-block block-${b.id}`} aria-label={tx(b.title)}><h3>{tx(b.title)}</h3><div className="xm xs2-legacy">{b.content}</div></section>)}</div>
   </section>;
 }
 
@@ -212,7 +213,7 @@ function ChannelRail({ strip, values, select }: { strip: Strip; values: Values; 
   const group = strip.kind === "bus" || strip.kind === "lr" ? "bus" : strip.kind === "dca" ? "dca" : strip.kind === "fxsend" || strip.kind === "fxrtn" ? "fx" : "input";
   const groups = [{ id: "input", name: "Canaux", strips: INPUTS.filter(s => s.kind !== "fxrtn") }, { id: "bus", name: "Bus / Main", strips: [...BUSES, MAIN] }, { id: "fx", name: "FX", strips: ALL.filter(s => s.kind === "fxrtn" || s.kind === "fxsend") }, { id: "dca", name: "DCA", strips: ALL.filter(s => s.kind === "dca") }];
   const bank = groups.find(g => g.id === group)!;
-  return <div className="visual-channel-nav"><div className="visual-bank-select" role="group" aria-label="Famille de canaux">{groups.map(g => <button key={g.id} type="button" aria-pressed={group === g.id} onClick={() => select(g.strips[0]!)}>{g.name}</button>)}</div><div ref={railRef} className="visual-channel-rail" role="tablist" aria-label="Sélection des canaux">{bank.strips.map(s => <button key={s.id} type="button" role="tab" aria-selected={s.id === strip.id} title={stripName(s, values)} onClick={() => select(s)}><small>{s.short}</small><span aria-hidden="true">{sourceIcon(s, values)}</span><b>{stripName(s, values)}</b></button>)}</div></div>;
+  return <div className="visual-channel-nav"><div className="visual-bank-select" role="group" aria-label={tx("Famille de canaux")}>{groups.map(g => <button key={g.id} type="button" aria-pressed={group === g.id} onClick={() => select(g.strips[0]!)}>{tx(g.name)}</button>)}</div><div ref={railRef} className="visual-channel-rail" role="tablist" aria-label={tx("Sélection des canaux")}>{bank.strips.map(s => <button key={s.id} type="button" role="tab" aria-selected={s.id === strip.id} title={stripName(s, values)} onClick={() => select(s)}><small>{tx(s.short)}</small><span aria-hidden="true">{tx(sourceIcon(s, values))}</span><b>{stripName(s, values)}</b></button>)}</div></div>;
 }
 function FocusedChannel(props: ViewProps & { select: (s: Strip) => void }) {
   const {ALL,MAIN,OUTPUTS,INPUTS,BUSES,FXSENDS,model}=useAirStrips();
@@ -223,20 +224,20 @@ function FocusedChannel(props: ViewProps & { select: (s: Strip) => void }) {
   useEffect(() => { workspaceRef.current?.closest(".xs2-body")?.scrollTo({ top: 0 }); }, [current, strip.id]);
   const i = ALL.findIndex(s => s.id === strip.id), fader = faderAddress(strip, 0), mute = onAddress(strip), solo = soloAddress(strip);
   const on = num(values, mute, 1) === 1;
-  const content = current === "input" ? <InputView {...props}/> : current === "gate" ? <GateView {...props}/> : current === "comp" ? <VisualCompressor {...props}/> : current === "eq" ? <EqView {...props}/> : current === "sends" ? <SendsView {...props}/> : current === "main" ? <MainView {...props}/> : <p>Ce DCA règle le niveau des canaux qui lui sont affectés. Sélectionne un canal pour éditer ses traitements.</p>;
+  const content = current === "input" ? <InputView {...props}/> : current === "gate" ? <GateView {...props}/> : current === "comp" ? <VisualCompressor {...props}/> : current === "eq" ? <EqView {...props}/> : current === "sends" ? <SendsView {...props}/> : current === "main" ? <MainView {...props}/> : <p>{tx("Ce DCA règle le niveau des canaux qui lui sont affectés. Sélectionne un canal pour éditer ses traitements.")}</p>;
   return <div className="visual-workspace" ref={workspaceRef}>
-    <aside className="visual-selected" aria-label={`Tranche sélectionnée ${stripName(strip, values)}`}>
-      <div className="visual-source-art" aria-hidden="true">{sourceIcon(strip, values)}</div>
-      <div className="visual-channel-title"><button type="button" aria-label="Canal précédent" disabled={i <= 0} onClick={() => select(ALL[i - 1]!)}>‹</button><strong>{strip.short} · {stripName(strip, values)}</strong><button type="button" aria-label="Canal suivant" disabled={i >= ALL.length - 1} onClick={() => select(ALL[i + 1]!)}>›</button></div>
-      <div className="visual-ms"><button type="button" disabled={!canWrite} className={!on ? "muted" : ""} aria-pressed={!on} onClick={() => set(mute, on ? 0 : 1)}>◀ Mute</button>{solo && <button type="button" disabled={!canWrite} className={values[solo] === 1 ? "solo" : ""} aria-pressed={values[solo] === 1} onClick={() => set(solo, values[solo] === 1 ? 0 : 1)}>♫ Solo</button>}</div>
-      <output className="visual-db">{dbText(num(values, fader))} dB</output>
-      <div className="visual-fader"><Meter indexes={strip.meters}/><Fader label={`Volume ${stripName(strip, values)}`} value={num(values, fader)} disabled={!canWrite} reset={.75} accent="#a87fff" onChange={v => set(fader, v)}/><div className="visual-fader-scale" aria-hidden="true">{["+10", "+5", "0", "−5", "−10", "−20", "−30", "−∞"].map(t => <span key={t}>{t}</span>)}</div></div>
-      <label className="visual-mobile-level">Volume<input type="range" aria-label={`Volume compact ${stripName(strip, values)}`} min="0" max="1" step=".005" value={num(values, fader)} disabled={!canWrite} onChange={e => set(fader, Number(e.target.value))}/></label>
-      {!["dca", "fxsend"].includes(strip.kind) && <div className="xm visual-pan"><Knob label="Panorama" value={num(values, `${strip.prefix}/mix/pan`, .5)} reset={.5} bipolar display={`${Math.round((num(values, `${strip.prefix}/mix/pan`, .5) - .5) * 200)}`} disabled={!canWrite} onChange={v => set(`${strip.prefix}/mix/pan`, v)}/></div>}
+    <aside className="visual-selected" aria-label={tx(`Tranche sélectionnée ${stripName(strip, values)}`)}>
+      <div className="visual-source-art" aria-hidden="true">{tx(sourceIcon(strip, values))}</div>
+      <div className="visual-channel-title"><button type="button" aria-label={tx("Canal précédent")} disabled={i <= 0} onClick={() => select(ALL[i - 1]!)}>‹</button><strong>{tx(strip.short)} · {stripName(strip, values)}</strong><button type="button" aria-label={tx("Canal suivant")} disabled={i >= ALL.length - 1} onClick={() => select(ALL[i + 1]!)}>›</button></div>
+      <div className="visual-ms"><button type="button" disabled={!canWrite} className={!on ? "muted" : ""} aria-pressed={!on} onClick={() => set(mute, on ? 0 : 1)}>{tx("◀ Mute")}</button>{solo && <button type="button" disabled={!canWrite} className={values[solo] === 1 ? "solo" : ""} aria-pressed={values[solo] === 1} onClick={() => set(solo, values[solo] === 1 ? 0 : 1)}>{tx("♫ Solo")}</button>}</div>
+      <output className="visual-db">{tx(dbText(num(values, fader)))}{tx(" dB")}</output>
+      <div className="visual-fader"><Meter indexes={strip.meters}/><Fader label={tx(`Volume ${stripName(strip, values)}`)} value={num(values, fader)} disabled={!canWrite} reset={.75} accent="#a87fff" onChange={v => set(fader, v)}/><div className="visual-fader-scale" aria-hidden="true">{["+10", "+5", "0", "−5", "−10", "−20", "−30", "−∞"].map(t => <span key={t}>{tx(t)}</span>)}</div></div>
+      <label className="visual-mobile-level">{tx("Volume")}<input type="range" aria-label={tx(`Volume compact ${stripName(strip, values)}`)} min="0" max="1" step=".005" value={num(values, fader)} disabled={!canWrite} onChange={e => set(fader, Number(e.target.value))}/></label>
+      {!["dca", "fxsend"].includes(strip.kind) && <div className="xm visual-pan"><Knob label={tx("Panorama")} value={num(values, `${strip.prefix}/mix/pan`, .5)} reset={.5} bipolar display={`${Math.round((num(values, `${strip.prefix}/mix/pan`, .5) - .5) * 200)}`} disabled={!canWrite} onChange={v => set(`${strip.prefix}/mix/pan`, v)}/></div>}
     </aside>
     <div className="visual-processing">
-      <nav className="visual-process-tabs" aria-label="Traitements du canal">{PROCESSORS.filter(p => available(p.id, strip)).map(p => <button key={p.id} type="button" aria-pressed={current === p.id} style={{ "--process-color": p.color } as React.CSSProperties} onClick={() => setStep(p.id)}><span aria-hidden="true">{p.icon}</span>{p.name}<i className={num(values, `${strip.prefix}/${p.id === "comp" ? "dyn" : p.id}/on`) === 1 ? "lit" : ""}/></button>)}</nav>
-      <section className={`visual-processor processor-${current}`} aria-label={PROCESSORS.find(p => p.id === current)?.name ?? "DCA"}><div className="xm xs2-legacy">{content}</div></section>
+      <nav className="visual-process-tabs" aria-label={tx("Traitements du canal")}>{PROCESSORS.filter(p => available(p.id, strip)).map(p => <button key={p.id} type="button" aria-pressed={current === p.id} style={{ "--process-color": p.color } as React.CSSProperties} onClick={() => setStep(p.id)}><span aria-hidden="true">{tx(p.icon)}</span>{tx(p.name)}<i className={num(values, `${strip.prefix}/${p.id === "comp" ? "dyn" : p.id}/on`) === 1 ? "lit" : ""}/></button>)}</nav>
+      <section className={`visual-processor processor-${current}`} aria-label={tx(PROCESSORS.find(p => p.id === current)?.name ?? "DCA")}><div className="xm xs2-legacy">{content}</div></section>
       {available("eq", strip) && current !== "eq" && <EqOverview strip={strip} values={values} open={() => setStep("eq")}/>}
     </div>
   </div>;
@@ -257,7 +258,7 @@ function EqOverview({ strip, values, open }: { strip: Strip; values: Values; ope
   const hp = strip.kind === "ch" && num(values, `${strip.prefix}/preamp/hpon`) === 1 ? logMap(num(values, `${strip.prefix}/preamp/hpf`), 20, 400) : undefined;
   const colors = ["#b277ff", "#26d8f2", "#43ee8b", "#ffc54e", "#fa5887", "#5ba7ff"];
   const points = Array.from({ length: 201 }, (_, i) => `${i / 200 * w},${yOf(eqResponse(bands, 20 * Math.pow(1000, i / 200), on, hp))}`).join(" ");
-  return <section className="visual-eq-overview" aria-label="Aperçu de l’égaliseur"><header><b>Égaliseur <small>· {on ? "actif" : "désactivé"}</small></b><button type="button" onClick={open}>Ouvrir EQ ↗</button></header><svg ref={svgRef} viewBox={`0 0 ${w} ${h}`} role="img" aria-label="Courbe de réponse de l’égaliseur"><defs><linearGradient id="visual-eq-spectrum">{colors.map((c, i) => <stop key={c} offset={`${i * 20}%`} stopColor={c}/>)}</linearGradient></defs>{[-12,-6,0,6,12].map(db => <line key={db} x1="0" x2={w} y1={yOf(db)} y2={yOf(db)} stroke="#33415c"/>)}{(w < 500 ? [20,100,1000,10000,20000] : [20,50,100,200,500,1000,2000,5000,10000,20000]).map(f => { const x = xOf(f); return <g key={f}><line x1={x} x2={x} y1="0" y2={plotH} stroke="#33415c"/><text x={Math.min(w - 18, Math.max(18, x))} y={h - 3} textAnchor="middle">{f >= 1000 ? `${f / 1000}k` : f}</text></g>; })}<polygon points={`0,${zero} ${points} ${w},${zero}`} fill="url(#visual-eq-spectrum)" opacity=".22"/><polyline points={points} fill="none" stroke="url(#visual-eq-spectrum)" strokeWidth="2"/>{bands.map((b, i) => <g key={i}><circle cx={xOf(b.f)} cy={yOf(b.type === 0 || b.type === 5 ? 0 : b.g)} r="8" fill={colors[i]}/><text x={xOf(b.f)} y={yOf(b.type === 0 || b.type === 5 ? 0 : b.g) + 4} textAnchor="middle" className="eq-number">{i + 1}</text></g>)}</svg></section>;
+  return <section className="visual-eq-overview" aria-label={tx("Aperçu de l’égaliseur")}><header><b>{tx("Égaliseur ")}<small>· {tx(on ? "actif" : "désactivé")}</small></b><button type="button" onClick={open}>{tx("Ouvrir EQ ↗")}</button></header><svg ref={svgRef} viewBox={`0 0 ${w} ${h}`} role="img" aria-label={tx("Courbe de réponse de l’égaliseur")}><defs><linearGradient id="visual-eq-spectrum">{colors.map((c, i) => <stop key={c} offset={`${i * 20}%`} stopColor={c}/>)}</linearGradient></defs>{[-12,-6,0,6,12].map(db => <line key={db} x1="0" x2={w} y1={yOf(db)} y2={yOf(db)} stroke="#33415c"/>)}{(w < 500 ? [20,100,1000,10000,20000] : [20,50,100,200,500,1000,2000,5000,10000,20000]).map(f => { const x = xOf(f); return <g key={f}><line x1={x} x2={x} y1="0" y2={plotH} stroke="#33415c"/><text x={Math.min(w - 18, Math.max(18, x))} y={h - 3} textAnchor="middle">{tx(f >= 1000 ? `${f / 1000}k` : f)}</text></g>; })}<polygon points={`0,${zero} ${points} ${w},${zero}`} fill="url(#visual-eq-spectrum)" opacity=".22"/><polyline points={points} fill="none" stroke="url(#visual-eq-spectrum)" strokeWidth="2"/>{bands.map((b, i) => <g key={i}><circle cx={xOf(b.f)} cy={yOf(b.type === 0 || b.type === 5 ? 0 : b.g)} r="8" fill={colors[i]}/><text x={xOf(b.f)} y={yOf(b.type === 0 || b.type === 5 ? 0 : b.g) + 4} textAnchor="middle" className="eq-number">{tx(i + 1)}</text></g>)}</svg></section>;
 }
 function GainReduction({ strip }: { strip: Strip }) {
   const [db, setDb] = useState<number | null>(null);
@@ -277,13 +278,13 @@ function GainReduction({ strip }: { strip: Strip }) {
     void poll(); const timer = setInterval(() => void poll(), 500);
     return () => { active = false; clearInterval(timer); };
   }, [strip.id]);
-  return <div className="visual-gain-reduction" aria-label="Réduction de gain du compresseur"><span>Réduction de gain</span><div role="meter" aria-label="Réduction de gain" aria-valuemin={0} aria-valuemax={30} aria-valuenow={db === null ? undefined : Math.min(30, -db)} aria-valuetext={db === null ? "Mesure indisponible" : `${db.toFixed(1)} dB`}><i style={{ width: `${db === null ? 0 : Math.min(100, -db / 30 * 100)}%` }}/></div><output>{db === null ? "—" : `${db.toFixed(1)} dB`}</output></div>;
+  return <div className="visual-gain-reduction" aria-label={tx("Réduction de gain du compresseur")}><span>{tx("Réduction de gain")}</span><div role="meter" aria-label={tx("Réduction de gain")} aria-valuemin={0} aria-valuemax={30} aria-valuenow={db === null ? undefined : Math.min(30, -db)} aria-valuetext={tx(db === null ? "Mesure indisponible" : `${db.toFixed(1)} dB`)}><i style={{ width: `${db === null ? 0 : Math.min(100, -db / 30 * 100)}%` }}/></div><output>{tx(db === null ? "—" : `${db.toFixed(1)} dB`)}</output></div>;
 }
 export function VisualCompressor(props: ViewProps & {advanced?:boolean}) {
   const { strip, values, set, canWrite } = props, p = `${strip.prefix}/dyn`;
   const threshold = num(values, `${p}/thr`, 1), ratio = num(values, `${p}/ratio`, 6), gain = num(values, `${p}/mgain`), on = num(values, `${p}/on`) === 1;
   const curve = transferPoints(compCurve(-60 + threshold * 60, ratio, Math.round(num(values, `${p}/knee`) * 5), gain * 24, num(values, `${p}/mode`) === 1), 240, 180, -60, 0);
-  return <><div className="visual-comp-heading"><h2>Compresseur</h2><button type="button" role="switch" aria-label="Activer le compresseur" aria-checked={on} disabled={!canWrite} onClick={() => set(`${p}/on`, on ? 0 : 1)}><span/>{on ? "Activé" : "Désactivé"}</button></div><div className="visual-comp-main"><svg viewBox="-25 -8 280 210" role="img" aria-label="Courbe du compresseur">{[0, 60, 120, 180, 240].map(x => <line key={x} x1={x} x2={x} y1="0" y2="180" className="comp-grid"/>)}{[0, 30, 60, 90, 120, 150, 180].map(y => <g key={y}><line x1="0" x2="240" y1={y} y2={y} className="comp-grid"/><text x="-5" y={y + 4} textAnchor="end">{Math.round(-y / 3)}</text></g>)}<line x1="0" y1="180" x2="240" y2="0" className="comp-guide"/><polygon points={`0,180 ${curve} 240,180`} fill="#a96bff" opacity=".18"/><polyline points={curve} fill="none" stroke="#c496ff" strokeWidth="3"/><text x="0" y="198">−60 dB</text><text x="210" y="198">0 dB</text></svg><div className="visual-comp-knobs"><Knob size={64} label="Seuil" disabled={!canWrite} value={threshold} display={`${(-60 + threshold * 60).toFixed(1)} dB`} onChange={v => set(`${p}/thr`, v)}/><Knob size={64} label="Ratio" disabled={!canWrite} value={ratio / 11} display={`${RATIOS[ratio]}:1`} onChange={v => set(`${p}/ratio`, Math.round(v * 11))}/><Knob size={64} label="Attaque" disabled={!canWrite} value={num(values, `${p}/attack`)} display={`${(num(values, `${p}/attack`) * 120).toFixed(0)} ms`} onChange={v => set(`${p}/attack`, v)}/><Knob size={64} label="Relâchement" disabled={!canWrite} value={num(values, `${p}/release`)} display={`${logMap(num(values, `${p}/release`), 5, 4000).toFixed(0)} ms`} onChange={v => set(`${p}/release`, v)}/><Knob size={64} label="Make-up" disabled={!canWrite} value={gain} display={`+${(gain * 24).toFixed(1)} dB`} onChange={v => set(`${p}/mgain`, v)}/></div></div><>{props.advanced!==false&&<GainReduction strip={strip}/>}</>{props.advanced!==false&&<details className="visual-advanced"><summary>Réglages avancés · presets, détection, knee, mix et sidechain</summary><CompView {...props}/></details>}</>;
+  return <><div className="visual-comp-heading"><h2>{tx("Compresseur")}</h2><button type="button" role="switch" aria-label={tx("Activer le compresseur")} aria-checked={on} disabled={!canWrite} onClick={() => set(`${p}/on`, on ? 0 : 1)}><span/>{tx(on ? "Activé" : "Désactivé")}</button></div><div className="visual-comp-main"><svg viewBox="-25 -8 280 210" role="img" aria-label={tx("Courbe du compresseur")}>{[0, 60, 120, 180, 240].map(x => <line key={x} x1={x} x2={x} y1="0" y2="180" className="comp-grid"/>)}{[0, 30, 60, 90, 120, 150, 180].map(y => <g key={y}><line x1="0" x2="240" y1={y} y2={y} className="comp-grid"/><text x="-5" y={y + 4} textAnchor="end">{tx(Math.round(-y / 3))}</text></g>)}<line x1="0" y1="180" x2="240" y2="0" className="comp-guide"/><polygon points={`0,180 ${curve} 240,180`} fill="#a96bff" opacity=".18"/><polyline points={curve} fill="none" stroke="#c496ff" strokeWidth="3"/><text x="0" y="198">{tx("−60 dB")}</text><text x="210" y="198">{tx("0 dB")}</text></svg><div className="visual-comp-knobs"><Knob size={64} label={tx("Seuil")} disabled={!canWrite} value={threshold} display={`${(-60 + threshold * 60).toFixed(1)} dB`} onChange={v => set(`${p}/thr`, v)}/><Knob size={64} label={tx("Ratio")} disabled={!canWrite} value={ratio / 11} display={`${RATIOS[ratio]}:1`} onChange={v => set(`${p}/ratio`, Math.round(v * 11))}/><Knob size={64} label={tx("Attaque")} disabled={!canWrite} value={num(values, `${p}/attack`)} display={`${(num(values, `${p}/attack`) * 120).toFixed(0)} ms`} onChange={v => set(`${p}/attack`, v)}/><Knob size={64} label={tx("Relâchement")} disabled={!canWrite} value={num(values, `${p}/release`)} display={`${logMap(num(values, `${p}/release`), 5, 4000).toFixed(0)} ms`} onChange={v => set(`${p}/release`, v)}/><Knob size={64} label={tx("Make-up")} disabled={!canWrite} value={gain} display={`+${(gain * 24).toFixed(1)} dB`} onChange={v => set(`${p}/mgain`, v)}/></div></div><>{props.advanced!==false&&<GainReduction strip={strip}/>}</>{props.advanced!==false&&<details className="visual-advanced"><summary>{tx("Réglages avancés · presets, détection, knee, mix et sidechain")}</summary><CompView {...props}/></details>}</>;
 }
 
 // ---------------- Ears ----------------
@@ -299,28 +300,28 @@ function EarsView({ values, set, writable, confirmed }: { values: Values; set: S
   };
   return <>
     <MonitorDesk values={values} set={set} writable={writable} confirmed={confirmed} reduction={bus=><GainReduction strip={bus}/>}/>
-    <details className="monitor-matrix"><summary>Matrice complète · tous les envois et bus internes</summary>
-    <div className="xs2-bar"><div><div style={{ fontSize: 18, fontWeight: 700 }}>Matrice des bus</div><div className="muted">Chaque colonne est un bus. Seuls les bus reliés à une sortie physique alimentent directement un retour.</div></div></div>
-    <div className="xs2-matrix" role="table" aria-label="Envois vers les ears">
-      <div className="row head" role="row"><div role="columnheader" className="muted">Source</div>
+    <details className="monitor-matrix"><summary>{tx("Matrice complète · tous les envois et bus internes")}</summary>
+    <div className="xs2-bar"><div><div style={{ fontSize: 18, fontWeight: 700 }}>{tx("Matrice des bus")}</div><div className="muted">{tx("Chaque colonne est un bus. Seuls les bus reliés à une sortie physique alimentent directement un retour.")}</div></div></div>
+    <div className="xs2-matrix" role="table" aria-label={tx("Envois vers les ears")}>
+      <div className="row head" role="row"><div role="columnheader" className="muted">{tx("Source")}</div>
         {BUSES.map((b, i) => { const db = fresh ? levels[b.meters[0]!] ?? -128 : -128; const lim = num(values, `/bus/${i + 1}/dyn/on`) === 1; return <div key={b.id} role="columnheader">
-          <b>{i<model.monitorOutputs?earsLabel(values,i+1):`Bus ${i+1} interne`}</b>
+          <b>{i<model.monitorOutputs?earsLabel(values,i+1):tx(`Bus ${i+1} interne`)}</b>
           <span className="meter"><i className={db > -6 ? "hot" : ""} style={{ width: `${Math.max(0, Math.min(100, (db + 60) / 60 * 100))}%` }} /></span>
-          <span className="mono muted" style={{ fontSize: 11 }}>{db <= -90 ? "—" : `crête ${Math.round(db)} dB`} · {lim ? "dynamique active" : "dynamique désactivée"}</span>
+          <span className="mono muted" style={{ fontSize: 11 }}>{tx(db <= -90 ? "—" : `crête ${Math.round(db)} dB`)} · {tx(lim ? "dynamique active" : "dynamique désactivée")}</span>
         </div>; })}
       </div>
       {rows.map(s => <div className="row" role="row" key={s.id}>
         <div className="src" role="rowheader"><i style={{ background: stripColor(num(values, `${s.prefix}/config/color`)) }} />{stripName(s, values)}</div>
         {BUSES.map((_, i) => { const a = `${s.prefix}/mix/${pad(i + 1)}/level`, v = num(values, a); return <div key={a} role="cell">
-          <input type="range" min={0} max={1} step={0.005} value={v} disabled={!writable} aria-label={`${stripName(s, values)} dans ${earsLabel(values, i + 1)}`} onChange={e => set(a, Number(e.target.value))} />
+          <input type="range" min={0} max={1} step={0.005} value={v} disabled={!writable} aria-label={tx(`${stripName(s, values)} dans ${earsLabel(values, i + 1)}`)} onChange={e => set(a, Number(e.target.value))} />
           <span className="v">{v <= 0.001 ? "—" : dbText(v)}</span>
         </div>; })}
       </div>)}
     </div>
     <div className="xs2-cards3">
-      {limiterOff.length ? <div className="xs2-note"><b>{limiterOff.length} bus nommé{limiterOff.length > 1 ? "s" : ""} sans dynamique active</b><div>Un limiteur peut réduire les crêtes électriques. Le niveau acoustique dépend aussi du casque et de son amplificateur ; ce réglage ne garantit pas la protection auditive.</div><div style={{ marginTop: 8 }}><button type="button" className="xs2-btn warn" disabled={!writable} onClick={addLimiters}>Ajouter la protection…</button></div></div>
-        : <div className="xs2-good"><b>Dynamique active sur les bus nommés</b><div>Vérifie le mode, le ratio et le niveau d’écoute de chaque retour.</div></div>}
-      <div className="xs2-card"><h3>Réverbération dans les ears</h3><div className="muted">Un peu de réverbération sur la voix aide le chanteur à se placer : règle la ligne de l’effet dans la colonne de chaque musicien.</div></div>
+      {limiterOff.length ? <div className="xs2-note"><b>{tx(limiterOff.length)}{tx(" bus nommé")}{tx(limiterOff.length > 1 ? "s" : "")}{tx(" sans dynamique active")}</b><div>{tx("Un limiteur peut réduire les crêtes électriques. Le niveau acoustique dépend aussi du casque et de son amplificateur ; ce réglage ne garantit pas la protection auditive.")}</div><div style={{ marginTop: 8 }}><button type="button" className="xs2-btn warn" disabled={!writable} onClick={addLimiters}>{tx("Ajouter la protection…")}</button></div></div>
+        : <div className="xs2-good"><b>{tx("Dynamique active sur les bus nommés")}</b><div>{tx("Vérifie le mode, le ratio et le niveau d’écoute de chaque retour.")}</div></div>}
+      <div className="xs2-card"><h3>{tx("Réverbération dans les ears")}</h3><div className="muted">{tx("Un peu de réverbération sur la voix aide le chanteur à se placer : règle la ligne de l’effet dans la colonne de chaque musicien.")}</div></div>
     </div>
     </details>
   </>;
@@ -338,9 +339,9 @@ function RoutingPage(props: ViewProps) {
     <div className="main"><div className="xm xs2-legacy"><RoutingView {...props} /></div></div>
     <div className="side">
       <div className="xs2-card" style={{ background: "#0F1E1E", borderColor: "#1D4A4A" }}>
-        <h3>Balance virtuelle {usb ? <span className="xs2-badge" style={{ background: "#3EE0E0" }}>{usb} USB</span> : null}</h3>
-        <div style={{ color: "#B9E6E6", marginBottom: 10 }}>Chaque canal écoute la piste USB enregistrée (REAPER) au lieu du micro : on rejoue la répète et on peaufine le son sans les musiciens.</div>
-        {usb ? <button type="button" className="xs2-btn" disabled={!canWrite} onClick={() => virtual(false)}>Revenir aux micros…</button> : <button type="button" className="xs2-btn primary" disabled={!canWrite} onClick={() => virtual(true)}>Passer les 16 canaux sur USB…</button>}
+        <h3>{tx("Balance virtuelle ")}{usb ? <span className="xs2-badge" style={{ background: "#3EE0E0" }}>{tx(usb)}{tx(" USB")}</span> : null}</h3>
+        <div style={{ color: "#B9E6E6", marginBottom: 10 }}>{tx("Chaque canal écoute la piste USB enregistrée (REAPER) au lieu du micro : on rejoue la répète et on peaufine le son sans les musiciens.")}</div>
+        {usb ? <button type="button" className="xs2-btn" disabled={!canWrite} onClick={() => virtual(false)}>{tx("Revenir aux micros…")}</button> : <button type="button" className="xs2-btn primary" disabled={!canWrite} onClick={() => virtual(true)}>{tx("Passer les 16 canaux sur USB…")}</button>}
       </div>
     </div>
   </div>;

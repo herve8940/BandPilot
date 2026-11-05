@@ -1,7 +1,7 @@
 const { app, BrowserWindow, dialog, shell, Menu, ipcMain, safeStorage } = require("electron");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
-const { mkdirSync, readFileSync, writeFileSync } = require("node:fs");
+const { mkdirSync, readFileSync, writeFileSync, renameSync } = require("node:fs");
 const net = require("node:net");
 const {loadAI,saveAI}=require("./ai-config.cjs");
 // Keep the existing data/profile directory across the display-name change.
@@ -10,6 +10,13 @@ if(!process.argv.includes('--smoke-test')){
   mkdirSync(legacyData,{recursive:true});app.setPath('userData',legacyData);
 }
 let win;
+let language="fr";
+const label=(fr,en)=>language==="en"?en:fr;
+function updateMenu(){Menu.setApplicationMenu(Menu.buildFromTemplate([{label:label("Connexion","Connection"),submenu:[
+ {label:label("Détecter et connecter ma console","Detect and connect my mixer"),click:()=>{if(win)void win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");}},
+ {type:"separator"},{role:"about",label:label("À propos de BandPilot","About BandPilot")},{type:"separator"},{role:"quit",label:label("Quitter","Quit")}
+]},{label:label("Affichage","View"),submenu:[{role:"reload",label:label("Actualiser","Reload")},{role:"togglefullscreen",label:label("Plein écran","Toggle full screen")}]}]));}
+
 app.whenReady().then(async () => {
   try {
     const smoke=process.argv.includes("--smoke-test");
@@ -27,10 +34,9 @@ app.whenReady().then(async () => {
     process.env.XR18_MODE=config.mode;
     process.env.XR18_HOST=config.host;
     process.env.XR18_ENABLE_WRITES=String(config.enableWrites);
-    Menu.setApplicationMenu(Menu.buildFromTemplate([{label:"Connexion",submenu:[
-      {label:"Détecter et connecter ma console",click:()=>{if(win)void win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");}},
-      {type:"separator"},{role:"about",label:"À propos de BandPilot"},{type:"separator"},{role:"quit",label:"Quitter"}
-    ]},{label:"Affichage",submenu:[{role:"reload"},{role:"togglefullscreen"}]}]));
+    const languagePath=path.join(dataPath,"language.json");
+    try{language=JSON.parse(readFileSync(languagePath,"utf8")).language==="en"?"en":"fr";}catch{}
+    updateMenu();
     const port = await new Promise((resolve,reject)=>{
       const probe=net.createServer();
       probe.once("error",reject);
@@ -59,9 +65,15 @@ app.whenReady().then(async () => {
     });
     const appIcon=path.join(__dirname,"icon.png");
     const fromWindow=(event)=>event.sender===win.webContents&&event.senderFrame===win.webContents.mainFrame;
+    ipcMain.on('bandpilot-language-get',event=>{event.returnValue=fromWindow(event)?language:'fr';});
+    ipcMain.on('bandpilot-language-set',(event,next)=>{
+      event.returnValue=false;
+      if(!fromWindow(event)||!['fr','en'].includes(next))return;
+      try{writeFileSync(languagePath+'.tmp',JSON.stringify({language:next}));renameSync(languagePath+'.tmp',languagePath);language=next;updateMenu();event.returnValue=true;}catch(error){console.error('Language preference could not be saved',error);}
+    });
     ipcMain.on('xr18-confirm',(event,message)=>{
       if(!fromWindow(event)){event.returnValue=false;return;}
-      event.returnValue=dialog.showMessageBoxSync(win,{type:"question",icon:appIcon,title:"BandPilot",message:String(message).slice(0,2000),buttons:["Annuler","Confirmer"],defaultId:1,cancelId:0,noLink:true})===1;
+      event.returnValue=dialog.showMessageBoxSync(win,{type:"question",icon:appIcon,title:"BandPilot",message:String(message).slice(0,2000),buttons:[label("Annuler","Cancel"),label("Confirmer","Confirm")],defaultId:1,cancelId:0,noLink:true})===1;
     });
     ipcMain.on('xr18-alert',(event,message)=>{
       if(fromWindow(event))dialog.showMessageBoxSync(win,{type:"info",icon:appIcon,title:"BandPilot",message:String(message).slice(0,2000),buttons:["OK"],noLink:true});
@@ -101,13 +113,24 @@ app.whenReady().then(async () => {
         await new Promise(resolve=>setTimeout(resolve,200));
       }
       if(!connectionReady)throw Error("Connexion locale : commandes administrateur non disponibles");
+      // Exercise the same language selector shipped to users, including native persistence.
+      await win.webContents.executeJavaScript(`(()=>{const select=document.querySelector('.bandpilot-language select');if(!select)throw Error('Missing language selector');select.value='en';select.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+      await new Promise(resolve=>setTimeout(resolve,200));
+      if(!await win.webContents.executeJavaScript(`document.documentElement.lang==='en' && document.body.textContent.includes('Connect to my mixer')`))throw Error('English interface not rendered');
+      if(JSON.parse(readFileSync(languagePath,'utf8')).language!=='en'||!Menu.getApplicationMenu().items.some(item=>item.label==='Connection'))throw Error('Native language preference/menu not updated');
+      await win.webContents.executeJavaScript('localStorage.clear()');
+      await win.loadURL(`http://127.0.0.1:${port}/`);
+      await new Promise(resolve=>setTimeout(resolve,400));
+      if(!await win.webContents.executeJavaScript(`document.documentElement.lang==='en'`))throw Error('Language not restored from desktop preference');
+      const mixerStatus=await (await fetch(`http://127.0.0.1:${port}/api/status`)).json();
+      if(mixerStatus.mode!=='simulation'||mixerStatus.writesEnabled)throw Error('Language test changed mixer connection');
       const auth=await fetch(`http://127.0.0.1:${port}/api/auth`);
       if(!auth.ok)throw Error("Authentification locale indisponible");
       app.exit(0);
     }
   } catch(error) {
     if(process.argv.includes("--smoke-test")){console.error(error);app.exit(1);return;}
-    dialog.showErrorBox("BandPilot — démarrage impossible",String(error));
+    dialog.showErrorBox(label("BandPilot — démarrage impossible","BandPilot — unable to start"),String(error));
     app.quit();
   }
 });

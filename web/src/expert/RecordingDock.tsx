@@ -1,3 +1,4 @@
+import {tx, getLocale} from "../i18n";
 import {useMixerModel} from '../MixerModel';
 import { useEffect, useState } from "react";
 import { Meter } from "../xair/controls";
@@ -21,18 +22,18 @@ export function RecordingDock({ open }: { open: () => void }) {
   const state = status?.state ?? "offline";
   const ready = state === "ready" && !!status?.session;
   const running = state === "recording";
-  return <div className="xs3-record-dock" role="region" aria-label="Transport d'enregistrement REAPER">
-    <button type="button" className="xs3-record-open" onClick={open} aria-label="Ouvrir l'enregistrement"><span className={running ? "xs3-rec-light active" : "xs3-rec-light"}>●</span><span><strong>Enregistrement</strong><small>{status?.session ? status.session.title : "Préparer une session REAPER"}</small></span></button>
-    <div className="xs3-rec-clock" aria-label="Durée d'enregistrement">{time(status?.elapsed ?? 0)}</div>
-    <div className="xs3-rec-state"><span className={running ? "active" : ""}>● {running ? "REC" : state === "ready" ? "REAPER prêt" : state === "lost" ? "Liaison perdue" : "Non prêt"}</span><small>{status?.session ? status.session.tracks + " pistes" : "Aucune session"}</small></div>
-    <div className="visual-record-meters" aria-label={`Niveaux des ${model.channels} entrées`}>{Array.from({length:model.channels},(_,i)=><Meter key={i} indexes={[i]}/>)}</div>
+  return <div className="xs3-record-dock" role="region" aria-label={tx("Transport d'enregistrement REAPER")}>
+    <button type="button" className="xs3-record-open" onClick={open} aria-label={tx("Ouvrir l'enregistrement")}><span className={running ? "xs3-rec-light active" : "xs3-rec-light"}>●</span><span><strong>{tx("Enregistrement")}</strong><small>{status?.session ? status.session.title : tx("Préparer une session REAPER")}</small></span></button>
+    <div className="xs3-rec-clock" aria-label={tx("Durée d'enregistrement")}>{tx(time(status?.elapsed ?? 0))}</div>
+    <div className="xs3-rec-state"><span className={running ? "active" : ""}>● {tx(running ? "REC" : state === "ready" ? "REAPER prêt" : state === "lost" ? "Liaison perdue" : "Non prêt")}</span><small>{tx(status?.session ? status.session.tracks + " pistes" : "Aucune session")}</small></div>
+    <div className="visual-record-meters" aria-label={tx(`Niveaux des ${model.channels} entrées`)}>{Array.from({length:model.channels},(_,i)=><Meter key={i} indexes={[i]}/>)}</div>
     <div className="xs3-rec-controls">
-      <button type="button" className="rec" title="Démarrer l'enregistrement" disabled={!ready || busy} onClick={() => void act("/api/reaper/rec")}>● <span>REC</span></button>
-      <button type="button" title="Lire dans REAPER" disabled={state !== "ready" || status?.playing || busy} onClick={() => void act("/api/show/play")}>▶ <span>Lire</span></button>
-      <button type="button" title="Arrêter REAPER" disabled={(!["recording","starting","lost"].includes(state) && !status?.playing) || busy} onClick={() => void act("/api/show/stop")}>■ <span>Stop</span></button>
-      <button type="button" title="Ajouter un marqueur" disabled={!running || busy} onClick={() => void act("/api/reaper/marker")}>⚑ <span>Marqueur</span></button>
-      <button type="button" title="Configurer l'enregistrement" onClick={open}>⚙ <span>Configurer</span></button>
+      <button type="button" className="rec" title={tx("Démarrer l'enregistrement")} disabled={!ready || busy} onClick={() => void act("/api/reaper/rec")}>● <span>{tx("REC")}</span></button>
+      <button type="button" title={tx("Lire dans REAPER")} disabled={state !== "ready" || status?.playing || busy} onClick={() => void act("/api/show/play")}>▶ <span>{tx("Lire")}</span></button>
+      <button type="button" title={tx("Arrêter REAPER")} disabled={(!["recording","starting","lost"].includes(state) && !status?.playing) || busy} onClick={() => void act("/api/show/stop")}>■ <span>{tx("Stop")}</span></button>
+      <button type="button" title={tx("Ajouter un marqueur")} disabled={!running || busy} onClick={() => void act("/api/reaper/marker")}>⚑ <span>{tx("Marqueur")}</span></button>
+      <button type="button" title={tx("Configurer l'enregistrement")} onClick={open}>⚙ <span>{tx("Configurer")}</span></button>
     </div>
-    {(error || status?.alert) && <span className="xs3-rec-error" role="alert">{error || status?.alert}</span>}
+    {(error || status?.alert) && <span className="xs3-rec-error" role="alert">{tx(error || status?.alert)}</span>}
   </div>;
 }

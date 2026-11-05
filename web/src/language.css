@@ -1,0 +1,2 @@
+.bandpilot-language{display:inline-flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0}.bandpilot-language select{min-width:140px;padding:9px 12px;border:1px solid var(--bp-line,#43526f);border-radius:9px;background:var(--bp-panel,#172136);color:var(--bp-text,#edf0fa)}
+.studio-control .bandpilot-language{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;width:max-content;max-width:100%;margin:8px 0;gap:12px}.studio-control .bandpilot-language select{width:auto;min-width:140px}

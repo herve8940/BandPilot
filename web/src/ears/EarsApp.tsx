@@ -1,3 +1,5 @@
+import {LanguageSelect} from "../LanguageSettings";
+import {tx, getLocale, useLanguage} from "../i18n";
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { faderToDb, formatDb, stripColor } from "../xairMath";
 
@@ -77,7 +79,7 @@ function Slider({ value, cap, onChange, disabled, label, color }: { value: numbe
   const drag = useRef<{ x: number; v: number } | null>(null);
   const pos = Math.max(0, Math.min(1, value / cap));
   const fromX = (e: ReactPointerEvent) => { const r = ref.current!.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * cap; };
-  return <div ref={ref} className={disabled ? "ea-slider disabled" : "ea-slider"} role="slider" aria-label={label} aria-valuemin={0} aria-valuemax={cap} aria-valuenow={value} aria-valuetext={`${formatDb(faderToDb(value))} dB`} tabIndex={disabled ? -1 : 0}
+  return <div ref={ref} className={disabled ? "ea-slider disabled" : "ea-slider"} role="slider" aria-label={tx(label)} aria-valuemin={0} aria-valuemax={cap} aria-valuenow={value} aria-valuetext={tx(`${formatDb(faderToDb(value))} dB`)} tabIndex={disabled ? -1 : 0}
     style={{ "--c": color } as React.CSSProperties}
     onKeyDown={e => { if (disabled) return; if (e.key === "ArrowRight" || e.key === "ArrowUp") onChange(Math.min(cap, value + .01)); if (e.key === "ArrowLeft" || e.key === "ArrowDown") onChange(Math.max(0, value - .01)); }}
     onPointerDown={e => { if (disabled) return; e.currentTarget.setPointerCapture(e.pointerId); drag.current = { x: e.clientX, v: value }; }}
@@ -99,6 +101,7 @@ function MeterBar({ db }: { db: number }) {
 }
 
 export function EarsApp() {
+  useLanguage();
   const { conn, share, sources, values, cap, control, meters, toast, setToast, set } = useEars();
   const [showAll, setShowAll] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -121,57 +124,58 @@ export function EarsApp() {
   const list = useMemo(() => sources.map(s => ({ ...s, name: str(`${s.prefix}/config/name`), level: `${s.prefix}/mix/${pad(bus)}/level` }))
     .filter(s => showAll || s.name || num(s.level) > .01), [sources, values, showAll, bus]);
 
-  if (conn === "revoked") return <main className="ea ea-center"><div className="ea-card"><h1>Lien expiré</h1><p>Ce QR code a été remplacé. Demande le nouveau à la personne qui gère la console.</p></div></main>;
-  if (!share) return <main className="ea ea-center"><div className="ea-loader" /><p>{conn === "offline" ? "Connexion à la console…" : "Chargement de ton retour…"}</p></main>;
+  if (conn === "revoked") return <main className="ea ea-center"><div className="ea-card"><LanguageSelect/><h1>{tx("Lien expiré")}</h1><p>{tx("Ce QR code a été remplacé. Demande le nouveau à la personne qui gère la console.")}</p></div></main>;
+  if (!share) return <main className="ea ea-center"><LanguageSelect/><div className="ea-loader" /><p>{tx(conn === "offline" ? "Connexion à la console…" : "Chargement de ton retour…")}</p></main>;
 
   const busName = str(`/bus/${bus}/config/name`) || `Bus ${bus}`;
   const masterAddr = `/bus/${bus}/mix/fader`, onAddr = `/bus/${bus}/mix/on`, on = num(onAddr, 1) === 1;
   const master = num(masterAddr);
   return <main className="ea">
+    <LanguageSelect/>
     <header className="ea-head">
-      <div><p className="ea-eyebrow">Mon retour · {busName}</p><h1>{share.name}</h1></div>
-      <span className={`ea-conn ${conn}`}>{conn === "online" ? "En direct" : "Reconnexion…"}</span>
+      <div><p className="ea-eyebrow">{tx("Mon retour · ")}{busName}</p><h1>{share.name}</h1></div>
+      <span className={`ea-conn ${conn}`}>{tx(conn === "online" ? "En direct" : "Reconnexion…")}</span>
     </header>
-    {!control && <p className="ea-banner">Lecture seule : le contrôle n’est pas activé sur l’ordinateur de la console.</p>}
+    {!control && <p className="ea-banner">{tx("Lecture seule : le contrôle n’est pas activé sur l’ordinateur de la console.")}</p>}
 
     <section className={on ? "ea-master" : "ea-master muted"}>
       <div className="ea-master-top">
-        <div><b>Volume de mon retour</b><span>{on ? `${formatDb(faderToDb(master))} dB` : "Coupé"}</span></div>
-        <button type="button" className={on ? "ea-mute" : "ea-mute on"} disabled={!canMove} onClick={() => set(onAddr, on ? 0 : 1)} aria-pressed={!on}>{on ? "Couper" : "Rétablir"}</button>
+        <div><b>{tx("Volume de mon retour")}</b><span>{tx(on ? `${formatDb(faderToDb(master))} dB` : "Coupé")}</span></div>
+        <button type="button" className={on ? "ea-mute" : "ea-mute on"} disabled={!canMove} onClick={() => set(onAddr, on ? 0 : 1)} aria-pressed={!on}>{tx(on ? "Couper" : "Rétablir")}</button>
       </div>
-      <Slider label="Volume de mon retour" value={master} cap={cap} color="#3ee0e0" disabled={!canMove} onChange={v => set(masterAddr, v)} />
+      <Slider label={tx("Volume de mon retour")} value={master} cap={cap} color="#3ee0e0" disabled={!canMove} onChange={v => set(masterAddr, v)} />
       <MeterBar db={freshMeters ? meters.bus : -128} />
     </section>
 
     <section className="ea-list">
-      <div className="ea-list-head"><h2>Ce que j’entends</h2><label><input type="checkbox" checked={showAll} onChange={e => setShowAll(e.target.checked)} /> Tout afficher</label></div>
+      <div className="ea-list-head"><h2>{tx("Ce que j’entends")}</h2><label><input type="checkbox" checked={showAll} onChange={e => setShowAll(e.target.checked)} />{tx(" Tout afficher")}</label></div>
       {list.map(s => {
         const color = stripColor(num(`${s.prefix}/config/color`)), level = num(s.level), muted = num(`${s.prefix}/mix/on`, 1) === 0;
         const db = freshMeters ? Math.max(...s.meters.map(i => meters.levels[i] ?? -128)) : -128;
         return <article key={s.prefix} className="ea-row" style={{ "--c": color } as React.CSSProperties}>
-          <div className="ea-row-top"><span className="ea-dot" /><b>{s.name || s.label}</b>{muted && <em>coupé en façade</em>}<span className="ea-db">{formatDb(faderToDb(level))}<small> dB</small></span></div>
-          <Slider label={`Niveau de ${s.name || s.label} dans mon retour`} value={level} cap={cap} color={color} disabled={!canMove} onChange={v => set(s.level, v)} />
+          <div className="ea-row-top"><span className="ea-dot" /><b>{s.name || s.label}</b>{muted && <em>{tx("coupé en façade")}</em>}<span className="ea-db">{tx(formatDb(faderToDb(level)))}<small>{tx(" dB")}</small></span></div>
+          <Slider label={tx(`Niveau de ${s.name || s.label} dans mon retour`)} value={level} cap={cap} color={color} disabled={!canMove} onChange={v => set(s.level, v)} />
           <MeterBar db={db} />
         </article>;
       })}
-      {!list.length && <p className="ea-empty">Aucune source envoyée dans ton retour. Coche « Tout afficher » pour en ajouter.</p>}
+      {!list.length && <p className="ea-empty">{tx("Aucune source envoyée dans ton retour. Coche « Tout afficher » pour en ajouter.")}</p>}
     </section>
 
     <section className="ea-profiles">
-      <h2>Mes réglages enregistrés</h2>
+      <h2>{tx("Mes réglages enregistrés")}</h2>
       <form onSubmit={e => { e.preventDefault(); if (profileName.trim()) void call("", "POST", { name: profileName.trim() }).then(d => { if (d) { setProfileName(""); setToast("Réglage enregistré"); } }); }}>
-        <input value={profileName} maxLength={40} onChange={e => setProfileName(e.target.value)} placeholder="Nom (ex. Concert, Répète)" aria-label="Nom du réglage" />
-        <button type="submit" disabled={busy || !profileName.trim()}>Enregistrer</button>
+        <input value={profileName} maxLength={40} onChange={e => setProfileName(e.target.value)} placeholder={tx("Nom (ex. Concert, Répète)")} aria-label={tx("Nom du réglage")} />
+        <button type="submit" disabled={busy || !profileName.trim()}>{tx("Enregistrer")}</button>
       </form>
       <ul>{profiles.map(p => <li key={p.id}>
-        <span><b>{p.name}</b><small>{new Date(p.updatedAt).toLocaleString("fr-BE", { dateStyle: "short", timeStyle: "short" })}</small></span>
-        <button type="button" disabled={busy || !canMove} onClick={() => void call(`/${p.id}/recall`, "POST").then(d => { if (d) setToast(`« ${p.name} » rappelé`); })}>Rappeler</button>
-        <button type="button" className="ghost" disabled={busy} aria-label={`Supprimer ${p.name}`} onClick={() => { if (confirm(`Supprimer « ${p.name} » ?`)) void call(`/${p.id}`, "DELETE"); }}>×</button>
+        <span><b>{p.name}</b><small>{tx(new Date(p.updatedAt).toLocaleString(getLocale(), { dateStyle: "short", timeStyle: "short" }))}</small></span>
+        <button type="button" disabled={busy || !canMove} onClick={() => void call(`/${p.id}/recall`, "POST").then(d => { if (d) setToast(`« ${p.name} » rappelé`); })}>{tx("Rappeler")}</button>
+        <button type="button" className="ghost" disabled={busy} aria-label={tx(`Supprimer ${p.name}`)} onClick={() => { if (confirm(tx(`Supprimer « ${p.name} » ?`))) void call(`/${p.id}`, "DELETE"); }}>{tx("×")}</button>
       </li>)}</ul>
-      {!profiles.length && <p className="ea-empty">Enregistre ton mix pour le retrouver au prochain concert.</p>}
+      {!profiles.length && <p className="ea-empty">{tx("Enregistre ton mix pour le retrouver au prochain concert.")}</p>}
     </section>
 
-    <footer className="ea-foot">Sécurité auditive : le niveau est plafonné à 0 dB et monte progressivement. Commence bas, puis monte ce qui te manque.</footer>
-    {toast && <div className="ea-toast" role="status">{toast}</div>}
+    <footer className="ea-foot">{tx("Sécurité auditive : le niveau est plafonné à 0 dB et monte progressivement. Commence bas, puis monte ce qui te manque.")}</footer>
+    {toast && <div className="ea-toast" role="status">{tx(toast)}</div>}
   </main>;
 }
