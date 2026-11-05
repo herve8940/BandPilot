@@ -10,8 +10,9 @@ if(!process.argv.includes('--smoke-test')){
   mkdirSync(legacyData,{recursive:true});app.setPath('userData',legacyData);
 }
 let win;
+const {languageCodes,normalizeLanguage,label:languageLabel}=require("./languages.cjs");
 let language="fr";
-const label=(fr,en)=>language==="en"?en:fr;
+const label=(fr,en)=>languageLabel(language,fr,en);
 function updateMenu(){Menu.setApplicationMenu(Menu.buildFromTemplate([{label:label("Connexion","Connection"),submenu:[
  {label:label("Détecter et connecter ma console","Detect and connect my mixer"),click:()=>{if(win)void win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");}},
  {type:"separator"},{role:"about",label:label("À propos de BandPilot","About BandPilot")},{type:"separator"},{role:"quit",label:label("Quitter","Quit")}
@@ -35,7 +36,7 @@ app.whenReady().then(async () => {
     process.env.XR18_HOST=config.host;
     process.env.XR18_ENABLE_WRITES=String(config.enableWrites);
     const languagePath=path.join(dataPath,"language.json");
-    try{language=JSON.parse(readFileSync(languagePath,"utf8")).language==="en"?"en":"fr";}catch{}
+    try{language=normalizeLanguage(JSON.parse(readFileSync(languagePath,"utf8")).language);}catch{}
     updateMenu();
     const port = await new Promise((resolve,reject)=>{
       const probe=net.createServer();
@@ -55,7 +56,7 @@ app.whenReady().then(async () => {
       try{const response=await fetch(`http://127.0.0.1:${port}/api/auth`);if(response.ok){ready=true;break;}}catch{}
       await new Promise(resolve=>setTimeout(resolve,250));
     }
-    if(!ready)throw Error("Le serveur local BandPilot n'a pas démarré.");
+    if(!ready)throw Error(label("Le serveur local BandPilot n'a pas démarré.","The local BandPilot server did not start."));
     win=new BrowserWindow({
       show:!smoke,
       width:1440,height:900,minWidth:800,minHeight:600,
@@ -68,7 +69,7 @@ app.whenReady().then(async () => {
     ipcMain.on('bandpilot-language-get',event=>{event.returnValue=fromWindow(event)?language:'fr';});
     ipcMain.on('bandpilot-language-set',(event,next)=>{
       event.returnValue=false;
-      if(!fromWindow(event)||!['fr','en'].includes(next))return;
+      if(!fromWindow(event)||!languageCodes.includes(next))return;
       try{writeFileSync(languagePath+'.tmp',JSON.stringify({language:next}));renameSync(languagePath+'.tmp',languagePath);language=next;updateMenu();event.returnValue=true;}catch(error){console.error('Language preference could not be saved',error);}
     });
     ipcMain.on('xr18-confirm',(event,message)=>{
@@ -113,15 +114,24 @@ app.whenReady().then(async () => {
         await new Promise(resolve=>setTimeout(resolve,200));
       }
       if(!connectionReady)throw Error("Connexion locale : commandes administrateur non disponibles");
+      const waitForRenderer=async(predicate)=>{
+        for(let attempt=0;attempt<40;attempt++){
+          if(await win.webContents.executeJavaScript(predicate))return;
+          await new Promise(resolve=>setTimeout(resolve,150));
+        }
+        throw Error('Language smoke test: renderer did not become ready');
+      };
       // Exercise the same language selector shipped to users, including native persistence.
-      await win.webContents.executeJavaScript(`(()=>{const select=document.querySelector('.bandpilot-language select');if(!select)throw Error('Missing language selector');select.value='en';select.dispatchEvent(new Event('change',{bubbles:true}));})()`);
-      await new Promise(resolve=>setTimeout(resolve,200));
-      if(!await win.webContents.executeJavaScript(`document.documentElement.lang==='en' && document.body.textContent.includes('Connect to my mixer')`))throw Error('English interface not rendered');
-      if(JSON.parse(readFileSync(languagePath,'utf8')).language!=='en'||!Menu.getApplicationMenu().items.some(item=>item.label==='Connection'))throw Error('Native language preference/menu not updated');
-      await win.webContents.executeJavaScript('localStorage.clear()');
-      await win.loadURL(`http://127.0.0.1:${port}/`);
-      await new Promise(resolve=>setTimeout(resolve,400));
-      if(!await win.webContents.executeJavaScript(`document.documentElement.lang==='en'`))throw Error('Language not restored from desktop preference');
+      for(const next of ['en','it','es','de','fr']){
+        await win.webContents.executeJavaScript(`(()=>{const select=document.querySelector('.bandpilot-language select');if(!select)throw Error('Missing language selector');select.value=${JSON.stringify(next)};select.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+        await waitForRenderer(`document.documentElement.lang===${JSON.stringify(next)} && document.querySelector('.bandpilot-language select')?.value===${JSON.stringify(next)}`);
+        if(JSON.parse(readFileSync(languagePath,'utf8')).language!==next||!Menu.getApplicationMenu().items.some(item=>item.label===languageLabel(next,'Connexion','Connection')))throw Error('Native language preference/menu not updated');
+        await win.webContents.executeJavaScript('localStorage.clear()');
+        await win.loadURL(`http://127.0.0.1:${port}/`);
+        await waitForRenderer(`document.documentElement.lang===${JSON.stringify(next)} && !!document.querySelector('.studio')`);
+        await win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");
+        await waitForRenderer(`document.querySelector('.bandpilot-language select')?.value===${JSON.stringify(next)}`);
+      }
       const mixerStatus=await (await fetch(`http://127.0.0.1:${port}/api/status`)).json();
       if(mixerStatus.mode!=='simulation'||mixerStatus.writesEnabled)throw Error('Language test changed mixer connection');
       const auth=await fetch(`http://127.0.0.1:${port}/api/auth`);

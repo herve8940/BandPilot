@@ -1,5 +1,7 @@
 # BandPilot 2.2 — Mon ingé son, pas à pas
 
+[Français](TUTO_MON_INGE_SON.md) · [English](TUTO_MON_INGE_SON_EN.md) · [Italiano](TUTO_MON_INGE_SON_IT.md) · [Español](TUTO_MON_INGE_SON_ES.md) · [Deutsch](TUTO_MON_INGE_SON_DE.md)
+
 [English](TUTO_MON_INGE_SON_EN.md) · [Guide complet](USER_GUIDE_FR.md) · [Visite vidéo](VIDEO_TOUR.md)
 
 Le coach accompagne la balance ; il ne reçoit pas le son, ne remplace pas ton écoute et ne décide pas seul d’une bonne qualité acoustique. Ce parcours concerne les modèles X-Air/M-Air pris en charge, **pas la X32** dans cette version. Les captures 2.2 sont réalisées en simulation. Lis les [limites matérielles](multi-model.md).

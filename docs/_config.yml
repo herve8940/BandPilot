@@ -1,6 +1,6 @@
 # GitHub Pages site for BandPilot (Settings › Pages › Deploy from branch: main, folder /docs).
 title: BandPilot
-description: "BandPilot — free multilingual mixer app in French and English. More languages on request. Windows, macOS, Linux; REAPER and personal monitors. Model-specific compatibility."
+description: "BandPilot — free multilingual mixer app in French, English, Italian, Spanish and German. More languages on request. Windows, macOS, Linux; REAPER and personal monitors. Model-specific compatibility."
 url: https://herve8940.github.io
 baseurl: /BandPilot
 lang: fr
@@ -42,3 +42,42 @@ defaults:
       path: "TUTO_MON_INGE_SON_EN.md"
     values:
       lang: en
+  - scope:
+      path: "it.html"
+    values:
+      layout: null
+      lang: it
+  - scope:
+      path: "USER_GUIDE_IT.md"
+    values:
+      lang: it
+  - scope:
+      path: "TUTO_MON_INGE_SON_IT.md"
+    values:
+      lang: it
+  - scope:
+      path: "es.html"
+    values:
+      layout: null
+      lang: es
+  - scope:
+      path: "USER_GUIDE_ES.md"
+    values:
+      lang: es
+  - scope:
+      path: "TUTO_MON_INGE_SON_ES.md"
+    values:
+      lang: es
+  - scope:
+      path: "de.html"
+    values:
+      layout: null
+      lang: de
+  - scope:
+      path: "USER_GUIDE_DE.md"
+    values:
+      lang: de
+  - scope:
+      path: "TUTO_MON_INGE_SON_DE.md"
+    values:
+      lang: de

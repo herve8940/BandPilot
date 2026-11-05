@@ -1,5 +1,7 @@
 # BandPilot 2.2 — sound-check coach, step by step
 
+[Français](TUTO_MON_INGE_SON.md) · [English](TUTO_MON_INGE_SON_EN.md) · [Italiano](TUTO_MON_INGE_SON_IT.md) · [Español](TUTO_MON_INGE_SON_ES.md) · [Deutsch](TUTO_MON_INGE_SON_DE.md)
+
 [Français](TUTO_MON_INGE_SON.md) · [Full guide](USER_GUIDE_EN.md) · [Video tour](VIDEO_TOUR.md)
 
 The coach supports your sound check. It does not receive audio or replace listening. This workflow is for supported X-Air/M-Air models, **not X32** in this release. New screenshots show simulation. Check the [hardware limits](multi-model.md). UI labels in the captures are French.

@@ -10,7 +10,9 @@ Application gratuite pour préparer la balance, piloter la console, donner les r
 
 [⬇ Télécharger](https://github.com/herve8940/BandPilot/releases/latest) · [🌐 Site](https://herve8940.github.io/BandPilot/) · [📘 Guide FR](docs/USER_GUIDE_FR.md) · [English](README.en.md) · [🎬 Visite vidéo](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
-**Application multilingue : français et anglais.** Choisis la langue dans **Réglages → Options · Langue** ; le choix est mémorisé sur cet appareil. Les musiciens peuvent choisir leur langue sur leur téléphone. D’autres langues peuvent être ajoutées suivant la demande.
+**Application multilingue : français, anglais, italien, espagnol et allemand.** Choisis la langue dans **Réglages → Options · Langue** ; le choix est mémorisé sur cet appareil. Les musiciens peuvent choisir leur langue sur leur téléphone. D’autres langues peuvent être ajoutées suivant la demande.
+
+[Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
 ![Console BandPilot 2.2 en simulation](docs/images/bandpilot-2.2/console.png)
 
@@ -57,15 +59,15 @@ La simulation de console ne simule pas REAPER : REC capture ses véritables entr
 
 - [Guide complet FR](docs/USER_GUIDE_FR.md) · [Full English guide](docs/USER_GUIDE_EN.md)
 - [Mon ingé son FR](docs/TUTO_MON_INGE_SON.md) · [English coach tutorial](docs/TUTO_MON_INGE_SON_EN.md)
-- [Visite vidéo et transcription](docs/VIDEO_TOUR.md) — montage de six captures en simulation, 42 secondes, sous-titres FR/EN.
-- [Nouveautés 2.2.3](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
+- [Visite vidéo et transcription](docs/VIDEO_TOUR.md) — montage de six captures en simulation, 42 secondes, sous-titres FR/EN/IT/ES/DE.
+- [Nouveautés 2.2.4](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
 - [Contrôles X-Air détaillés](docs/GUIDE_CONSOLE.md) · [Architecture et API](docs/SQLITE_API.md)
 
 ## Développement
 
 Node.js 20+ (CI et installateurs : Node 22). `npm ci`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test`, `npm run test:web` et `npm run build:all`. Installateurs : `npm run desktop:package`.
 
-142 tests backend et 11 tests de régression React couvrent notamment OSC, scènes, FX, comptes, retours, REAPER, Lua et profils de console. Ils ne remplacent pas une validation acoustique et un concert complet sur chaque matériel. La publication attend les contrôles des quatre plateformes de construction et conserve les sommes SHA-256.
+Les tests backend et les tests de régression React couvrent notamment OSC, scènes, FX, comptes, retours, REAPER, Lua et profils de console. Ils ne remplacent pas une validation acoustique et un concert complet sur chaque matériel. La publication attend les contrôles des quatre plateformes de construction et conserve les sommes SHA-256.
 
 Les anciens identifiants `xr18-studio`, le dépôt, les clés de données et les chemins REAPER restent pour préserver la compatibilité. Projet indépendant, non affilié à Behringer, Midas ou Music Tribe ; marques de leurs propriétaires. Licence [MIT](LICENSE).
 

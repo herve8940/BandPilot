@@ -1,13 +1,16 @@
 # BandPilot 2.2 — visite vidéo / video tour
 
-Cette vidéo de **42 secondes** est un montage de six captures réelles de l’interface en simulation. Ce n’est pas un enregistrement d’une balance réelle, une démonstration sonore ni une validation de console. Sans son ; active les sous-titres français ou anglais.
+Cette vidéo de **42 secondes** est un montage de six captures réelles de l’interface en simulation. Ce n’est pas un enregistrement d’une balance réelle, une démonstration sonore ni une validation de console. Sans son ; active les sous-titres français, anglais, italien, espagnol ou allemand.
 
-This **42-second** video is an illustrated tour assembled from six actual simulation screenshots, not live sound-check footage or hardware validation. No audio; French and English captions are available.
+This **42-second** video is an illustrated tour assembled from six actual simulation screenshots, not live sound-check footage or hardware validation. No audio; French, English, Italian, Spanish and German captions are available.
 
 <video controls preload="metadata" poster="images/bandpilot-2.2/coach.png" style="width:100%;max-width:1100px">
 <source src="media/bandpilot-tour-2.2.mp4" type="video/mp4">
 <track kind="captions" src="media/bandpilot-tour-2.2.fr.vtt" srclang="fr" label="Français" default>
 <track kind="captions" src="media/bandpilot-tour-2.2.en.vtt" srclang="en" label="English">
+<track kind="captions" src="media/bandpilot-tour-2.2.it.vtt" srclang="it" label="Italiano">
+<track kind="captions" src="media/bandpilot-tour-2.2.es.vtt" srclang="es" label="Español">
+<track kind="captions" src="media/bandpilot-tour-2.2.de.vtt" srclang="de" label="Deutsch">
 <a href="media/bandpilot-tour-2.2.mp4">Télécharger la vidéo MP4 / Download MP4</a>
 </video>
 
@@ -23,3 +26,9 @@ This **42-second** video is an illustrated tour assembled from six actual simula
 [Télécharger MP4](media/bandpilot-tour-2.2.mp4) · [Sous-titres FR](media/bandpilot-tour-2.2.fr.vtt) · [English captions](media/bandpilot-tour-2.2.en.vtt)
 
 [Guide complet FR](USER_GUIDE_FR.md) · [Full guide EN](USER_GUIDE_EN.md) · [Compatibilité / Compatibility](multi-model.md)
+
+[Italiano: sottotitoli](media/bandpilot-tour-2.2.it.vtt) · [Español: subtítulos](media/bandpilot-tour-2.2.es.vtt) · [Deutsch: Untertitel](media/bandpilot-tour-2.2.de.vtt)
+
+[Guida italiana](USER_GUIDE_IT.md) · [Guía en español](USER_GUIDE_ES.md) · [Deutsche Anleitung](USER_GUIDE_DE.md)
+
+Les captures restent en français. Seuls les sous-titres changent de langue. / The screenshots remain in French; subtitles provide the translated tour.

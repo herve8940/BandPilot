@@ -150,7 +150,7 @@ export function GainStep({profile,channel,setChannel,admin,busy,canApply,real,re
      <button className="primary" disabled={!admin||busy||!canApply||current?.state!=='ok'} onClick={()=>onApplyChannel(profile,channel)}><Wand2 size={15}/>{tx(" Appliquer à ")}{input.name}</button>
     </li>
    </ol>
-   <div className="coach-actions">{next&&<button onClick={()=>setChannel(next.channel)}>{tx("Instrument suivant : ")}{next.name} →</button>}<button disabled={!admin||busy||!canApply||!profile.inputs.length} onClick={()=>onApplyAll(profile)}><Wand2 size={15}/>{tx(" Appliquer tout le groupe (")}{tx(done)}{tx(" calé")}{tx(done>1?'s':'')})</button></div>
+   <div className="coach-actions">{next&&<button onClick={()=>setChannel(next.channel)}>{tx("Instrument suivant : ")}{next.name} →</button>}<button disabled={!admin||busy||!canApply||!profile.inputs.length} onClick={()=>onApplyAll(profile)}><Wand2 size={15}/>{tx(done===1?"Appliquer tout le groupe (1 calé)":`Appliquer tout le groupe (${done} calés)`)}</button></div>
   </div>}
   <p className="coach-note">{tx("Pourquoi cet ordre : le compresseur et le gate travaillent sur le signal qui sort du préampli, avec des seuils fixes. Si le gain monte de 6 dB après coup, le compresseur écrase 6 dB de plus et le gate laisse passer la repisse. Si tu changes un gain plus tard, je te le signale ici (« à refaire »). Je ne touche jamais au 48 V et je ne monte pas de plus de 6 dB à la fois.")}</p>
  </div>;

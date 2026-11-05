@@ -7,3 +7,21 @@ test('local adviser recognises English descriptions and retains French diagnoses
  for(const[id,en,fr]of samples){assert.equal(identifySymptom(en!),id,en);assert.equal(identifySymptom(fr!),id,fr);}
  assert.equal(identifySymptom('Everything sounds good'),null);
 });
+
+
+test('local adviser recognises Italian, Spanish and German audio problems',()=>{
+ const samples=[
+ ['feedback','Il monitor fischia','Hay acople en el monitor','Das Mikrofon pfeift'],
+ ['clipping','La chitarra distorce','La guitarra distorsiona','Die Gitarre übersteuert'],
+ ['cutoff','Le note vengono tagliate','Se cortan las palabras','Die Notenenden werden abgeschnitten'],
+ ['noise','Sento un ronzio','Hay un zumbido','Ich höre ein Brummen'],
+ ['harsh','La voce è troppo aspra','La voz es muy chillona','Die Stimme klingt schrill'],
+ ['boomy','Ci sono troppi bassi','Los graves retumban','Der Bass dröhnt'],
+ ['muddy','La voce è impastata','La voz suena apagada','Die Stimme klingt dumpf'],
+ ['buried','Non sento la mia voce','No se oye mi voz','Ich höre meine Stimme nicht'],
+ ['uneven','Il volume è irregolare','El volumen es desigual','Die Lautstärke schwankt'],
+ ['dry','La voce è troppo asciutta','La voz suena seca','Die Stimme klingt trocken']
+ ];
+ for(const [id,...texts] of samples)for(const text of texts)assert.equal(identifySymptom(text!),id,text);
+ for(const text of ['Tutto suona bene','Todo suena bien','Alles klingt gut'])assert.equal(identifySymptom(text),null,text);
+});

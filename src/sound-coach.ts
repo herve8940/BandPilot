@@ -161,7 +161,18 @@ export function thresholdsFrom(src:Source,peakDb:number,bleedDb?:number){
 }
 export function identifySymptom(text:string){
  const t=text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
- const patterns:[string,RegExp][]=[['feedback',/larsen|siffl|feedback|whistl/],['clipping',/satur|gresill|distors|rouge|clipp|crackl|distort/],['cutoff',/coup|fin.*mot|fin.*note|cut.?off|cutting|chopp/],['noise',/souffle|bourdonn|bruit|buzz|hiss|humming|noise/],['harsh',/agress|pique|strident|criard|harsh|piercing|shrill/],['boomy',/grave|resonn|boom|resonan|too much bass/],['muddy',/brouill|etouff|sourd|boueu|muddy|muffled/],['buried',/entend|disting|masqu|disparai|noye|buried|mask|disappear|cannot hear|can.t hear/],['uneven',/ecart|fort.*faible|irreguli|dynamique|uneven|inconsistent|loud.*quiet/],['dry',/reverb|sech|seche|echo|\bdry\b/]];
+ const patterns:[string,RegExp][]=[
+  ['feedback',/larsen|siffl|feedback|whistl|fischi|acopl|pitido|silbido|realimentacion|ruckkoppl|pfeif|quietsch/],
+  ['clipping',/satur|gresill|distors|rouge|clipp|crackl|distort|distorc|gracchi|crujid|ubersteuer|verzerr|knacks/],
+  ['cutoff',/coup|fin.*mot|fin.*note|cut.?off|cutting|chopp|tagliat|troncat|se corta|se cortan|cortad|abgeschnitt|abgehackt|verschluckt|notenenden|wortenden/],
+  ['noise',/souffle|bourdonn|bruit|buzz|hiss|humming|noise|frusci|ronzi|rumore|zumb|siseo|ruido|soplido|rausch|brumm|storgerausch|summen/],
+  ['harsh',/agress|pique|strident|criard|harsh|piercing|shrill|aspr|taglient|stridul|aggressiv|pungent|chillon|punzante|asper[ao]|schrill|scharf|stechend/],
+  ['boomy',/grave|resonn|boom|resonan|too much bass|troppi bassi|eccess.*bassi|rimbomb|retumb|zu viel bass|drohn|wummer/],
+  ['muddy',/brouill|etouff|sourd|boueu|muddy|muffled|impastat|ovattat|embarrad|apagad|embotad|turbio|poco clar|matschig|dumpf|mulmig/],
+  ['buried',/entend|disting|masqu|disparai|noye|buried|mask|disappear|cannot hear|can.t hear|non sento|non si sente|non riesco a sentire|copert|copre|sparisce|sepolt|no (puedo )?oigo|no se oye|no se escucha|no escucho|tapad|enmascarad|geht.*unter|hore.*nicht|nicht.*horbar|verdeckt/],
+  ['uneven',/ecart|fort.*faible|irreguli|dynamique|uneven|inconsistent|loud.*quiet|irregolar|disomogene|forte.*piano|troppa dinamica|irregular|desigual|fuerte.*suave|ungleichmass|unregelmass|laut.*leise|schwankt/],
+  ['dry',/reverb|sech|seche|echo|\bdry\b|asciutt|secc[oahe]|riverber|\beco\b|\bsec[oa]\b|trocken|\bhall\b/]
+ ];
  return patterns.find(([,r])=>r.test(t))?.[0]??null;
 }
 type MeterSample={updatedAt:string;channels:number[];available:boolean};

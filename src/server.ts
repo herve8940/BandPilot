@@ -1,3 +1,4 @@
+import {languageOrFrench} from '../shared/languages.js';
 import {MIXER_MODELS} from '../shared/mixer-models.js';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {Analyzer,familyFromName,type Instrument} from './analysis.js';
@@ -310,7 +311,7 @@ const handler: http.RequestListener = async (req, res) => {
         if(typeof d.message!=='string'||!d.message.trim()||d.message.length>2000)throw Error('Question de 1 à 2 000 caractères requise');
         const channel=Number(d.channel),input=coach.profile().inputs.find(i=>i.channel===channel);
         if(!input)throw Error('Choisir un instrument de la préparation');
-        if(d.external===true){if(d.consent!==true)throw Error('Accord explicite requis avant envoi à OpenAI');if(Date.now()-aiRequestAt<5000)throw Error('Attendre quelques secondes entre deux demandes IA');aiRequestAt=Date.now();result={source:'openai',...await askConnectedCoach(d.message,{source:input.source,mode:xr18.mode,connected:xr18.status().connected,language:d.language==='en'?'en':'fr'},d.consent)};}
+        if(d.external===true){if(d.consent!==true)throw Error('Accord explicite requis avant envoi à OpenAI');if(Date.now()-aiRequestAt<5000)throw Error('Attendre quelques secondes entre deux demandes IA');aiRequestAt=Date.now();result={source:'openai',...await askConnectedCoach(d.message,{source:input.source,mode:xr18.mode,connected:xr18.status().connected,language:languageOrFrench(d.language)},d.consent)};}
         else{const symptom=identifySymptom(d.message);result=symptom?{source:'local',symptom,...coach.advice(channel,symptom)}:{source:'local',answer:'Je peux t’aider à préparer le groupe, vérifier les niveaux et tester une correction à la fois. Décris ce qui te gêne : son brouillon, agressif, notes coupées, saturation, bruit ou voix difficile à distinguer.',check:'Choisis d’abord le canal et l’instrument, puis explique ce que tu entends. Je ne reçois aucun audio par OSC.',measuredAudio:false};}
       }else throw Error('Action du conseiller inconnue');
       res.end(JSON.stringify(result));

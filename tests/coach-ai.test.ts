@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {LANGUAGES,type Language} from '../shared/languages.js';
 import {askConnectedCoach} from '../src/coach-ai.js';
 test('connected AI requires explicit consent, uses server credentials and cannot produce executable console plans',async()=>{
  const oldKey=process.env.XR18_OPENAI_API_KEY,oldModel=process.env.XR18_OPENAI_MODEL;
@@ -21,10 +22,10 @@ test('connected advice uses the requested language without changing its safety c
  const oldKey=process.env.XR18_OPENAI_API_KEY,oldModel=process.env.XR18_OPENAI_MODEL;
  process.env.XR18_OPENAI_API_KEY='test-only';process.env.XR18_OPENAI_MODEL='test-model';
  try {
-  for(const language of ['fr','en'] as const){
+  for(const language of Object.keys(LANGUAGES) as Language[]){
    await askConnectedCoach('Check my vocals',{source:'lead-rock',mode:'simulation',connected:false,language},true,async(_input,init)=>{
     const payload=JSON.parse(String(init?.body));
-    assert.ok(payload.instructions.startsWith(language==='en'?'Respond exclusively in English.':'Réponds exclusivement en français.'));
+    assert.ok(payload.instructions.startsWith(LANGUAGES[language].adviser));
     assert.ok(payload.instructions.includes('Tu ne reçois aucun audio'));assert.equal(payload.tools,undefined);
     assert.equal(JSON.parse(payload.input[0].content).context.language,language);
     return new Response(JSON.stringify({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({answer:'Check placement.',checks:[],question:''})}]}]}));

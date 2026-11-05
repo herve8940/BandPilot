@@ -1,7 +1,7 @@
 {
   "name": "xr18-studio",
-  "version": "2.2.3",
-  "description": "BandPilot: free multilingual mixer control, sound checks, in-ear monitors and REAPER rehearsals. French/English; more languages on request. Windows, macOS, Linux. Model-aware X-Air/M-Air support; partial X32.",
+  "version": "2.2.4",
+  "description": "BandPilot: free mixer control, guided sound checks, phone monitors and REAPER rehearsals. French, English, Italian, Spanish, German; more languages on request. Windows, macOS, Linux. Model-aware X-Air/M-Air support; partial X32.",
   "keywords": [
     "behringer",
     "xr18",
@@ -22,7 +22,10 @@
     "react",
     "multilingual",
     "french",
-    "english"
+    "english",
+    "italian",
+    "spanish",
+    "german"
   ],
   "homepage": "https://herve8940.github.io/BandPilot/",
   "bugs": {

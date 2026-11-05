@@ -3,7 +3,7 @@ const {contextBridge,ipcRenderer}=require('electron');
 contextBridge.exposeInMainWorld('xr18DesktopAI',{
  configure:(input)=>ipcRenderer.invoke('xr18-ai-configure',input)
 });
-// Native confirmation windows in French with the app icon (the browser default shows English buttons).
+// Native confirmation windows follow the saved app language and use the app icon.
 contextBridge.exposeInMainWorld('xr18DesktopDialog',{
  confirm:(message)=>ipcRenderer.sendSync('xr18-confirm',String(message??'')),
  alert:(message)=>{ipcRenderer.sendSync('xr18-alert',String(message??''));}
