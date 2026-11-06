@@ -1,9 +1,9 @@
 /* XR18 Studio — Expert mode, "studio graphite" theme (design validated 01/11/2026).
    Everything is scoped to .xs2 so the Simple mode and other pages are untouched. */
 .xs2{
-  --g-bg:#0A0D11;--g-head:#0E1217;--g-panel:#11151B;--g-panel-2:#141920;--g-panel-3:#161C24;--g-sel:#12201F;
-  --g-line:#1F2630;--g-line-2:#2A323D;--g-text:#E8EDF3;--g-text-2:#9AA6B4;--g-text-3:#8994A1;
-  --g-accent:#3EE0E0;--g-accent-ink:#06181A;--g-accent-soft:#10302F;--g-accent-text:#BFF7F7;
+  --g-bg:var(--bp-bg,#0b1121);--g-head:#10192c;--g-panel:var(--bp-panel,#141d31);--g-panel-2:var(--bp-panel-raised,#1c2840);--g-panel-3:#25324b;--g-sel:#12201F;
+  --g-line:var(--bp-line,#374665);--g-line-2:#4b5c7b;--g-text:var(--bp-text,#e5ebfa);--g-text-2:var(--bp-muted,#a6b5cf);--g-text-3:#8994A1;
+  --g-accent:var(--bp-purple,#a778fa);--g-accent-ink:#fff;--g-accent-soft:#a778fa22;--g-accent-text:#ded0ff;
   --g-warn:#F5B83D;--g-warn-bg:#241D0E;--g-warn-line:#5C4718;--g-warn-text:#F8E3B4;
   --g-ok:#34D399;--g-ok-bg:#0F2420;--g-ok-line:#1D4A40;--g-ok-text:#B9E6D6;
   --g-red:#F0524F;--g-red-bg:#2A1414;--g-red-line:#6B2A2A;--g-red-text:#FF9C9A;

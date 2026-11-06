@@ -2,7 +2,7 @@ import {tx, getLocale} from "./i18n";
 import {useEffect,useState} from 'react';
 import {Fader,Knob,num,useLiveMixer,type Values,type SetFn} from './xair/controls';
 import {EqView,type ViewProps} from './xair/views';
-import {VisualCompressor} from './expert/ExpertStudio';
+import {VisualCompressor} from './expert/DynamicsControls';
 import {faderToDb,formatDb,logMap} from './xairMath';
 import {stripName,type Strip} from './xair/strips';
 import {useMixerModel} from './MixerModel';

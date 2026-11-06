@@ -1,4 +1,5 @@
 import {tx, getLocale} from "../i18n";
+import {Workshop} from './Workshop';
 import {useMixerModel} from '../MixerModel';
 import { useEffect, useMemo, useState } from "react";
 import { RecordingView } from "../expert/RecordingView";
@@ -20,7 +21,8 @@ export function BridgeInstall({ act, show }: { act: (p: string, d?: unknown) => 
     <button type="button" className="xs2-btn primary" onClick={() => { if (confirm(tx("Ajouter le pont BandPilot au démarrage de Reaper ?"))) void act("/api/show/install", { confirm: true }).then(r => { if (r) setDone(true); }); }}>{tx("Installer le pont")}</button>
     {done && <p role="status">{tx("Installé. Redémarre Reaper.")}</p>}</div>;
 }
-export function Rehearse() {
+export function Rehearse({onExpert}:{onExpert?:(channel:number)=>void}) {
+  const [atelier,setAtelier]=useState(()=>{try{return sessionStorage.getItem('bandpilot-workshop-view')==='true';}catch{return false;}});
   const mixerModel=useMixerModel();
   const { show, link, error, setError, act } = useShow();
   const [mode, setMode] = useState<"songs" | "band">(() => { try { return localStorage.getItem("xr18-rehearse") === "band" ? "band" : "songs"; } catch { return "songs"; } });
@@ -54,8 +56,9 @@ export function Rehearse() {
   return <section className="xs2 sh sh-rehearse" aria-label={tx("Répéter")}>
     <div className="sh-head">
       <div className="sh-seg" role="group" aria-label={tx("Type de répétition")}><button type="button" className={mode === "songs" ? "on" : ""} aria-pressed={mode === "songs"} onClick={() => go("songs")}>{tx("Avec mes morceaux")}</button><button type="button" className={mode === "band" ? "on" : ""} aria-pressed={mode === "band"} onClick={() => go("band")}>{tx("Groupe seul")}</button></div>
-      <Status show={show} link={link} />
+      <button type="button" className={`xs2-btn ${atelier?'primary':''}`} onClick={()=>{setAtelier(!atelier);sessionStorage.setItem('bandpilot-workshop-view',String(!atelier));}}>{tx(atelier?'Revenir à la répétition':'Atelier du son')}</button><Status show={show} link={link} />
     </div>
+    {atelier?<>{needsBridge(show)&&<BridgeInstall act={act} show={show}/>}<Workshop onExpert={onExpert}/></>:<>
     {(error || link?.alert) && <div className="xs2-msg error" role="alert">{tx(error || link?.alert)}<button type="button" aria-label={tx("Fermer")} onClick={() => { setError(""); if (link?.alert) void act("/api/reaper/dismiss"); }}>{tx("×")}</button></div>}
     {!busy && issues.slice(0, 2).map(i => <div className="xs2-msg" role="status" key={i}>{tx(i)}</div>)}
     <div className={`sh-transport ${recording ? "rec" : ""}`}>
@@ -81,5 +84,6 @@ export function Rehearse() {
           {mode === "songs" && takes > 0 && <button type="button" className={`sh-song ${original ? "on" : ""}`} disabled={busy} onClick={() => { const on = !original; void act("/api/show/original", { on, project:show.project }); }}><b>{tx("Original ReaCue")}</b></button>}</div>
       </aside>
     </div>}
+  </>}
   </section>;
 }

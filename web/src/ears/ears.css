@@ -1,5 +1,5 @@
 /* Page « Mon retour » pour téléphone : même thème sombre pro que l’application. */
-:root{--bg:#0b0d10;--surface:#12151a;--surface-2:#181c22;--surface-3:#20252d;--line:#262c35;--text:#e8ecf1;--text-2:#8f9aa8;--accent:#3ee0e0;--ok:#34d399;--warn:#f5b83d;--danger:#f0524f;color-scheme:dark}
+
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 button,input{font:inherit}

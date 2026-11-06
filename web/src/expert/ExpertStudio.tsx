@@ -9,14 +9,15 @@ import { faderToDb, formatDb, logMap, RATIOS, stripColor } from "../xairMath";
 import { AnalysisView } from "./AnalysisView";
 import { RecordingView } from "./RecordingView";
 import { RecordingDock } from "./RecordingDock";
-import {DeskLayoutTools, MonitorDesk, SignalPath, useDeskLayout} from "./Workspace";
+import {VisualCompressor} from "./DynamicsControls";
+import {DeskLayoutTools, SignalPath, useDeskLayout} from "./Workspace";
 import "../xair-mixer.css";
 import "./expert.css";
 import "./expert-v3.css";
 
-type View = "console" | "channel" | "ears" | "fx" | "routing" | "analysis" | "recording";
+type View = "console" | "channel" | "fx" | "routing" | "analysis" | "recording";
 const VIEWS: { id: View; label: string }[] = [
-  { id: "channel", label: "Canal" }, { id: "console", label: "Mélangeur" }, { id: "ears", label: "Ears" },
+  { id: "channel", label: "Canal" }, { id: "console", label: "Mélangeur" },
   { id: "fx", label: "Effets" }, { id: "routing", label: "Routage" }, { id: "analysis", label: "Analyse" }, { id: "recording", label: "Enregistrement" },
 ];
 async function api<T = any>(path: string, data?: unknown): Promise<T> {
@@ -25,7 +26,7 @@ async function api<T = any>(path: string, data?: unknown): Promise<T> {
 }
 const dbText = (wire: number) => formatDb(faderToDb(wire)).replace("-", "−");
 const busName = (values: Values, b: number) => { const n = values[`/bus/${b}/config/name`]; return typeof n === "string" && n.trim() ? n.trim() : `Bus ${b}`; };
-const earsLabel = (values: Values, b: number) => { const n = values[`/bus/${b}/config/name`]; return typeof n === "string" && n.trim() ? n.trim() : `Ears ${b}`; };
+const earsLabel = (values: Values, b: number) => { const n = values[`/bus/${b}/config/name`]; return typeof n === "string" && n.trim() ? n.trim() : `Retour ${b}`; };
 
 /** Small EQ curve of a strip (high-pass included), drawn on 60×26. */
 function eqPath(values: Values, prefix: string) {
@@ -41,7 +42,7 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel, simul
   const {ALL,MAIN,OUTPUTS,INPUTS,BUSES,FXSENDS,model}=useAirStrips();
   const live = useLiveMixer();
   const { values, set, confirmed, online, message, clearMessage } = live;
-  const [view, setView] = useState<View>(() => { try { return (localStorage.getItem("xr18-expert-view") as View) || "channel"; } catch { return "channel"; } });
+  const [view, setView] = useState<View>(() => { try { return VIEWS.find(v=>v.id===localStorage.getItem("xr18-expert-view"))?.id || "channel"; } catch { return "channel"; } });
   const [selectedId, setSelectedId] = useState(selectedChannel ? `ch${selectedChannel}` : "ch1");
   const [rehearsal, setRehearsal] = useState(false), [recoCount, setRecoCount] = useState(0), [notice, setNotice] = useState(""), [error, setError] = useState("");
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -81,7 +82,6 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel, simul
       {view === "console" && <ConsoleView values={values} set={set} writable={writable} rehearsal={rehearsal} strip={strip} select={select} />}
       {view === "console" && <ChannelPage {...channelProps} select={select} />}
       {view === "channel" && <FocusedChannel {...channelProps} select={select} />}
-      {view === "ears" && <EarsView values={values} set={set} writable={writable} confirmed={confirmed} />}
       {view === "fx" && <div className="xm xs2-legacy"><FxView {...props} /></div>}
       {view === "routing" && <RoutingPage {...props} />}
       {view === "analysis" && <AnalysisView values={values} rehearsal={rehearsal} canWrite={writable} onCount={setRecoCount} />}
@@ -260,73 +260,6 @@ function EqOverview({ strip, values, open }: { strip: Strip; values: Values; ope
   const points = Array.from({ length: 201 }, (_, i) => `${i / 200 * w},${yOf(eqResponse(bands, 20 * Math.pow(1000, i / 200), on, hp))}`).join(" ");
   return <section className="visual-eq-overview" aria-label={tx("Aperçu de l’égaliseur")}><header><b>{tx("Égaliseur ")}<small>· {tx(on ? "actif" : "désactivé")}</small></b><button type="button" onClick={open}>{tx("Ouvrir EQ ↗")}</button></header><svg ref={svgRef} viewBox={`0 0 ${w} ${h}`} role="img" aria-label={tx("Courbe de réponse de l’égaliseur")}><defs><linearGradient id="visual-eq-spectrum">{colors.map((c, i) => <stop key={c} offset={`${i * 20}%`} stopColor={c}/>)}</linearGradient></defs>{[-12,-6,0,6,12].map(db => <line key={db} x1="0" x2={w} y1={yOf(db)} y2={yOf(db)} stroke="#33415c"/>)}{(w < 500 ? [20,100,1000,10000,20000] : [20,50,100,200,500,1000,2000,5000,10000,20000]).map(f => { const x = xOf(f); return <g key={f}><line x1={x} x2={x} y1="0" y2={plotH} stroke="#33415c"/><text x={Math.min(w - 18, Math.max(18, x))} y={h - 3} textAnchor="middle">{tx(f >= 1000 ? `${f / 1000}k` : f)}</text></g>; })}<polygon points={`0,${zero} ${points} ${w},${zero}`} fill="url(#visual-eq-spectrum)" opacity=".22"/><polyline points={points} fill="none" stroke="url(#visual-eq-spectrum)" strokeWidth="2"/>{bands.map((b, i) => <g key={i}><circle cx={xOf(b.f)} cy={yOf(b.type === 0 || b.type === 5 ? 0 : b.g)} r="8" fill={colors[i]}/><text x={xOf(b.f)} y={yOf(b.type === 0 || b.type === 5 ? 0 : b.g) + 4} textAnchor="middle" className="eq-number">{tx(i + 1)}</text></g>)}</svg></section>;
 }
-function GainReduction({ strip }: { strip: Strip }) {
-  const [db, setDb] = useState<number | null>(null);
-  useEffect(() => {
-    let active = true, unsupported = false;
-    setDb(null);
-    const poll = async () => {
-      if (unsupported) return;
-      try {
-        const response = await fetch("/api/dynamics");
-        if (!response.ok) { if (response.status === 404) unsupported = true; if (active) setDb(null); return; }
-        const { frame } = await response.json();
-        const value = !frame ? null : strip.kind === "ch" ? frame.comp[Number(strip.short) - 1] : strip.kind === "bus" ? frame.bus[Number(strip.short.replace("Bus ", "")) - 1] : frame.lr;
-        if (active) setDb(typeof value === "number" && Number.isFinite(value) ? Math.min(0, value) : null);
-      } catch { if (active) setDb(null); }
-    };
-    void poll(); const timer = setInterval(() => void poll(), 500);
-    return () => { active = false; clearInterval(timer); };
-  }, [strip.id]);
-  return <div className="visual-gain-reduction" aria-label={tx("Réduction de gain du compresseur")}><span>{tx("Réduction de gain")}</span><div role="meter" aria-label={tx("Réduction de gain")} aria-valuemin={0} aria-valuemax={30} aria-valuenow={db === null ? undefined : Math.min(30, -db)} aria-valuetext={tx(db === null ? "Mesure indisponible" : `${db.toFixed(1)} dB`)}><i style={{ width: `${db === null ? 0 : Math.min(100, -db / 30 * 100)}%` }}/></div><output>{tx(db === null ? "—" : `${db.toFixed(1)} dB`)}</output></div>;
-}
-export function VisualCompressor(props: ViewProps & {advanced?:boolean}) {
-  const { strip, values, set, canWrite } = props, p = `${strip.prefix}/dyn`;
-  const threshold = num(values, `${p}/thr`, 1), ratio = num(values, `${p}/ratio`, 6), gain = num(values, `${p}/mgain`), on = num(values, `${p}/on`) === 1;
-  const curve = transferPoints(compCurve(-60 + threshold * 60, ratio, Math.round(num(values, `${p}/knee`) * 5), gain * 24, num(values, `${p}/mode`) === 1), 240, 180, -60, 0);
-  return <><div className="visual-comp-heading"><h2>{tx("Compresseur")}</h2><button type="button" role="switch" aria-label={tx("Activer le compresseur")} aria-checked={on} disabled={!canWrite} onClick={() => set(`${p}/on`, on ? 0 : 1)}><span/>{tx(on ? "Activé" : "Désactivé")}</button></div><div className="visual-comp-main"><svg viewBox="-25 -8 280 210" role="img" aria-label={tx("Courbe du compresseur")}>{[0, 60, 120, 180, 240].map(x => <line key={x} x1={x} x2={x} y1="0" y2="180" className="comp-grid"/>)}{[0, 30, 60, 90, 120, 150, 180].map(y => <g key={y}><line x1="0" x2="240" y1={y} y2={y} className="comp-grid"/><text x="-5" y={y + 4} textAnchor="end">{tx(Math.round(-y / 3))}</text></g>)}<line x1="0" y1="180" x2="240" y2="0" className="comp-guide"/><polygon points={`0,180 ${curve} 240,180`} fill="#a96bff" opacity=".18"/><polyline points={curve} fill="none" stroke="#c496ff" strokeWidth="3"/><text x="0" y="198">{tx("−60 dB")}</text><text x="210" y="198">{tx("0 dB")}</text></svg><div className="visual-comp-knobs"><Knob size={64} label={tx("Seuil")} disabled={!canWrite} value={threshold} display={`${(-60 + threshold * 60).toFixed(1)} dB`} onChange={v => set(`${p}/thr`, v)}/><Knob size={64} label={tx("Ratio")} disabled={!canWrite} value={ratio / 11} display={`${RATIOS[ratio]}:1`} onChange={v => set(`${p}/ratio`, Math.round(v * 11))}/><Knob size={64} label={tx("Attaque")} disabled={!canWrite} value={num(values, `${p}/attack`)} display={`${(num(values, `${p}/attack`) * 120).toFixed(0)} ms`} onChange={v => set(`${p}/attack`, v)}/><Knob size={64} label={tx("Relâchement")} disabled={!canWrite} value={num(values, `${p}/release`)} display={`${logMap(num(values, `${p}/release`), 5, 4000).toFixed(0)} ms`} onChange={v => set(`${p}/release`, v)}/><Knob size={64} label={tx("Make-up")} disabled={!canWrite} value={gain} display={`+${(gain * 24).toFixed(1)} dB`} onChange={v => set(`${p}/mgain`, v)}/></div></div><>{props.advanced!==false&&<GainReduction strip={strip}/>}</>{props.advanced!==false&&<details className="visual-advanced"><summary>{tx("Réglages avancés · presets, détection, knee, mix et sidechain")}</summary><CompView {...props}/></details>}</>;
-}
-
-// ---------------- Ears ----------------
-function EarsView({ values, set, writable, confirmed }: { values: Values; set: SetFn; writable: boolean; confirmed: ViewProps["confirmed"] }) {
-  const {ALL,MAIN,OUTPUTS,INPUTS,BUSES,FXSENDS,model}=useAirStrips();
-  const levels = useMeters(), fresh = meterStore.fresh();
-  const rows = INPUTS.filter(s => s.kind !== "ch" || stripName(s, values) !== s.fallback || (levels[s.meters[0]!] ?? -128) > -60);
-  const limiterOff = BUSES.slice(0,model.monitorOutputs).map((_, i) => i + 1).filter(b => num(values, `/bus/${b}/dyn/on`) !== 1 && busName(values, b) !== `Bus ${b}`);
-  const addLimiters = () => {
-    const v: Record<string, Value> = {};
-    for (const b of limiterOff) Object.assign(v, { [`/bus/${b}/dyn/on`]: 1, [`/bus/${b}/dyn/mode`]: 0, [`/bus/${b}/dyn/ratio`]: 11, [`/bus/${b}/dyn/thr`]: -6, [`/bus/${b}/dyn/knee`]: 0, [`/bus/${b}/dyn/attack`]: 1, [`/bus/${b}/dyn/release`]: 100, [`/bus/${b}/dyn/mgain`]: 0 });
-    void confirmed(v, `Ajouter un limiteur de protection à −6 dB sur ${limiterOff.map(b => earsLabel(values, b)).join(", ")} ?`);
-  };
-  return <>
-    <MonitorDesk values={values} set={set} writable={writable} confirmed={confirmed} reduction={bus=><GainReduction strip={bus}/>}/>
-    <details className="monitor-matrix"><summary>{tx("Matrice complète · tous les envois et bus internes")}</summary>
-    <div className="xs2-bar"><div><div style={{ fontSize: 18, fontWeight: 700 }}>{tx("Matrice des bus")}</div><div className="muted">{tx("Chaque colonne est un bus. Seuls les bus reliés à une sortie physique alimentent directement un retour.")}</div></div></div>
-    <div className="xs2-matrix" role="table" aria-label={tx("Envois vers les ears")}>
-      <div className="row head" role="row"><div role="columnheader" className="muted">{tx("Source")}</div>
-        {BUSES.map((b, i) => { const db = fresh ? levels[b.meters[0]!] ?? -128 : -128; const lim = num(values, `/bus/${i + 1}/dyn/on`) === 1; return <div key={b.id} role="columnheader">
-          <b>{i<model.monitorOutputs?earsLabel(values,i+1):tx(`Bus ${i+1} interne`)}</b>
-          <span className="meter"><i className={db > -6 ? "hot" : ""} style={{ width: `${Math.max(0, Math.min(100, (db + 60) / 60 * 100))}%` }} /></span>
-          <span className="mono muted" style={{ fontSize: 11 }}>{tx(db <= -90 ? "—" : `crête ${Math.round(db)} dB`)} · {tx(lim ? "dynamique active" : "dynamique désactivée")}</span>
-        </div>; })}
-      </div>
-      {rows.map(s => <div className="row" role="row" key={s.id}>
-        <div className="src" role="rowheader"><i style={{ background: stripColor(num(values, `${s.prefix}/config/color`)) }} />{stripName(s, values)}</div>
-        {BUSES.map((_, i) => { const a = `${s.prefix}/mix/${pad(i + 1)}/level`, v = num(values, a); return <div key={a} role="cell">
-          <input type="range" min={0} max={1} step={0.005} value={v} disabled={!writable} aria-label={tx(`${stripName(s, values)} dans ${earsLabel(values, i + 1)}`)} onChange={e => set(a, Number(e.target.value))} />
-          <span className="v">{v <= 0.001 ? "—" : dbText(v)}</span>
-        </div>; })}
-      </div>)}
-    </div>
-    <div className="xs2-cards3">
-      {limiterOff.length ? <div className="xs2-note"><b>{tx(limiterOff.length)}{tx(" bus nommé")}{tx(limiterOff.length > 1 ? "s" : "")}{tx(" sans dynamique active")}</b><div>{tx("Un limiteur peut réduire les crêtes électriques. Le niveau acoustique dépend aussi du casque et de son amplificateur ; ce réglage ne garantit pas la protection auditive.")}</div><div style={{ marginTop: 8 }}><button type="button" className="xs2-btn warn" disabled={!writable} onClick={addLimiters}>{tx("Ajouter la protection…")}</button></div></div>
-        : <div className="xs2-good"><b>{tx("Dynamique active sur les bus nommés")}</b><div>{tx("Vérifie le mode, le ratio et le niveau d’écoute de chaque retour.")}</div></div>}
-      <div className="xs2-card"><h3>{tx("Réverbération dans les ears")}</h3><div className="muted">{tx("Un peu de réverbération sur la voix aide le chanteur à se placer : règle la ligne de l’effet dans la colonne de chaque musicien.")}</div></div>
-    </div>
-    </details>
-  </>;
-}
-
 // ---------------- Routing ----------------
 function RoutingPage(props: ViewProps) {
   const { values, canWrite, confirmed } = props;

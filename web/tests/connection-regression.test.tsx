@@ -8,11 +8,13 @@ async function fixture(auth:()=>Promise<unknown>=async()=>({enabled:false,user:{
  const dom=new JSDOM('<!doctype html><div id="root"></div>',{url:'http://127.0.0.1:9999/'});
  const originals=new Map<string,PropertyDescriptor|undefined>();
  const install=(k:string,v:unknown)=>{originals.set(k,Object.getOwnPropertyDescriptor(globalThis,k));Object.defineProperty(globalThis,k,{configurable:true,writable:true,value:v});};
- const sockets:Socket[]=[];
- class Socket {readyState=1;onopen:any;onmessage:any;onclose:any;onerror:any;static OPEN=1;constructor(){sockets.push(this);queueMicrotask(()=>this.onopen?.({}));}send(){}close(){}emit(data:unknown){this.onmessage?.({data:JSON.stringify(data)});}}
+ const sockets:Socket[]=[],outbound:any[]=[];
+ class Socket {readyState=1;onopen:any;onmessage:any;onclose:any;onerror:any;static OPEN=1;constructor(){sockets.push(this);queueMicrotask(()=>this.onopen?.({}));}send(data:string){outbound.push(JSON.parse(data));}close(){}emit(data:unknown){this.onmessage?.({data:JSON.stringify(data)});}}
+ dom.window.HTMLElement.prototype.scrollTo=()=>{};
+ dom.window.HTMLElement.prototype.scrollIntoView=()=>{};
  const status={profile:DEFAULT_MIXER,model:'XR18',mode:'real',host:'192.0.2.18',port:10024,connected:true,writesEnabled:false};
  const writes:string[]=[];
- for(const [k,v] of Object.entries({window:dom.window,document:dom.window.document,navigator:dom.window.navigator,location:dom.window.location,localStorage:dom.window.localStorage,HTMLElement:dom.window.HTMLElement,Event:dom.window.Event,MouseEvent:dom.window.MouseEvent,WebSocket:Socket,requestAnimationFrame:(f:()=>void)=>setTimeout(f,0),cancelAnimationFrame:clearTimeout,IS_REACT_ACT_ENVIRONMENT:true}))install(k,v);
+ for(const [k,v] of Object.entries({window:dom.window,document:dom.window.document,navigator:dom.window.navigator,location:dom.window.location,localStorage:dom.window.localStorage,HTMLElement:dom.window.HTMLElement,Event:dom.window.Event,MouseEvent:dom.window.MouseEvent,WebSocket:Socket,ResizeObserver:class{observe(){}disconnect(){}},requestAnimationFrame:(f:()=>void)=>setTimeout(f,0),cancelAnimationFrame:clearTimeout,IS_REACT_ACT_ENVIRONMENT:true}))install(k,v);
  install('fetch',async(input:string,options?:RequestInit)=>{
   const path=String(input);if(options?.method&&options.method!=='GET')writes.push(path);
   let data:unknown={};let code=200;
@@ -22,6 +24,9 @@ async function fixture(auth:()=>Promise<unknown>=async()=>({enabled:false,user:{
   else if(path==='/api/main')data={channel:0,fader:.5,on:true,updatedAt:null};
   else if(path==='/api/workspace')data=null;
   else if(path==='/api/version')data={version:'test'};
+  else if(/^\/api\/monitor\/\d+\/profiles$/.test(path))data=[];
+  else if(/^\/api\/monitor\/\d+$/.test(path))data={levels:Array(16).fill(0)};
+  else if(path==='/api/ears-share')data={running:false,addresses:[],shares:[],port:8018};
   else if(path==='/api/mixer-sync')data={sources:[]};
   else if(['/api/users','/api/library','/api/songs','/api/setlists','/api/rehearsals'].includes(path))data=[];
   else if(path==='/api/reacue')data={armed:false};
@@ -32,7 +37,7 @@ async function fixture(auth:()=>Promise<unknown>=async()=>({enabled:false,user:{
  const React=await import('react');install('React',React);const {createRoot}=await import('react-dom/client');const root=createRoot(dom.window.document.getElementById('root'));
  const errors:unknown[][]=[];const consoleError=console.error;console.error=(...args)=>errors.push(args);
  const flush=async()=>{await React.act(async()=>{await new Promise(r=>setTimeout(r,0));});};
- return {dom,root,React,errors,writes,sockets,status,flush,async mount(element:React.ReactNode){await React.act(async()=>root.render(element));await flush();},async close(){await React.act(async()=>root.unmount());console.error=consoleError;dom.window.close();for(const [k,d]of originals){if(d)Object.defineProperty(globalThis,k,d);else delete (globalThis as any)[k];}}};
+ return {dom,root,React,errors,writes,sockets,outbound,status,flush,async mount(element:React.ReactNode){await React.act(async()=>root.render(element));await flush();},async close(){await React.act(async()=>root.unmount());console.error=consoleError;dom.window.close();for(const [k,d]of originals){if(d)Object.defineProperty(globalThis,k,d);else delete (globalThis as any)[k];}}};
 }
 
 test('startup and repeated mixer snapshots keep one connection panel with the local admin controls',async()=>{
@@ -80,5 +85,31 @@ test('a genuine guest remains unable to detect or enable mixer control',async()=
  const f=await fixture(async()=>({enabled:true,user:{role:'guest'}}));
  try{const {ConnectionPanel}=await import('../src/ConnectionPanel');await f.mount(<ConnectionPanel status={f.status}/>);
  const text=f.dom.window.document.body.textContent;assert.ok(text.includes('gérée par l’administrateur'));assert.ok(!text.includes('Détecter et connecter ma console'));assert.ok(!text.includes('Activer le contrôle'));
+ }finally{await f.close();}
+});
+
+test('one Returns destination contains mix and phone sharing; Expert has no duplicate Ears tab and reconnect preserves the page',async()=>{
+ const f=await fixture();try{
+  const {default:App}=await import('../src/App');await f.mount(<App/>);
+  const doc=f.dom.window.document;
+  const click=async(text:string,selector='button')=>{const b=[...doc.querySelectorAll(selector)].find((e:any)=>e.textContent===text);assert.ok(b,text);await f.React.act(async()=>b.dispatchEvent(new f.dom.window.MouseEvent('click',{bubbles:true})));await f.flush();};
+  const sound=doc.querySelector('button[aria-label="Régler le son Coach, console et retours"]');assert.ok(sound);
+  await f.React.act(async()=>sound.dispatchEvent(new f.dom.window.MouseEvent('click',{bubbles:true})));await f.flush();
+  await click('Retours','.subnav button');
+  assert.equal(doc.querySelectorAll('.monitor-desk').length,1);
+  assert.ok(!doc.body.textContent.includes('Ouvrir la régie des retours'));
+  await click('Téléphones','.bp-section-tabs button');
+  assert.equal(doc.querySelectorAll('.monitor-desk').length,0);
+  assert.ok([...doc.querySelectorAll('button')].some((e:any)=>e.textContent==='Démarrer le partage'));
+  await click('Mix et traitements','.bp-section-tabs button');assert.equal(doc.querySelectorAll('.monitor-desk').length,1);
+  localStorage.setItem('xr18-expert-view','ears');
+  await click('Console','.subnav button');await click('Expert');
+  assert.equal(doc.querySelectorAll('[aria-label="Mode Expert"]').length,1);
+  assert.ok(![...doc.querySelectorAll('.xs2-tabs button')].some((e:any)=>e.textContent==='Ears'));
+  await f.React.act(async()=>{for(const ws of f.sockets)ws.emit({type:'status',status:{...f.status,connected:false}});});await f.flush();
+  await f.React.act(async()=>{for(const ws of f.sockets)ws.emit({type:'status',status:{...f.status,connected:true}});});await f.flush();
+  assert.equal(doc.querySelectorAll('[aria-label="Mode Expert"]').length,1,'reconnect must not throw the musician back into settings');
+  assert.ok(!f.outbound.some(m=>m.type==='set'),'navigation never sends audio controls');
+  assert.ok(!f.writes.includes('/api/ears-share/start'),'sharing does not start on navigation');
  }finally{await f.close();}
 });

@@ -44,3 +44,9 @@ test('production bridge retains Rec response across Windows file locks without r
  assert.equal(r.status,0,r.stdout+r.stderr);assert.match(r.stdout,/I\/O regressions passed/);
  }
 });
+
+test('workshop Lua preserves source projects, routes mono correctly, checks revisions and releases audio accessors',()=>{
+ const require=createRequire(import.meta.url);
+ const r=spawnSync(process.execPath,[require.resolve('fengari-node-cli/src/lua-cli.js'),'tests/workshop-bridge.lua'],{encoding:'utf8'});
+ assert.equal(r.status,0,r.stdout+r.stderr);assert.match(r.stdout,/Workshop bridge passed/);
+});

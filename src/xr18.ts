@@ -32,6 +32,7 @@ export class XR18 extends EventEmitter {
   private operationEpoch=0;
   cancelOperations(){this.operationEpoch++;}
   operationId(){return this.operationEpoch;}
+  connectionId(){return this.generation;}
   private fxValues=new Map<number,{slot:number;algorithm:number;parameters:{type:"f"|"i";value:number}[]}>();
   parameterState(){return Object.fromEntries(this.parameterValues);}
   /** Rehearsal mode: the band only listens through the ears, the Main (front of house) stays muted. */

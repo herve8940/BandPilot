@@ -116,3 +116,16 @@ test('transport and Stop bypass queued waveform work',async()=>{
   assert.deepEqual(seen,['peaks','action','transport','state','peaks']);
  }finally{w.close();}
 });
+
+test('analysis is not starved by continuous polling and an atomic heartbeat replacement is retried',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'bandpilot-fair-')),box=join(dir,'XR18Studio');await mkdir(box);
+ const {readdir,readFile,rm}=await import('node:fs/promises');let active=false,closed=false;const seen:string[]=[];
+ const timer=setInterval(async()=>{if(active||closed)return;active=true;try{for(const name of await readdir(box)){
+  if(!/^request-[a-f0-9-]+\.lua$/.test(name))continue;const src=await readFile(join(box,name),'utf8');const id=/\["id"\]="([^"]+)"/.exec(src)![1]!,cmd=/\["cmd"\]="([^"]+)"/.exec(src)![1]!;await rm(join(box,name));seen.push(cmd);await new Promise(r=>setTimeout(r,10));await writeFile(join(box,`response-${id}.json`),JSON.stringify({id,ok:true,result:{}}));
+ }}finally{active=false;}},5);
+ const beat=setTimeout(()=>writeFileSync(join(box,'heartbeat.txt'),'BandPilotBridge/2\n1.4.0\n1'),50);
+ try{const bridge=new ReaperBridge(dir);const work=bridge.call('workshop_measure_batch');const queued=Array.from({length:10},(_,i)=>bridge.call('state',{test:i}));await Promise.all([work,...queued,bridge.actions([ACTION.stopAndSave])]);assert.equal(seen[0],'workshop_measure_batch');assert.equal(seen[1],'action');
+ // Queue a second measurement behind multiple reads; no more than two reads may overtake it.
+ seen.length=0;const first=bridge.call('state',{test:99});const polls=Array.from({length:6},(_,i)=>bridge.call('state',{test:i}));await Promise.all([first,...polls,bridge.call('workshop_measure_batch')]);assert.ok(seen.indexOf('workshop_measure_batch')<=2,seen.join(','));
+ }finally{clearTimeout(beat);closed=true;clearInterval(timer);}
+});

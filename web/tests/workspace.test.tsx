@@ -33,13 +33,13 @@ test('monitor desk writes only the selected bus sends, EQ and compressor; read-o
  const f=await fixture();try{
   const {MonitorDesk}=await import('../src/expert/Workspace'),{MixerModelContext}=await import('../src/MixerModel');
   const writes:[string,unknown][]=[];const values={'/ch/01/config/name':'Basse','/bus/2/mix/fader':.5,'/bus/2/dyn/thr':.5,'/bus/2/eq/1/g':.5};
-  const render=(writable:boolean,model=MIXER_MODELS.XR18)=>f.render(<MixerModelContext.Provider value={model}><MonitorDesk values={values} writable={writable} set={(a,v)=>writes.push([a,v])} confirmed={async()=>false} reduction={()=>null}/></MixerModelContext.Provider>);
+  const render=(writable:boolean,model=MIXER_MODELS.XR18)=>f.render(<MixerModelContext.Provider value={model}><MonitorDesk values={values} writable={writable} set={(a,v)=>writes.push([a,v])} confirmed={async()=>false}/></MixerModelContext.Provider>);
   await render(true);await f.click('Hervé');
   const key=async(selector:string)=>{const el=f.dom.window.document.querySelector(selector);assert.ok(el,selector);await f.React.act(async()=>el!.dispatchEvent(new f.dom.window.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true})));};
   await key('[role="slider"][aria-label="Basse vers Hervé"]');assert.match(writes.pop()![0],/^\/ch\/01\/mix\/02\/level$/);
   await f.click('Égaliseur du retour');await key('[role="slider"][aria-label="Gain"]');assert.equal(writes.pop()![0],'/bus/2/eq/1/g');
-  await f.click('Compression du retour');await key('[role="slider"][aria-label="Threshold"]');assert.equal(writes.pop()![0],'/bus/2/dyn/thr');
-  await render(false);writes.length=0;await key('[role="slider"][aria-label="Threshold"]');assert.equal(writes.length,0);
+  await f.click('Compression du retour');await key('[role="slider"][aria-label="Seuil"]');assert.equal(writes.pop()![0],'/bus/2/dyn/thr');
+  await render(false);writes.length=0;await key('[role="slider"][aria-label="Seuil"]');assert.equal(writes.length,0);
   await render(false,MIXER_MODELS.XR12);assert.equal(f.dom.window.document.querySelectorAll('.monitor-people button').length,2);
   assert.ok(!f.dom.window.document.querySelector('button[aria-pressed="true"]')?.textContent.includes('Bus 6'));
  }finally{await f.close();}

@@ -1,5 +1,5 @@
 /* Shared stage palette, compact navigation and visual channel workspace. */
-:root{--bg:#090e1c;--surface:#10182b;--surface-2:#182139;--surface-3:#232e49;--line:#2b3956;--line-2:#445476;--text:#edf1ff;--text-2:#b1bfd8;--text-3:#889bbd;--accent:#ad86ff;--accent-2:#7c55ef;--accent-soft:#9365ff22}
+
 .studio.app2{background:radial-gradient(ellipse at 75% 0%,#30204c55,transparent 55%),var(--bg)}
 .studio.app2 .topbar{padding:9px 18px;gap:8px 16px;background:linear-gradient(110deg,#121b30ee,#0b1020ee)}
 .studio.app2 .topbar-title{min-width:120px}.studio.app2 .topbar-title h1{font-size:19px}.studio.app2 .topbar-title p{font-size:11px}

@@ -48,7 +48,7 @@ export class Access {
 }
 export function permitted(user:User,method:string,path:string){
  if(user.role==='admin')return true;
- if(path.startsWith('/api/mixer-sync')||path==='/api/diagnostics/log'||path==='/api/discovery'||path==='/api/connection')return false;
+ if(path.startsWith('/api/workshop')||path.startsWith('/api/mixer-sync')||path==='/api/diagnostics/log'||path==='/api/discovery'||path==='/api/connection')return false;
  if(path.startsWith('/api/users')||path==='/api/audit'||path.startsWith('/api/reacue')||path.startsWith('/api/reaper')||path.startsWith('/api/show')||path.startsWith('/api/ears-share'))return false;
  if(method==='GET')return true;
  // A musician can change only assigned monitor sends, never FOH or another bus.
