@@ -1,0 +1,56 @@
+.tech-document{color:#172638;background:#fff;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.45;text-align:left;color-scheme:light;overflow-wrap:anywhere}
+.tech-document *{box-sizing:border-box}
+.tech-document .rider-sheet{padding:28px 32px;background:#fff}
+.tech-document .rider-sheet+.rider-sheet{border-top:8px solid #e7eaf0}
+.tech-document h1{font-size:30px;line-height:1.15;margin:5px 0 8px;letter-spacing:-.8px;color:#172638}
+.tech-document h2{display:flex;align-items:center;gap:10px;font-size:15px;margin:20px 0 12px;color:#172638;break-after:avoid}
+.tech-document h2>span{font-size:11px;letter-spacing:.5px;color:#6b4c9a;border-bottom:2px solid #b9a0de;padding:3px 1px}
+.tech-document h3{font-size:12px;margin:0 0 6px;color:#25334a;break-after:avoid}
+.tech-document p{margin:0;max-width:none;line-height:1.5;font-size:12px;color:#4d5b70;white-space:pre-line}
+.tech-document small{display:block;font-size:10px;color:#68748a;line-height:1.4}
+.tech-document .rider-doc-header{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #26354a;padding-bottom:16px}
+.tech-document .rider-kicker{font-size:9px;font-weight:700;letter-spacing:2px;color:#705396}
+.tech-document .rider-brand{font-size:16px;font-weight:800;text-align:right;flex:0 0 150px;padding-top:2px;color:#705396}
+.tech-document .rider-brand small{font-weight:400;font-size:9px;margin-top:5px}
+.tech-document .rider-facts{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:20px;padding:15px 0;border-bottom:1px solid #d9dfe8}
+.tech-document .rider-facts div{display:flex;flex-direction:column;font-size:11px;gap:3px;min-width:0}
+.tech-document .rider-facts b{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:#6c7585}
+.rider-stage-caption{display:flex;justify-content:space-between;font-size:10px;color:#6c7585;margin-bottom:7px}
+.rider-stage{position:relative;height:300px;border:1px solid #c6cede;border-radius:8px;background-color:#f6f8fb;background-image:linear-gradient(to right,#dce2ec77 1px,transparent 1px),linear-gradient(to bottom,#dce2ec77 1px,transparent 1px);background-size:33.333% 33.333%;color:#172638}
+.rider-stage-person{position:absolute;transform:translate(-50%,-50%);width:29%;max-width:170px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 5px;border:1px solid #c6cede;border-radius:9px;background:#fff;color:#172638;line-height:1.25;text-align:center;box-shadow:0 3px 9px #1b2d4610;overflow-wrap:anywhere}
+.rider-stage-person strong{font-size:12px}.rider-stage-person .rider-instrument{color:#7654a4;flex-shrink:0}
+.rider-stage-channels{font-size:9px;color:#647087;max-width:100%}.rider-stage-monitor{display:flex;align-items:center;justify-content:center;gap:4px;font-size:9px;color:#384d64}
+.rider-stage-person[aria-label]{touch-action:none;cursor:grab;user-select:none}.rider-stage-person:active{cursor:grabbing}.rider-stage-person:focus-visible{outline:3px solid #a778fa;outline-offset:3px;z-index:2}
+.rider-stage-empty{position:absolute;inset:30% 15%;text-align:center}
+.rider-audience{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:9px;color:#6c7585;padding-top:6px}.rider-audience span{font-weight:700;letter-spacing:3px;color:#384d64;border-top:3px solid #b9a0de;padding:5px 40px 0}
+.tech-document .rider-equipment{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tech-document .rider-equipment>section{border:1px solid #d9dfe8;border-radius:7px;padding:12px;min-width:0}
+.tech-document .rider-notes{margin-top:12px;border-left:3px solid #b9a0de;padding:2px 12px}
+.tech-document .rider-doc-footer{display:flex;justify-content:space-between;gap:20px;border-top:1px solid #d9dfe8;padding-top:10px;margin-top:20px;font-size:9px;color:#68748a}
+.tech-document .rider-page-header{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #26354a;padding-bottom:12px;font-size:13px}
+.tech-document table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10px;line-height:1.35;margin:0}
+.tech-document th{text-align:left;background:#eef0f5;color:#374358;font-size:9px;letter-spacing:.15px;padding:8px 6px;border-bottom:1px solid #c6cede}
+.tech-document td{padding:7px 6px;border-bottom:1px solid #e1e5eb;vertical-align:top;white-space:pre-line}
+.tech-document tr{break-inside:avoid}.tech-document thead{display:table-header-group}
+.tech-document .rider-patch-table th:nth-child(1){width:9%}.tech-document .rider-patch-table th:nth-child(2){width:29%}.tech-document .rider-patch-table th:nth-child(3){width:23%}.tech-document .rider-patch-table th:nth-child(4){width:13%}.tech-document .rider-patch-table th:nth-child(5){width:13%}.tech-document .rider-patch-table th:nth-child(6){width:13%}
+.tech-document .rider-monitor-table th:nth-child(1){width:9%}.tech-document .rider-monitor-table th:nth-child(2){width:20%}.tech-document .rider-monitor-table th:nth-child(3){width:25%}
+.tech-document .rider-channel{font-size:12px;color:#705396}.tech-document .rider-input-note{margin-top:4px;color:#44516a}.tech-document .rider-unconfirmed{color:#8a5a1d}
+.tech-document .rider-footnote{font-size:9px;margin-top:8px;color:#68748a}
+@media print{
+ @page{size:A4 portrait;margin:12mm}
+ html,body{margin:0!important;padding:0!important;background:#fff!important;color:#172638!important}
+ .tech-document{font-size:10px;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ .tech-document .rider-sheet{padding:0}
+ .tech-document .rider-sheet+.rider-sheet{border:0;break-before:page}
+ .tech-document .rider-doc-header{padding-bottom:12px}
+ .tech-document .rider-stage{height:75mm;break-inside:avoid}
+ .tech-document .rider-stage-wrap{break-inside:avoid}
+ .tech-document .rider-equipment{display:block;columns:2;column-gap:12px}
+ .tech-document .rider-equipment>section{break-inside:avoid}
+ .tech-document h2{margin-top:16px}
+ .tech-document table{font-size:10px}
+ .tech-document td{padding:3px 5px}
+ .tech-document table small{font-size:9px}
+ .tech-document th{padding:6px 5px}
+ .tech-document .rider-notes p,.tech-document .rider-equipment p{orphans:3;widows:3}
+ .tech-document .rider-doc-footer{break-inside:avoid;margin-top:14px}
+}

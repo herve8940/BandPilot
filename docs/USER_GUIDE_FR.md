@@ -118,4 +118,11 @@ Les scènes complètes peuvent être capturées et exportées/importées en JSON
 
 ### Fiche technique et plan de scène
 
-Les cartes musiciens, la liste de câblage et le plan imprimable reprennent les entrées et retours du groupe.
+Dans **Mon ingé son → Dire qui est branché où**, ouvre **Fiche technique du groupe**. Les entrées et les musiciens sont repris de la préparation du groupe.
+
+- **Informations** : groupe, concert, contact technique, espace scénique, matériel apporté et demandé à la salle.
+- **Câblage** : ouvre une entrée pour indiquer le micro ou la DI, le pied, le fournisseur, les remarques et le besoin de 48 V (requis, non requis ou à confirmer). Chaque canal d’une paire stéréo reste visible dans le document.
+- **Scène & retours** : déplace les musiciens avec la souris, au doigt ou avec les flèches du clavier. Les sélecteurs de position restent disponibles. Précise le type de retour, le besoin mono/stéréo et les prises électriques. Ces besoins ne modifient pas le routage de la console ; les sorties stéréo sont à convenir avec la salle.
+- **Aperçu PDF** : consulte le document avant de l’envoyer. Il sépare le plan de scène et l’accueil du câblage et des retours. De longues notes peuvent ajouter des pages.
+
+**Enregistrer** conserve la fiche avec le groupe. **Exporter PDF** ouvre une fenêtre d’enregistrement dans l’application Mac ; dans un navigateur, choisis l’enregistrement PDF dans la fenêtre d’impression. L’export reprend les champs affichés, même si tu n’as pas encore enregistré les dernières modifications. **Imprimer** imprime uniquement la fiche. Ces actions ne changent aucun réglage audio.

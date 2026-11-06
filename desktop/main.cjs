@@ -66,6 +66,21 @@ app.whenReady().then(async () => {
     });
     const appIcon=path.join(__dirname,"icon.png");
     const fromWindow=(event)=>event.sender===win.webContents&&event.senderFrame===win.webContents.mainFrame;
+    let exportingRider=false;
+    ipcMain.handle('bandpilot-tech-rider-pdf',async(event,input)=>{
+      if(!fromWindow(event)||exportingRider)return {error:label('Export PDF indisponible.','PDF export unavailable.')};
+      exportingRider=true;
+      try{
+        const {renderTechRiderPDF}=require('./tech-rider-pdf.cjs');
+        const pdf=await renderTechRiderPDF(input?.html);
+        const filename=typeof input?.filename==='string'?path.basename(input.filename).replace(/[<>:"/\\|?*\x00-\x1f]/g,'-').slice(0,160):'BandPilot-fiche-technique.pdf';
+        const target=await dialog.showSaveDialog(win,{title:label('Exporter la fiche technique','Export technical rider'),defaultPath:path.join(app.getPath('documents'),filename),filters:[{name:'PDF',extensions:['pdf']}]});
+        if(target.canceled||!target.filePath)return {cancelled:true};
+        await require('node:fs/promises').writeFile(target.filePath,pdf);
+        return {saved:true};
+      }catch(error){console.error('Technical rider PDF export failed',error);return {error:label('Impossible d’enregistrer le PDF. Réessaie ou utilise Imprimer.','Unable to save the PDF. Try again or use Print.')};}
+      finally{exportingRider=false;}
+    });
     ipcMain.on('bandpilot-language-get',event=>{event.returnValue=fromWindow(event)?language:'fr';});
     ipcMain.on('bandpilot-language-set',(event,next)=>{
       event.returnValue=false;

@@ -14,3 +14,7 @@ contextBridge.exposeInMainWorld('bandpilotLanguage',{
  get:()=>ipcRenderer.sendSync('bandpilot-language-get'),
  set:language=>ipcRenderer.sendSync('bandpilot-language-set',language)
 });
+
+contextBridge.exposeInMainWorld('bandpilotDocuments',{
+ saveTechRiderPDF:input=>ipcRenderer.invoke('bandpilot-tech-rider-pdf',input)
+});

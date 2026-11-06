@@ -4,39 +4,55 @@ on:
     branches: [main]
     paths: ['package.json', '.github/workflows/release.yml']
   workflow_dispatch:
+    inputs:
+      replace_version:
+        description: 'Rebuild an existing release: enter its exact version (for example 2.3.1)'
+        required: false
+        type: string
 permissions:
   contents: read
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   prepare:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       needed: ${{ steps.version.outputs.needed }}
+      replacing: ${{ steps.version.outputs.replacing }}
     steps:
       - uses: actions/checkout@v4
       - name: Check whether this version is already published
         id: version
         env:
           GH_TOKEN: ${{ github.token }}
+          REPLACE_VERSION: ${{ inputs.replace_version }}
         shell: bash
         run: |
           python3 - <<'PYTHON'
           import json,os,urllib.request,urllib.error
           version=json.load(open('package.json'))['version']
+          replacement=os.environ.get('REPLACE_VERSION', '')
+          if replacement and (os.environ['GITHUB_EVENT_NAME']!='workflow_dispatch' or replacement!=version):
+              raise SystemExit('Replacement requires a manual run with the exact package version.')
+          replacing=False
           request=urllib.request.Request(f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/releases/tags/v{version}",headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
           try:
               with urllib.request.urlopen(request) as response:
                   release=json.load(response)
-              needed=False
-              print('Version already exists; metadata-only changes do not rebuild or overwrite installers.')
+              replacing=bool(replacement)
+              if replacing and (release.get('immutable') or release.get('draft')):
+                  raise SystemExit('Cannot replace an immutable or draft release.')
+              needed=replacing
+              print('Explicit release rebuild requested.' if replacing else 'Version already exists; metadata-only changes do not rebuild or overwrite installers.')
           except urllib.error.HTTPError as error:
               if error.code!=404: raise
+              if replacement: raise SystemExit('The requested replacement release does not exist.')
               needed=True
           with open(os.environ['GITHUB_OUTPUT'],'a') as output:
               output.write('needed='+str(needed).lower()+'\n')
+              output.write('replacing='+str(replacing).lower()+'\n')
           PYTHON
   package:
     needs: prepare
@@ -133,7 +149,7 @@ jobs:
             release/*.deb
           if-no-files-found: error
   publish:
-    needs: package
+    needs: [prepare, package]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -158,7 +174,28 @@ jobs:
           files=sorted(p for p in root.iterdir() if p.is_file())
           (root/'SHA256SUMS.txt').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in files))
           PY
+      - name: Back up the release before replacing its installers
+        if: needs.prepare.outputs.replacing == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPLACE_VERSION: ${{ inputs.replace_version }}
+        run: bash scripts/rebuild-release.sh backup
+      - uses: actions/upload-artifact@v4
+        if: needs.prepare.outputs.replacing == 'true'
+        with:
+          name: release-before-rebuild-${{ github.run_id }}
+          path: release-backup/
+          retention-days: 90
+          if-no-files-found: error
+          compression-level: 0
+      - name: Replace the explicitly requested release
+        if: needs.prepare.outputs.replacing == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPLACE_VERSION: ${{ inputs.replace_version }}
+        run: bash scripts/rebuild-release.sh publish
       - name: Publish version after every platform passed
+        if: needs.prepare.outputs.replacing != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
