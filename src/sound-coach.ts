@@ -1,3 +1,4 @@
+import {CONNECTION_TYPES,type TechRider} from '../shared/tech-rider.js';
 import {PROCESSING_PRESETS} from './coach-presets.js';
 import {processingCommands} from './processing-osc.js';
 import {fromWire,descriptor,type Value} from './parameters.js';
@@ -62,7 +63,7 @@ export function monitorLevel(role:Role,family:Family,own:boolean){return own&&!(
 export type Musician={name:string;bus:number;role:Role;channels:number[]};
 export type Input={channel:number;source:string;name:string};
 export type Calibration={peakDb:number;gainDb:number|null;bleedDb?:number;at:string};
-export type CoachProfile={version:1;inputs:Input[];completed:string[];musicians?:Musician[];calibration?:Record<string,Calibration>};
+export type CoachProfile={version:1;inputs:Input[];completed:string[];musicians?:Musician[];calibration?:Record<string,Calibration>;tech?:TechRider};
 export const STEPS=[
  {id:'connect',title:'1. Brancher et connecter',text:'Relie le PC et la console au même réseau. Vérifie tes branchements, puis connecte la console. Garde les volumes des enceintes et des in-ear bas pendant la préparation.'},
  {id:'inputs',title:'2. Dire qui est branché où',text:'Choisis la prise utilisée par chaque instrument. Le modèle de groupe ci-dessous est une proposition : compare-le aux câbles avant de préparer les canaux.'},
@@ -124,6 +125,31 @@ export function validateProfile(value:unknown):CoachProfile {
  if(p.calibration!==undefined){
   if(!p.calibration||typeof p.calibration!=='object'||Array.isArray(p.calibration))throw Error('Mesures invalides');
   for(const [k,c] of Object.entries(p.calibration))if(!/^([1-9]|1[0-6])$/.test(k)||!c||!Number.isFinite(c.peakDb)||c.peakDb<-90||c.peakDb>0||(c.gainDb!==null&&!Number.isFinite(c.gainDb))||(c.bleedDb!==undefined&&(!Number.isFinite(c.bleedDb)||c.bleedDb<-90||c.bleedDb>0))||typeof c.at!=='string')throw Error('Mesures invalides');
+ }
+ if(p.tech!==undefined){
+  const tech=p.tech,record=(x:unknown)=>!!x&&typeof x==='object'&&!Array.isArray(x);
+  if(!record(tech)||(tech.inputs!==undefined&&!record(tech.inputs))||(tech.positions!==undefined&&!record(tech.positions)))throw Error('Fiche technique invalide');
+  const channels=new Set(p.inputs.map(i=>i.channel)), buses=new Set(p.musicians?.map(m=>m.bus));
+  const pairs=new Set<number>();
+  const inputs:NonNullable<TechRider['inputs']>={};
+  for(const [channel,details] of Object.entries(tech.inputs??{})){
+   const n=Number(channel);
+   if(!channels.has(n)||String(n)!==channel)continue;
+   if(!record(details)||(details.connection!==undefined&&!CONNECTION_TYPES.includes(details.connection))||(details.phantom!==undefined&&typeof details.phantom!=='boolean'))throw Error('Branchement invalide');
+   const partner=details.stereoWith;
+   if(partner!==undefined&&channels.has(partner)){
+    if(!Number.isInteger(partner)||partner!==n+1||pairs.has(n)||pairs.has(partner))throw Error('Paire stéréo invalide ou utilisée deux fois');
+    pairs.add(n);pairs.add(partner);
+   }
+   inputs[channel]={connection:details.connection,phantom:details.phantom===true,stereoWith:partner!==undefined&&channels.has(partner)?partner:undefined};
+  }
+  const positions:NonNullable<TechRider['positions']>={};
+  for(const [bus,pos] of Object.entries(tech.positions??{})){
+   if(!buses.has(Number(bus))||String(Number(bus))!==bus)continue;
+   if(!record(pos)||!Number.isInteger(pos.row)||!Number.isInteger(pos.column)||pos.row<0||pos.row>2||pos.column<0||pos.column>2)throw Error('Position de scène invalide');
+   positions[bus]={row:pos.row,column:pos.column};
+  }
+  return structuredClone({...p,tech:{inputs,positions}});
  }
  return structuredClone(p);
 }

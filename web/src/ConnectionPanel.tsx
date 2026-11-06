@@ -23,6 +23,16 @@ export function ConnectionPanel({status}:{status:Status}){
   await request('/api/connection',{mode:'real',host:device.host,port:device.port,enableWrites:false});
   setMessage(device.model+' connectée en lecture seule. Adresse mémorisée.');
  };
+ const [bridgeCheck,setBridgeCheck]=useState("");
+ const checkBridge=async()=>{
+  setBridgeCheck("Vérification de REAPER…");
+  try{
+   const bridge=await request('/api/show');
+   setBridgeCheck(bridge.alive
+    ? bridge.version===bridge.bridgeCurrent ? "Pont REAPER actif." : "Pont REAPER à mettre à jour dans Répéter."
+    : bridge.installed ? "Ouvre REAPER et lance le pont BandPilot." : "Installe le pont BandPilot depuis Répéter.");
+  }catch{setBridgeCheck("Diagnostic REAPER indisponible.");}
+ };
  const scan=()=>run(async()=>{
   setDevices([]);setMessage('Recherche de ta console sur le réseau local…');
   const result=await request('/api/discovery');setDevices(result.devices);
@@ -43,6 +53,15 @@ export function ConnectionPanel({status}:{status:Status}){
    if(enableWrites&&!window.confirm('Activer le contrôle de cette console ? Les commandes modifieront le son. Vérifie le niveau des sorties et des retours.'))return;
    void run(async()=>{await request('/api/connection',{mode:'real',host:status.host,port:status.port,enableWrites});setMessage(enableWrites?'Contrôle activé.':'Lecture seule activée.');});
   }}>{tx(status.writesEnabled?'Désactiver le contrôle':'Activer le contrôle')}</button>}
+  <details>
+    <summary>{tx("Diagnostiquer la connexion")}</summary>
+    <p>{tx(status.mode==='simulation' ? "La simulation est active. Détecte ta console pour passer au matériel." :
+      !status.connected ? "Console sans réponse. Vérifie le réseau local, puis relance la détection." :
+      !status.writesEnabled ? "Console joignable en lecture seule. Active le contrôle pour modifier les réglages." :
+      "Console joignable et contrôle actif.")}</p>
+    <button type="button" onClick={()=>void checkBridge()}>{tx("Vérifier le pont REAPER")}</button>
+    {bridgeCheck&&<p role="status">{tx(bridgeCheck)}</p>}
+  </details>
   <MixerSyncPanel status={status}/>
   <details><summary>{tx("Connexion manuelle si la recherche est bloquée")}</summary><form onSubmit={e=>{e.preventDefault();void run(async()=>{await request('/api/connection',{mode:'real',host,enableWrites:false});setMessage('Modèle détecté et connexion en lecture seule.');});}}><fieldset disabled={working}><label>{tx("Adresse IP")}<input required placeholder={tx("192.168.1.1 · détection des deux ports")} value={host} onChange={e=>setHost(e.target.value)}/></label><button>{tx("Se connecter")}</button></fieldset></form></details>
   <p className="app-version">{tx("BandPilot ")}<b>{tx(version||"…")}</b></p>

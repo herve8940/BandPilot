@@ -101,3 +101,13 @@ X-Air analysis uses available hardware levels, spectrum and dynamics measurement
 Optional accounts separate administrator, assigned-bus musician and read-only guest access. No mixer response: check network, IP and local-network/firewall permissions. Phone unavailable: check sharing, Wi-Fi and QR link. Bridge unavailable: install the current version and restart REAPER after saving. Back up scenes and project media before updating. Diagnostics include local IPs: review them before posting publicly.
 
 [Release notes](RELEASE_NOTES.md) · [Manual fixes](corrections-tests-manuels.md) · [Compatibility](multi-model.md) · [Detailed X-Air controls](GUIDE_CONSOLE.md)
+
+## BandPilot 2.3.1
+
+**Pick up from your last good soundcheck.** Link a complete scene and notes to each band, then review changes before recall. Musicians can check their assigned bus and source signal from their phone and recall their latest mix. Sound Workshop adds kick and bass A/B comparison. Connection diagnostics separate network, control and REAPER bridge issues.
+
+[Release notes](RELEASE_NOTES.md)
+
+### Technical rider and stage plot
+
+Musician cards, the patch list and a printable stage plot use the band’s input and monitor assignments.

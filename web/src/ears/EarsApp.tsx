@@ -1,3 +1,4 @@
+import type {PersonalPatchInput} from '../../../shared/tech-rider';
 import {LanguageSelect} from "../LanguageSettings";
 import {tx, getLocale, useLanguage} from "../i18n";
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
@@ -14,6 +15,7 @@ const token = location.pathname.split("/").filter(Boolean)[1] ?? "";
 function useEars() {
   const [conn, setConn] = useState<Conn>("connecting");
   const [share, setShare] = useState<{ name: string; bus: number } | null>(null);
+  const [patch,setPatch]=useState<PersonalPatchInput[]>([]);
   const [sources, setSources] = useState<Source[]>([]);
   const [values, setValues] = useState<Values>({});
   const [cap, setCap] = useState(.75);
@@ -39,7 +41,8 @@ function useEars() {
       };
       socket.onmessage = ev => {
         const m = JSON.parse(ev.data);
-        if (m.type === "snapshot") { setShare(m.share); setSources(m.sources); setValues(m.values); setCap(m.cap); setControl(m.control); }
+        if (m.type === "snapshot") { setShare(m.share); setSources(m.sources); setValues(m.values); setCap(m.cap); setControl(m.control); setPatch(m.patch??[]); }
+        else if (m.type === "technical-card") setPatch(m.patch??[]);
         else if (m.type === "parameter") {
           if (Date.now() - (touched.current.get(m.address) ?? 0) < 400) return;
           setValues(v => ({ ...v, [m.address]: m.value }));
@@ -70,7 +73,7 @@ function useEars() {
     };
     flush();
   }, []);
-  return { conn, share, sources, values, cap, control, meters, toast, setToast, set };
+  return { conn, share, patch, sources, values, cap, control, meters, toast, setToast, set };
 }
 
 /** Big horizontal slider: full width = safety ceiling (0 dB). */
@@ -102,7 +105,10 @@ function MeterBar({ db }: { db: number }) {
 
 export function EarsApp() {
   useLanguage();
-  const { conn, share, sources, values, cap, control, meters, toast, setToast, set } = useEars();
+  const { conn, share, patch, sources, values, cap, control, meters, toast, setToast, set } = useEars();
+  const [checkedSource,setCheckedSource]=useState("");
+  const [meterClock,setMeterClock]=useState(Date.now);
+  useEffect(()=>{const timer=setInterval(()=>setMeterClock(Date.now()),1000);return ()=>clearInterval(timer);},[]);
   const [showAll, setShowAll] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [profileName, setProfileName] = useState("");
@@ -110,7 +116,7 @@ export function EarsApp() {
   const bus = share?.bus ?? 1;
   const num = (a: string, fallback = 0) => typeof values[a] === "number" ? values[a] as number : fallback;
   const str = (a: string) => typeof values[a] === "string" ? (values[a] as string).trim() : "";
-  const freshMeters = Date.now() - meters.at < 2000;
+  const freshMeters = conn === "online" && Math.max(meterClock,meters.at) - meters.at < 2000;
   const canMove = control && conn === "online";
 
   const loadProfiles = useCallback(async () => { try { const r = await fetch(`/ears-api/${token}/profiles`); if (r.ok) setProfiles(await r.json()); } catch { /* offline: keep list */ } }, []);
@@ -138,6 +144,12 @@ export function EarsApp() {
     </header>
     {!control && <p className="ea-banner">{tx("Lecture seule : le contrôle n’est pas activé sur l’ordinateur de la console.")}</p>}
 
+    {!!patch.length&&<details className="ea-profiles">
+      <summary>{tx("Ma fiche de branchement")}</summary>
+      <ul>{patch.map(input=><li key={input.channel}><b>{tx("Entrée ")}{input.channel} · {input.name}</b>
+        <span>{input.connection?tx(({micro:"Micro",di:"DI",line:"Ligne"})[input.connection]):""}{input.phantom?" · 48 V":""}{input.stereoWith?` · ${tx("Paire stéréo")} ${input.channel}–${input.stereoWith}`:""}</span></li>)}</ul>
+    </details>}
+
     <section className={on ? "ea-master" : "ea-master muted"}>
       <div className="ea-master-top">
         <div><b>{tx("Volume de mon retour")}</b><span>{tx(on ? `${formatDb(faderToDb(master))} dB` : "Coupé")}</span></div>
@@ -146,6 +158,29 @@ export function EarsApp() {
       <Slider label={tx("Volume de mon retour")} value={master} cap={cap} color="#3ee0e0" disabled={!canMove} onChange={v => set(masterAddr, v)} />
       <MeterBar db={freshMeters ? meters.bus : -128} />
     </section>
+
+    <details className="ea-profiles">
+      <summary>{tx("Vérifier mon retour")}</summary>
+      <p>{share.name} · {tx("Bus")} {bus}{busName!==`Bus ${bus}`?` · ${busName}`:""}</p>
+      <p>{tx(!on ? "Ton retour est coupé." : master <= .001 ? "Le volume de ton retour est au minimum." : "Ton retour est ouvert.")}</p>
+      <label>{tx("Source à vérifier")} <select value={checkedSource} onChange={e=>setCheckedSource(e.target.value)}>
+        <option value="">{tx("Choisir une source")}</option>
+        {sources.map(s=><option value={s.prefix} key={s.prefix}>{str(s.prefix+"/config/name")||s.label}</option>)}
+      </select></label>
+      {sources.filter(s=>s.prefix===checkedSource).map(s=>{
+        const db=Math.max(...s.meters.map(i=>meters.levels[i]??-128));
+        const address=s.prefix+"/mix/"+pad(bus)+"/level";
+        return <div key={s.prefix} role="status">
+          <p>{tx(!freshMeters||!s.meters.some(i=>Number.isFinite(meters.levels[i])) ? "Mesure de la source indisponible." : db > -60 ? "Signal détecté sur cette source." : "Aucun signal net sur cette source. Joue ou chante pour vérifier.")}</p>
+          {typeof values[address]==="number"&&num(address)<=.001&&<p>{tx("L’envoi de cette source vers ton retour est au minimum.")}</p>}
+        </div>;
+      })}
+      {profiles.length>0&&(()=>{const latest=[...profiles].sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))[0]!;
+        return <button type="button" disabled={!canMove||busy} onClick={()=>{
+          if(confirm(tx(`Rappeler « ${latest.name} » dans ton retour ?`)))void call(`/${latest.id}/recall`,"POST").then(d=>{if(d)setToast(`« ${latest.name} » rappelé`);});
+        }}>{tx("Rappeler mon dernier mix")} · {latest.name}</button>;
+      })()}
+    </details>
 
     <section className="ea-list">
       <div className="ea-list-head"><h2>{tx("Ce que j’entends")}</h2><label><input type="checkbox" checked={showAll} onChange={e => setShowAll(e.target.checked)} />{tx(" Tout afficher")}</label></div>

@@ -5,7 +5,7 @@ import {inferWorkshopFamily} from '../shared/workshop-spectrum.js';
 import type {Advice,Evidence,Mapping} from './workshop.js';
 type Values=Record<string,Value>;
 const prefix=(c:number)=>`/ch/${String(c).padStart(2,'0')}`;
-const presets={voice:'lead-rock',backing:'backing-vocal',guitar:'electric-rhythm',bass:'bass-di',drums:'snare',keys:'keys',other:'electric-rhythm'};
+const presets={voice:'lead-rock',backing:'backing-vocal',guitar:'electric-rhythm',bass:'bass-di',kick:'kick',drums:'snare',keys:'keys',other:'electric-rhythm'};
 export function dynamicsAdvice(report:Evidence[],mapping:Mapping[],values:Values,references:Record<string,GateReference>={}):Advice[]{
  const result:Advice[]=[];
  for(const e of report){const m=mapping.find(m=>m.channel===e.channel),t=e.temporal;if(!m||!t)continue;

@@ -1,3 +1,4 @@
+import {patchSignature,personalPatch} from '../shared/tech-rider.js';
 import {languageOrFrench} from '../shared/languages.js';
 import {MIXER_MODELS} from '../shared/mixer-models.js';
 import {readFileSync,writeFileSync} from 'node:fs';
@@ -93,9 +94,9 @@ async function reaperPlan(){
 // Rehearsal mode survives a restart: the Main must not come back on by surprise.
 const rehearsalPath=join(dirname(configPath),'rehearsal.json');
 try{xr18.setRehearsal(JSON.parse(readFileSync(rehearsalPath,'utf8')).on===true);}catch{/* first start: off */}
-const studioApi=new StudioApi(xr18,access,library,show);
+const studioApi=new StudioApi(xr18,access,library,show,()=>patchSignature(coach.profile()));
 // Musicians' monitor mixes on the local network (QR links). Off until started from the app.
-const ears=new EarsShare(dbPath,xr18,()=>process.env.XR18_WEB_DIST,()=>studioApi.busy?'Une opération est en cours sur l’ordinateur, réessaie dans un instant':null,()=>show.manualOverride());
+const ears=new EarsShare(dbPath,xr18,()=>process.env.XR18_WEB_DIST,()=>studioApi.busy?'Une opération est en cours sur l’ordinateur, réessaie dans un instant':null,()=>show.manualOverride(),(bus,name)=>personalPatch(coach.profile(),bus,name));
 const listenHost=process.env.XR18_HTTP_HOST??'127.0.0.1';
 const tls=process.env.XR18_TLS_CERT&&process.env.XR18_TLS_KEY?{cert:await readFile(process.env.XR18_TLS_CERT),key:await readFile(process.env.XR18_TLS_KEY)}:undefined;
 if(!['127.0.0.1','localhost'].includes(listenHost)&&(!tls||!access.enabled()))throw Error('Accès réseau : HTTPS et comptes configurés requis.');
@@ -195,7 +196,7 @@ const handler: http.RequestListener = async (req, res) => {
    else if(path==='/api/workshop/analyze')result=await workshop.analyze();
    else if(path==='/api/workshop/listen-analyze'){if(d.confirm!==true)throw Error('Confirme la lecture pour mesurer les traitements');result=await workshop.listenAnalyze();}
    else if(path==='/api/workshop/cancel')result=workshop.cancelAnalysis();
-   else if(path==='/api/workshop/trial')result=await workshop.trial(String(d.id),d.action as 'try'|'keep'|'undo');
+   else if(path==='/api/workshop/trial')result=await workshop.trial(String(d.id),d.action as 'try'|'keep'|'undo'|'before'|'after');
    else throw Error('Action atelier inconnue');
    res.end(JSON.stringify(result));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
@@ -318,7 +319,7 @@ const handler: http.RequestListener = async (req, res) => {
   }
   if(path.startsWith('/api/coach/')&&req.method==='POST'){
     try{const d=await body(req);let result:unknown;
-      if(path==='/api/coach/profile')result=coach.saveProfile(d.profile);
+      if(path==='/api/coach/profile'){result=coach.saveProfile(d.profile);ears.refreshTechnicalCards();}
       else if(path==='/api/coach/prepare')result=await coach.prepare(d.channel===undefined?undefined:Number(d.channel));
       else if(path==='/api/coach/gain')result=await coach.gainCheck(Number(d.channel));
       else if(path==='/api/coach/bleed')result=await coach.bleedCheck(Number(d.channel));

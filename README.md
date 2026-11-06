@@ -60,10 +60,12 @@ La simulation de console ne simule pas REAPER : REC capture ses véritables entr
 - [Guide complet FR](docs/USER_GUIDE_FR.md) · [Full English guide](docs/USER_GUIDE_EN.md)
 - [Mon ingé son FR](docs/TUTO_MON_INGE_SON.md) · [English coach tutorial](docs/TUTO_MON_INGE_SON_EN.md)
 - [Visite vidéo et transcription](docs/VIDEO_TOUR.md) — montage de six captures en simulation, 42 secondes, sous-titres FR/EN/IT/ES/DE.
-- [Nouveautés 2.3.0](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
+- [Nouveautés 2.3.1](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
 - [Contrôles X-Air détaillés](docs/GUIDE_CONSOLE.md) · [Architecture et API](docs/SQLITE_API.md)
 
 ## Développement
+
+**BandPilot 2.3.1** ajoute les [fiches de balance par groupe](docs/WORKSPACES.md#reprendre-une-balance-de-groupe), la [fiche technique et le plan de scène](docs/WORKSPACES.md#fiche-technique-du-groupe), la vérification du retour sur téléphone, la [comparaison kick et basse](docs/ATELIER_DU_SON.md#comparer-le-kick-et-la-basse) et le [diagnostic de connexion](docs/CONNEXION_XR18.md#diagnostiquer-la-connexion).
 
 Dans **BandPilot 2.3.0**, l’[Atelier du son et les conseils mesurés](docs/ATELIER_DU_SON.md) ajoutent le travail sur un extrait REAPER, la comparaison A/B et la restauration des sources. Spectre par instrument, compatibilité mono, conseils EQ et essais de polarité sont intégrés. Le gate guidé utilise deux repères écoutés (repos et note faible), et la compression tient compte de l’enveloppe du jeu. Dans **Mon ingé son**, les [ambiances guidées](docs/INGE_SON.md#ambiances-guidées) proposent des effets pour le chant, les chœurs, la guitare acoustique ou solo, la caisse claire, les toms et le clavier, avec un dosage individuel par retour. Pont REAPER **1.5.0** requis pour les nouvelles mesures.
 

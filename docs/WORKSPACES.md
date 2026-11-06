@@ -46,3 +46,15 @@ Open **Retours → Ouvrir la régie des retours**, or **Expert → Ears**, to se
 Physical monitor selection respects the model: two outputs on XR12/MR12 and six on XR18/MR18/X18. This feature is for X-Air/M-Air; X32 remains a separate experimental adapter. No dynamic EQ or automatic processing is added.
 
 Update the REAPER bridge to **1.2.3** from Rehearse, save projects and restart REAPER. Version 2.2.2 protects concurrent clients and transient file locks and prioritizes transport. Windows locking is covered by simulated regressions; validation on the affected Windows hardware remains necessary.
+
+## Reprendre une balance de groupe
+
+Dans **Scènes → Fiches de balance**, associe une scène complète BandPilot à un nom de groupe et note les points validés ou à revérifier. Le même nom met à jour la fiche. La scène conserve ses réglages de retours. Sur une console réelle connectée avec le contrôle actif, **Préparer le rappel** affiche les différences avant confirmation et écarte le 48 V.
+
+Le QR du musicien donne accès à **Vérifier mon retour**. Il affiche le bus assigné, l’état du volume du retour et, si des mesures arrivent, la présence de signal sur la source sélectionnée. Le dernier mix enregistré peut être rappelé après confirmation.
+
+## Fiche technique du groupe
+
+Dans **Mon ingé son → Préparer mon groupe → Fiche technique du groupe**, la liste reprend les entrées et les musiciens déjà déclarés. Précise les branchements micro, DI ou ligne, les paires stéréo adjacentes et les besoins de 48 V à vérifier. Enregistre la fiche pour conserver ces notes et les positions.
+
+Déplace les cartes sur le plan de scène ou choisis leur position dans la liste. Le plan est vu depuis la salle. **Imprimer la fiche technique** prépare le plan, les cartes et la liste de câblage. Sur téléphone, le lien personnel affiche les entrées du musicien si son nom et son bus correspondent à ceux de la préparation. Une fiche de balance signale les changements d’affectation depuis sa dernière validation.

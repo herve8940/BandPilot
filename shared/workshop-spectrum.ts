@@ -1,6 +1,6 @@
 /** Local, measured spectral/mono evidence. No genre-independent "ideal EQ" is assumed. */
 export const SPECTRUM_HZ=[31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000];
-export const WORKSHOP_FAMILIES=['guitar','voice','backing','bass','drums','keys','other'] as const;
+export const WORKSHOP_FAMILIES=['guitar','voice','backing','bass','kick','drums','keys','other'] as const;
 export type WorkshopFamily=typeof WORKSHOP_FAMILIES[number];
 export type SpectralWindow={start:number;duration:number;spectrum?:number[];stereo?:{left:number;right:number;cross:number;frames:number}};
 export type SpectralEvidence={bands:number[];lowMidPercent:number;rumblePercent:number;activeSeconds:number;lowMidSeconds:number;lowMidStart:number;rumbleStart:number;phase?:{correlation:number;monoLossDb:number;worstLossDb:number;negativePercent:number;activeSeconds:number;variable:boolean;start:number;stop:number;balanced:boolean}};
@@ -10,6 +10,7 @@ const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
 export function inferWorkshopFamily(name:string):WorkshopFamily{
  const n=name.toLowerCase();
  if(/ch(oe|œ)ur|backing voc/.test(n))return 'backing';
+ if(/\bkick\b|grosse caisse|bass drum|bombo|grancassa/.test(n))return 'kick';
  if(/bass|basse/.test(n))return 'bass';
  if(/guit|gtr/.test(n))return 'guitar';
  if(/chant|voix|vocal|voc\b/.test(n))return 'voice';

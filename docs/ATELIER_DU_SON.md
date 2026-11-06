@@ -101,3 +101,7 @@ Les références musicales appartiennent à l’analyse courante et sont effacé
 ### Validation de cette évolution
 
 Les nouveaux calculs, les enveloppes Lua (y compris silence et dernière fenêtre incomplète), l’essai/annulation du gate, les propositions périmées et les interfaces sont couverts par des tests automatisés. Les tests matériels de la section précédente concernent DEV.2 : ils ne valident pas à eux seuls les nouveaux réglages gate, compression et ambiances de DEV.3. L’écoute sur la console et dans les ears reste à réaliser avant d’en faire une version stable.
+
+## Comparer le kick et la basse
+
+Affecte un **Kick** et une **Basse** mono, puis analyse un passage où les deux jouent. Si la même zone du grave ressort sur plusieurs fenêtres communes, un constat apparaît dans **EQ**. Écoute le passage avant l’essai, passe sur B, puis essaie la coupe de 2 dB proposée sur la basse si une bande peut être utilisée. Arrête la lecture pour basculer entre **A · Sans la correction** et **B · Avec la correction**, puis réécoute le même passage. Garde ou annule ensuite. Le recouvrement spectral des prises brutes donne un endroit à vérifier à l’oreille.

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PlanDialog, type Plan } from "./SoundCoach";
 
 type Entry = { id: string; kind: string; name: string; data: unknown; createdAt: string };
+type BalanceSheet = {sceneId:string;notes:string;updatedAt:string;patchChanged?:boolean};
 type Change = { address: string; before: string | number; after: string | number };
 type Pending = { plan: Plan; apply: () => Promise<string> };
 
@@ -23,6 +24,7 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
   useEffect(() => { void api<{ user: { role: string } | null }>("/api/auth").then(a => setAdmin(a.user?.role === "admin")).catch(() => undefined); }, []);
   const [entries, setEntries] = useState<Entry[]>([]), [name, setName] = useState(""), [busy, setBusy] = useState(""), [message, setMessage] = useState(""), [error, setError] = useState("");
   const [pending, setPending] = useState<Pending | null>(null), [applying, setApplying] = useState(false);
+  const [group,setGroup]=useState(""),[sheetScene,setSheetScene]=useState(""),[sheetNotes,setSheetNotes]=useState("");
   const refresh = async () => setEntries(await api<Entry[]>("/api/library"));
   useEffect(() => { void refresh().catch(e => setError(e.message)); }, []);
   const run = async (label: string, task: () => Promise<string | void>) => {
@@ -102,6 +104,36 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
       </details>
     </fieldset>}
     {(message || error) && <p className={error ? "scene-msg error" : "scene-msg"} role={error ? "alert" : "status"}>{tx(error || message)}</p>}
+    <section className="scene-list" aria-label={tx("Fiches de balance")}>
+      <h3>{tx("Fiches de balance")}</h3>
+      <p>{tx("Retrouve une scène validée, ses retours et les points à revérifier à la prochaine balance.")}</p>
+      {admin&&<form className="scene-save" onSubmit={event=>{
+        event.preventDefault();
+        void run("balance-sheet",async()=>{
+          await api("/api/library","POST",{kind:"balance-sheet",name:group.trim(),data:{sceneId:sheetScene,notes:sheetNotes}});
+          return "Fiche de balance enregistrée.";
+        });
+      }}>
+        <label>{tx("Nom du groupe")}<input required maxLength={120} value={group} onChange={e=>setGroup(e.target.value)}/></label>
+        <label>{tx("Scène validée")}<select required value={sheetScene} onChange={e=>setSheetScene(e.target.value)}>
+          <option value="">{tx("Choisir une scène complète")}</option>
+          {scenes.filter(e=>e.kind==="scene"&&(e.data as {version?:number})?.version===2).map(e=><option key={e.id} value={e.id}>{e.name}</option>)}
+        </select></label>
+        <label>{tx("Notes de répétition et points à vérifier")}<textarea maxLength={4000} value={sheetNotes} onChange={e=>setSheetNotes(e.target.value)}/></label>
+        <button disabled={!!busy||!group.trim()||!sheetScene}>{tx("Enregistrer la fiche")}</button>
+      </form>}
+      {entries.filter(e=>e.kind==="balance-sheet").sort((a,b)=>(b.data as BalanceSheet).updatedAt.localeCompare((a.data as BalanceSheet).updatedAt)).map(e=>{
+        const sheet=e.data as BalanceSheet, scene=scenes.find(s=>s.id===sheet.sceneId);
+        return <article className="scene-row" key={e.id}>
+          <div><b>{e.name}</b><small>{scene?.name??tx("Scène indisponible")} · {when(sheet.updatedAt)}</small><p style={{whiteSpace:"pre-wrap"}}>{sheet.notes}</p>{sheet.patchChanged&&<p role="status">{tx("Le câblage ou les retours déclarés ont changé depuis cette fiche. Vérifie la fiche technique avant le rappel.")}</p>}</div>
+          {admin&&<div className="scene-actions">
+            <button type="button" disabled={!scene||!!busy} onClick={()=>{if(scene)void recall(scene);}}>{tx("Préparer le rappel")}</button>
+            <button type="button" onClick={()=>{setGroup(e.name);setSheetScene(scene?.id??"");setSheetNotes(sheet.notes);}}>{tx("Modifier")}</button>
+            <button type="button" disabled={!!busy} onClick={()=>remove(e)}>{tx("Supprimer")}</button>
+          </div>}
+        </article>;
+      })}
+    </section>
     <h3>{tx("Tes scènes (")}{tx(scenes.length)})</h3>
     {scenes.length ? <div className="scene-list">{tx(scenes.map(row))}</div> : <p className="scene-empty">{tx("Aucune scène pour l’instant. Donne un nom ci-dessus et sauvegarde l’état actuel de la console.")}</p>}
     <details className="scene-autos">

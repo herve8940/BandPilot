@@ -48,3 +48,17 @@ test('silent or missing stereo side never produces a polarity proposal',()=>{
  assert.equal(spectralEvidence(w)!.phase,undefined);
  assert.equal(inferWorkshopFamily('Guitare solo'),'guitar');assert.equal(inferWorkshopFamily('Chœurs synthétiques'),'backing');
 });
+
+test('kick and bass need repeated overlap in aligned windows and only the bass EQ is changed',()=>{
+ const kick={...mono,name:'Kick'},bass={...mono,index:1,guid:'b',name:'Basse',channel:2};
+ const low=SPECTRUM_HZ.map(f=>f===80?20:.01);
+ const kickReport=evidence(1,'Kick',windows(low)),bassReport=evidence(2,'Basse',windows(low));
+ const find=(b:typeof bassReport)=>spectralAdvice([kickReport,b],[kick,bass],params()).find(a=>a.id==='kick-bass-2');
+ const advice=find(bassReport);
+ assert.ok(advice);
+ assert.equal(advice.changes['/ch/02/eq/2/g'],-2);
+ assert.equal(advice.changes['/ch/02/eq/2/f'],80);
+ assert.ok(Object.keys(advice.changes).every(address=>address.startsWith('/ch/02/eq/')));
+ assert.equal(find(evidence(2,'Basse',windows(low).map(w=>({...w,start:w.start+20})))),undefined);
+ assert.equal(find(evidence(2,'Basse',windows(low).slice(0,2))),undefined);
+});

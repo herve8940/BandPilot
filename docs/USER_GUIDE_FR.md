@@ -109,3 +109,13 @@ Les scènes complètes peuvent être capturées et exportées/importées en JSON
 - Avant mise à jour : exporte les scènes et sauvegarde les projets et leurs médias. Pour un incident, télécharge le diagnostic dans Réglages ; relis-le avant de le joindre publiquement, car il contient les IP locales.
 
 [Notes de version](RELEASE_NOTES.md) · [Essais et corrections](corrections-tests-manuels.md) · [Limites par modèle](multi-model.md) · [Documentation détaillée des contrôles X-Air](GUIDE_CONSOLE.md)
+
+## BandPilot 2.3.1
+
+**Reprendre la dernière bonne balance.** Associe une scène complète et des notes à chaque groupe, puis vérifie les différences avant le rappel sur la console. Depuis son téléphone, chaque musicien peut vérifier son bus et le signal d’une source, puis rappeler son dernier mix. L’Atelier du son propose une comparaison A/B du kick et de la basse. Le diagnostic de connexion distingue réseau, contrôle et pont REAPER.
+
+[Nouveautés](RELEASE_NOTES.md)
+
+### Fiche technique et plan de scène
+
+Les cartes musiciens, la liste de câblage et le plan imprimable reprennent les entrées et retours du groupe.

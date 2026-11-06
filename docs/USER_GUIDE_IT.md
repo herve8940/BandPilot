@@ -101,3 +101,13 @@ L'analisi X-Air utilizza i livelli hardware disponibili, le misurazioni di spett
 Gli account opzionali separano l'accesso amministratore, musicista bus assegnato e ospite di sola lettura. Nessuna risposta del mixer: controlla i permessi di rete, IP e rete locale/firewall. Telefono non disponibile: controlla condivisione, Wi-Fi e collegamento QR. Bridge non disponibile: installa la versione corrente e riavvia REAPER dopo aver salvato. Eseguire il backup delle scene e dei supporti di progetto prima dell'aggiornamento. La diagnostica include gli IP locali: esaminali prima di pubblicarli pubblicamente.
 
 [Note sulla versione](RELEASE_NOTES.md) · [Correzioni manuali](corrections-tests-manuels.md) · [Compatibilità](multi-model.md) · [Controlli X-Air dettagliati](GUIDE_CONSOLE.md)
+
+## BandPilot 2.3.1
+
+**Riparti dall’ultimo soundcheck riuscito.** Associa una scena completa e le note a ogni gruppo e verifica le modifiche prima del richiamo. Dal telefono, i musicisti possono controllare bus e segnale e richiamare l’ultimo mix. Il Laboratorio del suono aggiunge il confronto A/B tra cassa e basso. La diagnostica distingue rete, controllo e ponte REAPER.
+
+[Note di rilascio](RELEASE_NOTES.md)
+
+### Scheda tecnica e planimetria
+
+Schede dei musicisti, lista cablaggi e planimetria stampabile riprendono gli ingressi e i monitor del gruppo.

@@ -16,7 +16,7 @@ export type AudioWindow=SpectralWindow & {start:number;duration:number;peak:numb
 export type Evidence={channel:number;name:string;windows:AudioWindow[];peakDb:number;rmsDb:number;crestDb:number;clipped:number;spectral?:SpectralEvidence;temporal?:TemporalEvidence};
 export type Advice={kind?:'level'|'eq'|'phase'|'dynamics'|'gate';unavailableReason?:string;id:string;channel:number;title:string;fact:string;hypothesis:string;start:number;stop:number;changes:Record<string,Value>;impact:string;baseline?:Values};
 type Values=Record<string,Value>;
-export type WorkshopSession={id:string;name:string;identity:string;model:string;source:string;project:string;start:number;stop:number;mapping:Mapping[];phase:'preparing'|'active'|'recovery'|'finished';route:Values;virtual:Values;a:Values;b:Values;side:'A'|'B';note:string;createdAt:string;report?:Evidence[];dynamics?:{channel:number;name:string;maxReduction:number;strongPercent:number;start:number;stop:number;samples:number}[];advice?:Advice[];preference?:'A'|'B';error?:string;gateReferences?:Record<string,GateReference>;trial?:{id:string;before:Values;after:Values};};
+export type WorkshopSession={id:string;name:string;identity:string;model:string;source:string;project:string;start:number;stop:number;mapping:Mapping[];phase:'preparing'|'active'|'recovery'|'finished';route:Values;virtual:Values;a:Values;b:Values;side:'A'|'B';note:string;createdAt:string;report?:Evidence[];dynamics?:{channel:number;name:string;maxReduction:number;strongPercent:number;start:number;stop:number;samples:number}[];advice?:Advice[];preference?:'A'|'B';error?:string;gateReferences?:Record<string,GateReference>;trial?:{id:string;before:Values;after:Values;audition?:'before'|'after'};};
 export type Catalog={project:string;outputs:number;device:string;rate:number;tracks:{index:number;guid:string;name:string;channels:number;family?:WorkshopFamily;items:{pos:number;length:number;file:string;take:string}[]}[]};
 const prefix=(c:number)=>`/ch/${String(c).padStart(2,'0')}`;
 const db=(v:number)=>v>0?Math.max(-120,20*Math.log10(v)):-120;
@@ -210,7 +210,7 @@ export class Workshop{
   s.gateReferences={...s.gateReferences,[String(channel)]:Object.fromEntries(keys.map(k=>[k,input[k]])) as GateReference};
   s.advice=await this.adviceFor(s,s.report!,await this.settings(s.mapping));this.persist();return this.status();
  });}
- async trial(id:string,action:'try'|'keep'|'undo'){return this.serial(async()=>{
+ async trial(id:string,action:'try'|'keep'|'undo'|'before'|'after'){return this.serial(async()=>{
   const s=this.requireActive();await this.stopped(s);if(s.phase!=='active')throw Error('Restaure d’abord cet atelier');
   if(action==='try'){
    if(s.trial)throw Error('Un conseil est déjà en comparaison');
@@ -225,8 +225,17 @@ export class Workshop{
    s.trial={id,before,after};this.persist();try{await this.apply(after,s);s.trial.after=await this.read(Object.keys(after));this.persist();}catch(e){s.phase='recovery';s.error=(e as Error).message;this.persist();throw e;}
   }else{
    if(!s.trial||s.trial.id!==id)throw Error('Essai introuvable');
-   const now=await this.read(Object.keys(s.trial.after));if(!this.equal(now,s.trial.after))throw Error('Ces réglages ont changé depuis l’essai : restaure depuis l’atelier pour éviter d’effacer une autre correction');
-   if(action==='undo')await this.apply(s.trial.before,s);else if(action!=='keep')throw Error('Action invalide');
+   const trial=s.trial, current=trial.audition??'after';
+   const now=await this.read(Object.keys(trial.after));
+   if(!this.equal(now,trial[current]))throw Error('Ces réglages ont changé depuis l’essai : restaure depuis l’atelier pour éviter d’effacer une autre correction');
+   if(!['before','after','keep','undo'].includes(action))throw Error('Action invalide');
+   const target=action==='before'||action==='undo'?'before':'after';
+   if(target!==current){
+    s.phase='recovery';this.persist();
+    try{await this.apply(trial[target],s);trial.audition=target;s.phase='active';this.persist();}
+    catch(e){s.error=(e as Error).message;this.persist();throw e;}
+   }
+   if(action==='before'||action==='after')return this.status();
    delete s.trial;s.b=await this.settings(s.mapping);if(s.report)s.advice=await this.adviceFor(s,s.report,s.b);else if(action==='keep')delete s.advice;if(action==='keep')delete s.dynamics;this.persist();
   }
   return this.status();

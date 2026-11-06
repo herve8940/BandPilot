@@ -101,3 +101,13 @@ El análisis X-Air utiliza niveles de hardware disponibles, mediciones de espect
 Las cuentas opcionales separan el administrador, el músico del bus asignado y el acceso de invitado de solo lectura. No hay respuesta de la mesa de mezclas: verifique los permisos de red, IP y red local/firewall. Teléfono no disponible: verifique compartir, Wi-Fi y enlace QR. Puente no disponible: instale la versión actual y reinicie REAPER después de guardar. Haga una copia de seguridad de las escenas y los medios del proyecto antes de actualizar. Los diagnósticos incluyen IP locales: revíselas antes de publicarlas públicamente.
 
 [Notas de la versión](RELEASE_NOTES.md) · [Correcciones manuales](corrections-tests-manuels.md) · [Compatibilidad](multi-model.md) · [Controles detallados de X-Air](GUIDE_CONSOLE.md)
+
+## BandPilot 2.3.1
+
+**Retoma la última prueba de sonido validada.** Asocia una escena completa y notas a cada grupo y revisa los cambios antes de recuperarla. Desde el teléfono, los músicos pueden comprobar su bus y la señal y recuperar su última mezcla. El Taller de sonido añade una comparación A/B de bombo y bajo. El diagnóstico distingue red, control y puente REAPER.
+
+[Notas de la versión](RELEASE_NOTES.md)
+
+### Ficha técnica y plano del escenario
+
+Las fichas de músicos, la lista de conexiones y el plano imprimible usan las entradas y los monitores del grupo.

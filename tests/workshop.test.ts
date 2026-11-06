@@ -142,7 +142,10 @@ test('a stereo polarity trial changes only the right channel and A/B/finish rest
  await f.workshop.analyze();while(f.workshop.status().job?.running)await new Promise(r=>setTimeout(r,5));
  assert.equal(f.workshop.status().job!.error,'');const advice=f.workshop.status().active!.advice!.find(a=>a.id==='phase-1')!;assert.ok(advice);
  await f.workshop.trial(advice.id,'try');assert.equal(await f.xr.readParameter('/ch/01/preamp/invert'),0);assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),1);
- await f.workshop.trial(advice.id,'keep');await f.workshop.compare('A');assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),0);
+ await f.workshop.trial(advice.id,'before');assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),0);
+ await f.workshop.trial(advice.id,'after');assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),1);
+ await f.workshop.trial(advice.id,'before');
+ await f.workshop.trial(advice.id,'keep');assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),1);await f.workshop.compare('A');assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),0);
  await f.workshop.compare('B');assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),1);await f.workshop.finish('A',true);assert.equal(await f.xr.readParameter('/ch/02/preamp/invert'),0);
  }finally{f.close();}
 });

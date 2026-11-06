@@ -1,3 +1,4 @@
+import type {TechRider} from '../../shared/tech-rider';
 import {tx, getLocale} from "./i18n";
 import {useMixerModel} from './MixerModel';
 import {useEffect,useState} from 'react';
@@ -6,7 +7,7 @@ import {Eraser,Check,Drum,Headphones,Plus,QrCode,Trash2,Users,Wand2} from 'lucid
 export type Input={channel:number;source:string;name:string};
 export type Role='chant'|'guitare'|'basse'|'batterie'|'clavier';
 export type Musician={name:string;bus:number;role:Role;channels:number[]};
-export type Profile={version:1;inputs:Input[];completed:string[];musicians?:Musician[]};
+export type Profile={version:1;inputs:Input[];completed:string[];musicians?:Musician[];tech?:TechRider};
 export type Source={id:string;label:string;group:string;family:string;color:number;name:string;pan:number};
 export type PresetCard={title:string;description:string;advice:string;lines:string[]};
 export type CoachData={sources:Source[];presets:Record<string,PresetCard>;roles:{id:Role;label:string;hint:string}[];recipes:Record<Role,Record<string,number>>;ownLevel:number;templates:{id:string;label:string;description:string;inputs:Input[]}[];drumKit:string[]};
@@ -26,11 +27,17 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
  const model=useMixerModel();
  const [open,setOpen]=useState<number|null>(null);
  const src=(id:string)=>data.sources.find(s=>s.id===id)!;
- const update=(next:Profile)=>setProfile({...next,musicians:next.musicians?.map(m=>({...m,channels:m.channels.filter(c=>next.inputs.some(i=>i.channel===c))}))});
+ const withoutObsoleteWiring=(next:Profile):Profile=>{
+  if(!next.tech?.inputs)return next;
+  const unchanged=new Set(next.inputs.filter(i=>profile.inputs.some(old=>old.channel===i.channel&&old.source===i.source)).map(i=>i.channel));
+  const inputs=Object.fromEntries(Object.entries(next.tech.inputs).filter(([channel])=>unchanged.has(Number(channel))).map(([channel,details])=>[channel,{...details,stereoWith:details.stereoWith&&unchanged.has(details.stereoWith)?details.stereoWith:undefined}]));
+  return {...next,tech:{...next.tech,inputs}};
+ };
+ const update=(next:Profile)=>setProfile({...withoutObsoleteWiring(next),musicians:next.musicians?.map(m=>({...m,channels:m.channels.filter(c=>next.inputs.some(i=>i.channel===c))}))});
  const choose=(index:number,id:string)=>{
   const current=profile.inputs[index]!,before=src(current.source);
   const keepName=current.name.trim()&&current.name!==before.name&&!/^Micro \d+$/.test(current.name);
-  const next={...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,source:id,name:keepName?v.name:src(id).name}:v)};
+  const next=withoutObsoleteWiring({...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,source:id,name:keepName?v.name:src(id).name}:v)});
   setProfile(next);setOpen(current.channel);
   // Choosing an instrument proposes its complete best-practice setting right away.
   if(canApply)onApplyChannel(next,current.channel);else notify('Instrument choisi. Connecte la console (ou passe en simulation) pour appliquer sa configuration complète.');

@@ -1,11 +1,35 @@
 import {PARAMETERS,fromWire,type Value} from './parameters.js';
-import {inferWorkshopFamily} from '../shared/workshop-spectrum.js';
+import {inferWorkshopFamily,SPECTRUM_HZ,type SpectralWindow} from '../shared/workshop-spectrum.js';
 import type {Advice,Evidence,Mapping} from './workshop.js';
 const prefix=(c:number)=>`/ch/${String(c).padStart(2,'0')}`;
 type Values=Record<string,Value>;
+/** Compare aligned one-second windows from the same raw REAPER excerpt. */
+function sharedLowBand(kick:SpectralWindow[],bass:SpectralWindow[]){
+ const matches=new Map<number,{count:number;start:number}>();
+ const valid=(w:SpectralWindow)=>w.spectrum?.length===SPECTRUM_HZ.length&&w.spectrum.every(v=>Number.isFinite(v)&&v>=0);
+ const byTime=new Map(kick.filter(valid).map(w=>[w.start,w]));
+ for(const w of bass.filter(valid)){
+  const k=byTime.get(w.start);
+  if(!k||Math.abs(k.duration-w.duration)>.01)continue;
+  const ks=k.spectrum!,bs=w.spectrum!;
+  const kt=ks.reduce((a,b)=>a+b,0),bt=bs.reduce((a,b)=>a+b,0);
+  if(Math.min(kt,bt)<1e-7)continue;
+  const candidates=SPECTRUM_HZ.map((hz,i)=>({hz,score:Math.min(ks[i]!/kt,bs[i]!/bt)}))
+   .filter(b=>b.hz>=50&&b.hz<=160&&b.score>=.12)
+   .sort((a,b)=>b.score-a.score);
+  const strongest=candidates[0];
+  if(!strongest)continue;
+  const old=matches.get(strongest.hz);
+  matches.set(strongest.hz,{count:(old?.count??0)+1,start:old?.start??w.start});
+ }
+ const best=[...matches].sort((a,b)=>b[1].count-a[1].count)[0];
+ return best&&best[1].count>=3?{hz:best[0],...best[1]}:undefined;
+}
 export function spectralAdvice(report:Evidence[],mapping:Mapping[],values:Values):Advice[]{
  const out:Advice[]=[];
  const unit=(a:string)=>values[a]===undefined?NaN:Number(fromWire(a,values[a]!));
+const kicks=mapping.filter(track=>(track.family??inferWorkshopFamily(track.name))==='kick');
+ const basses=mapping.filter(track=>(track.family??inferWorkshopFamily(track.name))==='bass');
  for(const e of report){
   const spec=e.spectral,m=mapping.find(m=>m.channel===e.channel);if(!spec||!m)continue;
   const channels=Array.from({length:m.channels},(_,i)=>m.channel+i),family=m.family??inferWorkshopFamily(m.name);
@@ -23,6 +47,20 @@ export function spectralAdvice(report:Evidence[],mapping:Mapping[],values:Values
    }
    return {changes:reason?{}:changes,reason};
   };
+  if(family==='bass'&&m.channels===1&&basses.length===1&&kicks.length===1&&kicks[0]!.channels===1){
+   const kick=report.find(track=>track.channel===kicks[0]!.channel);
+   const overlap=kick&&sharedLowBand(kick.windows,e.windows);
+   if(kick&&overlap){
+    const {changes,reason}=safeEq(overlap.hz);
+    for(const address of Object.keys(changes))if(address.endsWith('/g'))changes[address]=-2;
+    const kickSettings=Object.fromEntries(Object.entries(values).filter(([address])=>address.startsWith(prefix(kick.channel)+'/eq/')));
+    out.push({...base,id:`kick-bass-${e.channel}`,kind:'eq',title:`${kick.name} + ${e.name} : grave à comparer`,
+     start:overlap.start,stop:overlap.start+1,
+     fact:`Les deux pistes brutes concentrent une part de leur énergie autour de ${overlap.hz} Hz sur ${overlap.count} fenêtres communes.`,
+     hypothesis:reason||`Écoute les deux ensemble. Essaie −2 dB à ${overlap.hz} Hz sur la basse (Q 1,2) et garde l’essai seulement si le kick devient plus lisible et que la basse conserve son corps.`,
+     changes,baseline:{...baseline('eq'),...kickSettings},unavailableReason:reason||undefined});
+   }
+  }
   if(['guitar','voice','backing','keys'].includes(family)&&spec.activeSeconds>=3&&spec.lowMidPercent>=50&&spec.lowMidSeconds>=Math.max(3,spec.activeSeconds*.25)){
    const f=250,{changes,reason}=safeEq(f);
    out.push({...base,id:`mud-${e.channel}`,kind:'eq',title:`${e.name} : bas-médiums très présents`,fact:`${spec.lowMidPercent} % de l’énergie entre 80 Hz et 8 kHz se situe entre 160 et 400 Hz ; dominance large sur ${Math.round(spec.lowMidSeconds)} s de signal.`,hypothesis:'Cette zone donne du corps, mais peut aussi rendre le son chargé. Compare une réduction légère de 3 dB à 250 Hz (Q 1,2), sans chercher à obtenir une courbe plate.',changes,baseline:baseline('eq'),unavailableReason:reason||undefined});

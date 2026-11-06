@@ -16,3 +16,7 @@ Les commandes de connexion et la détection sont réservées à l’administrate
 Application de bureau : configuration dans le dossier utilisateur, fichier `connection.json`. Démarrage Node : fichier voisin de la base SQLite ; emplacement personnalisable par `XR18_CONNECTION_PATH`. Sans fichier valide, les variables d’environnement servent de valeurs initiales. Le fichier sauvegardé prend ensuite priorité.
 
 Validation : compilation TypeScript backend et React/Vite, tests unitaires et intégration HTTP/WebSocket, émulateur OSC UDP (identité, connexion, absence d’écriture audio, erreurs, persistance et retour en simulation). La détection broadcast et le pilotage restent à vérifier avec une XR18 physique sur le réseau du PC. Aucun essai matériel n’est revendiqué.
+
+## Diagnostiquer la connexion
+
+Dans **Réglages → Connexion à ma console → Diagnostiquer la connexion**, BandPilot indique si tu es en simulation, si la console ne répond pas, ou si elle est joignable avec ou sans contrôle. **Vérifier le pont REAPER** distingue un pont actif, un pont à mettre à jour et un pont installé mais non démarré. L’installation du pont se fait depuis **Répéter**.

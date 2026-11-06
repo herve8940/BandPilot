@@ -101,3 +101,13 @@ Die X-Air-Analyse nutzt verfügbare Hardwarepegel, Spektrum- und Dynamikmessunge
 Optionale Konten trennen Administrator, zugewiesenen Busmusiker und schreibgeschützten Gastzugriff. Keine Reaktion des Mischpults: Überprüfen Sie die Netzwerk-, IP- und lokalen Netzwerk-/Firewall-Berechtigungen. Telefon nicht verfügbar: Überprüfen Sie die Freigabe, das WLAN und den QR-Link. Bridge nicht verfügbar: Installieren Sie die aktuelle Version und starten Sie REAPER nach dem Speichern neu. Sichern Sie Szenen und Projektmedien vor dem Aktualisieren. Die Diagnose umfasst lokale IPs: Überprüfen Sie diese, bevor Sie sie öffentlich veröffentlichen.
 
 [Versionshinweise](RELEASE_NOTES.md) · [Manuelle Korrekturen](corrections-tests-manuels.md) · [Kompatibilität](multi-model.md) · [Detaillierte X-Air-Steuerung](GUIDE_CONSOLE.md)
+
+## BandPilot 2.3.1
+
+**Beim letzten guten Soundcheck anknüpfen.** Verknüpfe eine vollständige Szene und Notizen mit jeder Band und prüfe die Änderungen vor dem Abruf. Musiker können Bus und Signal am Handy prüfen und ihren letzten Mix abrufen. Die Klangwerkstatt ergänzt einen A/B-Vergleich für Kick und Bass. Die Diagnose unterscheidet Netzwerk, Steuerung und REAPER-Bridge.
+
+[Versionshinweise](RELEASE_NOTES.md)
+
+### Technischer Bühnenplan
+
+Musikerkarten, Eingangsliste und druckbarer Bühnenplan nutzen die Eingangs- und Monitorzuweisungen der Band.

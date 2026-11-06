@@ -1,3 +1,4 @@
+import type {PersonalPatchInput} from '../shared/tech-rider.js';
 // Partage des retours sur le réseau local : chaque musicien ouvre SON mix par un lien
 // personnel (QR code). Le lien ne donne accès qu'aux envois de son bus, au volume et au
 // mute de son retour, et à ses profils. La console complète reste sur l'ordinateur.
@@ -59,7 +60,7 @@ export class EarsShare {
  private port=0;
  private shares=new Map<string,EarShare>();
  private sockets=new Map<WebSocket,{share:EarShare;rate:number[];lastMeters:number}>();
- constructor(file:string,private xr:XR18,private webDist:()=>string|undefined,private guard:()=>string|null,private onWrite:()=>void){
+ constructor(file:string,private xr:XR18,private webDist:()=>string|undefined,private guard:()=>string|null,private onWrite:()=>void,private patch?:(bus:number,name:string)=>PersonalPatchInput[]){
   this.db=new Database(file);
   this.db.exec(`CREATE TABLE IF NOT EXISTS ear_shares(id TEXT PRIMARY KEY,name TEXT NOT NULL,bus INTEGER NOT NULL,token TEXT NOT NULL UNIQUE,created_at TEXT NOT NULL);
    CREATE TABLE IF NOT EXISTS ear_mix_profiles(id TEXT PRIMARY KEY,share_id TEXT NOT NULL,name TEXT NOT NULL,values_json TEXT NOT NULL,updated_at TEXT NOT NULL)`);
@@ -209,6 +210,9 @@ export class EarsShare {
   ws.on('close',()=>this.sockets.delete(ws));
   ws.on('error',()=>this.sockets.delete(ws));
  }
+ refreshTechnicalCards(){
+  for(const [ws,{share}] of this.sockets)if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:"technical-card",patch:this.patch?.(share.bus,share.name)??[]}));
+ }
  private sendSnapshot(ws:WebSocket){
   const c=this.sockets.get(ws);if(!c||ws.readyState!==WebSocket.OPEN)return;
   // Re-read the share: the token may have been regenerated or removed meanwhile.
@@ -216,7 +220,7 @@ export class EarsShare {
   const state=this.xr.parameterState(),values:Record<string,unknown>={};
   for(const a of this.visible(share.bus))if(state[a])values[a]=state[a]!.value;
   const st=this.xr.status();
-  ws.send(JSON.stringify({type:'snapshot',share:{name:share.name,bus:share.bus},cap:EAR_CAP,sources:this.sources(),values,
+  ws.send(JSON.stringify({type:'snapshot',share:{name:share.name,bus:share.bus},cap:EAR_CAP,sources:this.sources(),values,patch:this.patch?.(share.bus,share.name)??[],
    control:st.mode==='simulation'||(st.connected&&st.writesEnabled),mode:st.mode}));
  }
  private onMessage(ws:WebSocket,raw:Buffer){
