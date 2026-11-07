@@ -4,6 +4,7 @@ const { pathToFileURL } = require("node:url");
 const { mkdirSync, readFileSync, writeFileSync, renameSync } = require("node:fs");
 const net = require("node:net");
 const {loadAI,saveAI}=require("./ai-config.cjs");
+if(process.argv.includes('--smoke-test')&&process.env.XR18_SMOKE_DATA)app.setPath('userData',process.env.XR18_SMOKE_DATA);
 // Keep the existing data/profile directory across the display-name change.
 if(!process.argv.includes('--smoke-test')){
   const legacyData=path.join(app.getPath('appData'),'xr18-studio');
@@ -139,7 +140,8 @@ app.whenReady().then(async () => {
           if(await win.webContents.executeJavaScript(predicate))return;
           await new Promise(resolve=>setTimeout(resolve,150));
         }
-        throw Error('Language smoke test: renderer did not become ready');
+        const state=await win.webContents.executeJavaScript('document.body.textContent.slice(-4000)');
+        throw Error('Native smoke test: renderer did not become ready: '+predicate+'\n'+state);
       };
       // Exercise the same language selector shipped to users, including native persistence.
       for(const next of ['en','it','es','de','fr']){
@@ -156,6 +158,7 @@ app.whenReady().then(async () => {
       // profile. No GitHub issue or hardware command is sent by this smoke test.
       await win.webContents.executeJavaScript(`document.querySelector('button[title="Régler le son"]').click()`);
       await waitForRenderer(`!!document.querySelector('.coach-shortcuts')`);
+      await require('./coach-smoke.cjs')(win,waitForRenderer);
       await win.webContents.executeJavaScript(`document.querySelector('.coach-shortcuts button').click()`);
       await waitForRenderer(`!!document.querySelector('.tech-rider[open]')`);
       const screenshot=async(name)=>{if(process.env.XR18_SMOKE_SCREENSHOTS){mkdirSync(process.env.XR18_SMOKE_SCREENSHOTS,{recursive:true});writeFileSync(path.join(process.env.XR18_SMOKE_SCREENSHOTS,name),(await win.webContents.capturePage()).toPNG());}};

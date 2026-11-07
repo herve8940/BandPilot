@@ -6,7 +6,9 @@ function registerSupport({app,win,ipcMain,dialog,shell,safeStorage,port,dataPath
  const reports=new Map(),inflight=new Map(),directory=join(dataPath,'reports'),credentialPath=join(dataPath,'github-credentials.json');
  let token=null,updatePromise=null,updateState=null;
  const encrypted=()=>safeStorage.isEncryptionAvailable()&&safeStorage.getSelectedStorageBackend?.()!=='basic_text';
- try{if(encrypted())token=safeStorage.decryptString(Buffer.from(JSON.parse(readFileSync(credentialPath,'utf8')).encrypted,'base64'));}catch{}
+ // Do not access the OS keychain on a fresh install with no saved GitHub login.
+ // Some desktops can prompt synchronously and block the first window.
+ try{const saved=JSON.parse(readFileSync(credentialPath,'utf8'));if(saved.encrypted&&encrypted())token=safeStorage.decryptString(Buffer.from(saved.encrypted,'base64'));}catch{}
  const base=`http://127.0.0.1:${port}`;
  const local=async(path)=>{const cookies=await win.webContents.session.cookies.get({url:base});const r=await fetch(base+path,{headers:{Cookie:cookies.map(c=>c.name+'='+c.value).join(';')},signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error('Diagnostic local indisponible.');return r.json();};
  const authorized=async(event)=>{

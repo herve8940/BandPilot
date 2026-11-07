@@ -2301,5 +2301,6 @@
   "Ancien suivi archivé. Les effets de la console sont inchangés.": "Old tracking record archived. Mixer effects are unchanged.",
   "Musiciens enregistrés. Aucun réglage audio modifié.": "Musicians saved. No audio settings changed.",
   "Instrument choisi. Enregistre ton groupe, puis utilise Préparer les réglages quand tu es prêt.": "Instrument selected. Save your band, then use Prepare settings when ready.",
-  "Source, canal 1 à 16 et nom de 12 caractères maximum requis": "Source, channel 1–16 and name up to 12 characters required"
+  "Source, canal 1 à 16 et nom de 12 caractères maximum requis": "Source, channel 1–16 and name up to 12 characters required",
+  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Close this window and prepare the settings again. If the changes were partially applied, “Undo the last guided change” lets you review the backup."
 }

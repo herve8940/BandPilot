@@ -191,11 +191,21 @@ export function levelReport(channel:number,samples:MeterSample[],now=Date.now())
 export class SoundCoach {
  constructor(private xr:XR18,private control:ConsoleControl,private library:LibraryStore){}
  profile():CoachProfile {
-  const p=this.library.list('coach-profile')[0]?.data as CoachProfile??{version:1,inputs:structuredClone(GROUP_TEMPLATE),completed:[]};
+  const p=this.library.list('coach-profile',1)[0]?.data as CoachProfile??{version:1,inputs:structuredClone(GROUP_TEMPLATE),completed:[]};
   return p.musicians?p:{...p,musicians:suggestMusicians(p.inputs)};
  }
  /** Measurements belong to the server: a profile sent by the browser never overwrites them. */
- saveProfile(input:unknown,measurements=false){const p=validateProfile(input);if(p.inputs.some(i=>i.channel>this.xr.model().channels)||p.musicians?.some(m=>m.bus>this.xr.model().monitorOutputs))throw Error('Entrée ou sortie de retour absente sur '+this.xr.model().label);if(!measurements){const stored=this.library.list('coach-profile')[0]?.data as CoachProfile|undefined;if(stored?.calibration)p.calibration=stored.calibration;else delete p.calibration;}const saved=this.library.save('coach-profile','Ma préparation',p);return {...p,id:saved.id};}
+ saveProfile(input:unknown,measurements=false){
+  const p=validateProfile(input);
+  if(p.inputs.some(i=>i.channel>this.xr.model().channels)||p.musicians?.some(m=>m.bus>this.xr.model().monitorOutputs))throw Error('Entrée ou sortie de retour absente sur '+this.xr.model().label);
+  if(!measurements){
+   const stored=this.library.list('coach-profile',1)[0]?.data as CoachProfile|undefined;
+   // A measurement belongs to the source on that input, not to its socket forever.
+   if(stored?.calibration)p.calibration=Object.fromEntries(Object.entries(stored.calibration).filter(([channel])=>p.inputs.some(i=>i.channel===Number(channel)&&stored.inputs.some(old=>old.channel===i.channel&&old.source===i.source))));
+   else delete p.calibration;
+  }
+  const saved=this.library.save('coach-profile','Ma préparation',p);return {...p,id:saved.id};
+ }
  catalog(){return {sources:SOURCES,presets:this.presetSummaries(),roles:ROLES,recipes:MONITOR_RECIPES,ownLevel:OWN_LEVEL,templates:TEMPLATES,drumKit:DRUM_KIT,steps:STEPS,symptoms:SYMPTOMS,template:GROUP_TEMPLATE,profile:this.profile(),status:this.xr.status(),aiConfigured:Boolean(process.env.XR18_OPENAI_API_KEY&&process.env.XR18_OPENAI_MODEL)};}
  /** Plain-language card of what each instrument setting does. */
  presetSummaries(){
@@ -263,8 +273,14 @@ export class SoundCoach {
    inputs:musicians.map(m=>`${m.name} → bus ${m.bus}`)};
  }
  async apply(token:unknown,confirm:unknown){
-  if(confirm!==true)throw Error('Confirmation requise');const result=await this.control.apply(token,false,true);
-  this.library.save('coach-history','Réglage guidé appliqué',{backupId:result.backupId,at:new Date().toISOString()});return result;
+  if(confirm!==true)throw Error('Confirmation requise');
+  try{const result=await this.control.apply(token,false,true);
+   this.library.save('coach-history','Réglage guidé appliqué',{backupId:result.backupId,at:new Date().toISOString()});return result;
+  }catch(error){
+   const backupId=(error as {backupId?:string}).backupId;
+   if(backupId)this.library.save('coach-history','Réglage guidé interrompu',{backupId,at:new Date().toISOString()});
+   throw error;
+  }
  }
  async suggest(channel:number,symptom:string){
   const input=this.input(channel);if(!input)throw Error('Attribuer un instrument à ce canal');
@@ -282,7 +298,7 @@ export class SoundCoach {
   return {advice,proposal:{...await this.control.preview(values),title:symptom==='cutoff'?'Essayer sans gate':'Essayer une petite correction',explanation:symptom==='cutoff'?'Le gate sera désactivé sur ce canal seulement.':`Une bande EQ du canal sera remplacée pour essayer une réduction ciblée. La fréquence est une hypothèse liée à ta description ; elle n’est pas détectée dans le son.`,inputs:[input.name]}};
  }
  async undo(){
-  const last=this.library.list('coach-history')[0];if(!last)throw Error('Aucun réglage guidé à annuler');
+  const last=this.library.list('coach-history',1)[0];if(!last)throw Error('Aucun réglage guidé à annuler');
   const before=this.library.get((last.data as {backupId:string}).backupId);if(before.kind!=='parameter-backup')throw Error('Sauvegarde incompatible');
   return {...await this.control.preview(before.data,true),title:'Revenir au réglage précédent',explanation:'Seuls les paramètres de la dernière intervention guidée sont restaurés. Compare aussi tes éventuelles modifications manuelles depuis cette intervention.',inputs:[]};
  }
@@ -304,9 +320,9 @@ export class SoundCoach {
  async calibrationStatus(){
   const p=this.profile(),out=[];
   for(const i of p.inputs){
-   const c=p.calibration?.[String(i.channel)],s=source(i.source);let gainDb:number|null=null;
-   try{gainDb=(await this.currentGain(i.channel)).gainDb;}catch{gainDb=null;}
-   const valid=!!c&&(c.gainDb===null||gainDb===null||Math.abs(c.gainDb-gainDb)<.3);
+   const c=p.calibration?.[String(i.channel)],s=source(i.source);let gainDb:number|null=null,read=false;
+   try{gainDb=(await this.currentGain(i.channel)).gainDb;read=true;}catch{gainDb=null;}
+   const valid=!!c&&read&&(c.gainDb===null?gainDb===null:gainDb!==null&&Math.abs(c.gainDb-gainDb)<.3);
    out.push({channel:i.channel,name:i.name,source:i.source,gainDb,peakDb:c?.peakDb??null,bleedDb:c?.bleedDb??null,measuredAt:c?.at??null,valid,needsBleed:s.gateThr!==null,
     state:!c?'todo':valid?'ok':'stale',thresholds:c&&valid?thresholdsFrom(s,c.peakDb,c.bleedDb):null});
   }

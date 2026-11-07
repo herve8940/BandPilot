@@ -2301,5 +2301,6 @@
   "Ancien suivi archivé. Les effets de la console sont inchangés.": "Alte Zuordnung archiviert. Die Mischpulteffekte sind unverändert.",
   "Musiciens enregistrés. Aucun réglage audio modifié.": "Musiker gespeichert. Keine Audioeinstellung geändert.",
   "Instrument choisi. Enregistre ton groupe, puis utilise Préparer les réglages quand tu es prêt.": "Instrument ausgewählt. Speichere die Band und verwende Einstellungen vorbereiten, sobald du bereit bist.",
-  "Source, canal 1 à 16 et nom de 12 caractères maximum requis": "Quelle, Kanal 1–16 und Name mit maximal 12 Zeichen erforderlich"
+  "Source, canal 1 à 16 et nom de 12 caractères maximum requis": "Quelle, Kanal 1–16 und Name mit maximal 12 Zeichen erforderlich",
+  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Schließe dieses Fenster und bereite die Einstellungen erneut vor. Wurden sie nur teilweise angewendet, kannst du über „Letzte geführte Änderung rückgängig machen“ die Sicherung prüfen."
 }

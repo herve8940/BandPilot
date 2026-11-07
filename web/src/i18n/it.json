@@ -2301,5 +2301,6 @@
   "Ancien suivi archivé. Les effets de la console sont inchangés.": "Vecchio registro archiviato. Gli effetti del mixer sono invariati.",
   "Musiciens enregistrés. Aucun réglage audio modifié.": "Musicisti salvati. Nessuna impostazione audio modificata.",
   "Instrument choisi. Enregistre ton groupe, puis utilise Préparer les réglages quand tu es prêt.": "Strumento selezionato. Salva il gruppo, poi usa Prepara impostazioni quando sei pronto.",
-  "Source, canal 1 à 16 et nom de 12 caractères maximum requis": "Servono sorgente, canale 1–16 e nome fino a 12 caratteri"
+  "Source, canal 1 à 16 et nom de 12 caractères maximum requis": "Servono sorgente, canale 1–16 e nome fino a 12 caratteri",
+  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Chiudi questa finestra e prepara nuovamente le impostazioni. Se sono state applicate solo in parte, « Annulla l’ultima modifica guidata » permette di rivedere il backup."
 }

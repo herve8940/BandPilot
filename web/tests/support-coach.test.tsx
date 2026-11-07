@@ -49,3 +49,42 @@ test('ambience recovery remains accessible when a foreign or missing source disa
   }finally{if(original)globalThis.confirm=original;else delete(globalThis as any).confirm;}
  }finally{await f.close();}
 });
+
+test('a failed instrument validation is visible inside its dialog and cannot resend a consumed plan',async()=>{
+ const f=await fixture();try{
+  const {SoundCoach}=await import('../src/SoundCoach');let applied=0;
+  const profile={version:1,completed:[],inputs:[{channel:1,source:'lead-rock',name:'Chant'}],musicians:[]};
+  const catalog={role:'admin',profile,steps:[{id:'inputs',title:'2. Dire qui est branché où',text:''}],sources:[{id:'lead-rock',label:'Chant',name:'Chant',color:1,group:'Voix'}],presets:{},templates:[],drumKit:[],symptoms:[]};
+  globalThis.fetch=async(path:any,init:any)=>{
+   if(path==='/api/coach/apply'){applied++;return new Response(JSON.stringify({error:'État modifié : prévisualiser à nouveau'}),{status:400});}
+   return new Response(JSON.stringify(path==='/api/coach'?catalog:path==='/api/coach/prepare'?{token:'once',title:'Chant',explanation:'Réglages',inputs:['Chant'],changes:[]}:{}));
+  };
+  f.dom.window.localStorage.setItem('xr18-coach-step','inputs');
+  await f.mount(<SoundCoach status={{mode:'simulation',connected:true,writesEnabled:false}} online meters={{channels:[],available:false,updatedAt:null}} onConnect={()=>{}} onMonitors={()=>{}} onExpert={()=>{}}/>);
+  await f.click('Préparer les réglages');await f.click('Essayer en simulation');
+  const dialog=f.dom.window.document.querySelector('dialog');assert.match(dialog.querySelector('[role=alert]')?.textContent??'',/État modifié/);
+  assert.equal(dialog.querySelector('button.primary').disabled,true);await f.click('Essayer en simulation');assert.equal(applied,1);
+  await f.click('Fermer');await f.click('Préparer les réglages');assert.equal(f.dom.window.document.querySelector('dialog button.primary').disabled,false);
+ }finally{await f.close();}
+});
+
+test('a full group refuses a partial drum kit without removing its existing electronic drums',async()=>{
+ const f=await fixture();try{
+  const {InputsStep}=await import('../src/CoachSetup');let current:any={version:1,completed:[],inputs:Array.from({length:16},(_,i)=>({channel:i+1,source:i===15?'drum-module':'lead-rock',name:'Canal '+(i+1)}))},notice='';
+  const ids=['lead-rock','drum-module','kick','snare','tom1','tom2','tom3','oh-left','oh-right'];
+  const data:any={sources:ids.map(id=>({id,name:id,label:id,group:'Instruments',color:1})),presets:{},templates:[],drumKit:ids.slice(2)};
+  function Harness(){const [p,set]=f.React.useState(current);return <InputsStep data={data} profile={p} setProfile={v=>{current=v;set(v);}} admin busy={false} canApply onApplyChannel={()=>{}} onApplyAll={()=>{}} onSave={async()=>true} notify={m=>notice=m} onNext={()=>{}} onBlank={()=>{}}/>;}
+  const before=structuredClone(current);await f.mount(<Harness/>);await f.click('Ajouter la batterie détailléeKick, snare, tom 1, tom 2, tom 3, OH 1, OH 2 sur les entrées libres.');
+  assert.deepEqual(current,before);assert.match(notice,/entrées libres/);assert.doesNotMatch(notice,/ajoutée/);
+ }finally{await f.close();}
+});
+
+test('moving an input to another socket keeps its musician assignment',async()=>{
+ const f=await fixture();try{
+  const {InputsStep}=await import('../src/CoachSetup');let current:any={version:1,completed:[],inputs:[{channel:1,source:'lead-rock',name:'Chant'}],musicians:[{name:'Hervé',bus:1,role:'chant',channels:[1]}]};
+  const data:any={sources:[{id:'lead-rock',name:'Chant',label:'Chant',group:'Voix',color:1}],presets:{},templates:[],drumKit:[]};
+  function Harness(){const[p,set]=f.React.useState(current);return <InputsStep data={data} profile={p} setProfile={v=>{current=v;set(v);}} admin busy={false} canApply onApplyChannel={()=>{}} onApplyAll={()=>{}} onSave={async()=>true} notify={()=>{}} onNext={()=>{}} onBlank={()=>{}}/>;}
+  await f.mount(<Harness/>);await f.React.act(async()=>{const select=f.dom.window.document.querySelector('select');select.value='4';select.dispatchEvent(new f.dom.window.Event('change',{bubbles:true}));});
+  assert.equal(current.inputs[0].channel,4);assert.deepEqual(current.musicians[0].channels,[4]);
+ }finally{await f.close();}
+});

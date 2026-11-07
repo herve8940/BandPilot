@@ -138,3 +138,11 @@ Le bouton **Signaler un problème** se trouve en bas du menu. Décris le problè
 Les rapports natifs sont conservés dans le dossier de données, sous `reports` (vingt derniers rapports). Sous macOS : `~/Library/Application Support/xr18-studio/reports`. Sous Windows : `%APPDATA%\xr18-studio\reports`. Aucune base complète, piste audio ou fiche de contacts n’est envoyée. Les descriptions libres restent à relire avant publication.
 
 Au démarrage de l’application de bureau, une vérification discrète recherche un installateur stable publié depuis `main`. Sans Internet, le contrôle de la console reste disponible. Une bannière propose **Télécharger** si une nouvelle version compatible est publiée ; le téléchargement et l’installation ne sont jamais imposés pendant une session. Le panneau de support permet aussi une vérification manuelle et affiche la version et la fabrication.
+
+## Validation d’un instrument (2.3.3)
+
+Ajouter un instrument ou changer son nom prépare le groupe. « Enregistrer mon groupe » conserve cette préparation. « Préparer les réglages » enregistre le groupe puis affiche les modifications proposées ; la console ne change qu’après validation dans cette fenêtre.
+
+Si la validation échoue, lis le message dans la fenêtre, ferme-la puis prépare une nouvelle proposition. Il n’est pas nécessaire de redémarrer BandPilot. Si une modification a été interrompue, « Annuler le dernier réglage guidé » permet de revoir et confirmer la restauration de la sauvegarde.
+
+Après remplacement d’un instrument, refais sa mesure de gain. Changer sa prise conserve le musicien associé, mais les mesures liées à l’ancienne prise doivent être refaites.

@@ -10,7 +10,8 @@ test('native support isolates credentials, restricts IPC and deduplicates simult
  const path=mkdtempSync(join(tmpdir(),'bandpilot-support-')),handlers=new Map<string,any>(),originalFetch=globalThis.fetch;let role='admin',posts=0;
  const frame={url:'http://127.0.0.1:1234/'},webContents={mainFrame:frame,session:{cookies:{get:async()=>[]}},on:()=>{}};
  const event={sender:webContents,senderFrame:frame};
- const storage={isEncryptionAvailable:()=>true,getSelectedStorageBackend:()=> 'test',encryptString:(s:string)=>Buffer.from(s).map(b=>b^165),decryptString:(b:Buffer)=>Buffer.from(b).map(v=>v^165).toString()};
+ let keychainChecks=0;
+ const storage={isEncryptionAvailable:()=>{keychainChecks++;return true;},getSelectedStorageBackend:()=> 'test',encryptString:(s:string)=>Buffer.from(s).map(b=>b^165),decryptString:(b:Buffer)=>Buffer.from(b).map(v=>v^165).toString()};
  const fetcher=async(url:any,init:any={})=>{
   if(String(url).endsWith('/api/auth'))return new Response(JSON.stringify({user:{role}}));
   if(String(url).endsWith('/api/diagnostics/report'))return new Response(JSON.stringify({app:{version:'2.3.2'},events:[]}));
@@ -21,6 +22,7 @@ test('native support isolates credentials, restricts IPC and deduplicates simult
  const oldMonitors=process.listeners('uncaughtExceptionMonitor');
  try{
   registerSupport({app:{getPath:()=>path,getVersion:()=> '2.3.2'},win:{webContents},ipcMain:{handle:(name:string,fn:any)=>handlers.set(name,fn)},dialog:{showSaveDialog:async()=>({canceled:true})},shell:{openExternal:async()=>{}},safeStorage:storage,port:1234,dataPath:path,sanitize:sanitizeDiagnostic,diagnostic:()=>{},smoke:true});
+  assert.equal(keychainChecks,0,'opening a fresh profile never prompts for the OS keychain');
   const call=(name:string,input?:any)=>handlers.get('bandpilot-'+name)(event,input);
   assert.ok((await handlers.get('bandpilot-support-status')({...event,sender:{}})).error);
   role='musician';assert.ok((await call('report-prepare',{})).error);role='admin';

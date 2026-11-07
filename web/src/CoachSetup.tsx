@@ -42,9 +42,8 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
   notify('Instrument choisi. Enregistre ton groupe, puis utilise Préparer les réglages quand tu es prêt.');
  };
  const addDrums=()=>{
-  let inputs=[...profile.inputs],last=0;
-  for(const id of data.drumKit){if(inputs.some(i=>i.source===id))continue;const ch=freeChannel(inputs,last,model.channels)??freeChannel(inputs,0,model.channels);if(!ch){notify(`Plus assez d’entrées libres pour toute la batterie (${model.channels} maximum).`);break;}inputs.push({channel:ch,source:id,name:src(id).name});last=ch;}
-  inputs=inputs.filter(i=>!i.source.startsWith('drum-module'));
+  const inputs=profile.inputs.filter(i=>!i.source.startsWith('drum-module'));let last=0;
+  for(const id of data.drumKit){if(inputs.some(i=>i.source===id))continue;const ch=freeChannel(inputs,last,model.channels)??freeChannel(inputs,0,model.channels);if(!ch){notify(`Plus assez d’entrées libres pour toute la batterie (${model.channels} maximum).`);return;}inputs.push({channel:ch,source:id,name:src(id).name});last=ch;}
   update({...profile,inputs:inputs.sort((a,b)=>a.channel-b.channel)});notify('Batterie détaillée ajoutée : kick, snare, tom 1, tom 2, tom 3, OH 1 et OH 2. Vérifie les numéros d’entrée puis applique.');
  };
  return <div className="coach-section">
@@ -56,7 +55,7 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
   <p className="coach-hint">{tx('Ajouter ou choisir un instrument prépare ton groupe. La console est consultée seulement avec Préparer les réglages, puis modifiée après confirmation.')}</p>
   <div className="coach-inputs">{profile.inputs.map((input,index)=>{const s=src(input.source),card=data.presets[input.source];return <div className="coach-input2" key={input.channel+':'+index} style={{['--chip' as string]:swatch(s.color)}}>
    <div className="row">
-    <label>{tx("Prise")}<select disabled={!admin||busy} value={input.channel} onChange={e=>update({...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,channel:Number(e.target.value)}:v)})}>{Array.from({length:model.channels},(_,i)=><option key={i+1} value={i+1} disabled={i+1!==input.channel&&profile.inputs.some(v=>v.channel===i+1)}>{tx("Entrée ")}{tx(i+1)}</option>)}</select></label>
+    <label>{tx("Prise")}<select disabled={!admin||busy} value={input.channel} onChange={e=>{const channel=Number(e.target.value);update({...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,channel}:v),musicians:profile.musicians?.map(m=>({...m,channels:m.channels.map(c=>c===input.channel?channel:c)}))});}}>{Array.from({length:model.channels},(_,i)=><option key={i+1} value={i+1} disabled={i+1!==input.channel&&profile.inputs.some(v=>v.channel===i+1)}>{tx("Entrée ")}{tx(i+1)}</option>)}</select></label>
     <label>{tx("Instrument")}<InstrumentSelect data={data} value={input.source} disabled={!admin||busy} onChange={id=>choose(index,id)}/></label>
     <label>{tx("Nom sur la console")}<input disabled={!admin||busy} value={input.name} maxLength={12} onChange={e=>update({...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,name:e.target.value}:v)})}/></label>
     <div className="row-actions"><button className="apply" disabled={!admin||busy||!canApply} title={tx("Appliquer la configuration complète de cet instrument")} onClick={()=>onApplyChannel(profile,input.channel)}><Wand2 size={15}/>{tx(" Préparer les réglages")}</button><button disabled={!admin||busy} aria-label={tx('Retirer '+input.name)} title={tx("Retirer")} onClick={()=>update({...profile,inputs:profile.inputs.filter((_,i)=>i!==index)})}><Trash2 size={15}/></button></div>
