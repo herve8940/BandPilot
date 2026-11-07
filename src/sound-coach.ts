@@ -116,7 +116,9 @@ export function validateProfile(value:unknown):CoachProfile {
  const p=value as CoachProfile;
  if(!p||p.version!==1||!Array.isArray(p.inputs)||p.inputs.length>16||!Array.isArray(p.completed)||p.completed.some(id=>!STEPS.some(s=>s.id===id)))throw Error('Préparation de groupe invalide');
  if(new Set(p.inputs.map(i=>i.channel)).size!==p.inputs.length)throw Error('Une seule source par canal');
- for(const i of p.inputs)if(!i||!Number.isInteger(i.channel)||i.channel<1||i.channel>16||!SOURCES.some(s=>s.id===i.source)||typeof i.name!=='string'||!i.name.trim()||Buffer.byteLength(i.name)>12||/[\x00-\x1f\x7f]/.test(i.name))throw Error('Source, canal 1 à 16 et nom de 12 octets maximum requis');
+ // Keep the musician's Unicode label; channelValues converts it with consoleName
+ // at the hardware boundary. Match the form's 12-character limit, not UTF-8 bytes.
+ for(const i of p.inputs)if(!i||!Number.isInteger(i.channel)||i.channel<1||i.channel>16||!SOURCES.some(s=>s.id===i.source)||typeof i.name!=='string'||!i.name.trim()||i.name.length>12||/[\x00-\x1f\x7f]/.test(i.name))throw Error('Source, canal 1 à 16 et nom de 12 caractères maximum requis');
  if(p.musicians!==undefined){
   if(!Array.isArray(p.musicians)||p.musicians.length>6)throw Error('6 musiciens maximum (un bus chacun)');
   if(new Set(p.musicians.map(m=>m.bus)).size!==p.musicians.length)throw Error('Un bus différent par musicien');

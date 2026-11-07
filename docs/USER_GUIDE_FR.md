@@ -126,3 +126,15 @@ Dans **Mon ingé son → Dire qui est branché où**, ouvre **Fiche technique du
 - **Aperçu PDF** : consulte le document avant de l’envoyer. Il sépare le plan de scène et l’accueil du câblage et des retours. De longues notes peuvent ajouter des pages.
 
 **Enregistrer** conserve la fiche avec le groupe. **Exporter PDF** ouvre une fenêtre d’enregistrement dans l’application Mac ; dans un navigateur, choisis l’enregistrement PDF dans la fenêtre d’impression. L’export reprend les champs affichés, même si tu n’as pas encore enregistré les dernières modifications. **Imprimer** imprime uniquement la fiche. Ces actions ne changent aucun réglage audio.
+
+## Récupération des ambiances et assistance (2.3.2)
+
+Dans **Mon ingé son**, les raccourcis **Fiche technique · Plan de scène · PDF** et **Ambiances des sources** donnent accès directement à ces outils. L’ajout ou le choix d’un instrument ne lit plus la console : enregistre le groupe, puis utilise **Préparer les réglages**. L’application demande toujours confirmation avant d’appliquer.
+
+Si une ambiance reste attachée à une ancienne adresse, **Vérifier et retrouver cette ambiance** relit les réglages sur la console connectée. Le suivi est transféré seulement si le modèle, l’effet et les réglages correspondent. Cette opération ne change pas le son. **Archiver cet ancien suivi** libère le suivi dans BandPilot ; les effets restent configurés sur la console. Un slot encore alimenté par une autre source n’est pas remplacé.
+
+Le bouton **Signaler un problème** se trouve en bas du menu. Décris le problème, prépare le rapport, puis vérifie son aperçu. Tu peux enregistrer le fichier JSON sans Internet. Pour créer une issue directement, connecte un jeton personnel GitHub limité au dépôt `herve8940/BandPilot`, permission **Issues: read and write**. Il est conservé dans le coffre chiffré du système, jamais dans le rapport. Tu peux le retirer avec **Déconnecter GitHub**. Sans cette connexion, **Créer dans le navigateur** copie le rapport : colle-le dans la description et valide l’issue sur GitHub. Les issues sont publiques.
+
+Les rapports natifs sont conservés dans le dossier de données, sous `reports` (vingt derniers rapports). Sous macOS : `~/Library/Application Support/xr18-studio/reports`. Sous Windows : `%APPDATA%\xr18-studio\reports`. Aucune base complète, piste audio ou fiche de contacts n’est envoyée. Les descriptions libres restent à relire avant publication.
+
+Au démarrage de l’application de bureau, une vérification discrète recherche un installateur stable publié depuis `main`. Sans Internet, le contrôle de la console reste disponible. Une bannière propose **Télécharger** si une nouvelle version compatible est publiée ; le téléchargement et l’installation ne sont jamais imposés pendant une session. Le panneau de support permet aussi une vérification manuelle et affiche la version et la fabrication.

@@ -1,3 +1,5 @@
+import {AppErrorBoundary} from './AppErrorBoundary';
+import {installErrorReporting} from './diagnostics';
 import React from "react";
 import {tx} from "./i18n";
 import { createRoot } from "react-dom/client";
@@ -11,5 +13,6 @@ const confirmDialog = desktopDialog?.confirm ?? window.confirm.bind(window);
 const alertDialog = desktopDialog?.alert ?? window.alert.bind(window);
 window.confirm = (message?: string) => confirmDialog(tx(message ?? ""));
 window.alert = (message?: string) => alertDialog(tx(message ?? ""));
-createRoot(document.getElementById("root")!).render(<React.StrictMode><AuthGate><App /></AuthGate></React.StrictMode>);
+installErrorReporting();
+createRoot(document.getElementById("root")!).render(<React.StrictMode><AuthGate><AppErrorBoundary><App /></AppErrorBoundary></AuthGate></React.StrictMode>);
 

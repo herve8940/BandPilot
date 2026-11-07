@@ -38,7 +38,16 @@ export class ConsoleControl {
   const values:Record<string,Value>={},before:Record<string,Value>={};
   for(const [a,v] of Object.entries(input))values[a]=wire?validateWire(a,v):toWire(a,v);
   const identity=this.identity();
-  for(const a of Object.keys(values))before[a]=await this.xr.readParameter(a);
+  for(const a of Object.keys(values)){
+   try{before[a]=await this.xr.readParameter(a);}
+   catch(error){
+    // UDP can lose a reply. Retry only a read timeout on the same connection,
+    // never a write, a validation failure or a changed console.
+    if(identity!==this.identity()||!(error instanceof Error)||!error.message.startsWith('Pas de réponse '))throw error;
+    before[a]=await this.xr.readParameter(a);
+   }
+   if(identity!==this.identity())throw Error('Connexion modifiée pendant la préparation');
+  }
   if(this.previews.size>100)this.previews.clear();const token=randomUUID();
   // A preview stays valid 10 minutes: apply() re-reads every value first and refuses if anything moved
   // ("État modifié"), so the delay only has to cover a person reading the window.

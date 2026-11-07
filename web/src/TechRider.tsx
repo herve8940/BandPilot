@@ -11,7 +11,7 @@ const rows=['Fond de scène','Milieu de scène','Avant-scène'],columns=['Gauche
 type Pane='info'|'patch'|'stage'|'preview';
 const panes:{id:Pane;label:string;icon:typeof FileText}[]=[{id:'info',label:'Informations',icon:FileText},{id:'patch',label:'Câblage',icon:Cable},{id:'stage',label:'Scène & retours',icon:MapPin},{id:'preview',label:'Aperçu PDF',icon:FileDown}];
 
-export function TechRider({profile,editable,onChange,onSave}:{profile:Profile;editable:boolean;onChange:(profile:Profile)=>void;onSave:(profile:Profile)=>Promise<void>}){
+export function TechRider({profile,editable,onChange,onSave,expanded=false}:{expanded?:boolean;profile:Profile;editable:boolean;onChange:(profile:Profile)=>void;onSave:(profile:Profile)=>Promise<void>}){
  const [pane,setPane]=useState<Pane>('info'),[exporting,setExporting]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState(''),[dirty,setDirty]=useState(false);
  const inputs=[...profile.inputs].sort((a,b)=>a.channel-b.channel),people=profile.musicians??[],tech=profile.tech??{},details=tech.inputs??{};
  const update=(patch:Partial<Rider>)=>{if(!editable)return;onChange({...profile,tech:{...tech,...patch,updatedAt:new Date().toISOString()}});setDirty(true);setNotice('');};
@@ -21,7 +21,7 @@ export function TechRider({profile,editable,onChange,onSave}:{profile:Profile;ed
  const partnerOf=new Map(inputs.flatMap(i=>details[i.channel]?.stereoWith===i.channel+1&&inputs.some(j=>j.channel===i.channel+1)?[[i.channel+1,i.channel] as const]:[]));
  const run=async(action:()=>Promise<void>)=>{setError('');setNotice('');try{await action();}catch(e){setError(e instanceof Error?e.message:'Action indisponible');}};
  const field=(key:keyof typeof TECH_TEXT_LIMITS,label:string,multiline=false)=> <label className={multiline?'rider-field rider-field-wide':'rider-field'} key={key}><span>{tx(label)}</span>{multiline?<textarea rows={4} value={tech[key]??''} maxLength={TECH_TEXT_LIMITS[key]} disabled={!editable} onChange={e=>update({[key]:e.target.value})}/>:<input type={key==='contactEmail'?'email':key==='contactPhone'?'tel':'text'} value={tech[key]??''} maxLength={TECH_TEXT_LIMITS[key]} disabled={!editable} onChange={e=>update({[key]:e.target.value})}/>}</label>;
- return <details className="tech-rider">
+ return <details className="tech-rider" open={expanded||undefined}>
   <summary><FileText size={22}/><span><strong>{tx('Fiche technique du groupe')}</strong><small>{tx('Plan de scène, câblage et PDF pour la salle')}</small></span><span className="rider-summary-count">{inputs.length} {tx('entrées')}</span></summary>
   <div className="rider-workspace">
    <div className="rider-toolbar"><div><span className="rider-eyebrow">{tx('PRÉPARER LE CONCERT')}</span><h3>{tech.bandName||tx('La fiche de ton groupe')}</h3></div><div className="rider-actions">

@@ -44,6 +44,8 @@ app.whenReady().then(async () => {
       probe.listen(0,"127.0.0.1",()=>{const address=probe.address();const freePort=typeof address==="object"?address.port:0;probe.close(()=>resolve(freePort));});
     });
     process.env.XR18_APP_VERSION=app.getVersion();
+    let build;try{build=JSON.parse(readFileSync(path.join(__dirname,'build-info.json'),'utf8'));}catch{}
+    process.env.XR18_APP_BUILD=build?.commit?`${build.commit.slice(0,12)} · ${build.builtAt}`:'source';
     process.env.HTTP_PORT=String(port);
     process.env.XR18_DB_PATH=path.join(dataPath,"xr18-studio.db");
     process.env.XR18_WEB_DIST=app.isPackaged
@@ -64,6 +66,9 @@ app.whenReady().then(async () => {
       backgroundColor:"#0d1621",
       webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,preload:path.join(__dirname,"preload.cjs")}
     });
+    const {sanitizeDiagnostic}=await import(pathToFileURL(path.join(app.getAppPath(),'dist/shared/diagnostic-report.js')).href);
+    const {diagnostic}=await import(pathToFileURL(path.join(app.getAppPath(),'dist/src/diagnostics.js')).href);
+    require('./support.cjs').registerSupport({app,win,ipcMain,dialog,shell,safeStorage,port,dataPath,sanitize:sanitizeDiagnostic,diagnostic,smoke});
     const appIcon=path.join(__dirname,"icon.png");
     const fromWindow=(event)=>event.sender===win.webContents&&event.senderFrame===win.webContents.mainFrame;
     let exportingRider=false;
@@ -147,6 +152,23 @@ app.whenReady().then(async () => {
         await win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");
         await waitForRenderer(`document.querySelector('.bandpilot-language select')?.value===${JSON.stringify(next)}`);
       }
+      // Exercise the shipped rider and diagnostic bridge with an isolated simulation
+      // profile. No GitHub issue or hardware command is sent by this smoke test.
+      await win.webContents.executeJavaScript(`document.querySelector('button[title="Régler le son"]').click()`);
+      await waitForRenderer(`!!document.querySelector('.coach-shortcuts')`);
+      await win.webContents.executeJavaScript(`document.querySelector('.coach-shortcuts button').click()`);
+      await waitForRenderer(`!!document.querySelector('.tech-rider[open]')`);
+      const screenshot=async(name)=>{if(process.env.XR18_SMOKE_SCREENSHOTS){mkdirSync(process.env.XR18_SMOKE_SCREENSHOTS,{recursive:true});writeFileSync(path.join(process.env.XR18_SMOKE_SCREENSHOTS,name),(await win.webContents.capturePage()).toPNG());}};
+      await screenshot('technical-rider.png');
+      await win.webContents.executeJavaScript(`document.querySelector('.support-open').click()`);
+      await waitForRenderer(`!!document.querySelector('.support-dialog[open]')`);
+      await win.webContents.executeJavaScript(`(()=>{const input=document.querySelector('.support-dialog input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'Vérification de démarrage');input.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+      await waitForRenderer(`!document.querySelector('.support-dialog button.primary').disabled`);
+      await win.webContents.executeJavaScript(`document.querySelector('.support-dialog button.primary').click()`);
+      await waitForRenderer(`!!document.querySelector('.support-dialog pre')`);
+      const report=await win.webContents.executeJavaScript(`JSON.parse(document.querySelector('.support-dialog pre').textContent)`);
+      if(report.app.version!==app.getVersion()||report.console.mode!=='simulation'||!report.id||!report.app.build)throw Error('Diagnostic bridge returned an invalid report');
+      await screenshot('debug-report.png');
       const mixerStatus=await (await fetch(`http://127.0.0.1:${port}/api/status`)).json();
       if(mixerStatus.mode!=='simulation'||mixerStatus.writesEnabled)throw Error('Language test changed mixer connection');
       const auth=await fetch(`http://127.0.0.1:${port}/api/auth`);

@@ -18,3 +18,14 @@ contextBridge.exposeInMainWorld('bandpilotLanguage',{
 contextBridge.exposeInMainWorld('bandpilotDocuments',{
  saveTechRiderPDF:input=>ipcRenderer.invoke('bandpilot-tech-rider-pdf',input)
 });
+
+contextBridge.exposeInMainWorld('bandpilotSupport',{
+ status:()=>ipcRenderer.invoke('bandpilot-support-status'),
+ connect:token=>ipcRenderer.invoke('bandpilot-github-connect',token),
+ prepare:input=>ipcRenderer.invoke('bandpilot-report-prepare',input),
+ export:id=>ipcRenderer.invoke('bandpilot-report-export',id),
+ send:id=>ipcRenderer.invoke('bandpilot-report-send',id),
+ browser:id=>ipcRenderer.invoke('bandpilot-report-browser',id),
+ checkUpdate:force=>ipcRenderer.invoke('bandpilot-update-check',force===true),
+ openUpdate:()=>ipcRenderer.invoke('bandpilot-update-open')
+});

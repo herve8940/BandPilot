@@ -23,7 +23,7 @@ function InstrumentSelect({data,value,disabled,onChange}:{data:CoachData;value:s
 
 export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyChannel,onApplyAll,onSave,notify,onNext,onBlank}:{
  data:CoachData;profile:Profile;setProfile:(p:Profile)=>void;admin:boolean;busy:boolean;canApply:boolean;
- onApplyChannel:(p:Profile,channel:number)=>void;onApplyAll:(p:Profile)=>void;onSave:(p:Profile)=>void;notify:(m:string)=>void;onNext:()=>void;onBlank:()=>void}){
+ onApplyChannel:(p:Profile,channel:number)=>void;onApplyAll:(p:Profile)=>void;onSave:(p:Profile)=>Promise<boolean>;notify:(m:string)=>void;onNext:()=>void;onBlank:()=>void}){
  const model=useMixerModel();
  const [open,setOpen]=useState<number|null>(null);
  const src=(id:string)=>data.sources.find(s=>s.id===id)!;
@@ -39,8 +39,7 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
   const keepName=current.name.trim()&&current.name!==before.name&&!/^Micro \d+$/.test(current.name);
   const next=withoutObsoleteWiring({...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,source:id,name:keepName?v.name:src(id).name}:v)});
   setProfile(next);setOpen(current.channel);
-  // Choosing an instrument proposes its complete best-practice setting right away.
-  if(canApply)onApplyChannel(next,current.channel);else notify('Instrument choisi. Connecte la console (ou passe en simulation) pour appliquer sa configuration complète.');
+  notify('Instrument choisi. Enregistre ton groupe, puis utilise Préparer les réglages quand tu es prêt.');
  };
  const addDrums=()=>{
   let inputs=[...profile.inputs],last=0;
@@ -54,29 +53,29 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
   <div className="coach-templates">{data.templates.map(t=><button key={t.id} disabled={!admin||busy} onClick={()=>{update({...profile,inputs:structuredClone(t.inputs)});notify(`Modèle « ${t.label} » chargé. Rien n’est encore envoyé à la console.`);}}><b>{tx(t.label)}</b><small>{tx(t.description)}</small></button>)}
    <button className="drums" disabled={!admin||busy} onClick={addDrums}><b><Drum size={16}/>{tx(" Ajouter la batterie détaillée")}</b><small>{tx("Kick, snare, tom 1, tom 2, tom 3, OH 1, OH 2 sur les entrées libres.")}</small></button></div>
   <h3>{tx("2. Choisis l’instrument de chaque prise")}</h3>
-  <p className="coach-hint">{tx("Dès que tu choisis un instrument, je te propose sa ")}<b>{tx("configuration complète")}</b>{tx(" : coupe-bas, égaliseur, compresseur, gate, position stéréo, nom et couleur.")}</p>
+  <p className="coach-hint">{tx('Ajouter ou choisir un instrument prépare ton groupe. La console est consultée seulement avec Préparer les réglages, puis modifiée après confirmation.')}</p>
   <div className="coach-inputs">{profile.inputs.map((input,index)=>{const s=src(input.source),card=data.presets[input.source];return <div className="coach-input2" key={input.channel+':'+index} style={{['--chip' as string]:swatch(s.color)}}>
    <div className="row">
     <label>{tx("Prise")}<select disabled={!admin||busy} value={input.channel} onChange={e=>update({...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,channel:Number(e.target.value)}:v)})}>{Array.from({length:model.channels},(_,i)=><option key={i+1} value={i+1} disabled={i+1!==input.channel&&profile.inputs.some(v=>v.channel===i+1)}>{tx("Entrée ")}{tx(i+1)}</option>)}</select></label>
     <label>{tx("Instrument")}<InstrumentSelect data={data} value={input.source} disabled={!admin||busy} onChange={id=>choose(index,id)}/></label>
     <label>{tx("Nom sur la console")}<input disabled={!admin||busy} value={input.name} maxLength={12} onChange={e=>update({...profile,inputs:profile.inputs.map((v,i)=>i===index?{...v,name:e.target.value}:v)})}/></label>
-    <div className="row-actions"><button className="apply" disabled={!admin||busy||!canApply} title={tx("Appliquer la configuration complète de cet instrument")} onClick={()=>onApplyChannel(profile,input.channel)}><Wand2 size={15}/>{tx(" Appliquer")}</button><button disabled={!admin||busy} aria-label={tx('Retirer '+input.name)} title={tx("Retirer")} onClick={()=>update({...profile,inputs:profile.inputs.filter((_,i)=>i!==index)})}><Trash2 size={15}/></button></div>
+    <div className="row-actions"><button className="apply" disabled={!admin||busy||!canApply} title={tx("Appliquer la configuration complète de cet instrument")} onClick={()=>onApplyChannel(profile,input.channel)}><Wand2 size={15}/>{tx(" Préparer les réglages")}</button><button disabled={!admin||busy} aria-label={tx('Retirer '+input.name)} title={tx("Retirer")} onClick={()=>update({...profile,inputs:profile.inputs.filter((_,i)=>i!==index)})}><Trash2 size={15}/></button></div>
    </div>
    {card&&<details open={open===input.channel} onToggle={e=>{if((e.target as HTMLDetailsElement).open)setOpen(input.channel);}}><summary>{tx("Ce que je règle : ")}{tx(card.title)}</summary><ul>{card.lines.map((l,n)=><li key={n}>{tx(l)}</li>)}</ul><p>{tx(card.advice)}</p></details>}
   </div>;})}</div>
   <div className="coach-actions">
    <button disabled={!admin||busy||profile.inputs.length>=model.channels} onClick={()=>{const ch=freeChannel(profile.inputs,0,model.channels);if(ch)update({...profile,inputs:[...profile.inputs,{channel:ch,source:'lead-rock',name:'Micro '+ch}].sort((a,b)=>a.channel-b.channel)});}}><Plus size={15}/>{tx(" Ajouter un instrument")}</button>
    <button disabled={!admin||busy} onClick={()=>onSave(profile)}>{tx("Enregistrer mon groupe")}</button>
-   <button className="primary" disabled={!admin||busy||!canApply||!profile.inputs.length} onClick={()=>onApplyAll(profile)}><Wand2 size={16}/>{tx(" Appliquer à tout le groupe (")}{tx(profile.inputs.length)}{tx(" instruments)")}</button>
-   <button disabled={!profile.inputs.length} onClick={()=>{onSave(profile);onNext();}}>{tx("Étape suivante : régler les gains →")}</button>
+   <button className="primary" disabled={!admin||busy||!canApply||!profile.inputs.length} onClick={()=>onApplyAll(profile)}><Wand2 size={16}/>{tx(" Préparer les réglages du groupe (")}{tx(profile.inputs.length)}{tx(" instruments)")}</button>
+   <button disabled={!admin||busy||!profile.inputs.length} onClick={()=>void onSave(profile).then(saved=>{if(saved)onNext();})}>{tx("Étape suivante : régler les gains →")}</button>
   </div>
   <p className="coach-note">{tx("Avant chaque application, tu vois la liste « avant / après » et une sauvegarde est faite : « Annuler le dernier réglage guidé » remet tout comme avant. Je ne touche ni au gain d’entrée, ni au 48 V, ni aux volumes, ni aux mutes. Règle d’abord le gain (étape 3) : les seuils du compresseur et du gate supposent des crêtes vers −6 dB.")}</p>
  </div>;
 }
 
-export function EarsStep({data,profile,setProfile,admin,busy,canApply,onSuggest,onApply,onShare}:{
+export function EarsStep({data,profile,setProfile,admin,busy,canApply,onSuggest,onApply,onShare,onSave}:{
  data:CoachData;profile:Profile;setProfile:(p:Profile)=>void;admin:boolean;busy:boolean;canApply:boolean;
- onSuggest:()=>void;onApply:(p:Profile,bus?:number)=>void;onShare:(p:Profile)=>void}){
+ onSuggest:()=>void;onApply:(p:Profile,bus?:number)=>void;onShare:(p:Profile)=>void;onSave:(p:Profile)=>void}){
  const model=useMixerModel();
  const musicians=profile.musicians??[];
  const src=(id:string)=>data.sources.find(s=>s.id===id)!;
@@ -93,14 +92,14 @@ export function EarsStep({data,profile,setProfile,admin,busy,canApply,onSuggest,
     <label>{tx("Musicien")}<input disabled={!admin||busy} value={m.name} maxLength={12} onChange={e=>edit(i,{name:e.target.value})}/></label>
     <label>{tx("Sortie / bus")}<select disabled={!admin||busy} value={m.bus} onChange={e=>edit(i,{bus:Number(e.target.value)})}>{Array.from({length:model.monitorOutputs},(_,b)=><option key={b+1} value={b+1} disabled={b+1!==m.bus&&musicians.some(x=>x.bus===b+1)}>{tx("Bus ")}{tx(b+1)}{tx(" (Aux ")}{tx(b+1)})</option>)}</select></label>
     <label>{tx("Rôle")}<select disabled={!admin||busy} value={m.role} onChange={e=>edit(i,{role:e.target.value as Role})}>{data.roles.map(r=><option key={r.id} value={r.id}>{tx(r.label)}</option>)}</select></label>
-    <div className="row-actions"><button className="apply" disabled={!admin||busy||!canApply} onClick={()=>onApply(profile,m.bus)}><Wand2 size={15}/>{tx(" Appliquer")}</button><button disabled={!admin||busy} aria-label={tx('Retirer '+m.name)} onClick={()=>set(musicians.filter((_,n)=>n!==i))}><Trash2 size={15}/></button></div>
+    <div className="row-actions"><button className="apply" disabled={!admin||busy||!canApply} onClick={()=>onApply(profile,m.bus)}><Wand2 size={15}/>{tx(" Préparer les réglages")}</button><button disabled={!admin||busy} aria-label={tx('Retirer '+m.name)} onClick={()=>set(musicians.filter((_,n)=>n!==i))}><Trash2 size={15}/></button></div>
    </div>
    <small className="role-hint">{tx(role.hint)}</small>
    <div className="own"><span>{tx("Ses instruments (mis devant) :")}</span>{profile.inputs.map(input=><button key={input.channel} disabled={!admin||busy} className={m.channels.includes(input.channel)?'on':''} onClick={()=>edit(i,{channels:m.channels.includes(input.channel)?m.channels.filter(c=>c!==input.channel):[...m.channels,input.channel]})}>{input.name}</button>)}</div>
    <div className="mixbars" aria-label={tx('Mix de départ de '+m.name)}>{rows.map(({input,db})=><div key={input.channel} className={db<=-90?'off':''}><span>{input.name}</span><i><b style={{width:db<=-90?'0%':Math.max(4,Math.round((db+40)/40*100))+'%',background:swatch(src(input.source).color)}}/></i><em>{tx(db<=-90?'coupé':db+' dB')}</em></div>)}</div>
   </article>;})}</div>
   <div className="coach-actions">
-   <button className="primary" disabled={!admin||busy||!canApply||!musicians.length||!profile.inputs.length} onClick={()=>onApply(profile)}><Wand2 size={16}/>{tx(" Appliquer les retours de tous (")}{tx(musicians.length)})</button>
+   <button disabled={!admin||busy} onClick={()=>onSave(profile)}>{tx("Enregistrer les musiciens")}</button><button className="primary" disabled={!admin||busy||!canApply||!musicians.length||!profile.inputs.length} onClick={()=>onApply(profile)}><Wand2 size={16}/>{tx(" Appliquer les retours de tous (")}{tx(musicians.length)})</button>
    <button disabled={!admin||busy||!musicians.length} onClick={()=>onShare(profile)}><QrCode size={16}/>{tx(" Créer les QR codes des musiciens")}</button>
   </div>
   <p className="coach-note">{tx("Le bus est nommé, retiré de la façade et démarré à −10 dB par sécurité. Les retours d’effets (réverbe) ne sont pas modifiés. Les cymbales sont coupées dans le retour du batteur car il les entend déjà fort. Garde le volume du boîtier bas au premier essai.")}</p>

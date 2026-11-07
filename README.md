@@ -60,10 +60,12 @@ La simulation de console ne simule pas REAPER : REC capture ses véritables entr
 - [Guide complet FR](docs/USER_GUIDE_FR.md) · [Full English guide](docs/USER_GUIDE_EN.md)
 - [Mon ingé son FR](docs/TUTO_MON_INGE_SON.md) · [English coach tutorial](docs/TUTO_MON_INGE_SON_EN.md)
 - [Visite vidéo et transcription](docs/VIDEO_TOUR.md) — montage de six captures en simulation, 42 secondes, sous-titres FR/EN/IT/ES/DE.
-- [Nouveautés 2.3.1](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
+- [Nouveautés 2.3.2](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
 - [Contrôles X-Air détaillés](docs/GUIDE_CONSOLE.md) · [Architecture et API](docs/SQLITE_API.md)
 
 ## Développement
+
+**BandPilot 2.3.2** fiabilise les ambiances et l’ajout d’instruments, rend la fiche technique directement accessible, ajoute les rapports de bug GitHub et propose les mises à jour au lancement. [Détails](docs/RELEASE_NOTES.md).
 
 **BandPilot 2.3.1** ajoute les [fiches de balance par groupe](docs/WORKSPACES.md#reprendre-une-balance-de-groupe), la [fiche technique et le plan de scène](docs/WORKSPACES.md#fiche-technique-du-groupe), la vérification du retour sur téléphone, la [comparaison kick et basse](docs/ATELIER_DU_SON.md#comparer-le-kick-et-la-basse) et le [diagnostic de connexion](docs/CONNEXION_XR18.md#diagnostiquer-la-connexion).
 

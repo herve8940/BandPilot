@@ -9,3 +9,5 @@ coverage/
 
 # Local desktop packaging output
 /release/
+
+/desktop/build-info.json

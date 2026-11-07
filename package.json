@@ -1,6 +1,6 @@
 {
   "name": "xr18-studio",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "BandPilot: free mixer control, guided sound checks, phone monitors and REAPER rehearsals. French, English, Italian, Spanish, German; more languages on request. Windows, macOS, Linux. Model-aware X-Air/M-Air support; partial X32.",
   "keywords": [
     "behringer",
@@ -43,7 +43,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "node scripts/build-info.cjs && tsc -p tsconfig.json",
     "start": "node dist/src/server.js",
     "test": "node --import tsx --test --test-concurrency=4 --test-timeout=60000 tests/*.test.ts",
     "setup": "npm install && npm --prefix web install",

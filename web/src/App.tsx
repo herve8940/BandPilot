@@ -1,3 +1,4 @@
+import {SupportCenter} from './SupportCenter';
 import {LanguageSettings} from "./LanguageSettings";
 import {tx, getLocale, useLanguage} from "./i18n";
 import {MixerModelContext} from './MixerModel';
@@ -345,7 +346,7 @@ export default function App() {
         <button type="button" className="rail-space-btn" aria-label={tx(`${tx(sp.name)} ${tx(sp.hint)}`)} title={tx(sp.name)} onClick={()=>setPage(sp.pages[0]!)} aria-current={space===sp.id?"true":undefined}><sp.icon size={20}/><span><b>{tx(sp.name)}</b><small>{tx(sp.hint)}</small></span></button>
         {space===sp.id&&sp.pages.length>1&&<div className="rail-pages">{sp.pages.map(pg=>{const P=PAGE_INFO[pg];return <button key={pg} type="button" className={page===pg?"active":""} onClick={()=>setPage(pg)}><P.icon size={16}/>{tx(P.name)}</button>;})}</div>}
       </div>)}</nav>
-      <div className="rail-foot">
+      <div className="rail-foot"><SupportCenter/>
         <button type="button" className="rail-toggle" onClick={toggleRail} title={tx(railCompact ? "Agrandir le menu" : "Réduire le menu pour gagner de la place")} aria-label={tx(railCompact ? "Agrandir le menu" : "Réduire le menu")}>{railCompact ? <PanelLeftOpen size={18}/> : <><PanelLeftClose size={18}/><span>{tx("Réduire le menu")}</span></>}</button>
         <button type="button" className={`conn-card ${status.connected?(isSim?"sim":"ok"):"off"}`} onClick={()=>setPage("settings")} title={tx("Ouvrir la connexion")}>
           {status.connected?<Wifi size={18}/>:<WifiOff size={18}/>}

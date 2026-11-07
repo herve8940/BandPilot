@@ -1,3 +1,4 @@
+import {diagnosticEvents,sanitizeDiagnostic} from '../shared/diagnostic-report.js';
 import {patchSignature,personalPatch} from '../shared/tech-rider.js';
 import {languageOrFrench} from '../shared/languages.js';
 import {MIXER_MODELS} from '../shared/mixer-models.js';
@@ -41,7 +42,8 @@ const diagnostics=new DiagnosticLog(join(dirname(dbPath),'logs','xr18-studio.log
 setDiagnosticLogger(diagnostics);
 // Version shown in Réglages and written in the diagnostic log (set by the desktop app, else package.json).
 const APP_VERSION=process.env.XR18_APP_VERSION??(()=>{try{return JSON.parse(readFileSync(new URL('../../package.json',import.meta.url),'utf8')).version as string;}catch{return 'source';}})();
-diagnostic('startup',{version:APP_VERSION,platform:process.platform,arch:process.arch,node:process.version});
+const APP_BUILD=process.env.XR18_APP_BUILD??'source';
+diagnostic('startup',{build:APP_BUILD,version:APP_VERSION,platform:process.platform,arch:process.arch,node:process.version});
 const configPath=process.env.XR18_CONNECTION_PATH??join(dirname(dbPath),'connection.json');
 let config=await loadConnection(configPath,{mode:process.env.XR18_MODE==='real'?'real':'simulation',host:process.env.XR18_HOST??'192.168.1.1',port:Number(process.env.XR18_PORT??10024),enableWrites:process.env.XR18_ENABLE_WRITES==='true'});
 if(config.mode==='real'){const devices=await discoverXR18(1500,[config.host],config.port).catch(()=>[]);const found=devices.find(d=>d.host===config.host);config=found?{...config,model:found.model}:{...config,enableWrites:false};}
@@ -166,7 +168,14 @@ const handler: http.RequestListener = async (req, res) => {
     res.end(JSON.stringify(result));
    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
-  if(path==='/api/version'&&req.method==='GET'){res.end(JSON.stringify({version:APP_VERSION}));return;}
+  if(path==='/api/version'&&req.method==='GET'){res.end(JSON.stringify({version:APP_VERSION,build:APP_BUILD}));return;}
+  if(path==='/api/diagnostics/report'&&req.method==='GET'){
+    const state=xr18.status(),fx=vocalFx.status(),p=coach.profile();
+    res.end(JSON.stringify({schema:1,createdAt:new Date().toISOString(),app:{version:APP_VERSION,build:APP_BUILD},system:{platform:process.platform,arch:process.arch,node:process.version,electron:process.versions.electron},console:{mode:state.mode,model:state.model,connected:state.connected,writesEnabled:state.writesEnabled},group:{inputs:p.inputs.map(i=>({channel:i.channel,source:i.source})),monitors:(p.musicians??[]).map(m=>({bus:m.bus,channels:m.channels}))},ambience:fx.session?{slot:fx.session.slot,phase:fx.session.phase,sameConsole:fx.session.sameConsole,sourceMissing:fx.session.sourceMissing,channel:fx.session.choice.channel,ambience:fx.session.choice.ambience}:null,events:diagnosticEvents(diagnostics.read())}));return;
+  }
+  if(path==='/api/diagnostics/event'&&req.method==='POST'){
+    const d=await body(req);diagnostic('ui.error',sanitizeDiagnostic({action:String(d.action??'').slice(0,120),message:String(d.message??''),stack:String(d.stack??'')}) as Record<string,unknown>);res.end(JSON.stringify({ok:true}));return;
+  }
   if(path==='/api/diagnostics/log'&&req.method==='GET'){
     try{res.setHeader('Content-Type','text/plain; charset=utf-8');res.setHeader('Content-Disposition','attachment; filename="xr18-studio-diagnostic.log"');res.end(diagnostics.read());}
     catch{res.writeHead(503);res.end('Journal indisponible : vérifier les droits du dossier de données.');}return;
@@ -315,7 +324,7 @@ const handler: http.RequestListener = async (req, res) => {
   }
   if(path==='/api/coach/vocal-fx'&&req.method==='GET'){res.end(JSON.stringify(vocalFx.status()));return;}
   if(path.startsWith('/api/coach/vocal-fx/')&&req.method==='POST'){
-    try{const d=await body(req);const result=path==='/api/coach/vocal-fx/read-doses'?await vocalFx.readDoses():path==='/api/coach/vocal-fx/preview'?await vocalFx.preview(d):path==='/api/coach/vocal-fx/apply'?await vocalFx.apply(d.token,d.confirm):path==='/api/coach/vocal-fx/keep'?await vocalFx.keep():path==='/api/coach/vocal-fx/undo'?await vocalFx.undo(d.all===true,d.confirm===true):null;if(!result)throw Error('Action d’ambiance inconnue');res.end(JSON.stringify(result));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+    try{const d=await body(req);const result=path==='/api/coach/vocal-fx/archive'?await vocalFx.archive(d.confirm===true):path==='/api/coach/vocal-fx/reconnect'?await vocalFx.reconnect(d.confirm===true):path==='/api/coach/vocal-fx/read-doses'?await vocalFx.readDoses():path==='/api/coach/vocal-fx/preview'?await vocalFx.preview(d):path==='/api/coach/vocal-fx/apply'?await vocalFx.apply(d.token,d.confirm):path==='/api/coach/vocal-fx/keep'?await vocalFx.keep():path==='/api/coach/vocal-fx/undo'?await vocalFx.undo(d.all===true,d.confirm===true):null;if(!result)throw Error('Action d’ambiance inconnue');diagnostic('ambience.action',{action:path});res.end(JSON.stringify(result));}catch(e){diagnostic('ambience.error',{action:path,message:(e as Error).message,stack:(e as Error).stack});res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path.startsWith('/api/coach/')&&req.method==='POST'){
     try{const d=await body(req);let result:unknown;
@@ -342,8 +351,8 @@ const handler: http.RequestListener = async (req, res) => {
         if(d.external===true){if(d.consent!==true)throw Error('Accord explicite requis avant envoi à OpenAI');if(Date.now()-aiRequestAt<5000)throw Error('Attendre quelques secondes entre deux demandes IA');aiRequestAt=Date.now();result={source:'openai',...await askConnectedCoach(d.message,{source:input.source,mode:xr18.mode,connected:xr18.status().connected,language:languageOrFrench(d.language)},d.consent)};}
         else{const symptom=identifySymptom(d.message);result=symptom?{source:'local',symptom,...coach.advice(channel,symptom)}:{source:'local',answer:'Je peux t’aider à préparer le groupe, vérifier les niveaux et tester une correction à la fois. Décris ce qui te gêne : son brouillon, agressif, notes coupées, saturation, bruit ou voix difficile à distinguer.',check:'Choisis d’abord le canal et l’instrument, puis explique ce que tu entends. Je ne reçois aucun audio par OSC.',measuredAudio:false};}
       }else throw Error('Action du conseiller inconnue');
-      res.end(JSON.stringify(result));
-    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+      diagnostic('coach.action',{action:path});res.end(JSON.stringify(result));
+    }catch(e){diagnostic('coach.error',{action:path,message:(e as Error).message,stack:(e as Error).stack});res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path==='/api/console/fx'&&req.method==='GET'){try{res.end(JSON.stringify(await xr18.readFx(Number(new URL(req.url!,'http://localhost').searchParams.get('slot')))));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;}
   if(path==='/api/console/parameters'&&req.method==='GET'){

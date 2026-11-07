@@ -4,6 +4,7 @@ import {fromWire,toWire,readbackTolerance,type Value} from './parameters.js';
 import {type CoachProfile} from './sound-coach.js';
 import type {XR18} from './xr18.js';
 import type {LibraryStore} from './library-store.js';
+import {diagnostic} from './diagnostics.js';
 type Values=Record<string,Value>;
 type Fx=Awaited<ReturnType<XR18['readFx']>>;
 type Snapshot={values:Values;fx:Fx};
@@ -35,14 +36,40 @@ export class VocalFx {
  constructor(private xr:XR18,private library:LibraryStore,private profile:()=>CoachProfile){
   const saved=library.list('vocal-fx').find(e=>{
    const session=e.data as Session;
-   return session.phase!=='finished'&&!session.identity.startsWith('["simulation",');
+   return session&&typeof session.identity==='string'&&session.phase!=='finished'&&!session.identity.startsWith('["simulation",');
   });
   if(saved){this.realSession=saved.data as Session;this.entry=saved.id;}
  }
  private identity(){const s=this.xr.status();return JSON.stringify([s.mode,s.model,s.host??'',s.port]);}
  private guard(write=false){if(this.xr.model().family!=='xair')throw Error('Ambiances vocales disponibles sur X-Air / M-Air');const s=this.xr.status();if(s.mode==='real'&&(!s.connected||write&&!s.writesEnabled))throw Error('Connecte la console et active le contrôle pour essayer');if(this.session&&this.session.identity!==this.identity())throw Error('Retrouve la console de cette ambiance avant de la modifier');}
  private persist(){if(this.xr.status().mode==='real'&&this.session){if(this.entry)this.library.update(this.entry,this.session);else this.entry=this.library.save('vocal-fx','Ambiance vocale',this.session).id;}}
- status(){const s=this.session;return {supported:this.xr.model().family==='xair',voices:this.profile().inputs.filter(i=>ambiencesForSource(i.source).length),monitors:this.profile().musicians??[],session:s?{slot:s.slot,choice:s.choice,phase:s.phase,error:s.error,sameConsole:s.identity===this.identity()}:null};}
+ status(){const s=this.session,voices=this.profile().inputs.filter(i=>ambiencesForSource(i.source).length);return {supported:this.xr.model().family==='xair',voices,monitors:this.profile().musicians??[],session:s?{slot:s.slot,choice:s.choice,phase:s.phase,error:s.error,sameConsole:s.identity===this.identity(),sourceMissing:!voices.some(v=>v.channel===s.choice.channel),savedHost:this.savedIdentity(s)?.[2]??'',currentHost:this.xr.status().host??''}:null};}
+ private savedIdentity(s:Session){try{const identity=JSON.parse(s.identity);return Array.isArray(identity)&&identity.length===4?identity:null;}catch{return null;}}
+ /** Forget only the application's ownership. Never restore a foreign console's snapshot. */
+ async archive(confirmed=false){return this.serial(async()=>{
+  if(!confirmed||!this.session)throw Error('Confirme l’archivage du suivi de cette ambiance');
+  const s=this.session;s.phase='finished';this.persist();this.session=null;this.previewed=null;if(this.xr.status().mode==='real')this.entry=null;
+  diagnostic('ambience.archived',{slot:s.slot});return this.status();
+ });}
+ /** An IP change is accepted only after reading the entire owned state on the new
+  * connection. No write is sent; musicians' independent dose changes are retained. */
+ async reconnect(confirmed=false){return this.serial(async()=>{
+  const s=this.session,status=this.xr.status(),identity=this.identity(),connection=this.xr.connectionId();
+  if(!confirmed||!s||status.mode!=='real'||!status.connected||this.xr.model().family!=='xair')throw Error('Connecte la console puis confirme la vérification de l’ambiance');
+  const saved=this.savedIdentity(s);
+  if(saved?.[0]!=='real'||saved[1]!==status.model||s.phase==='recovery')throw Error('Récupération automatique impossible : vérifie les effets ou archive l’ancien suivi');
+  const values=await this.read(Object.keys(s.current.values)),fx=await this.xr.readFx(s.slot);
+  const isDose=(key:string)=>new RegExp(`^/rtn/${s.slot}/mix/0[1-6]/level$`).test(key)&&Object.hasOwn(s.choice.doses,String(Number(key.split('/')[4])));
+  if(!this.equal(Object.fromEntries(Object.entries(s.current.values).filter(([key])=>!isDose(key))),values)||!this.sameFx(s.current.fx,fx))throw Error('Les réglages de cette console ne correspondent pas à l’ambiance sauvegardée. Aucun réglage modifié.');
+  const guards=await this.read(this.guardKeys(s.slot));
+  if(!this.unused(s.slot,guards,s.choice.channel))throw Error('Un autre instrument utilise cet effet : vérifie-le dans Effets');
+  if(connection!==this.xr.connectionId()||identity!==this.identity())throw Error('Console changée pendant la vérification');
+  for(const [key,value] of Object.entries(values))if(isDose(key)){
+   s.choice.doses[String(Number(key.split('/')[4]))]=Number(fromWire(key,value));
+   if(s.previousChoice&&s.trialBefore)s.trialBefore.values[key]=value;
+  }
+  s.identity=identity;s.current={values,fx};this.previewed=null;this.persist();diagnostic('ambience.reconnected',{slot:s.slot});return this.status();
+ });}
  private async serial<T>(fn:()=>Promise<T>){if(this.busy)throw Error('Une opération d’ambiance est en cours');this.busy=true;try{return await fn();}finally{this.busy=false;}}
  private async read(keys:string[]){const values:Values={};for(let i=0;i<keys.length;i+=8)await Promise.all(keys.slice(i,i+8).map(async key=>{values[key]=await this.xr.readParameter(key);}));return values;}
  private equal(a:Values,b:Values){return Object.entries(a).every(([key,v])=>typeof v==='number'&&typeof b[key]==='number'?Math.abs(v-Number(b[key]))<=readbackTolerance(key):v===b[key]);}

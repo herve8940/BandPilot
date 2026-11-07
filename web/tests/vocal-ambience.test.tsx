@@ -42,6 +42,6 @@ test('coach keeps instrument correction and vocal ambience in distinct simple vi
   assert.match(f.dom.window.document.body.textContent,/Je m’occupe de/);assert.equal(f.dom.window.document.querySelector('[aria-label="Ambiance de la voix"]'),null);
   await f.click('Ambiances des sources');assert.ok(f.dom.window.document.querySelector('[aria-label="Ambiance de la voix"]'));assert.doesNotMatch(f.dom.window.document.body.textContent,/Je m’occupe de|Annuler le dernier réglage guidé/);
   await f.click('Corriger un instrument');assert.match(f.dom.window.document.body.textContent,/Je m’occupe de/);assert.equal(f.dom.window.document.querySelector('[aria-label="Ambiance de la voix"]'),null);
-  await f.click('La voix est trop sèche');assert.ok(f.dom.window.document.querySelector('[aria-label="Ambiance de la voix"]'));assert.equal(f.calls.length,0,'switching tools never changes audio');
+  await f.click('La voix est trop sèche');assert.ok(f.dom.window.document.querySelector('[aria-label="Ambiance de la voix"]'));assert.ok(f.calls.every(c=>c.path==='/api/coach/profile'),'switching tools saves only the group, never audio');
  }finally{await f.close();}
 });
