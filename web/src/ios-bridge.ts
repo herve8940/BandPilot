@@ -18,10 +18,11 @@ if(native){
   const base64=await new Promise<string>((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]);r.onerror=reject;r.readAsDataURL(blob);});
   return checked(call('save',{name,base64}));
  };
+ const download=(anchor:HTMLAnchorElement)=>{const url=new URL(anchor.href);if(url.origin!==location.origin)return;void fetch(url).then(r=>{if(!r.ok)throw Error('Le fichier n’a pas pu être exporté.');return r.blob();}).then(b=>save(anchor.download,b)).catch(e=>window.alert(e.message));};
  const click=HTMLAnchorElement.prototype.click;
- HTMLAnchorElement.prototype.click=function(){if(this.download){const url=new URL(this.href);if(url.origin!==location.origin&&url.protocol!=='blob:')return;void fetch(url).then(r=>r.blob()).then(b=>save(this.download,b)).catch(e=>window.alert(e.message));}else click.call(this);};
+ HTMLAnchorElement.prototype.click=function(){if(this.download)download(this);else click.call(this);};
  window.open=(url?:string|URL)=>{if(url&&String(url).startsWith('https://'))void checked(call('open',{url:String(url)})).catch(e=>window.alert(e.message));return null;};
- document.addEventListener('click',event=>{const a=(event.target as Element)?.closest?.('a[target="_blank"]') as HTMLAnchorElement|null;if(a?.href.startsWith('https://')){event.preventDefault();window.open(a.href);}});
+ document.addEventListener('click',event=>{const a=(event.target as Element)?.closest?.('a') as HTMLAnchorElement|null;if(a?.download){event.preventDefault();download(a);}else if(a?.target==='_blank'&&a.href.startsWith('https://')){event.preventDefault();window.open(a.href);}});
  const reports=new Map<string,any>();
  const report=(id:string)=>{const r=reports.get(id);if(!r)throw Error('Prépare le rapport avant de le partager.');return r;};
  const repository='https://github.com/herve8940/BandPilot';

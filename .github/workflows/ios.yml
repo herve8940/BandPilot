@@ -44,8 +44,15 @@ jobs:
       - name: Save simulator screenshot and unsigned application
         run: |
           xcrun simctl launch "$BANDPILOT_SIMULATOR" be.bandpilot.ipad
+          sleep 5
           xcrun simctl io "$BANDPILOT_SIMULATOR" screenshot ios/build/ipad-simulator.png
           ditto -c -k --keepParent ios/build/device/Build/Products/Release-iphoneos/BandPilot.app ios/build/BandPilot-iPad-unsigned.zip
+      - name: Show Apple build failures
+        if: failure()
+        run: |
+          for log in ios/build/device-build.log ios/build/simulator-tests.log; do
+            if test -f "$log"; then tail -100 "$log"; fi
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:

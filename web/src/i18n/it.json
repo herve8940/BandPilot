@@ -2302,5 +2302,11 @@
   "Musiciens enregistrés. Aucun réglage audio modifié.": "Musicisti salvati. Nessuna impostazione audio modificata.",
   "Instrument choisi. Enregistre ton groupe, puis utilise Préparer les réglages quand tu es prêt.": "Strumento selezionato. Salva il gruppo, poi usa Prepara impostazioni quando sei pronto.",
   "Source, canal 1 à 16 et nom de 12 caractères maximum requis": "Servono sorgente, canale 1–16 e nome fino a 12 caratteri",
-  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Chiudi questa finestra e prepara nuovamente le impostazioni. Se sono state applicate solo in parte, « Annulla l’ultima modifica guidata » permette di rivedere il backup."
+  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Chiudi questa finestra e prepara nuovamente le impostazioni. Se sono state applicate solo in parte, « Annulla l’ultima modifica guidata » permette di rivedere il backup.",
+  "Connecter cet iPad à la console": "Collega questo iPad al mixer",
+  "Connecte cet iPad au même réseau Wi-Fi que la console, saisis son adresse IP et autorise BandPilot à accéder au réseau local.": "Collega questo iPad alla stessa rete Wi-Fi del mixer, inserisci il suo indirizzo IP e consenti a BandPilot di accedere alla rete locale.",
+  "Vérifie le Wi-Fi et l’adresse de la console. Dans Réglages de l’iPad → Apps → BandPilot, autorise le réseau local.": "Controlla il Wi-Fi e l’indirizzo del mixer. Nelle impostazioni iPad di BandPilot, consenti l’accesso alla rete locale.",
+  "Une nouvelle version de BandPilot est disponible sur l’App Store. Tu peux terminer ta session avant de l’installer.": "Una nuova versione di BandPilot è disponibile sull’App Store. Puoi terminare la sessione prima di installarla.",
+  "Les mises à jour iPad sont distribuées par l’App Store.": "Gli aggiornamenti per iPad vengono distribuiti tramite l’App Store.",
+  "Cette version iPad n’est pas encore publiée sur l’App Store.": "Questa versione per iPad non è ancora pubblicata sull’App Store."
 }
