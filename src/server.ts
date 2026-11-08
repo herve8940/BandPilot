@@ -243,7 +243,212 @@ const handler: http.RequestListener = async (req, res) => {
     else if(req.method!=='POST'){res.writeHead(405);res.end(JSON.stringify({error:'Méthode non autorisée'}));return;}
     else{
      const d=await body(req);
-     if(path==='/api/show/install'){if(d.confirm!==true)throw Error('Confirmation requise');access.log(user!,'Installation du pont Re…4673 tokens truncated…e,readOnly:true}));return;}
+     if(path==='/api/show/install'){if(d.confirm!==true)throw Error('Confirmation requise');access.log(user!,'Installation du pont Reaper');result=await bridge.install();}
+     else if(path==='/api/show/goto'){if(reaper.status().recording)throw Error('Enregistrement en cours : arrête-le avant de changer de morceau.');result=await bridge.call('goto_pos',{pos:Number(d.pos)});}
+     else if(path==='/api/show/loop')result=await bridge.call('set_loop',{project:d.project,on:d.on===true,start:Number(d.start),stop:Number(d.stop)});
+     else if(path==='/api/show/take'){
+      const done=await bridge.call<{changed:number}>('select_take',{project:d.project,take:Number(d.take),start:Number(d.start),stop:Number(d.stop)});
+      if(!done.changed)throw Error('Cette prise n’existe pas sur ces pistes');
+      result=done;
+     }
+     else if(path==='/api/show/track')result=await bridge.call('track_mute',{name:String(d.name),on:d.on===true,solo:d.solo===true});
+     else if(path==='/api/show/play'){await reaper.watch();result=await reaper.play();}
+     else if(path==='/api/show/stop'){await reaper.watch();result=['recording','starting','lost','stopping'].includes(reaper.status().state)?await reaper.stop():await reaper.halt();}
+     else if(path==='/api/show/continue')result=reaper.cancelAutoStop();
+     else if(path==='/api/show/presence'){
+      const plan=await recentPlan(),present=(Array.isArray(d.present)?d.present:[]).map(String),rec=plan.tracks.filter(t=>t.selected);
+      const {rec:add,unarm,roles}=presenceCommands(rec,present);
+      await bridge.call('apply_presence',{project:d.project,rec:add,unarm,roles});
+      const state=await bridge.state();
+      // ReaCue applies this itself when its window is open. The mutes above already cover the case where it is closed.
+      if(state.setlist)await saveLiveRoles(state.setlist,Object.keys(roles).filter(r=>roles[r])).catch(e=>diagnostic('reacue-live',{error:(e as Error).message}));
+      result={present};
+     }
+     else if(path==='/api/show/original'){
+      result=await bridge.call('listen_original',{on:d.on===true,project:d.project});
+     }
+     else if(path==='/api/show/rec'){
+      if(!Number.isFinite(d.start))throw Error('Morceau requis');
+      await bridge.call('goto_pos',{pos:Number(d.start)});
+      access.log(user!,'Reaper : Rec sur un morceau');await reaper.record({atEnd:false});
+      result=reaper.setAutoStop(Number.isFinite(d.stop)?Number(d.stop)+SONG_TAIL_S:null,SONG_TAIL_S);
+     }
+     else{res.writeHead(404);res.end(JSON.stringify({error:'Introuvable'}));return;}
+    }
+    res.end(JSON.stringify(result));
+   }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}
+   return;
+  }
+  if(path.startsWith('/api/reaper')){
+   // Reaper never touches the console: no global lock, and Rec/Stop must work during any other operation.
+   try{
+    let result:unknown;
+    if(path==='/api/reaper'&&req.method==='GET'){await reaper.watch();result={...reaper.status(),defaultFolder:defaultSessionsFolder()};}
+    else if(path==='/api/reaper/plan'&&req.method==='GET'){const plan=await recentPlan();result={...plan,hoursFree:await freeHours(homedir(),plan)};}
+    else if(path==='/api/reaper/session'&&req.method==='POST'){
+     const d=await body(req);if(reaper.status().recording)throw Error('Un enregistrement est en cours : arrête-le avant de préparer une session.');
+     const plan=await reaperPlan();
+     if(Array.isArray(d.tracks))for(const t of plan.tracks)t.selected=d.tracks.includes(t.id);
+     const session=await createSession(plan,{name:d.name,folder:d.folder});
+     access.log(user!,'Session Reaper créée : '+session.title);
+     reaper.session={...session,tracks:plan.tracks.filter(t=>t.selected).length};
+     await reaper.watch();await openInReaper(session.file);
+     result=reaper.status();
+    }
+    else if(path==='/api/reaper/rec'&&req.method==='POST'){access.log(user!,'Reaper : Rec');result=await reaper.record();}
+    else if(path==='/api/reaper/stop'&&req.method==='POST'){access.log(user!,'Reaper : Stop');result=await reaper.stop();}
+    else if(path==='/api/reaper/marker'&&req.method==='POST')result=await reaper.marker();
+    else if(path==='/api/reaper/dismiss'&&req.method==='POST')result=reaper.dismissAlert();
+    else{res.writeHead(404);res.end(JSON.stringify({error:'Introuvable'}));return;}
+    res.end(JSON.stringify(result));
+   }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}
+   return;
+  }
+  if(path==='/api/rehearsal'){
+    try{
+      if(req.method==='POST'){
+        const d=await body(req);if(typeof d.on!=='boolean')throw Error('on: true ou false');
+        xr18.setRehearsal(d.on);writeFileSync(rehearsalPath,JSON.stringify({on:d.on}));diagnostic('rehearsal',{on:d.on});
+        if(d.on&&xr18.status().writesEnabled&&xr18.status().connected)await xr18.writeParameter('/lr/mix/on',0);
+      }
+      res.end(JSON.stringify({on:xr18.isRehearsal(),mainOn:xr18.mainState().on}));
+    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path.startsWith('/api/analysis')){
+    try{
+      let result:unknown;const d:any=req.method==='POST'?await body(req):{};
+      if(req.method==='GET'&&path==='/api/analysis')result=analyzer.snapshot();
+      else if(path==='/api/analysis/start')result=analyzer.start(d.target);
+      else if(path==='/api/analysis/stop')result=analyzer.stop();
+      else if(path==='/api/analysis/target')result=analyzer.setTarget(d.target);
+      else if(path==='/api/analysis/scan')result=await analyzer.scan();
+      else if(path==='/api/analysis/dismiss')result=analyzer.dismiss(String(d.id));
+      else if(path==='/api/analysis/release'){analyzer.release(String(d.id));result=analyzer.snapshot();}
+      else if(path==='/api/analysis/listen'){if(d.side!=='a'&&d.side!=='b')throw Error('side a ou b');result=await analyzer.listen(String(d.id),d.side);}
+      else if(path==='/api/analysis/preview'){
+        // Back to A first: the backup taken at apply time must hold the real "before".
+        const r=analyzer.find(String(d.id));await analyzer.restoreA(r.id);
+        const plan=await show.console.preview(r.changes);analyzer.release(r.id);
+        result={...plan,title:r.title,explanation:r.why,inputs:[r.where],recommendation:r};
+      }
+      else{res.writeHead(404);res.end(JSON.stringify({error:'Action inconnue'}));return;}
+      res.end(JSON.stringify(result));
+    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path==='/api/coach/vocal-fx'&&req.method==='GET'){res.end(JSON.stringify(vocalFx.status()));return;}
+  if(path.startsWith('/api/coach/vocal-fx/')&&req.method==='POST'){
+    try{const d=await body(req);const result=path==='/api/coach/vocal-fx/archive'?await vocalFx.archive(d.confirm===true):path==='/api/coach/vocal-fx/reconnect'?await vocalFx.reconnect(d.confirm===true):path==='/api/coach/vocal-fx/read-doses'?await vocalFx.readDoses():path==='/api/coach/vocal-fx/preview'?await vocalFx.preview(d):path==='/api/coach/vocal-fx/apply'?await vocalFx.apply(d.token,d.confirm):path==='/api/coach/vocal-fx/keep'?await vocalFx.keep():path==='/api/coach/vocal-fx/undo'?await vocalFx.undo(d.all===true,d.confirm===true):null;if(!result)throw Error('Action d’ambiance inconnue');diagnostic('ambience.action',{action:path});res.end(JSON.stringify(result));}catch(e){diagnostic('ambience.error',{action:path,message:(e as Error).message,stack:(e as Error).stack});res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path.startsWith('/api/coach/')&&req.method==='POST'){
+    try{const d=await body(req);let result:unknown;
+      if(path==='/api/coach/profile'){result=coach.saveProfile(d.profile);ears.refreshTechnicalCards();}
+      else if(path==='/api/coach/prepare')result=await coach.prepare(d.channel===undefined?undefined:Number(d.channel));
+      else if(path==='/api/coach/gain')result=await coach.gainCheck(Number(d.channel));
+      else if(path==='/api/coach/bleed')result=await coach.bleedCheck(Number(d.channel));
+      else if(path==='/api/coach/calibration')result=await coach.calibrationStatus();
+      else if(path==='/api/coach/ears')result=await coach.prepareEars(d.bus===undefined?undefined:Number(d.bus));
+      else if(path==='/api/coach/ears/share'){
+        // Personal QR link for every musician that has none yet on its bus.
+        const musicians=coach.profile().musicians??[];let created=0;
+        for(const m of musicians)if(!ears.list().some(s=>s.bus===m.bus)){ears.create(m.name,m.bus);created++;}
+        result={created,status:ears.status()};
+      }
+      else if(path==='/api/coach/suggest')result=await coach.suggest(Number(d.channel),String(d.symptom));
+      else if(path==='/api/coach/apply'){if(d.confirm!==true)throw Error('Confirmation requise');result=await coach.apply(d.token,d.confirm);}
+      else if(path==='/api/coach/undo')result=await coach.undo();
+      else if(path==='/api/coach/measure')result=await coach.measure(Number(d.channel));
+      else if(path==='/api/coach/ask'){
+        if(typeof d.message!=='string'||!d.message.trim()||d.message.length>2000)throw Error('Question de 1 à 2 000 caractères requise');
+        const channel=Number(d.channel),input=coach.profile().inputs.find(i=>i.channel===channel);
+        if(!input)throw Error('Choisir un instrument de la préparation');
+        if(d.external===true){if(d.consent!==true)throw Error('Accord explicite requis avant envoi à OpenAI');if(Date.now()-aiRequestAt<5000)throw Error('Attendre quelques secondes entre deux demandes IA');aiRequestAt=Date.now();result={source:'openai',...await askConnectedCoach(d.message,{source:input.source,mode:xr18.mode,connected:xr18.status().connected,language:languageOrFrench(d.language)},d.consent)};}
+        else{const symptom=identifySymptom(d.message);result=symptom?{source:'local',symptom,...coach.advice(channel,symptom)}:{source:'local',answer:'Je peux t’aider à préparer le groupe, vérifier les niveaux et tester une correction à la fois. Décris ce qui te gêne : son brouillon, agressif, notes coupées, saturation, bruit ou voix difficile à distinguer.',check:'Choisis d’abord le canal et l’instrument, puis explique ce que tu entends. Je ne reçois aucun audio par OSC.',measuredAudio:false};}
+      }else throw Error('Action du conseiller inconnue');
+      diagnostic('coach.action',{action:path});res.end(JSON.stringify(result));
+    }catch(e){diagnostic('coach.error',{action:path,message:(e as Error).message,stack:(e as Error).stack});res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path==='/api/console/fx'&&req.method==='GET'){try{res.end(JSON.stringify(await xr18.readFx(Number(new URL(req.url!,'http://localhost').searchParams.get('slot')))));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;}
+  if(path==='/api/console/parameters'&&req.method==='GET'){
+    const prefix=new URL(req.url!,'http://localhost').searchParams.get('prefix')??'/ch/01/';
+    res.end(JSON.stringify({parameters:show.console.catalog(prefix),status:xr18.status()}));return;
+  }
+  if(path==='/api/console/refresh'&&req.method==='POST'){
+    const d=await body(req);try{await xr18.refreshParameters(String(d.prefix));res.end(JSON.stringify({ok:true}));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path==='/api/console/preview'&&req.method==='POST'){
+    try{const d=await body(req);res.end(JSON.stringify(await show.console.preview(d.values)));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path==='/api/console/blank'&&req.method==='POST'){
+    try{res.end(JSON.stringify({...await show.console.preview(Object.fromEntries(Object.entries(blankSceneValues()).filter(([a])=>xr18.supports(a))),true),...BLANK_SCENE_TEXT,inputs:[]}));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path==='/api/console/restore'&&req.method==='POST'){
+    // Preview going back to the values saved just before an apply (undo).
+    try{const d=await body(req);const saved=library.get(String(d.backupId));if(saved.kind!=='parameter-backup')throw Error('Sauvegarde incompatible');res.end(JSON.stringify({...await show.console.preview(saved.data,true),title:'Revenir à avant',explanation:'Les réglages modifiés reprennent les valeurs sauvegardées juste avant le changement.',inputs:[]}));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path==='/api/console/apply'&&req.method==='POST'){
+    try{const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');res.end(JSON.stringify(await show.console.apply(d.token,d.allowPhantom===true,d.tolerant===true)));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(path==='/api/console/mute-all'&&req.method==='POST'){
+    try{const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');const values:Record<string,Value>={};for(let i=1;i<=xr18.model().channels;i++)values[`/ch/${String(i).padStart(2,'0')}/mix/on`]=0;const p=await show.console.preview(values,true);res.end(JSON.stringify(await show.console.apply(p.token)));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+    const monitorProfiles=/^\/api\/monitor\/([1-6])\/profiles(?:\/([a-f0-9-]+)\/(apply))?$/.exec(path);
+  if(monitorProfiles){
+    try{const bus=Number(monitorProfiles[1]);
+      if(req.method==='GET'&&!monitorProfiles[2]){res.end(JSON.stringify(database.listEarProfiles().filter(p=>p.bus===bus)));return;}
+      if(req.method==='POST'){
+        const data=await body(req);
+        if(!monitorProfiles[2]){const levels=[];for(let channel=1;channel<=16;channel++)levels.push(await xr18.readParameter(`/ch/${String(channel).padStart(2,'0')}/mix/${String(bus).padStart(2,'0')}/level`));res.end(JSON.stringify(database.saveEarProfile({musician:data.name,bus,levels})));return;}
+        if(data.confirm!==true)throw Error('Confirmation requise');
+        const profile=database.listEarProfiles().find(p=>p.id===monitorProfiles[2]&&p.bus===bus);if(!profile||profile.levels.some(v=>v>.75))throw Error('Profil absent ou au-dessus du plafond');
+        const values:Record<string,Value>={};for(let channel=1;channel<=xr18.model().channels;channel++)values[`/ch/${String(channel).padStart(2,'0')}/mix/${String(bus).padStart(2,'0')}/level`]=profile.levels[channel-1]!;
+        const before:Record<string,Value>={};for(const a of Object.keys(values))before[a]=await xr18.readParameter(a);library.save('parameter-backup','Avant rappel retour',before);
+        for(let step=1;step<=15;step++){const ramp=Object.fromEntries(Object.entries(values).map(([a,v])=>[a,Number(before[a])+(Number(v)-Number(before[a]))*step/15]));await xr18.applyParameters(ramp);await new Promise(r=>setTimeout(r,30));}
+        res.end(JSON.stringify({ok:true}));return;
+      }
+    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));return;}
+  }
+    if(user&&await studioApi.handle(req,res,path,user))return;
+  if (req.method === "GET" && path === "/api/status") { res.end(JSON.stringify(xr18.status())); return; }
+  if(req.method==='GET'&&path==='/api/dynamics'){
+    xr18.subscribeAnalysis();
+    const frame=xr18.status().connected&&dynamicsFrame&&Date.now()-dynamicsFrame.at<2000?dynamicsFrame:null;
+    res.end(JSON.stringify({frame}));return;
+  }
+  if (req.method === "GET" && path === "/api/meters") {res.end(JSON.stringify(xr18.meterState()));return;}
+  if (req.method === "GET" && path === "/api/channels") { res.end(JSON.stringify(xr18.listChannels())); return; }
+  if(req.method==="GET"&&path==="/api/main"){res.end(JSON.stringify(xr18.mainState()));return;}
+  const mixerWrite=/^\/api\/(?:channels\/(\d+)\/(on)|main\/(fader|on))$/.exec(path);
+  if(req.method==="POST"&&mixerWrite){
+    try{
+      let raw="";for await(const part of req){raw+=part;if(raw.length>1024)throw Error("Payload too large");}
+      const data:unknown=JSON.parse(raw);if(!data||typeof data!=="object"||Array.isArray(data))throw Error("Invalid body");
+      const value=(data as Record<string,unknown>).value;
+      if(mixerWrite[2]==="on"||mixerWrite[3]==="on"){
+        if(typeof value!=="boolean")throw Error("Boolean value required");
+        if(mixerWrite[1])xr18.setOn(Number(mixerWrite[1]),value);else xr18.setMainOn(value);
+      }else{
+        if(typeof value!=="number")throw Error("Numeric value required");
+        xr18.setMainFader(value);
+      }
+      res.end(JSON.stringify({ok:true,acknowledged:xr18.mode==="simulation"}));return;
+    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));return;}
+  }
+  if(req.method==="POST"&&path==="/api/osc/advanced/write"){
+    try{
+      if(req.headers.origin && !["http://127.0.0.1","http://localhost"].some(base=>req.headers.origin!.startsWith(base+":")))throw Error("Remote origin denied");
+      let raw="";for await(const part of req){raw+=part;if(raw.length>512)throw Error("Payload too large");}
+      const data:unknown=JSON.parse(raw);
+      if(!data||typeof data!=="object"||Array.isArray(data))throw Error("Invalid request");
+      const {address,value,confirm} = data as Record<string,unknown>;
+      if(confirm!==true||typeof address!=="string"||typeof value!=="number")throw Error("Explicit confirmation and numeric OSC value required");
+      xr18.writeAdvanced(address,value);
+      res.end(JSON.stringify({ok:true,sent:true,hardwareAcknowledged:false,address}));return;
+    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));return;}
+  }
+  if(req.method==="GET"&&path==="/api/osc/advanced"){res.end(JSON.stringify({values:xr18.advancedState(),readOnly:true,verifiedOnHardware:false}));return;}
+  const advancedMatch=/^\/api\/osc\/advanced\/channels\/(\d+)\/refresh$/.exec(path);
+  if(req.method==="POST"&&advancedMatch){try{xr18.refreshAdvanced(Number(advancedMatch[1]));res.end(JSON.stringify({ok:true,readOnly:true}));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;}
+  if(req.method==="POST"&&path==="/api/osc/advanced/fx/refresh"){xr18.refreshFx();res.end(JSON.stringify({ok:true,readOnly:true}));return;}
   const earsMatch=/^\/api\/ears\/profiles(?:\/([a-f0-9-]+))?$/.exec(path);
   if(earsMatch){
     try{
