@@ -91,9 +91,14 @@
  NSDictionary *state=[self api:@"/api/status" body:nil expected:200 authorized:YES];XCTAssertFalse([state[@"writesEnabled"] boolValue]);
  [self js:@"window.beforeNativeResume=true"];
  [self.controller resumeSafely];[self waitJS:@"!window.beforeNativeResume&&!!document.querySelector('.studio')"];
- [self js:@"window.BandPilotIOS.invoke('print','test-pdf',JSON.stringify({html:'<!doctype html><html><body><h1>Fiche technique — Éric</h1><p>BandPilot iPad</p></body></html>',name:'BandPilot-test.pdf'}))"];
+ NSString *pdfName=[NSString stringWithFormat:@"BandPilot-test-%@.pdf",NSUUID.UUID.UUIDString];
+ [self js:[NSString stringWithFormat:@"window.BandPilotIOS.invoke('print','test-pdf',JSON.stringify({html:'<!doctype html><html><body><h1>Fiche technique — Éric</h1><p>BandPilot iPad</p></body></html>',name:'%@'}));true",pdfName]];
  NSDate *end=[NSDate dateWithTimeIntervalSinceNow:20];while(!self.controller.presentedViewController&&end.timeIntervalSinceNow>0)[NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.2]];
  XCTAssertTrue([self.controller.presentedViewController isKindOfClass:UIActivityViewController.class]);
+ NSURL *pdfURL=nil;
+ for(NSURL *file in [NSFileManager.defaultManager enumeratorAtURL:[NSURL fileURLWithPath:NSTemporaryDirectory()] includingPropertiesForKeys:nil options:0 errorHandler:nil])if([file.lastPathComponent isEqual:pdfName]){pdfURL=file;break;}
+ XCTAssertNotNil(pdfURL);CGPDFDocumentRef pdf=CGPDFDocumentCreateWithURL((__bridge CFURLRef)pdfURL);
+ XCTAssertNotEqual(pdf,NULL);if(pdf){XCTAssertGreaterThan(CGPDFDocumentGetNumberOfPages(pdf),0);CGPDFDocumentRelease(pdf);}
  [self.controller dismissViewControllerAnimated:NO completion:nil];
 }
 @end
