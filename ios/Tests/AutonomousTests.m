@@ -16,6 +16,8 @@
  XCTAssertNotNil(BPNodeEngine.shared.origin,@"Engine startup failed: %@",BPNodeEngine.shared.failure);
  [self waitJS:@"!!document.querySelector('.studio')"];
  [self api:@"/api/connection" body:@{@"mode":@"simulation",@"host":@"127.0.0.1",@"enableWrites":@NO} expected:200 authorized:YES];
+ // Every scenario starts with a voice and its suggested monitor, independent of test order.
+ [self api:@"/api/coach/profile" body:@{@"profile":@{@"version":@1,@"completed":@[],@"inputs":@[@{@"channel":@1,@"source":@"lead-rock",@"name":@"Voix test"}]}} expected:200 authorized:YES];
 }
 - (id)js:(NSString *)script {
  XCTestExpectation *done=[self expectationWithDescription:@"JavaScript"];__block id result=nil;
