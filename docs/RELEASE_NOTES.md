@@ -1,3 +1,11 @@
+# BandPilot — nouveautés
+
+## Android 2.4.0-android.1 · 8 novembre 2026
+
+La première application Android autonome est disponible en APK signé, avec connexion directe à la console en Wi-Fi, sans PC ni Docker. Elle reprend la fiche technique, le plan de scène, l’export PDF et les ambiances des sources. [Télécharger et installer](ANDROID.md) · [Notes Android, essais et limites](RELEASE_ANDROID_2_4_0_1.md).
+
+Les installateurs de bureau restent en **2.3.3**.
+
 # BandPilot 2.3.3
 
 ## Français

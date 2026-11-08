@@ -1,6 +1,6 @@
 # GitHub Pages site for BandPilot (Settings › Pages › Deploy from branch: main, folder /docs).
 title: BandPilot
-description: "BandPilot — free multilingual mixer app in French, English, Italian, Spanish and German. More languages on request. Windows, macOS, Linux; REAPER and personal monitors. Model-specific compatibility."
+description: "BandPilot — application gratuite en cinq langues : console, fiche technique PDF, plan de scène et ambiances. Windows, macOS, Linux et Android autonome. REAPER sur ordinateur."
 url: https://herve8940.github.io
 baseurl: /BandPilot
 lang: fr

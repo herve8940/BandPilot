@@ -16,9 +16,21 @@ Application gratuite pour préparer la balance, piloter la console, donner les r
 
 ![Console BandPilot 2.2.4 en simulation](docs/images/bandpilot-2.2.4/expert-canal.jpg)
 
-Windows · Mac Intel et Apple Silicon · Linux
+Windows · Mac Intel et Apple Silicon · Linux · **Android autonome**
 
 </div>
+
+## Nouveautés : fiche technique, ambiances et Android
+
+Première version Android disponible en APK signé. Installation durable, sans signature à renouveler tous les sept jours. REAPER reste sur ordinateur.
+
+- **Fiche technique et plan de scène** — Prépare les entrées, les musiciens, les retours et les branchements. Place chacun sur le plan de scène, puis imprime la fiche ou exporte un PDF. Le raccourci est visible dès l’accueil de Mon ingé son.
+- **Ambiances des sources** — Choisis une ambiance adaptée au chant ou à l’instrument, prévisualise l’essai et règle la quantité pour chaque musicien. Garde le résultat ou reviens aux réglages précédents.
+- **Android autonome** — Installe l’APK sur une tablette compatible et connecte-la directement à la console par Wi-Fi. L’interface, le moteur et les données sont sur la tablette : aucun PC ni Docker nécessaire.
+
+[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.1/BandPilot-Android-2.4.0-android.1-universal.apk) · [Guide Android](docs/ANDROID.md)
+
+Première version : 2.4.0-android.1. Android 8 minimum, Android System WebView 111 minimum. APK ARM 32/64 bits et x86_64 ; affichage portrait et paysage. Installation et démarrage vérifiés sur une Xiaomi Redmi Pad sous Android 14 ; fonctionnement confirmé par son utilisateur. La compatibilité de chaque tablette et de chaque console reste à valider. Appareils à pages mémoire de 16 Ko non certifiés. REAPER et l’Atelier lié aux prises restent disponibles sur ordinateur.
 
 ## Les fonctions
 
@@ -32,11 +44,11 @@ Windows · Mac Intel et Apple Silicon · Linux
 | Préparer | Répertoire, setlists, répétitions, brouillon persistant, capture/export/import JSON de scènes et sauvegardes avant rappel. |
 | Réglages | Détection par modèle, lecture seule initiale, synchronisation, comptes facultatifs, diagnostic, IA connectée facultative et intégrations. |
 
-Le contrôle local ne demande ni compte ni Internet. Ordinateur, console et téléphones partagent le même réseau local. REAPER est un logiciel séparé avec sa propre licence ; l’IA connectée facultative nécessite Internet et une clé personnelle.
+Le contrôle local ne demande ni compte ni Internet. Ordinateur ou tablette Android, console et téléphones partagent le même réseau local. REAPER est un logiciel séparé avec sa propre licence ; l’IA connectée facultative nécessite Internet et une clé personnelle.
 
 ## Consoles et limites
 
-| Modèle | État dans 2.2 |
+| Modèle | État actuel |
 |---|---|
 | Behringer XR18 | Famille principale ; essais physiques réalisés sur XR18. |
 | Behringer X18 / Midas MR18 | Profils et protocole commun ; validation physique de ces appareils restante. |
@@ -65,7 +77,7 @@ La simulation de console ne simule pas REAPER : REC capture ses véritables entr
 
 ## Développement
 
-Une version Android autonome est en développement : [installation, compatibilité et compilation de l’APK](android/README.md). Elle embarque le moteur de console et les données sur la tablette, sans PC ni Docker. Les installateurs de bureau ci-dessus restent distincts de cet APK.
+La version Android autonome est disponible : [installation, compatibilité et compilation de l’APK](android/README.md). Elle embarque le moteur de console et les données sur la tablette, sans PC ni Docker. Les installateurs de bureau ci-dessus restent distincts de cet APK.
 
 **BandPilot 2.3.3** corrige la validation des instruments, conserve une possibilité d’annulation après interruption et renforce les vérifications de l’application Windows installée. Les rapports debug et les mises à jour au lancement restent disponibles. [Détails](docs/RELEASE_NOTES.md).
 

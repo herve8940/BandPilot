@@ -1,4 +1,4 @@
-#BandPilot
+# BandPilot
 
 **La tua band. Il tuo mixer. Il tuo suono.**
 
@@ -11,6 +11,19 @@ BandPilot è il nuovo nome di XR18 Studio: un'app locale gratuita per sound chec
 [Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
 ![Mixer esperto BandPilot 2.2.4 in simulazione](docs/images/bandpilot-2.2.4/expert-canal-it.jpg)
+
+## Novità: scheda tecnica, effetti e Android
+
+La prima versione Android autonoma è disponibile come APK firmato. Non serve rinnovare la firma ogni settimana. REAPER resta sul computer.
+
+- **Scheda tecnica e pianta del palco** — Prepara ingressi, musicisti, monitor e collegamenti. Posiziona il gruppo sulla pianta del palco e stampa o esporta un PDF. Il collegamento è visibile nel consulente audio.
+- **Effetti per le sorgenti** — Scegli un effetto adatto alla voce o allo strumento, controlla l’anteprima e dosa l’effetto nel monitor di ogni musicista. Conferma il risultato oppure ripristina le impostazioni precedenti.
+- **Android autonomo** — Installa l’APK su un tablet compatibile e collegalo direttamente al mixer via Wi-Fi. Interfaccia, motore e dati risiedono sul tablet: senza PC o Docker.
+
+[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.1/BandPilot-Android-2.4.0-android.1-universal.apk) · [Guida Android (FR)](docs/ANDROID.md)
+
+Prima versione: 2.4.0-android.1. Android 8+ e Android System WebView 111+. APK per ARM a 32/64 bit e x86_64; orientamento verticale e orizzontale. Installazione e avvio verificati su Xiaomi Redmi Pad con Android 14; funzionamento confermato dall’utente. Gli altri tablet e le combinazioni con i mixer richiedono verifiche. Dispositivi con pagine di memoria da 16 KB non certificati. REAPER e il Laboratorio basato sulle registrazioni restano sul computer.
+
 
 ## Caratteristiche
 

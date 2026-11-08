@@ -1,0 +1,47 @@
+name: Android APK validation
+on:
+  push:
+    branches: [main, "feature/**"]
+    paths: ['android/**', 'src/**', 'shared/**', 'web/**', 'package*.json', '.github/workflows/android.yml']
+  pull_request:
+    paths: ['android/**', 'src/**', 'shared/**', 'web/**', 'package*.json', '.github/workflows/android.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+            android/runtime/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm ci
+      - run: npm --prefix web ci
+      - run: npm --prefix android/runtime ci
+      - run: node --test android/tests/sqlite.test.mjs
+      - run: node android/scripts/test-runtime.mjs
+      - run: npm run build:all
+      - run: python3 android/scripts/fetch-runtime.py
+      - run: node android/scripts/prepare.mjs
+      - name: Install pinned Android build dependencies
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.2.12479018' 'cmake;3.22.1'
+      - name: Build all three architectures and run Android lint
+        run: android/gradlew -p android assembleDebug lint --max-workers=2
+      - run: python3 android/scripts/check-apk.py android/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-validation
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+          if-no-files-found: error

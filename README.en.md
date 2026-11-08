@@ -12,6 +12,19 @@ BandPilot is the new name of XR18 Studio: a free local app for guided sound chec
 
 ![BandPilot 2.2.4 Expert mixer in simulation](docs/images/bandpilot-2.2.4/expert-canal-en.jpg)
 
+## New: technical rider, source ambience and Android
+
+The first standalone Android version is available as a signed APK. No weekly re-signing is required. REAPER remains on desktop.
+
+- **Technical rider and stage plot** — Prepare inputs, musicians, monitors and connections. Position the band on the stage plot, then print or export a PDF. A visible shortcut opens it from the sound coach.
+- **Source ambience** — Choose effects suited to the voice or instrument, preview the trial and adjust the amount in each musician’s monitor. Keep the result or restore the previous settings.
+- **Standalone Android** — Install the APK on a compatible tablet and connect directly to the mixer over Wi-Fi. The interface, engine and data run on the tablet: no PC or Docker required.
+
+[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.1/BandPilot-Android-2.4.0-android.1-universal.apk) · [Android guide (FR)](docs/ANDROID.md)
+
+First version: 2.4.0-android.1. Android 8+ and Android System WebView 111+. Universal APK for ARM 32/64-bit and x86_64; portrait and landscape layouts. Installation and startup checked on a Xiaomi Redmi Pad running Android 14; operation confirmed by its user. Other tablets and mixer combinations still require validation. Devices using 16 KB memory pages are not certified. REAPER and its recording-based Workshop remain desktop features.
+
+
 ## Features
 
 - Six-step coach: connect, configure inputs, measure gain, troubleshoot, prepare monitors and save. It reads measurements, not audio.

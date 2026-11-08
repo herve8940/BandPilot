@@ -12,6 +12,19 @@ BandPilot ist der neue Name von XR18 Studio: eine kostenlose lokale App für gef
 
 ![BandPilot 2.2.4 Expert Mischpult in Simulation](docs/images/bandpilot-2.2.4/expert-canal-de.jpg)
 
+## Neu: Technical Rider, Effekte und Android
+
+Die erste eigenständige Android-Version ist als signierte APK verfügbar. Keine wöchentliche Neusignierung nötig. REAPER bleibt auf dem Computer.
+
+- **Technical Rider und Bühnenplan** — Plane Eingänge, Musiker, Monitore und Anschlüsse. Platziere die Band auf dem Bühnenplan und drucke ihn aus oder exportiere ein PDF. Ein direkter Zugang ist im Soundcoach sichtbar.
+- **Effekte für Quellen** — Wähle einen passenden Effekt für Stimme oder Instrument, prüfe den Vorschlag und dosiere ihn für jeden Monitormix. Übernimm das Ergebnis oder stelle die vorherigen Einstellungen wieder her.
+- **Eigenständiges Android** — Installiere die APK auf einem kompatiblen Tablet und verbinde es direkt per WLAN mit dem Mischpult. Oberfläche, Steuerung und Daten laufen auf dem Tablet: ohne PC oder Docker.
+
+[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.1/BandPilot-Android-2.4.0-android.1-universal.apk) · [Android-Anleitung (FR)](docs/ANDROID.md)
+
+Erste Version: 2.4.0-android.1. Android 8+ und Android System WebView 111+. APK für ARM mit 32/64 Bit und x86_64; Hoch- und Querformat. Installation und Start auf einem Xiaomi Redmi Pad mit Android 14 geprüft; Funktion vom Nutzer bestätigt. Andere Tablets und Mischpultkombinationen müssen noch geprüft werden. Geräte mit 16-KB-Speicherseiten sind nicht zertifiziert. REAPER und die auf Aufnahmen basierende Klangwerkstatt bleiben Desktop-Funktionen.
+
+
 ## Funktionen
 - Sechs-Schritte-Coach: Anschließen, Eingänge konfigurieren, Verstärkung messen, Fehler beheben, Monitore vorbereiten und speichern. Es liest Messungen, keine Audiodaten.
 - Mischpult im einfachen und im Expertenmodus, kompakte Seitenleiste, Kanalbänke, EQ/Gate/Komprimierung/Sends/Busse/DCAs/FX/Routing, wie vom Modell unterstützt.

@@ -1,0 +1,24 @@
+🎶 BandPilot : la fiche technique, les ambiances des sources… et maintenant Android !
+
+Ces derniers jours, BandPilot a avancé sur trois points pour simplifier la préparation et les réglages du groupe.
+
+📋 UNE FICHE TECHNIQUE PRÊTE À PARTAGER
+Retrouve les musiciens, les instruments, les entrées, les retours et les branchements au même endroit. Place le groupe sur le plan de scène, puis imprime la fiche ou exporte-la en PDF pour préparer la prochaine date. Le bouton est directement accessible dans « Mon ingé son ».
+
+🎛️ UNE AMBIANCE, CHACUN SON DOSAGE
+Choisis une ambiance adaptée à la voix ou à l’instrument, puis règle la quantité d’effet dans le retour de chaque musicien. Tu peux préparer un essai, écouter, garder le résultat ou revenir aux réglages précédents. La récupération des ambiances a aussi été améliorée.
+
+📱 BANDPILOT DEVIENT AUTONOME SUR ANDROID
+Une première application Android est maintenant disponible en APK signé. Elle se connecte directement à la console en Wi-Fi : le moteur tourne sur la tablette, sans PC ni Docker. Installation durable, sans signature à renouveler chaque semaine, avec une interface adaptée au portrait et au paysage.
+
+L’installation et le démarrage ont été vérifiés sur une Redmi Pad sous Android 14, et le fonctionnement a été confirmé à l’usage. Android 8 minimum et WebView récent sont nécessaires ; consulte le guide pour les modèles et les limites de cette première version. Les fonctions liées à REAPER restent sur ordinateur.
+
+🔧 Côté fiabilité, la validation des instruments et l’installation Windows ont également été corrigées. Le rapport debug aide à signaler un problème sur GitHub, et BandPilot recherche les nouvelles versions au lancement.
+
+BandPilot reste gratuit, open source et disponible en cinq langues, sur Windows, macOS, Linux et désormais Android.
+
+👉 Découvrir les nouveautés et télécharger : https://herve8940.github.io/BandPilot/
+
+Vos retours sur vos tablettes et vos consoles permettront de continuer à améliorer l’application.
+
+#BandPilot #Android #MusiqueLive #Sonorisation #FicheTechnique #InEar #OpenSource

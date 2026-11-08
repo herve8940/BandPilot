@@ -1,6 +1,8 @@
 # BandPilot Android autonome
 
-Version Android initiale : **2.4.0-android.1**, issue du moteur BandPilot 2.3.3.
+Version Android initiale disponible : **2.4.0-android.1**, issue du moteur BandPilot 2.3.3.
+
+[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.1/BandPilot-Android-2.4.0-android.1-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
 
 L’APK embarque l’interface et le moteur OSC. La tablette échange directement avec la console sur le Wi-Fi ; aucun PC, Docker ou accès Internet n’est nécessaire au pilotage. Les données restent dans le stockage privé de l’application. Une mise à jour avec la même signature conserve ces données ; une désinstallation les supprime.
 
@@ -66,7 +68,7 @@ cd android
 
 Le test instrumenté vérifie l’interface, l’ajout et la validation d’un instrument, un nom accentué, l’aperçu d’ambiance, le diagnostic et la persistance après rechargement. Il lance une console OSC de test dans Android et vérifie des commandes UDP natives et le passage en lecture seule lors d’une interruption. Aucun appareil audio réel n’est utilisé par ce test.
 
-Validation de cette première version : 211 tests du moteur, 28 tests de l’interface, 39 tests exécutés avec l’adaptateur SQLite Android et un test de persistance de cet adaptateur passent. L’APK signé a été installé sur un émulateur Android 15 / API 35, x86_64, WebView 124 : parcours instrumenté complet, fermeture puis redémarrage et affichages 1280 × 800 et 800 × 1280 vérifiés. Les bibliothèques des trois architectures sont contrôlées dans l’APK, mais ARM 32/64 bits et Android 8–14 n’ont pas été exécutés sur appareil dans cette validation.
+Validation de cette première version : 211 tests du moteur, 28 tests de l’interface, 39 tests exécutés avec l’adaptateur SQLite Android et un test de persistance de cet adaptateur passent. L’APK signé a été installé sur un émulateur Android 15 / API 35, x86_64, WebView 124 : parcours instrumenté complet, fermeture puis redémarrage et affichages 1280 × 800 et 800 × 1280 vérifiés. Les bibliothèques des trois architectures sont contrôlées dans l’APK, et une Xiaomi Redmi Pad (22081283G) sous Android 14, ARM 64 bits, WebView 156 et pages de 4 Ko a ensuite été utilisée pour vérifier l’installation et le démarrage en simulation. Son utilisateur a confirmé le bon fonctionnement. Les autres modèles, ARM 32 bits et Android 8–13 restent à valider sur appareil. La connexion de cette tablette à une console physique n’a pas été vérifiée par le test de démarrage.
 
 Pour tester l’APK release, utiliser `-PtestBuildType=release assembleRelease assembleReleaseAndroidTest` avec les propriétés de signature, installer les deux APK puis exécuter d’abord `AutonomousTest` et ensuite `PersistenceTest` après un `am force-stop`. Le second test conserve le profil du premier ; ne pas effacer les données entre les deux.
 

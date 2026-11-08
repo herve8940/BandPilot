@@ -1,4 +1,4 @@
-#BandPilot
+# BandPilot
 
 **Tu banda. Tu mesa de mezclas. Tu sonido.**
 
@@ -11,6 +11,19 @@ BandPilot es el nuevo nombre de XR18 Studio: una aplicación local gratuita para
 [Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
 ![BandPilot 2.2.4 Mesa de mezclas experto en simulación](docs/images/bandpilot-2.2.4/expert-canal-es.jpg)
+
+## Novedades: ficha técnica, ambientes y Android
+
+La primera versión Android autónoma está disponible como APK firmado. No requiere renovar la firma cada semana. REAPER sigue en el ordenador.
+
+- **Ficha técnica y plano del escenario** — Prepara entradas, músicos, monitores y conexiones. Coloca al grupo en el plano e imprime o exporta un PDF. El acceso directo aparece en el asesor de sonido.
+- **Ambientes de las fuentes** — Elige un efecto adecuado para la voz o el instrumento, revisa la propuesta y ajusta la cantidad en el monitor de cada músico. Conserva el resultado o recupera los ajustes anteriores.
+- **Android autónomo** — Instala el APK en una tableta compatible y conéctala directamente a la mesa por Wi-Fi. La interfaz, el motor y los datos están en la tableta: sin PC ni Docker.
+
+[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.1/BandPilot-Android-2.4.0-android.1-universal.apk) · [Guía Android (FR)](docs/ANDROID.md)
+
+Primera versión: 2.4.0-android.1. Android 8+ y Android System WebView 111+. APK para ARM de 32/64 bits y x86_64; orientación vertical y horizontal. Instalación y arranque comprobados en Xiaomi Redmi Pad con Android 14; funcionamiento confirmado por su usuario. Otras tabletas y combinaciones con mesas requieren validación. Dispositivos con páginas de memoria de 16 KB no certificados. REAPER y el Taller basado en grabaciones siguen en el ordenador.
+
 
 ## Características
 
