@@ -83,3 +83,17 @@ test('discovery also uses the limited broadcast, like X-AIR Edit',()=>{
  assert.deepEqual(t,['192.168.71.255','255.255.255.255']);
  assert.deepEqual(discoveryTargets({}),[]);
 });
+test('Android network interruption cannot re-enable a connection still being opened',async()=>{
+ const directory=await mkdtemp(join(tmpdir(),'bandpilot-suspend-')),path=join(directory,'connection.json');
+ const socket=dgram.createSocket('udp4');await new Promise<void>(r=>socket.bind(0,'127.0.0.1',r));
+ const port=socket.address().port;
+ socket.on('message',(data,remote)=>{const msg=decodeOsc(data);if(msg.address==='/info')socket.send(encodeOsc('/info',['V','Fixture','XR18','1']),remote.port,remote.address);if(msg.address==='/lr/mix/fader')socket.send(encodeOsc(msg.address,[oscFloat(.25)]),remote.port,remote.address);});
+ const initial={mode:'simulation' as const,host:'127.0.0.1',port,enableWrites:false};const xr=new XR18(initial),manager=new ConnectionManager(xr,path,initial);
+ try{
+  await manager.change({...initial,mode:'real'});
+  xr.once('reset',()=>{void manager.suspend();});
+  await assert.rejects(manager.change({...initial,mode:'real',enableWrites:true}),/interrompue|aucune réponse/);
+  assert.equal(xr.status().writesEnabled,false);assert.equal(xr.status().connected,false);
+  assert.equal((await loadConnection(path,initial)).enableWrites,false);
+ }finally{xr.close();socket.close();await rm(directory,{recursive:true,force:true});}
+});

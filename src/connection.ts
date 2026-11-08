@@ -35,10 +35,12 @@ export async function saveConnection(path:string,config:ConnectionConfig){
 }
 export class ConnectionManager {
  private busy=false;
+ private epoch=0;
  constructor(private xr:XR18,private path:string,private config:ConnectionConfig){}
+ async suspend(){this.epoch++;this.config={...this.config,enableWrites:false};this.xr.suspendControl();if(!this.busy)await saveConnection(this.path,this.config);}
  async change(input:unknown){
   if(this.busy)throw Error('Connexion déjà en cours');
-  const next=connectionConfig(input);this.busy=true;
+  const next=connectionConfig(input);this.busy=true;const epoch=this.epoch;
   const previous=this.config;let switched=false;
   diagnostic('connection.start',{mode:next.mode,host:next.host,port:next.port,enableWrites:next.enableWrites});
   try{
@@ -50,19 +52,24 @@ export class ConnectionManager {
     if(devices.length>1)throw Error('Plusieurs consoles sur cette adresse : choisis le port détecté.');
     const device=devices[0]!;next.model=device.model;next.port=device.port;
    }
+   if(epoch!==this.epoch)throw Error('Connexion interrompue : vérifie le réseau puis reconnecte la console.');
    switched=true;await this.xr.reconnect(next);
    if(next.mode==='real'){
     const end=Date.now()+2500;
     while(!this.xr.status().connected&&Date.now()<end)await new Promise(r=>setTimeout(r,40));
     if(!this.xr.status().connected)throw Error('Console détectée, mais aucune réponse de mixage reçue.');
    }
-   await saveConnection(this.path,next);this.config=next;
+   if(epoch!==this.epoch)throw Error('Connexion interrompue : vérifie le réseau puis reconnecte la console.');
+   await saveConnection(this.path,next);
+   if(epoch!==this.epoch){await saveConnection(this.path,this.config);throw Error('Connexion interrompue : vérifie le réseau puis reconnecte la console.');}
+   this.config=next;
    diagnostic('connection.success',{mode:next.mode,host:next.host,port:next.port});
    return this.xr.status();
   }catch(e){
    diagnostic('connection.failed',{message:e instanceof Error?e.message:String(e),transportChanged:switched});
    // Failed identity probes leave the existing session untouched.
-   if(switched){await this.xr.reconnect(previous);}
+   if(switched&&epoch===this.epoch){await this.xr.reconnect(previous);}
+   else if(epoch!==this.epoch){this.xr.suspendControl();await saveConnection(this.path,this.config);}
    throw e;
   }finally{this.busy=false;}
  }

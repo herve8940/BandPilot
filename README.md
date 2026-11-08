@@ -65,6 +65,8 @@ La simulation de console ne simule pas REAPER : REC capture ses véritables entr
 
 ## Développement
 
+Une version Android autonome est en développement : [installation, compatibilité et compilation de l’APK](android/README.md). Elle embarque le moteur de console et les données sur la tablette, sans PC ni Docker. Les installateurs de bureau ci-dessus restent distincts de cet APK.
+
 **BandPilot 2.3.3** corrige la validation des instruments, conserve une possibilité d’annulation après interruption et renforce les vérifications de l’application Windows installée. Les rapports debug et les mises à jour au lancement restent disponibles. [Détails](docs/RELEASE_NOTES.md).
 
 **BandPilot 2.3.1** ajoute les [fiches de balance par groupe](docs/WORKSPACES.md#reprendre-une-balance-de-groupe), la [fiche technique et le plan de scène](docs/WORKSPACES.md#fiche-technique-du-groupe), la vérification du retour sur téléphone, la [comparaison kick et basse](docs/ATELIER_DU_SON.md#comparer-le-kick-et-la-basse) et le [diagnostic de connexion](docs/CONNEXION_XR18.md#diagnostiquer-la-connexion).

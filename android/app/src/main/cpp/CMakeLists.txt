@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(bandpilot LANGUAGES C CXX)
+add_library(node SHARED IMPORTED)
+set_target_properties(node PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../../../libnode/bin/${ANDROID_ABI}/libnode.so")
+add_library(bandpilot SHARED engine.cpp)
+target_include_directories(bandpilot PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../../libnode/include/node")
+target_link_libraries(bandpilot node android log)
+target_link_options(bandpilot PRIVATE "-Wl,-z,max-page-size=16384")

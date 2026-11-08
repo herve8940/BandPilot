@@ -1,4 +1,6 @@
 import {diagnosticEvents,sanitizeDiagnostic} from '../shared/diagnostic-report.js';
+import {nativeAccess} from './native-access.js';
+import {androidUpdate} from './android-updates.js';
 import {patchSignature,personalPatch} from '../shared/tech-rider.js';
 import {languageOrFrench} from '../shared/languages.js';
 import {MIXER_MODELS} from '../shared/mixer-models.js';
@@ -105,10 +107,20 @@ if(!['127.0.0.1','localhost'].includes(listenHost)&&(!tls||!access.enabled()))th
 const handler: http.RequestListener = async (req, res) => {
   let ownsWriteLock=false;
   try {
+  if(!nativeAccess(req)){res.writeHead(403);res.end(JSON.stringify({error:'Application locale requise'}));return;}
   const path = new URL(req.url ?? "/", "http://localhost").pathname;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
   if(!sameOrigin(req)){res.writeHead(403);res.end(JSON.stringify({error:"Origine refusée"}));return;}
+  if(process.env.BANDPILOT_ANDROID==='1'&&path==='/api/android/suspend'&&req.method==='POST'){
+   show.manualOverride();await connection.suspend();res.end(JSON.stringify({ok:true}));return;
+  }
+  if(process.env.BANDPILOT_ANDROID==='1'&&path==='/api/android/update'&&req.method==='GET'){
+   res.end(JSON.stringify(await androidUpdate(APP_VERSION)));return;
+  }
+  if(process.env.BANDPILOT_ANDROID==='1'&&/^\/api\/(?:reaper|workshop)(?:\/|$)/.test(path)){
+   res.writeHead(501);res.end(JSON.stringify({error:'REAPER et l’Atelier du son sont disponibles dans BandPilot sur ordinateur.'}));return;
+  }
   if(path==='/api/auth'&&req.method==='GET'){res.end(JSON.stringify({enabled:access.enabled(),user:access.user(req)}));return;}
   if(path==='/api/auth/setup'&&req.method==='POST'){
     try{const d=await body(req);if(access.enabled())throw Error('Comptes déjà configurés');access.create(d.name,d.password,'admin',[]);for(const ws of wss.clients)ws.terminate();res.end(JSON.stringify({ok:true}));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
@@ -534,7 +546,7 @@ const handler: http.RequestListener = async (req, res) => {
   finally {if(ownsWriteLock)studioApi.busy=false;}
 };
 const server=tls?https.createServer(tls,handler):http.createServer(handler);
-const wss = new WebSocketServer({ server, path: "/ws", verifyClient:({req},done)=>done(sameOrigin(req)&&!!access.user(req),401) });
+const wss = new WebSocketServer({ server, path: "/ws", verifyClient:({req},done)=>done(nativeAccess(req)&&sameOrigin(req)&&!!access.user(req),401) });
 const wsRequests=new WeakMap<WebSocket,http.IncomingMessage>();
 // Live control channel for the graphical mixer (fader drags, knobs, mute, solo), like X-AIR Edit.
 function handleLive(ws:WebSocket,req:http.IncomingMessage,raw:Buffer){
@@ -568,7 +580,12 @@ xr18.on("connection", () => {const message=JSON.stringify({type:"status",status:
 xr18.on("warning", warning => {console.warn("[OSC]", warning);diagnostic("osc.warning",{message:String(warning).slice(0,500)}); });
 await xr18.start();
 const port = Number(process.env.HTTP_PORT ?? 3000);
-server.listen(port, listenHost, () => console.log(`BandPilot API on ${tls?"https":"http"}://${listenHost}:${port} (${xr18.mode})`));
+server.listen(port, listenHost, () => {
+ const address=server.address(),actual=typeof address==='object'?address?.port:port;
+ console.log(`BandPilot API on ${tls?"https":"http"}://${listenHost}:${actual} (${xr18.mode})`);
+ if(process.env.BANDPILOT_ANDROID==='1'&&process.env.BANDPILOT_READY_FILE){writeFileSync(process.env.BANDPILOT_READY_FILE,JSON.stringify({port:actual,version:APP_VERSION}),{mode:0o600});writeFileSync(join(dirname(process.env.BANDPILOT_READY_FILE),'port.json'),JSON.stringify(actual),{mode:0o600});}
+});
+server.on('error',error=>{if(process.env.BANDPILOT_ANDROID==='1'&&(error as NodeJS.ErrnoException).code==='EADDRINUSE')server.listen(0,listenHost);else throw error;});
 const statusTimer=setInterval(()=>{for(const ws of wss.clients){const req=wsRequests.get(ws);if(!req||!access.user(req))ws.terminate();}const message=JSON.stringify({type:"status",status:xr18.status()});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);},2000);
 statusTimer.unref();
 function shutdown(){clearInterval(statusTimer);ears.close();xr18.close();database.close();access.close();library.close();for(const ws of wss.clients)ws.terminate();wss.close();server.close();}

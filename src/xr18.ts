@@ -31,6 +31,7 @@ export class XR18 extends EventEmitter {
   private generation=0;
   private operationEpoch=0;
   cancelOperations(){this.operationEpoch++;}
+  suspendControl(){this.writes=false;this.cancelOperations();this.close();this.emit('connection');}
   operationId(){return this.operationEpoch;}
   connectionId(){return this.generation;}
   private fxValues=new Map<number,{slot:number;algorithm:number;parameters:{type:"f"|"i";value:number}[]}>();

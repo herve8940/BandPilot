@@ -1,0 +1,57 @@
+plugins { id 'com.android.application' }
+def signingFile = System.getenv('BANDPILOT_SIGNING_PROPERTIES')
+def signing = new Properties()
+if (signingFile) file(signingFile).withInputStream { signing.load(it) }
+def runtimeVersion = file('src/main/assets/runtime/version.json')
+def runtimeRevision = runtimeVersion.exists() ? new groovy.json.JsonSlurper().parse(runtimeVersion).revision ?: 'development' : 'missing'
+android {
+ namespace 'be.bandpilot.android'
+ compileSdk 35
+ ndkVersion '27.2.12479018'
+ defaultConfig {
+  applicationId 'be.bandpilot.android'
+  minSdk 26
+  targetSdk 35
+  versionCode 2040001
+  versionName '2.4.0-android.1'
+  buildConfigField 'String', 'RUNTIME_REV', '"' + runtimeRevision + '"'
+  ndk { abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64' }
+  externalNativeBuild { cmake { arguments '-DANDROID_STL=c++_shared', '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON' } }
+  testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+ }
+ signingConfigs {
+  if (signingFile) release {
+   storeFile file(signing.getProperty('storeFile'))
+   storePassword signing.getProperty('storePassword')
+   keyAlias signing.getProperty('keyAlias')
+   keyPassword signing.getProperty('keyPassword')
+  }
+ }
+ buildTypes {
+  release { minifyEnabled false; if (signingFile) signingConfig signingConfigs.release }
+  debug { applicationIdSuffix '.debug'; versionNameSuffix '-debug' }
+ }
+ buildFeatures { buildConfig true }
+ testBuildType (project.findProperty('testBuildType') ?: 'debug')
+ sourceSets { main { jniLibs.srcDirs = ['libnode/bin'] } }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+ externalNativeBuild { cmake { path 'src/main/cpp/CMakeLists.txt'; version '3.22.1' } }
+ // 4 KB upstream libnode currently needs Android's compatibility loader on 16 KB devices.
+ // Do not claim 16 KB support until the runtime is rebuilt and device-tested.
+ packaging { jniLibs { useLegacyPackaging true; keepDebugSymbols += ['**/libnode.so'] } }
+}
+tasks.register('verifyEmbeddedRuntime') {
+ doLast {
+  ['bootstrap.cjs','server.mjs','version.json','web/index.html','node_modules/sql.js/dist/sql-wasm.wasm'].each {
+   if (!file('src/main/assets/runtime/' + it).exists()) throw new GradleException('Missing runtime asset: ' + it + '. Run node android/scripts/prepare.mjs first.')
+  }
+  ['arm64-v8a','armeabi-v7a','x86_64'].each {
+   if (!file('libnode/bin/' + it + '/libnode.so').exists()) throw new GradleException('Missing native runtime: ' + it + '. Run python3 android/scripts/fetch-runtime.py first.')
+  }
+ }
+}
+tasks.named('preBuild').configure { dependsOn 'verifyEmbeddedRuntime' }
+dependencies {
+ androidTestImplementation 'androidx.test:runner:1.6.2'
+ androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}

@@ -11,3 +11,16 @@ coverage/
 /release/
 
 /desktop/build-info.json
+
+# Android outputs, downloaded runtime, and private signing material
+/android/.gradle/
+/android/.cxx/
+/android/build/
+/android/app/build/
+/android/app/.cxx/
+/android/app/libnode/
+/android/app/src/main/assets/runtime/
+/android/local.properties
+/android/signing.properties
+*.jks
+*.keystore

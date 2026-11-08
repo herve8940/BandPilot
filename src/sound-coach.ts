@@ -1,3 +1,4 @@
+import {foldLatin} from '../shared/latin-fold.js';
 import {validateTechRider,type TechRider} from '../shared/tech-rider.js';
 import {PROCESSING_PRESETS} from './coach-presets.js';
 import {processingCommands} from './processing-osc.js';
@@ -111,7 +112,7 @@ export function suggestMusicians(inputs:Input[]):Musician[]{
  return out;
 }
 /** XR18 names are 12 bytes; keep them ASCII so the console reads back exactly what was sent. */
-export function consoleName(name:string){return name.replace(/[œŒ]/g,m=>m==='œ'?'oe':'OE').replace(/[æÆ]/g,m=>m==='æ'?'ae':'AE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7e]/g,'').slice(0,12).trim()||'Micro';}
+export function consoleName(name:string){return foldLatin(name).replace(/[^\x20-\x7e]/g,'').slice(0,12).trim()||'Micro';}
 export function validateProfile(value:unknown):CoachProfile {
  const p=value as CoachProfile;
  if(!p||p.version!==1||!Array.isArray(p.inputs)||p.inputs.length>16||!Array.isArray(p.completed)||p.completed.some(id=>!STEPS.some(s=>s.id===id)))throw Error('Préparation de groupe invalide');
@@ -166,7 +167,7 @@ export function thresholdsFrom(src:Source,peakDb:number,bleedDb?:number){
  return {compThrDb:comp,gateThrDb:gate,note};
 }
 export function identifySymptom(text:string){
- const t=text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const t=foldLatin(text).toLowerCase();
  const patterns:[string,RegExp][]=[
   ['feedback',/larsen|siffl|feedback|whistl|fischi|acopl|pitido|silbido|realimentacion|ruckkoppl|pfeif|quietsch/],
   ['clipping',/satur|gresill|distors|rouge|clipp|crackl|distort|distorc|gracchi|crujid|ubersteuer|verzerr|knacks/],
