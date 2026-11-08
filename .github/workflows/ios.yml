@@ -1,0 +1,58 @@
+name: iPad standalone validation
+on:
+  push:
+    branches: [main, 'feature/**']
+    paths: ['ios/**', 'src/**', 'shared/**', 'web/**', 'android/runtime/sqlite.mjs', 'package*.json', '.github/workflows/ios.yml']
+  pull_request:
+    paths: ['ios/**', 'src/**', 'shared/**', 'web/**', 'android/runtime/sqlite.mjs', 'package*.json', '.github/workflows/ios.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ipad:
+    runs-on: macos-15-intel
+    timeout-minutes: 35
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+            ios/runtime/package-lock.json
+      - run: npm ci
+      - run: npm --prefix web ci
+      - run: npm --prefix ios/runtime ci
+      - run: node ios/scripts/test-runtime.mjs
+      - run: npm run build:all
+      - run: python3 ios/scripts/fetch-runtime.py
+      - run: node ios/scripts/prepare.mjs
+      - name: Generate the Xcode project
+        run: |
+          command -v xcodegen || brew install xcodegen
+          xcodegen generate --spec ios/project.yml
+      - name: Compile for a physical iPad without signing
+        run: xcodebuild -project ios/BandPilot.xcodeproj -scheme BandPilot -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath ios/build/device CODE_SIGNING_ALLOWED=NO build > ios/build/device-build.log 2>&1
+      - name: Select an available iPad simulator
+        run: python3 ios/scripts/select-simulator.py
+      - name: Test the embedded engine, instrument validation, ambience and PDF on iPad
+        run: xcodebuild -project ios/BandPilot.xcodeproj -scheme BandPilot -configuration Debug -destination "platform=iOS Simulator,id=$BANDPILOT_SIMULATOR" -derivedDataPath ios/build/simulator -resultBundlePath ios/build/iPad-tests.xcresult CODE_SIGNING_ALLOWED=NO test > ios/build/simulator-tests.log 2>&1
+      - name: Save simulator screenshot and unsigned application
+        run: |
+          xcrun simctl launch "$BANDPILOT_SIMULATOR" be.bandpilot.ipad
+          xcrun simctl io "$BANDPILOT_SIMULATOR" screenshot ios/build/ipad-simulator.png
+          ditto -c -k --keepParent ios/build/device/Build/Products/Release-iphoneos/BandPilot.app ios/build/BandPilot-iPad-unsigned.zip
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ipad-build-and-tests
+          path: |
+            ios/build/*.log
+            ios/build/*.xcresult
+            ios/build/*.png
+            ios/build/BandPilot-iPad-unsigned.zip
+          retention-days: 14

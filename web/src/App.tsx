@@ -1,4 +1,4 @@
-import {isAndroid} from './platform';
+import {isNativeMobile} from './platform';
 import {SupportCenter} from './SupportCenter';
 import {LanguageSettings} from "./LanguageSettings";
 import {tx, getLocale, useLanguage} from "./i18n";
@@ -63,7 +63,7 @@ const ALL_SPACES: { id: Space; name: string; hint: string; icon: typeof AudioLin
   { id:"show", name:"Concert", hint:"Dérouler le set", icon:ListMusic, pages:["concert"] },
   { id:"setup", name:"Réglages", hint:"Connexion et système", icon:Settings2, pages:["settings"] },
 ];
-const SPACES=ALL_SPACES.filter(s=>!isAndroid||!['rehearse','show'].includes(s.id));
+const SPACES=ALL_SPACES.filter(s=>!isNativeMobile||!['rehearse','show'].includes(s.id));
 const PAGE_INFO: Record<Page, { name: string; hint: string; icon: typeof AudioLines }> = {
   console: { name:"Console", hint:"Volumes, mutes et réglages de chaque source", icon:SlidersHorizontal },
   rehearse: { name:"Répéter", hint:"Avec tes morceaux ReaCue ou le groupe seul", icon:Music2 },
@@ -372,10 +372,10 @@ export default function App() {
         </div>
         {SPACES.find(sp=>sp.id===space)!.pages.length>1&&<nav className="subnav" aria-label={tx("Pages")}>{SPACES.find(sp=>sp.id===space)!.pages.map(pg=><button key={pg} type="button" className={page===pg?"active":""} onClick={()=>setPage(pg)}>{tx(PAGE_INFO[pg].name)}</button>)}</nav>}
       </header>
-      {!isAndroid&&<WorkshopNotice onOpen={()=>{sessionStorage.setItem("bandpilot-workshop-view","true");setPage("rehearse");}}/>}
+      {!isNativeMobile&&<WorkshopNotice onOpen={()=>{sessionStorage.setItem("bandpilot-workshop-view","true");setPage("rehearse");}}/>}
       {blankPlan && <PlanDialog plan={blankPlan} busy={blankBusy} canApply={canWrite} mode={isSim ? "simulation" : "real"} onClose={() => setBlankPlan(null)} onApply={() => void applyBlank()}/>}
       {notice && <div className="studio-alert" role="alert"><CircleAlert size={16}/><span>{tx(notice)}</span><button onClick={()=>setNotice("")}>{tx("Fermer")}</button></div>}
-      {unsupportedX32 ? <section className="model-blocked"><h2>{tx(model.label)}{tx(" · adaptation en cours")}</h2><p>{tx("Le mélangeur 32 canaux, 16 bus, 8 DCA et 6 matrices est disponible. Les fonctions guidées, scènes complètes et retours sur téléphone nécessitent encore leur adaptateur X32.")}</p><button onClick={()=>setPage("console")}>{tx("Ouvrir le mélangeur ")}{tx(model.label)}</button></section> : page==="console"&&model.family==="x32" ? <div className="studio-work"><X32Console canWrite={canWrite}/></div> : page==="rehearse" ? <Rehearse onExpert={ch=>{setSelected(ch);localStorage.setItem("xr18-expert-view","channel");setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="concert" ? <Concert/> : page==="coach" ? <SoundCoach onWorkshop={isAndroid?undefined:()=>{sessionStorage.setItem("bandpilot-workshop-view","true");setPage("rehearse");}} status={status} online={socketOk} meters={meterState} onConnect={()=>setPage("settings")} onMonitors={()=>setPage("ears")} onExpert={(ch,view)=>{if(ch)setSelected(ch);try{localStorage.setItem("xr18-expert-view",view??"channel");}catch{}setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="console" ? consoleMode==="simple" ? <div className="content"><SimpleMixer simulation={isSim} canWrite={canWrite} onExpert={ch=>{if(ch)setSelected(ch);setExpertTab(ch?"eq":"mixer");setTab("mixer");setConsoleMode("expert");}}/></div> : <>
+      {unsupportedX32 ? <section className="model-blocked"><h2>{tx(model.label)}{tx(" · adaptation en cours")}</h2><p>{tx("Le mélangeur 32 canaux, 16 bus, 8 DCA et 6 matrices est disponible. Les fonctions guidées, scènes complètes et retours sur téléphone nécessitent encore leur adaptateur X32.")}</p><button onClick={()=>setPage("console")}>{tx("Ouvrir le mélangeur ")}{tx(model.label)}</button></section> : page==="console"&&model.family==="x32" ? <div className="studio-work"><X32Console canWrite={canWrite}/></div> : page==="rehearse" ? <Rehearse onExpert={ch=>{setSelected(ch);localStorage.setItem("xr18-expert-view","channel");setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="concert" ? <Concert/> : page==="coach" ? <SoundCoach onWorkshop={isNativeMobile?undefined:()=>{sessionStorage.setItem("bandpilot-workshop-view","true");setPage("rehearse");}} status={status} online={socketOk} meters={meterState} onConnect={()=>setPage("settings")} onMonitors={()=>setPage("ears")} onExpert={(ch,view)=>{if(ch)setSelected(ch);try{localStorage.setItem("xr18-expert-view",view??"channel");}catch{}setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="console" ? consoleMode==="simple" ? <div className="content"><SimpleMixer simulation={isSim} canWrite={canWrite} onExpert={ch=>{if(ch)setSelected(ch);setExpertTab(ch?"eq":"mixer");setTab("mixer");setConsoleMode("expert");}}/></div> : <>
 
         <div className="studio-work">
           {model.usbChannels===0&&<p className="model-note">{tx(model.label)} : {tx(model.channels)}{tx(" entrées, ")}{tx(model.micPreamps)}{tx(" préamplis micro et ")}{tx(model.monitorOutputs)}{tx(" sorties Aux physiques. Enregistrement USB stéréo sur clé ; pas d’interface USB multipiste vers l’ordinateur.")}</p>}

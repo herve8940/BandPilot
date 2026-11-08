@@ -24,3 +24,17 @@ coverage/
 /android/signing.properties
 *.jks
 *.keystore
+
+# iPad build output and downloaded frameworks; signing stays in Xcode/Keychain
+/ios/vendor/
+/ios/build/
+/ios/BandPilot/Runtime/
+/ios/BandPilot.xcodeproj/
+/ios/runtime/node_modules/
+*.xcuserstate
+xcuserdata/
+*.p12
+*.mobileprovision
+
+/ios/BandPilot/Assets.xcassets/AppIcon.appiconset/icon.png
+/ios/BandPilot/Info.plist

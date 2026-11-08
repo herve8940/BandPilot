@@ -1,0 +1,77 @@
+name: BandPilot
+options:
+  bundleIdPrefix: be.bandpilot
+  deploymentTarget:
+    iOS: '16.4'
+  developmentLanguage: fr
+settings:
+  base:
+    CLANG_ENABLE_MODULES: YES
+    CLANG_ENABLE_OBJC_ARC: YES
+    CLANG_CXX_LANGUAGE_STANDARD: c++17
+    MARKETING_VERSION: 2.4.0
+    CURRENT_PROJECT_VERSION: 1
+    TARGETED_DEVICE_FAMILY: '2'
+    SUPPORTS_MACCATALYST: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  BandPilot:
+    type: application
+    platform: iOS
+    sources:
+      - path: BandPilot
+        excludes: [Runtime, Info.plist]
+      - path: BandPilot/Runtime
+        type: folder
+        buildPhase: resources
+    info:
+      path: BandPilot/Info.plist
+      properties:
+        CFBundleDisplayName: BandPilot
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleLocalizations: [fr, en, it, es, de]
+        UILaunchScreen:
+          UIColorName: ''
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSLocalNetworkUsageDescription: BandPilot se connecte directement à ta console et partage les retours avec les musiciens sur ton réseau local.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: be.bandpilot.ipad
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - framework: vendor/NodeMobile.xcframework
+        embed: true
+        codeSign: true
+      - sdk: UIKit.framework
+      - sdk: WebKit.framework
+      - sdk: Network.framework
+      - sdk: Security.framework
+  BandPilotTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: be.bandpilot.ipad.tests
+        HEADER_SEARCH_PATHS: $(SRCROOT)/BandPilot
+    dependencies:
+      - target: BandPilot
+schemes:
+  BandPilot:
+    build:
+      targets:
+        BandPilot: all
+        BandPilotTests: [test]
+    test:
+      targets: [BandPilotTests]

@@ -1,4 +1,5 @@
 import './android-bridge';
+import './ios-bridge';
 import {AppErrorBoundary} from './AppErrorBoundary';
 import {installErrorReporting} from './diagnostics';
 import React from "react";

@@ -9,6 +9,7 @@ export interface ConnectionConfig {mode:Mode;host:string;port:number;enableWrite
 /** Plain-language explanation of why the console cannot be reached, from the socket error codes. */
 export function unreachableMessage(host:string,port:number,errors:string[]){
  const text=errors.join(' ');
+ if(process.env.BANDPILOT_IOS==='1'&&/EHOSTUNREACH|ENETUNREACH|EACCES|EPERM/.test(text))return `L’iPad ne peut pas joindre ${host}:${port}. Vérifie le Wi-Fi, l’adresse de la console et l’autorisation Réseau local de BandPilot dans Réglages.`;
  if(/EHOSTUNREACH|ENETUNREACH|EACCES|EPERM/.test(text))return `L’ordinateur n’arrive pas à joindre ${host} (réseau injoignable). Causes les plus fréquentes : `+
   `1) sur Mac, BandPilot n’a pas l’autorisation « Réseau local » : Réglages Système › Confidentialité et sécurité › Réseau local, active BandPilot puis relance l’application ; `+
   `2) la console a changé d’adresse ou est éteinte : clique « Détecter et connecter ma console » ; `+
