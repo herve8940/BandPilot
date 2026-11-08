@@ -28,20 +28,25 @@ static NSData *message(NSString *address,NSArray *args) {
 @implementation BPOSCPeer
 - (BOOL)start {
  self.socketFD=socket(AF_INET,SOCK_DGRAM,0);if(self.socketFD<0)return NO;
+ int capacity=262144;setsockopt(self.socketFD,SOL_SOCKET,SO_RCVBUF,&capacity,sizeof(capacity));
  struct sockaddr_in local={0};local.sin_family=AF_INET;local.sin_addr.s_addr=htonl(INADDR_LOOPBACK);local.sin_port=0;
  if(bind(self.socketFD,(struct sockaddr *)&local,sizeof(local))!=0){close(self.socketFD);return NO;}
  socklen_t size=sizeof(local);getsockname(self.socketFD,(struct sockaddr *)&local,&size);self.port=ntohs(local.sin_port);self.values=[NSMutableDictionary new];
- self.source=dispatch_source_create(DISPATCH_SOURCE_TYPE_READ,self.socketFD,0,dispatch_get_global_queue(QOS_CLASS_UTILITY,0));
+ dispatch_queue_t queue=dispatch_queue_create("BandPilot.OSC.TestPeer",dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL,QOS_CLASS_USER_INITIATED,0));
+ self.source=dispatch_source_create(DISPATCH_SOURCE_TYPE_READ,self.socketFD,0,queue);
  __weak BPOSCPeer *weak=self;int fd=self.socketFD;
  dispatch_source_set_event_handler(self.source,^{
-  BPOSCPeer *s=weak;if(!s)return;uint8_t buffer[8192];struct sockaddr_in from;socklen_t length=sizeof(from);ssize_t n=recvfrom(fd,buffer,sizeof(buffer),0,(struct sockaddr *)&from,&length);if(n<=0)return;
-  NSData *packet=[NSData dataWithBytes:buffer length:(NSUInteger)n];NSUInteger offset=0;NSString *address=readString(packet,&offset),*tags=readString(packet,&offset);if(!address||!tags)return;
+  BPOSCPeer *s=weak;if(!s)return;
+  // Drain bursts from the initial console sync without dropping queued requests.
+  for(;;){uint8_t buffer[8192];struct sockaddr_in from;socklen_t length=sizeof(from);ssize_t n=recvfrom(fd,buffer,sizeof(buffer),MSG_DONTWAIT,(struct sockaddr *)&from,&length);if(n<=0)return;
+  NSData *packet=[NSData dataWithBytes:buffer length:(NSUInteger)n];NSUInteger offset=0;NSString *address=readString(packet,&offset),*tags=readString(packet,&offset);if(!address||!tags)continue;
   id value=nil;if(tags.length>1){unichar t=[tags characterAtIndex:1];if(t=='s')value=readString(packet,&offset);else if(offset+4<=packet.length){uint32_t bits;memcpy(&bits,buffer+offset,4);bits=ntohl(bits);if(t=='f'){float f;memcpy(&f,&bits,4);value=@(f);}else if(t=='i')value=@((int32_t)bits);}}
   NSData *reply;
   if([address isEqual:@"/info"]||[address isEqual:@"/xinfo"])reply=message(address,@[@"127.0.0.1",@"iPad fixture",@"XR18",@"1.18"]);
-  else if([address isEqual:@"/xremote"]||[address hasPrefix:@"/subscribe"]||[address hasPrefix:@"/meters"])return;
+  else if([address isEqual:@"/xremote"]||[address hasPrefix:@"/subscribe"]||[address hasPrefix:@"/meters"])continue;
   else {@synchronized(s){if(value)s.values[address]=value;reply=message(address,@[s.values[address]?:([address hasSuffix:@"/config/name"]?@"":@0)]);}}
   sendto(fd,reply.bytes,reply.length,0,(struct sockaddr *)&from,length);
+  }
  });dispatch_source_set_cancel_handler(self.source,^{close(fd);});dispatch_resume(self.source);return YES;
 }
 - (id)value:(NSString *)address {@synchronized(self){return self.values[address];}}

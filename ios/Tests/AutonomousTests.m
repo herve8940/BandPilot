@@ -48,6 +48,9 @@
  NSDictionary *report=[self api:@"/api/diagnostics/report" body:nil expected:200 authorized:YES];
  XCTAssertTrue([report[@"app"][@"version"] containsString:@"ios"]);
  XCTAssertFalse([[self js:@"[...document.querySelectorAll('.rail-space-btn')].some(b=>b.textContent.includes('Enregistrer et réécouter'))"] boolValue]);
+ UIGraphicsImageRenderer *renderer=[[UIGraphicsImageRenderer alloc] initWithBounds:self.controller.view.window.bounds];
+ UIImage *image=[renderer imageWithActions:^(UIGraphicsImageRendererContext *context){[self.controller.view.window drawViewHierarchyInRect:self.controller.view.window.bounds afterScreenUpdates:YES];}];
+ XCTAttachment *capture=[XCTAttachment attachmentWithImage:image];capture.name=@"BandPilot-iPad";capture.lifetime=XCTAttachmentLifetimeKeepAlways;[self addAttachment:capture];
 }
 - (void)testDirectUDPAndSuspend {
  BPOSCPeer *peer=[BPOSCPeer new];XCTAssertTrue([peer start]);
