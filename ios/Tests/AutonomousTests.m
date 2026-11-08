@@ -82,6 +82,10 @@
  XCTAssertTrue([NSFileManager.defaultManager fileExistsAtPath:[BPNodeEngine.shared.root stringByAppendingPathComponent:@"data/bandpilot.db"]]);
 }
 - (void)testResumeAndPDFExport {
+ [self js:@"window.permissionDialogPage=true"];
+ [UIApplication.sharedApplication.delegate applicationDidBecomeActive:UIApplication.sharedApplication];
+ [NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.4]];
+ XCTAssertTrue([[self js:@"window.permissionDialogPage===true"] boolValue],@"Accepting a permission dialog must not reload the connection form");
  XCTestExpectation *paused=[self expectationWithDescription:@"Suspend"];
  [BPNodeEngine.shared suspend:^(BOOL ok){XCTAssertTrue(ok);[paused fulfill];}];[self waitForExpectations:@[paused] timeout:10];
  NSDictionary *state=[self api:@"/api/status" body:nil expected:200 authorized:YES];XCTAssertFalse([state[@"writesEnabled"] boolValue]);
