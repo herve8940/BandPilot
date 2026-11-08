@@ -63,8 +63,8 @@ export function ConnectionPanel({status}:{status:Status}){
     {!isNativeMobile&&<button type="button" onClick={()=>void checkBridge()}>{tx("Vérifier le pont REAPER")}</button>}
     {bridgeCheck&&<p role="status">{tx(bridgeCheck)}</p>}
   </details>
-  <MixerSyncPanel status={status}/>
   <details open={isIOS||undefined}><summary>{tx(isIOS?"Connecter cet iPad à la console":"Connexion manuelle si la recherche est bloquée")}</summary>{isIOS&&<p>{tx("Connecte cet iPad au même réseau Wi-Fi que la console, saisis son adresse IP et autorise BandPilot à accéder au réseau local.")}</p>}<form onSubmit={e=>{e.preventDefault();void run(async()=>{await request('/api/connection',{mode:'real',host,enableWrites:false});setMessage('Modèle détecté et connexion en lecture seule.');});}}><fieldset disabled={working}><label>{tx("Adresse IP")}<input required placeholder={tx("192.168.1.1 · détection des deux ports")} value={host} onChange={e=>setHost(e.target.value)}/></label><button>{tx("Se connecter")}</button></fieldset></form></details>
+  {isIOS?<details><summary>{tx("Préparer la synchronisation")}</summary><MixerSyncPanel status={status}/></details>:<MixerSyncPanel status={status}/>}
   <p className="app-version">{tx("BandPilot ")}<b>{tx(version||"…")}</b></p>
   <p><a href="/api/diagnostics/log" download="xr18-studio-diagnostic.log">{tx("Télécharger le journal de diagnostic")}</a></p>
   <p>{tx("Après un essai de connexion, télécharge ce fichier pour le joindre au support. Il contient les adresses IP locales et les réponses d’identité de la console, sans clé API ni mot de passe.")}</p>
