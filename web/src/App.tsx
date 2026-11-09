@@ -27,6 +27,7 @@ import "./fx-library.css";
 import "./processing.css";
 import "./design-v3.css";
 import "./recording-v3.css";
+import "./expert/bandstudio.css";
 import "./show/rehearsal-responsive.css";
 import "./expert/desk.css";
 import "./visual-console.css";

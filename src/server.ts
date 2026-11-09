@@ -1,3 +1,4 @@
+import {BandStudio} from './bandstudio.js';
 import {diagnosticEvents,sanitizeDiagnostic} from '../shared/diagnostic-report.js';
 import {patchSignature,personalPatch} from '../shared/tech-rider.js';
 import {languageOrFrench} from '../shared/languages.js';
@@ -73,6 +74,7 @@ const instruments=():Instrument[]=>{
 };
 const analyzer=new Analyzer(xr18,instruments);
 const bridge=new ReaperBridge();
+const bandstudio=new BandStudio();
 const reaper=new ReaperLink({transport:()=>bridge.transport(),actions:ids=>bridge.actions(ids)});
 const workshop=new Workshop(xr18,bridge,library,resolve(dirname(dbPath),'workshops'));
 const SONG_TAIL_S=8;
@@ -123,6 +125,22 @@ const handler: http.RequestListener = async (req, res) => {
    try{if(req.method==='GET')res.end(JSON.stringify(database.workspace()));
    else if(req.method==='PUT')res.end(JSON.stringify(database.saveWorkspace(await body(req))));
    else{res.writeHead(405);res.end('{}');}}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(req.method==='POST'&&['/api/reaper/rec','/api/show/rec'].includes(path)){
+   const studio=await bandstudio.state().catch(()=>null);
+   if(studio?.recording||studio?.pending){res.writeHead(409);res.end(JSON.stringify({error:'Arrête la prise BandStudio avant de lancer une prise REAPER.'}));return;}
+  }
+  if(path.startsWith('/api/bandstudio')){
+   try{
+    if(req.method==='GET'&&path==='/api/bandstudio'){res.end(JSON.stringify(await bandstudio.state()));return;}
+    if(req.method==='GET'&&path==='/api/bandstudio/plan'){res.end(JSON.stringify(await reaperPlan()));return;}
+    if(req.method!=='POST'||path!=='/api/bandstudio/command'){res.writeHead(404);res.end('{}');return;}
+    const d=await body(req),action=String(d.action);
+    if(workshop.blocksRecording()&&action!=='stop')throw Error('Termine l’Atelier du son avant de piloter BandStudio.');
+    if(['record','new','configure','play'].includes(action)&&bridge.alive()&&(await bridge.transport()).recording)throw Error('Arrête la prise REAPER avant de piloter BandStudio.');
+    const {projectID,...args}=d;
+    const result=await bandstudio.command(args,String(projectID));access.log(user!,`BandStudio ${action}`);res.end(JSON.stringify(result));
+   }catch(e){res.writeHead(409);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(workshop.blocksRecording()&&req.method!=='GET'&&(['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/show/presence','/api/show/original','/api/show/take','/api/show/track','/api/show/play','/api/show/loop','/api/show/goto','/api/mixer-sync/apply','/api/console/apply','/api/coach/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo','/api/coach/vocal-fx/keep','/api/analysis/listen','/api/reacue/event','/api/reacue/arm'].includes(path)||/^\/api\/library\/[^/]+\/apply$/.test(path))){res.writeHead(409);res.end(JSON.stringify({error:'Termine l’Atelier du son et restaure les sources avant cette action ; les réglages directs de canal restent disponibles dans Console'}));return;}
   if(path==='/api/reacue/stop'&&req.method==='POST'){show.arm(false);access.log(user!,'Arrêt ReaCue');res.end(JSON.stringify({ok:true}));return;}

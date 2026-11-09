@@ -1,0 +1,71 @@
+name: BandPilot with BandStudio DEV (Windows)
+on:
+  push:
+    branches: [codex/bandstudio-multitrack-dev]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: bandpilot-bandstudio-dev
+  cancel-in-progress: false
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm --prefix web ci
+      - name: Recording and permission regressions
+        run: node --import tsx --test --test-concurrency=1 tests/bandstudio.test.ts tests/access.test.ts tests/reaper.test.ts tests/reaper-bridge.test.ts tests/studio-api.test.ts
+      - run: npm run test:web
+      - run: npm run desktop:package
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Test packaged Windows application
+        shell: pwsh
+        run: |
+          node desktop/smoke.cjs "$pwd/release/win-unpacked/BandPilot.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged application failed to start' }
+          $file = Get-Item release/BandPilot-Windows-2.3.4-dev.1.exe
+          $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($file.Name)" | Set-Content release/SHA256SUMS.txt -Encoding ascii
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bandpilot-bandstudio-windows
+          path: |
+            release/BandPilot-Windows-2.3.4-dev.1.exe
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+  publish:
+    needs: windows
+    if: github.ref == 'refs/heads/codex/bandstudio-multitrack-dev'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: bandpilot-bandstudio-windows
+          path: installers
+      - name: Publish a separate development release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/codex/bandstudio-multitrack-dev" --jq .object.sha)
+          if [ "$current_sha" != "$GITHUB_SHA" ]; then exit 0; fi
+          (cd installers && sha256sum --check SHA256SUMS.txt)
+          tag=bandstudio-integration-dev
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" -f sha="$GITHUB_SHA" -F force=true
+            gh release upload "$tag" installers/* --clobber
+            gh release edit "$tag" --notes-file docs/BANDSTUDIO_DEV.md --prerelease --latest=false
+          else
+            gh release create "$tag" installers/* --target "$GITHUB_SHA" --title 'BandPilot 2.3.4 DEV — BandStudio multipiste' --notes-file docs/BANDSTUDIO_DEV.md --prerelease --latest=false
+          fi

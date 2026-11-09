@@ -1,3 +1,4 @@
+import {BandStudioRecording} from './BandStudioRecording';
 import {tx, getLocale} from "../i18n";
 import { useEffect, useState } from "react";
 
@@ -33,6 +34,7 @@ export function RecordingView({ embedded = false }: { embedded?: boolean }) {
   const alerts = chosen.filter(t => t.warning);
 
   return <div className="xs2-page xs2-rec">
+    <BandStudioRecording/>
     {!embedded && <div className={`xs2-card xs2-rec-transport ${state === "recording" ? "on" : ""}`}>
       <span className={`xs2-pill ${PILL[state]}`}><span className="xs2-dot" />{tx(LABEL[state])}</span>
       {status?.recording && <b className="xs2-rec-clock">{tx(clock(status.elapsed))}</b>}
