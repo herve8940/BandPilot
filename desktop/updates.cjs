@@ -41,7 +41,7 @@ async function digest(file){const hash=createHash('sha256');for await(const chun
 function targetFor(app,platform,env){
  if(!app.isPackaged)return null;
  if(platform==='darwin'){
-  const target=path.resolve(app.getAppPath(),'../../..');
+  const target=path.posix.resolve(app.getAppPath(),'../../..');
   // Updates must never target a mounted installer, App Translocation or a symlink.
   if(!target.endsWith('.app')||target.startsWith('/Volumes/')||target.includes('/AppTranslocation/'))return null;
   return target;
