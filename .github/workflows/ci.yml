@@ -3,6 +3,8 @@ on:
   push:
     branches: [main, DEV, "feature/**"]
   pull_request:
+permissions:
+  contents: read
 jobs:
   backend:
     strategy:
@@ -15,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install
+      - run: npm ci
       - run: npm test
       - run: npm run build
   frontend:
@@ -31,3 +33,17 @@ jobs:
       - run: npm run test:web
       - working-directory: web
         run: npm run build
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/sync-support.mjs --check
+      - run: python3 scripts/check-docs.py
+      - name: Build GitHub Pages documentation
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site

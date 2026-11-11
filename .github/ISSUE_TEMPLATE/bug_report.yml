@@ -1,30 +1,47 @@
 name: 🐞 Signaler un problème / Report a bug
-description: Quelque chose ne marche pas comme prévu / Something does not work as expected
+description: Un problème reproductible dans BandPilot / A reproducible BandPilot problem
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Cette issue est publique. Retire noms, contacts, clés, chemins privés et données musicales des captures et rapports.
+        This issue is public. Remove personal information, credentials and recordings before posting.
+        Vulnérabilité / Vulnerability: follow SECURITY.md instead of posting exploit details here.
   - type: textarea
     id: what
     attributes:
-      label: Que se passe-t-il ? / What happens?
-      description: Ce que tu as fait, ce que tu attendais, ce qui s’est passé. Une capture d’écran aide beaucoup. / What you did, what you expected, what happened. A screenshot helps a lot.
+      label: Étapes, résultat attendu et résultat observé / Steps, expected and actual result
+      description: Précise simulation ou console réelle, et ton usage. / State simulation or hardware, and your use case.
     validations: {required: true}
   - type: input
     id: version
-    attributes: {label: Version de BandPilot / BandPilot version, placeholder: "2.0.0"}
+    attributes:
+      label: Version exacte et canal / Exact version and channel
+      placeholder: "2.3.3 stable / 2.4.0-android.1 / 2.3.4-dev.1"
     validations: {required: true}
   - type: dropdown
     id: os
     attributes:
-      label: Ordinateur / Computer
-      options: [Mac Apple Silicon, Mac Intel, Windows, Linux, Téléphone / Phone]
+      label: Plateforme / Platform
+      options: [Mac Apple Silicon, Mac Intel, Windows, Linux, Android autonome / Standalone Android, Navigateur téléphone ou tablette / Phone or tablet browser, Autre / Other]
     validations: {required: true}
+  - type: input
+    id: platform_version
+    attributes:
+      label: Version du système et appareil / OS version and device
+      description: Sur Android, indique aussi la version WebView si connue. / On Android, include WebView version if known.
   - type: dropdown
     id: mixer
     attributes:
       label: Console / Mixer
-      options: [XR18, X18, MR18, Simulation]
+      options: [XR18, X18, MR18, XR12, MR12, X32 / Rack / Compact / Producer / Core (experimental), Simulation, Autre ou inconnue / Other or unknown]
+    validations: {required: true}
+  - type: input
+    id: firmware
+    attributes: {label: Firmware de la console si connu / Mixer firmware if known}
   - type: textarea
     id: log
     attributes:
-      label: Journal de diagnostic / Diagnostic log
-      description: Réglages › « Télécharger le journal de diagnostic », puis joins le fichier. / Settings › download the diagnostic log and attach it.
+      label: Rapport de diagnostic relu / Reviewed diagnostic report
+      description: Prépare le rapport dans Signaler un problème, vérifie l’aperçu et retire les données privées avant de le joindre. / Prepare the report, review its preview and remove private data before attaching it.

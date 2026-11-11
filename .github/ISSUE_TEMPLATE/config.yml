@@ -1,5 +1,11 @@
 blank_issues_enabled: true
 contact_links:
-  - name: 📘 Tuto « Mon ingé son » / Tutorial
-    url: https://herve8940.github.io/BandPilot/TUTO_MON_INGE_SON.html
-    about: Le guide pas à pas pour débutants / The step-by-step beginner guide
+  - name: 📘 Guides et téléchargements / Guides and downloads
+    url: https://herve8940.github.io/BandPilot/#download
+    about: Versions bureau et Android, guides en cinq langues / Desktop and Android releases, guides in five languages
+  - name: 🔒 Sécurité / Security
+    url: https://github.com/herve8940/BandPilot/blob/main/SECURITY.md
+    about: Procédure pour les signalements sensibles / Sensitive-report procedure
+  - name: 🤝 Aider BandPilot / Support BandPilot
+    url: https://herve8940.github.io/BandPilot/SUPPORT_FR.html
+    about: Tests, traductions, documentation et soutien facultatif / Testing, translations, documentation and optional support

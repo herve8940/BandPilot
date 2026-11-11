@@ -1,0 +1,52 @@
+{
+  "fr": {
+    "documentation": "Documentation",
+    "guide": "Guide",
+    "compatibility": "Compatibilité",
+    "download": "Télécharger",
+    "support": "Soutenir BandPilot",
+    "privacy": "Confidentialité",
+    "help": "Assistance",
+    "home": "/"
+  },
+  "en": {
+    "documentation": "Documentation",
+    "guide": "Guide",
+    "compatibility": "Compatibility",
+    "download": "Download",
+    "support": "Support BandPilot",
+    "privacy": "Privacy",
+    "help": "Help",
+    "home": "/en.html"
+  },
+  "it": {
+    "documentation": "Documentazione",
+    "guide": "Guida",
+    "compatibility": "Compatibilità",
+    "download": "Download",
+    "support": "Sostieni BandPilot",
+    "privacy": "Privacy",
+    "help": "Assistenza",
+    "home": "/it.html"
+  },
+  "es": {
+    "documentation": "Documentación",
+    "guide": "Guía",
+    "compatibility": "Compatibilidad",
+    "download": "Descargar",
+    "support": "Apoya BandPilot",
+    "privacy": "Privacidad",
+    "help": "Ayuda",
+    "home": "/es.html"
+  },
+  "de": {
+    "documentation": "Dokumentation",
+    "guide": "Anleitung",
+    "compatibility": "Kompatibilität",
+    "download": "Herunterladen",
+    "support": "BandPilot unterstützen",
+    "privacy": "Datenschutz",
+    "help": "Hilfe",
+    "home": "/de.html"
+  }
+}

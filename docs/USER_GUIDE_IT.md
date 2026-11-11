@@ -1,6 +1,8 @@
-# BandPilot 2.2 — guida illustrata
+# BandPilot — guida illustrata
 
-**Novità nella versione 2.2.2:** [layout personali, regia monitor e correzione REAPER](WORKSPACES.md#english).
+Desktop: **2.3.3 stabile** (Windows, macOS, Linux). Android: **2.4.0-android.1 in anteprima**, APK separato. BandStudio: **2.3.4-dev.1 in anteprima Windows**, da provare con la versione compatibile di BandStudio; non fa parte della versione stabile.
+
+Le schermate 2.2.4 mostrano una versione precedente in simulazione. Le note di rilascio descrivono le novità successive. [2.3.3](RELEASE_NOTES.md) · [Android (FR)](ANDROID.md)
 
 [Francese](USER_GUIDE_FR.md) · [Coach controllo audio](TUTO_MON_INGE_SON_IT.md) · [Tour video](VIDEO_TOUR.md) · [Compatibilità dettagliata](multi-model.md)
 
@@ -16,7 +18,7 @@ Apri **Impostazioni → Opzioni · Lingua** e seleziona **English**, **Français
 
 ## 1. Installa e conserva i tuoi dati
 
-Utilizzare le [versioni ufficiali](https://github.com/herve8940/BandPilot/releases/latest): Windows `.exe`, Intel Mac `x64.dmg`, Apple Silicon Mac `arm64.dmg`, Linux `.deb` o `.AppImage`. Chiudi la vecchia app prima dell'installazione. Gli identificatori dei dati legacy XR18 Studio vengono conservati; esportare scene importanti prima dell'aggiornamento. I progetti REAPER esistenti non vengono convertiti automaticamente.
+Utilizzare le [versioni ufficiali](https://herve8940.github.io/BandPilot/it.html#download): Windows `.exe`, Intel Mac `x64.dmg`, Apple Silicon Mac `arm64.dmg`, Linux `.deb` o `.AppImage`. Chiudi la vecchia app prima dell'installazione. Gli identificatori dei dati legacy XR18 Studio vengono conservati; esportare scene importanti prima dell'aggiornamento. I progetti REAPER esistenti non vengono convertiti automaticamente.
 
 Gli installatori potrebbero non essere firmati o non autenticati. Se il sistema operativo blocca un'app, verificane l'origine e leggi il messaggio di sistema. macOS richiede l'autorizzazione di rete locale; Windows potrebbe richiedere l'autorizzazione sulla rete privata appropriata.
 
@@ -74,7 +76,7 @@ I telefoni già aperti seguono le modifiche di sola lettura/controllo senza rica
 
 <h2 id="reaper">8. Prove e registrazione REAPER</h2>
 
-REAPER è un software separato con la propria installazione e licenza. Installa il bridge **1.2.3** da Rehearse, salva i progetti, quindi riavvia REAPER per caricare il bridge aggiornato. I percorsi tecnici legacy rimangono per compatibilità.
+REAPER è un software separato con la propria installazione e licenza. Installa il bridge **1.5.0** da Rehearse, salva i progetti, quindi riavvia REAPER per caricare il bridge aggiornato. I percorsi tecnici legacy rimangono per compatibilità.
 
 1. In Registrazione, aggiorna la console, scegli le tracce e la destinazione, quindi crea e apri una sessione. Le sessioni esistenti non vengono sovrascritte. Verifica il dispositivo audio, i canali di ingresso e la frequenza di campionamento in REAPER.
 2. La preparazione multitraccia automatica è per XR18/MR18/X18. XR12/MR12 non hanno quell'interfaccia PC. La preparazione della scheda/routing X32 non è disponibile.
@@ -111,3 +113,15 @@ Gli account opzionali separano l'accesso amministratore, musicista bus assegnato
 ### Scheda tecnica e planimetria
 
 Schede dei musicisti, lista cablaggi e planimetria stampabile riprendono gli ingressi e i monitor del gruppo.
+
+## Convalida degli strumenti e assistenza (2.3.2–2.3.3)
+
+Salvare il gruppo prepara il profilo; le modifiche audio guidate richiedono anteprima e conferma. In caso di errore, leggi il messaggio, chiudi la finestra e prepara una nuova proposta. Le modifiche interrotte conservano una copia per l’annullamento guidato. Misura di nuovo il guadagno dopo aver sostituito uno strumento. Il recupero degli effetti legge il mixer e trasferisce il collegamento solo se modello, effetto e parametri corrispondono; archiviare un collegamento non cambia il mixer.
+
+Il collegamento alla scheda tecnica apre le schede dei musicisti e la pianta stampabile. I rapporti possono essere controllati, salvati localmente o pubblicati esplicitamente su GitHub: le issue sono pubbliche. La ricerca di aggiornamenti all’avvio propone il download senza imporre l’installazione. Consulta la pagina sulla privacy per le richieste esterne.
+
+## Sostieni BandPilot
+
+Il sostegno volontario aiuta a dedicare tempo alle correzioni, alle prove sui mixer e alle guide in cinque lingue. Anche segnalazioni, traduzioni e condivisioni sono utili.
+
+[Come aiutare il progetto](SUPPORT_IT.md) · [Dati e privacy (FR / EN)](PRIVACY.md)

@@ -1,6 +1,8 @@
-# BandPilot 2.2 — illustrated guide
+# BandPilot — illustrated guide
 
-**New in 2.2.2:** [personal layouts, monitor desk and REAPER fix](WORKSPACES.md#english).
+Desktop: **2.3.3 stable** (Windows, macOS, Linux). Android: **2.4.0-android.1 prerelease**, separate APK. BandStudio: **2.3.4-dev.1 Windows prerelease**, for testing with the matching BandStudio version; not part of the stable release.
+
+The 2.2.4 screenshots show an earlier version in simulation. See the release notes for subsequent changes. [2.3.3](RELEASE_NOTES.md) · [Android (FR)](ANDROID.md)
 
 [Français](USER_GUIDE_FR.md) · [Sound-check coach](TUTO_MON_INGE_SON_EN.md) · [Video tour](VIDEO_TOUR.md) · [Detailed compatibility](multi-model.md)
 
@@ -16,7 +18,7 @@ Open **Settings → Options · Language** and select **English**, **Français**,
 
 ## 1. Install and preserve your data
 
-Use the [official releases](https://github.com/herve8940/BandPilot/releases/latest): Windows `.exe`, Intel Mac `x64.dmg`, Apple Silicon Mac `arm64.dmg`, Linux `.deb` or `.AppImage`. Close the old app before installing. Legacy XR18 Studio data identifiers are retained; export important scenes before updating. Existing REAPER projects are not automatically converted.
+Use the [official releases](https://herve8940.github.io/BandPilot/en.html#download): Windows `.exe`, Intel Mac `x64.dmg`, Apple Silicon Mac `arm64.dmg`, Linux `.deb` or `.AppImage`. Close the old app before installing. Legacy XR18 Studio data identifiers are retained; export important scenes before updating. Existing REAPER projects are not automatically converted.
 
 Installers may be unsigned or unnotarized. If the OS blocks an app, verify its origin and read the system message. macOS requires Local Network permission; Windows may require permission on your appropriate private network.
 
@@ -74,7 +76,7 @@ Already open phones follow read-only/control changes without a reload. Profiles 
 
 <h2 id="reaper">8. REAPER rehearsals and recording</h2>
 
-REAPER is separate software with its own installation and license. Install bridge **1.2.3** from Rehearse, save projects, then restart REAPER to load the updated bridge. Legacy technical paths remain for compatibility.
+REAPER is separate software with its own installation and license. Install bridge **1.5.0** from Rehearse, save projects, then restart REAPER to load the updated bridge. Legacy technical paths remain for compatibility.
 
 1. In Recording, refresh the console, choose tracks and destination, then create and open a session. Existing sessions are not overwritten. Verify the audio device, input channels and sample rate in REAPER.
 2. Automatic multitrack preparation is for XR18/MR18/X18. XR12/MR12 lack that PC interface. X32 card/routing preparation is unavailable.
@@ -111,3 +113,15 @@ Optional accounts separate administrator, assigned-bus musician and read-only gu
 ### Technical rider and stage plot
 
 Musician cards, the patch list and a printable stage plot use the band’s input and monitor assignments.
+
+## Instrument validation and assistance (2.3.2–2.3.3)
+
+Saving a band prepares its profile; guided audio changes require a preview and confirmation. If validation fails, read the error, close the dialog and prepare a new proposal. Interrupted changes retain a guided undo backup. Remeasure gain after replacing an instrument. Source ambience recovery reads the connected mixer and transfers tracking only when model, effect and settings match; archiving old tracking leaves the mixer settings in place.
+
+The technical rider shortcut opens musician cards and the printable stage plot. Desktop debug reports can be previewed, saved locally or explicitly published to GitHub; issues are public. Update checks run at startup when internet is available and offer a download without forcing installation. See the data and privacy page for external requests.
+
+## Support BandPilot
+
+Voluntary support helps make time for fixes, mixer testing and guides in five languages. Field reports, translations and sharing the project also help.
+
+[Ways to help the project](SUPPORT_EN.md) · [Data and privacy (FR / EN)](PRIVACY.md)

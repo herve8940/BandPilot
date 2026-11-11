@@ -1,6 +1,8 @@
-# BandPilot 2.2 — guide illustré
+# BandPilot — guide illustré
 
-**Nouveautés 2.2.2 :** [console personnelle, régie des retours et correctif REAPER](WORKSPACES.md).
+Bureau : **2.3.3 stable** (Windows, macOS, Linux). Android : **2.4.0-android.1 en préversion**, APK séparé. BandStudio : **2.3.4-dev.1 en préversion Windows**, à tester avec la version compatible de BandStudio ; ne fait pas partie de la version stable.
+
+Les captures 2.2.4 illustrent une version antérieure en simulation. Consulte les notes de version pour les évolutions. [2.3.3](RELEASE_NOTES.md) · [Android (FR)](ANDROID.md)
 
 [English](USER_GUIDE_EN.md) · [Mon ingé son](TUTO_MON_INGE_SON.md) · [Visite vidéo](VIDEO_TOUR.md) · [Compatibilité détaillée](multi-model.md)
 
@@ -16,7 +18,7 @@ Ouvre **Réglages → Options · Langue**, puis choisis **Français**, **English
 
 ## 1. Installer et conserver ses données
 
-Télécharge la version de ton ordinateur dans [les versions officielles](https://github.com/herve8940/BandPilot/releases/latest) : Windows `.exe`, Mac Intel `x64.dmg`, Mac Apple Silicon `arm64.dmg`, Linux `.deb` ou `.AppImage`. Ferme l’ancienne application avant d’installer. Les identifiants de données de XR18 Studio sont conservés : exporte tout de même tes scènes importantes avant la mise à jour. Aucun projet REAPER n’est converti automatiquement.
+Télécharge la version de ton ordinateur dans [les versions officielles](https://herve8940.github.io/BandPilot/#download) : Windows `.exe`, Mac Intel `x64.dmg`, Mac Apple Silicon `arm64.dmg`, Linux `.deb` ou `.AppImage`. Ferme l’ancienne application avant d’installer. Les identifiants de données de XR18 Studio sont conservés : exporte tout de même tes scènes importantes avant la mise à jour. Aucun projet REAPER n’est converti automatiquement.
 
 Si le système bloque le lancement, vérifie l’origine et consulte son message de sécurité. Sur macOS, l’autorisation **Réseau local** est nécessaire pour la découverte et les retours. Sur Windows, autorise l’application sur le réseau privé approprié. Les installateurs peuvent ne pas être signés ou notariés.
 
@@ -80,7 +82,7 @@ Le téléphone suit les changements lecture seule/contrôle sans rechargement. L
 
 <h2 id="reaper">8. Répéter et enregistrer avec REAPER</h2>
 
-REAPER est un logiciel séparé, avec sa propre installation et licence. Dans **Répéter**, installe le pont proposé **1.2.3**, sauvegarde tes projets puis redémarre REAPER pour charger sa nouvelle version. Les anciens chemins techniques XR18 Studio sont conservés pour rester compatibles.
+REAPER est un logiciel séparé, avec sa propre installation et licence. Dans **Répéter**, installe le pont proposé **1.5.0**, sauvegarde tes projets puis redémarre REAPER pour charger sa nouvelle version. Les anciens chemins techniques XR18 Studio sont conservés pour rester compatibles.
 
 1. Dans **Enregistrement**, relis la console, choisis les pistes et le dossier, puis **Créer et ouvrir dans Reaper**. Une session existante n’est pas écrasée. Vérifie le périphérique audio, les entrées et la fréquence dans REAPER.
 2. L’USB multipiste automatique concerne XR18/MR18/X18. XR12/MR12 n’ont pas cette interface ; la carte et le routage X32 ne sont pas pris en charge par cette préparation.
@@ -146,3 +148,9 @@ Ajouter un instrument ou changer son nom prépare le groupe. « Enregistrer mon 
 Si la validation échoue, lis le message dans la fenêtre, ferme-la puis prépare une nouvelle proposition. Il n’est pas nécessaire de redémarrer BandPilot. Si une modification a été interrompue, « Annuler le dernier réglage guidé » permet de revoir et confirmer la restauration de la sauvegarde.
 
 Après remplacement d’un instrument, refais sa mesure de gain. Changer sa prise conserve le musicien associé, mais les mesures liées à l’ancienne prise doivent être refaites.
+
+## Soutenir BandPilot
+
+Un soutien volontaire aide à consacrer du temps aux corrections, aux essais sur les consoles et aux guides en cinq langues. Un retour de terrain, une traduction ou un partage du projet sont aussi utiles.
+
+[Comment aider le projet](SUPPORT_FR.md) · [Données et confidentialité (FR / EN)](PRIVACY.md)

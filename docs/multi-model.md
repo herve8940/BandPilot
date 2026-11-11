@@ -1,6 +1,6 @@
 # BandPilot — état de l’adaptation multi-modèle
 
-BandPilot 2.2 publie cette adaptation avec des limites explicites ; ce n’est pas une certification de tous les matériels. **La compatibilité complète X32 n’est pas terminée.**
+Cette matrice décrit les profils de la version stable 2.3.3 et leurs limites ; ce n’est pas une certification de tous les matériels. **La compatibilité complète X32 n’est pas terminée.**
 
 ## État par famille
 

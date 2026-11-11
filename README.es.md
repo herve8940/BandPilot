@@ -2,7 +2,7 @@
 
 **Tu banda. Tu mesa de mezclas. Tu sonido.**
 
-[Descargar](https://github.com/herve8940/BandPilot/releases/latest) · [Sitio web](https://herve8940.github.io/BandPilot/es.html) · [Guía completa](docs/USER_GUIDE_ES.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
+[Descargar](https://herve8940.github.io/BandPilot/es.html#download) · [Sitio web](https://herve8940.github.io/BandPilot/es.html) · [Guía completa](docs/USER_GUIDE_ES.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
 BandPilot es el nuevo nombre de XR18 Studio: una aplicación local gratuita para pruebas de sonido guiadas, control visual de la mesa de mezclas, monitores telefónicos personales y ensayos de REAPER. Windows, Intel/Apple Silicon macOS y Linux.
 
@@ -11,6 +11,12 @@ BandPilot es el nuevo nombre de XR18 Studio: una aplicación local gratuita para
 [Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
 ![BandPilot 2.2.4 Mesa de mezclas experto en simulación](docs/images/bandpilot-2.2.4/expert-canal-es.jpg)
+
+## Versiones y disponibilidad
+
+Escritorio: **2.3.3 estable** (Windows, macOS, Linux). Android: **2.4.0-android.1 preliminar**, APK independiente. BandStudio: **2.3.4-dev.1 preliminar para Windows**, para probar con la versión compatible de BandStudio; no forma parte de la versión estable.
+
+[Descargas y límites](https://herve8940.github.io/BandPilot/es.html#download) · [BandStudio DEV](https://github.com/herve8940/BandPilot/releases/tag/bandstudio-integration-dev)
 
 ## Novedades: ficha técnica, ambientes y Android
 
@@ -44,7 +50,7 @@ La operación local no necesita cuenta ni Internet; Mesa de mezclas, computadora
 
 ## Empezar
 
-Haga una copia de seguridad de las escenas, instale el paquete correspondiente, explore la simulación, descubra el hardware de solo lectura y luego extraiga **Mixer → PC** antes de habilitar el control. Siga el [tutorial ilustrado del entrenador](docs/TUTO_MON_INGE_SON_ES.md). Instale bridge **1.2.3** desde Ensayo, guarde proyectos y reinicie REAPER. La simulación de la mesa de mezclas no simula las entradas de audio de REAPER. Los paquetes pueden no estar firmados ni notariados.
+Haga una copia de seguridad de las escenas, instale el paquete correspondiente, explore la simulación, descubra el hardware de solo lectura y luego extraiga **Mixer → PC** antes de habilitar el control. Siga el [tutorial ilustrado del entrenador](docs/TUTO_MON_INGE_SON_ES.md). Instale bridge **1.5.0** desde Ensayo, guarde proyectos y reinicie REAPER. La simulación de la mesa de mezclas no simula las entradas de audio de REAPER. Los paquetes pueden no estar firmados ni notariados.
 
 [Vídeo ilustrado y transcripción](docs/VIDEO_TOUR.md) · [Notas de la versión](docs/RELEASE_NOTES.md) · [Correcciones manuales](docs/corrections-tests-manuels.md)
 
@@ -61,3 +67,15 @@ Corrección de inicio: [panel de conexión 2.2.1](docs/hotfix-2.2.1.md).
 ## BandPilot 2.2.2
 
 [Diseños personales y escritorio de monitor](docs/WORKSPACES.md#english): diseños específicos de modelo/pantalla, mezcla/EQ/compresión por músico y rutas de señal. Incluye la [corrección REAPER bridge 1.2.3](docs/hotfix-2.2.2.md).
+
+<!-- support:start -->
+## Apoya BandPilot
+
+Más tiempo para tocar y menos buscando un ajuste. BandPilot ayuda a los grupos a preparar la prueba de sonido y recuperar sus configuraciones con una herramienta gratuita y abierta.
+
+El apoyo voluntario ayuda a dedicar tiempo a las correcciones, las pruebas con mesas y las guías en cinco idiomas. Los comentarios, las traducciones y compartir el proyecto también ayudan.
+
+[Cómo ayudar al proyecto](docs/SUPPORT_ES.md) · [Contribuir](CONTRIBUTING.md)
+<!-- support:end -->
+
+[Seguridad](SECURITY.md) · [Datos y privacidad](docs/PRIVACY.md) · [Ayuda](SUPPORT.md) · [MIT](LICENSE)
