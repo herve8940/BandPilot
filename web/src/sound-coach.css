@@ -69,3 +69,5 @@
 .coach .coach-toast-close{padding:0;min-height:0;position:absolute;top:6px;right:8px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#cfe0ee;font-size:20px;line-height:1;cursor:pointer}
 .coach .coach-toast-close:hover{background:#ffffff14}
 .gain-result .gain-moved{margin:8px 0 0;padding:8px 10px;border-radius:8px;background:#12303a;color:#bdf3f3}
+
+.coach-sound-choice{display:grid;gap:8px;padding:16px;margin-bottom:18px;border:1px solid var(--bp-line,#3a4552);border-radius:10px}.coach-sound-choice label{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-weight:600}.coach-sound-choice select{max-width:100%;min-width:180px}.coach-sound-choice p{margin:0;font-size:13px;line-height:1.5}

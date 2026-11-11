@@ -1,10 +1,10 @@
 # Installer BandPilot sur Android
 
-> **Préversion Android 2.4.0-android.1** : APK distribué séparément de la version stable de bureau 2.3.3.
+> **Préversion Android 2.4.0-android.2** : APK distribué séparément de la version stable de bureau 2.3.3.
 
-**BandPilot Android 2.4.0-android.1 est disponible en APK signé.** La tablette embarque l’interface, le moteur de console et les données : elle se connecte directement à la table par Wi-Fi, sans PC ni Docker.
+**BandPilot Android 2.4.0-android.2 est disponible en APK signé.** La tablette embarque l’interface, le moteur de console et les données : elle se connecte directement à la table par Wi-Fi, sans PC ni Docker.
 
-[Télécharger l’APK Android](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.1/BandPilot-Android-2.4.0-android.1-universal.apk) · [Version et sommes de contrôle](https://github.com/herve8940/BandPilot/releases/tag/android-v2.4.0-android.1)
+[Télécharger l’APK Android](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.2/BandPilot-Android-2.4.0-android.2-universal.apk) · [Version et sommes de contrôle](https://github.com/herve8940/BandPilot/releases/tag/android-v2.4.0-android.2)
 
 ## Compatibilité
 
@@ -40,3 +40,11 @@ Les fonctions REAPER, l’enregistrement USB multipiste et l’Atelier lié à l
 **Signaler un problème** prépare un rapport debug à vérifier, enregistrer ou copier dans une issue GitHub. L’ouverture de l’issue sur Android passe par le navigateur. La recherche des prochaines versions Android se lance au démarrage lorsqu’Internet est disponible ; elle propose un téléchargement et n’interrompt pas la session.
 
 [Compilation et détails techniques](https://github.com/herve8940/BandPilot/tree/main/android) · [Retour au site](index.html)
+
+## Logs et mises à jour dans l’application
+
+Ouvrir **Aide, logs et mises à jour** pour consulter les événements récents, exporter le journal masqué ou vérifier les nouvelles versions. La recherche est automatique à l’ouverture et toutes les six heures pendant l’utilisation. L’option **Télécharger automatiquement les mises à jour Android** est facultative et désactivée par défaut. Elle reste mémorisée sur l’appareil.
+
+Quand le fichier vérifié est prêt, choisir **Installer** après la session. Android demande confirmation et, la première fois, peut demander d’autoriser BandPilot comme source d’installation. Revenir ensuite dans BandPilot et choisir de nouveau Installer. L’application suspend le contrôle de la console avant l’installation ; une annulation demande de réactiver le contrôle dans Réglages. Ne pas désinstaller l’ancienne version : la mise à jour signée conserve les profils.
+
+Le coach propose aussi le son Naturel ou Rock live, une marge d’entrée indépendante et le type d’écoute de chaque musicien (in-ears, casque, retour de scène ou choix non renseigné). Ce sont des points de départ à vérifier avec le groupe. Les profils existants gardent leurs choix et leur comportement.

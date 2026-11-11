@@ -14,7 +14,7 @@ BandPilot è un’app locale gratuita per controllare i mixer Behringer X-Air e 
 
 ## Versioni e disponibilità
 
-Desktop: [ultima versione stabile](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.1 in anteprima**, APK separato.
+Desktop: [ultima versione stabile](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.2 in anteprima**, APK separato.
 
 [Download e limiti](https://herve8940.github.io/BandPilot/it.html#download)
 
@@ -28,9 +28,9 @@ La prima versione Android autonoma è disponibile come APK firmato. Non serve ri
 - **Effetti per le sorgenti** — Scegli un effetto adatto alla voce o allo strumento, controlla l’anteprima e dosa l’effetto nel monitor di ogni musicista. Conferma il risultato oppure ripristina le impostazioni precedenti.
 - **Android autonomo** — Installa l’APK su un tablet compatibile e collegalo direttamente al mixer via Wi-Fi. Interfaccia, motore e dati risiedono sul tablet: senza PC o Docker.
 
-[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.1/BandPilot-Android-2.4.0-android.1-universal.apk) · [Guida Android (FR)](docs/ANDROID.md)
+[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.2/BandPilot-Android-2.4.0-android.2-universal.apk) · [Guida Android (FR)](docs/ANDROID.md)
 
-Prima versione: 2.4.0-android.1. Android 8+ e Android System WebView 111+. APK per ARM a 32/64 bit e x86_64; orientamento verticale e orizzontale. Installazione e avvio verificati su Xiaomi Redmi Pad con Android 14; funzionamento confermato dall’utente. Gli altri tablet e le combinazioni con i mixer richiedono verifiche. Dispositivi con pagine di memoria da 16 KB non certificati. REAPER e il Laboratorio basato sulle registrazioni restano sul computer.
+Prima versione: 2.4.0-android.2. Android 8+ e Android System WebView 111+. APK per ARM a 32/64 bit e x86_64; orientamento verticale e orizzontale. Installazione e avvio verificati su Xiaomi Redmi Pad con Android 14; funzionamento confermato dall’utente. Gli altri tablet e le combinazioni con i mixer richiedono verifiche. Dispositivi con pagine di memoria da 16 KB non certificati. REAPER e il Laboratorio basato sulle registrazioni restano sul computer.
 
 
 ## Caratteristiche

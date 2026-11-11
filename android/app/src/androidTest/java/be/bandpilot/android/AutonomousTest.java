@@ -59,6 +59,11 @@ public class AutonomousTest {
    api("/api/connection",new JSONObject().put("mode","simulation").put("host","127.0.0.1").put("enableWrites",false));
   }
   assertTrue(api("/api/diagnostics/report",null).getJSONObject("app").getString("version").contains("android"));
+  assertEquals("true",js("typeof window.bandpilotSupport.installUpdate==='function' && typeof window.bandpilotSupport.exportLogs==='function'"));
+  js("document.querySelector('.support-open').click()");waitFor("!!document.querySelector('.support-dialog[open]')");
+  js("[...document.querySelectorAll('.support-dialog button')].find(b=>b.textContent.trim()==='Afficher les logs').click()");waitFor("!!document.querySelector('.support-dialog pre')");
+  assertTrue(js("document.querySelector('.support-dialog pre').textContent").contains("android.engine_start"));
+  assertTrue(api("/api/android/update/status",null).has("automaticEnabled"));
   js("location.reload()");waitFor("!!document.querySelector('.studio')");
   assertEquals("Basse Éric",api("/api/coach",null).getJSONObject("profile").getJSONArray("inputs").getJSONObject(inputs.length()-1).getString("name"));
  }

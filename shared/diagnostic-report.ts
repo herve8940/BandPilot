@@ -7,7 +7,7 @@ export function redactDiagnosticText(value:string){
   .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,'[email]')
   .replace(/https?:\/\/[^\s"<>]+/g,'[url]')
   .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g,'[ip]')
-  .replace(/(?:[A-Za-z]:[\\/]|\/(?:Users|home|private|var|tmp)\/)[^\s"<>)]*/g,'[path]')
+  .replace(/(?:[A-Za-z]:[\\/]|\/(?:Users|home|private|var|tmp|data|storage|sdcard)\/)[^\s"<>)]*/g,'[path]')
   .slice(0,1500);
 }
 export function sanitizeDiagnostic(value:unknown,depth=0):unknown{
@@ -22,7 +22,7 @@ export function diagnosticEvents(log:string){
  const events:unknown[]=[];
  for(const line of log.split('\n'))try{
   const e=JSON.parse(line);
-  if(/^(?:startup$|connection\.|osc\.warning$|coach\.|ambience\.|http\.error$|ui\.|desktop\.)/.test(e.event))events.push(sanitizeDiagnostic(e));
+  if(/^(?:startup$|android\.|connection\.|osc\.warning$|coach\.|ambience\.|http\.error$|ui\.|desktop\.)/.test(e.event))events.push(sanitizeDiagnostic(e));
  }catch{/* A partial final line does not invalidate the report. */}
  return events.slice(-100);
 }

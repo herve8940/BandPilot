@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 dist/
 .env
 .env.*
@@ -21,7 +21,7 @@ coverage/
 /android/build/
 /android/app/build/
 /android/app/.cxx/
-/android/app/libnode/
+/android/app/libnode
 /android/app/src/main/assets/runtime/
 /android/local.properties
 /android/signing.properties

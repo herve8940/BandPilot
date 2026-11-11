@@ -31,7 +31,7 @@ public final class EngineService extends Service {
  private static native int startNode(String[] arguments);
  @Override public IBinder onBind(Intent intent){return null;}
  @Override public void onCreate(){
-  super.onCreate();root=new File(getFilesDir(),"bandpilot");root.mkdirs();
+  super.onCreate();AndroidLog.event(this,"engine_start");root=new File(getFilesDir(),"bandpilot");root.mkdirs();
   // Clear the previous process's ready marker before the Activity can read it.
   if(!started)new File(root,"ready.json").delete();
   byte[] random=new byte[32];new SecureRandom().nextBytes(random);StringBuilder hex=new StringBuilder();for(byte b:random)hex.append(String.format("%02x",b));token=hex.toString();
@@ -70,7 +70,7 @@ public final class EngineService extends Service {
      NetworkCapabilities cap=connectivity.getNetworkCapabilities(n);
      if(cap!=null&&cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)){chosen=n;break;}
     }
-    if(!java.util.Objects.equals(activeNetwork,chosen)&&readyPort()>0)suspendControl();
+    if(!java.util.Objects.equals(activeNetwork,chosen)&&readyPort()>0){AndroidLog.event(this,"network_changed");suspendControl();}
     if(chosen!=null){
      LinkProperties props=connectivity.getLinkProperties(chosen);JSONArray addresses=new JSONArray();
      if(props!=null)for(LinkAddress link:props.getLinkAddresses())if(link.getAddress() instanceof Inet4Address){
@@ -102,8 +102,8 @@ public final class EngineService extends Service {
     if(!next.renameTo(runtime))throw new IOException("Installation interne impossible");
    }
    int exit=startNode(new String[]{"node",new File(runtime,"bootstrap.cjs").getAbsolutePath(),root.getAbsolutePath(),token});
-   failure="Le moteur BandPilot s’est arrêté ("+exit+"). Ferme puis rouvre l’application.";
-  }catch(Throwable e){failure="Démarrage impossible : "+e.getMessage();Log.e("BandPilot","Engine startup failed",e);}
+   AndroidLog.event(this,"engine_stopped");failure="Le moteur BandPilot s’est arrêté ("+exit+"). Ferme puis rouvre l’application.";
+  }catch(Throwable e){AndroidLog.event(this,"engine_start_error");failure="Démarrage impossible : "+e.getMessage();Log.e("BandPilot","Engine startup failed",e);}
  }
  private static void copyAssets(AssetManager assets,String source,File target)throws IOException{
   String[] children=assets.list(source);if(children!=null&&children.length>0){target.mkdirs();for(String child:children)copyAssets(assets,source+"/"+child,new File(target,child));}
