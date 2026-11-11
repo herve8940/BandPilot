@@ -1,6 +1,7 @@
 import {foldLatin} from '../shared/latin-fold.js';
 import {validateTechRider,type TechRider} from '../shared/tech-rider.js';
-import {PROCESSING_PRESETS} from './coach-presets.js';
+import {coachProcessingPreset} from './coach-presets.js';
+import {COACH_SOUNDS,MONITOR_LISTENING,gainHeadroom,isCoachSound,isGainHeadroom,type CoachSound,type GainHeadroom,type MonitorListening} from '../shared/coach-sound.js';
 import {processingCommands} from './processing-osc.js';
 import {fromWire,descriptor,type Value} from './parameters.js';
 import type {XR18} from './xr18.js';
@@ -59,12 +60,15 @@ export const MONITOR_RECIPES:Record<Role,Record<Family,number>>={
 };
 /** Own instrument: clearly in front of everything else. */
 export const OWN_LEVEL=-3;
-/** An acoustic drummer already hears the kit loud: his own mics follow the recipe (cymbals off), not a blanket boost. */
-export function monitorLevel(role:Role,family:Family,own:boolean){return own&&!(role==='batterie'&&family!=='edrums')?OWN_LEVEL:MONITOR_RECIPES[role][family];}
+export function monitorRecipes(listening?:MonitorListening):typeof MONITOR_RECIPES{
+ return listening==='in-ear'||listening==='headphones'?{...MONITOR_RECIPES,batterie:{...MONITOR_RECIPES.batterie,snare:-12,toms:-18,cymbals:-26}}:MONITOR_RECIPES;
+}
+/** Acoustic kit mics follow the listening recipe rather than a blanket own-instrument boost. */
+export function monitorLevel(role:Role,family:Family,own:boolean,listening?:MonitorListening){return own&&!(role==='batterie'&&family!=='edrums')?OWN_LEVEL:monitorRecipes(listening)[role][family];}
 export type Musician={name:string;bus:number;role:Role;channels:number[]};
 export type Input={channel:number;source:string;name:string};
 export type Calibration={peakDb:number;gainDb:number|null;bleedDb?:number;at:string};
-export type CoachProfile={version:1;inputs:Input[];completed:string[];musicians?:Musician[];calibration?:Record<string,Calibration>;tech?:TechRider};
+export type CoachProfile={version:1;sound?:CoachSound;headroom?:GainHeadroom;inputs:Input[];completed:string[];musicians?:Musician[];calibration?:Record<string,Calibration>;tech?:TechRider};
 export const STEPS=[
  {id:'connect',title:'1. Brancher et connecter',text:'Relie le PC et la console au même réseau. Vérifie tes branchements, puis connecte la console. Garde les volumes des enceintes et des in-ear bas pendant la préparation.'},
  {id:'inputs',title:'2. Dire qui est branché où',text:'Choisis la prise utilisée par chaque instrument. Le modèle de groupe ci-dessous est une proposition : compare-le aux câbles avant de préparer les canaux.'},
@@ -114,8 +118,11 @@ export function suggestMusicians(inputs:Input[]):Musician[]{
 /** XR18 names are 12 bytes; keep them ASCII so the console reads back exactly what was sent. */
 export function consoleName(name:string){return foldLatin(name).replace(/[^\x20-\x7e]/g,'').slice(0,12).trim()||'Micro';}
 export function validateProfile(value:unknown):CoachProfile {
- const p=value as CoachProfile;
+ let p=value as CoachProfile;
  if(!p||p.version!==1||!Array.isArray(p.inputs)||p.inputs.length>16||!Array.isArray(p.completed)||p.completed.some(id=>!STEPS.some(s=>s.id===id)))throw Error('Préparation de groupe invalide');
+ const legacyNatural=(p.sound as string)==='inears-natural';
+ if(p.sound!==undefined&&!isCoachSound(p.sound)&&!legacyNatural)throw Error('Profil sonore inconnu');
+ if(p.headroom!==undefined&&!isGainHeadroom(p.headroom))throw Error('Marge à l’entrée inconnue');
  if(new Set(p.inputs.map(i=>i.channel)).size!==p.inputs.length)throw Error('Une seule source par canal');
  // Keep the musician's Unicode label; channelValues converts it with consoleName
  // at the hardware boundary. Match the form's 12-character limit, not UTF-8 bytes.
@@ -129,6 +136,12 @@ export function validateProfile(value:unknown):CoachProfile {
   if(!p.calibration||typeof p.calibration!=='object'||Array.isArray(p.calibration))throw Error('Mesures invalides');
   for(const [k,c] of Object.entries(p.calibration))if(!/^([1-9]|1[0-6])$/.test(k)||!c||!Number.isFinite(c.peakDb)||c.peakDb<-90||c.peakDb>0||(c.gainDb!==null&&!Number.isFinite(c.gainDb))||(c.bleedDb!==undefined&&(!Number.isFinite(c.bleedDb)||c.bleedDb<-90||c.bleedDb>0))||typeof c.at!=='string')throw Error('Mesures invalides');
  }
+ // Preserve the opt-in behavior of the first DEV profile; never infer it for older groups.
+ if(legacyNatural){
+  const musicians=p.musicians??suggestMusicians(p.inputs),monitors={...p.tech?.monitors};
+  for(const m of musicians)monitors[String(m.bus)]={...monitors[String(m.bus)],kind:monitors[String(m.bus)]?.kind??'in-ear'};
+  p={...p,sound:'natural',headroom:p.headroom??'extra',musicians,tech:{...p.tech,monitors}};
+ }
  if(p.tech!==undefined){
   return structuredClone({...p,tech:validateTechRider(p.tech,new Set(p.inputs.map(i=>i.channel)),new Set(p.musicians?.map(m=>m.bus)))});
  }
@@ -141,11 +154,11 @@ const half=(v:number)=>Math.round(v*2)/2;
 const fmt=(v:number)=>(v>0?'+':'')+String(v).replace('.',',')+' dB';
 /** Above this preamp gain a line-level source (e-drums, keys) should rather be turned up at the instrument. */
 export const LINE_GAIN_ADVICE_DB=20;
-export function gainProposal(peakDb:number,gainDb:number|null,min=-12,max=60):GainDecision{
+export function gainProposal(peakDb:number,gainDb:number|null,min=-12,max=60,headroom?:GainHeadroom):GainDecision{
  if(peakDb< -55)return {state:'none',deltaDb:0,targetGainDb:null,title:'Pas de signal',message:'Rien n’arrive sur cette entrée pendant la mesure. Vérifie le câble, le numéro d’entrée, le volume de l’instrument ou le 48 V d’un micro statique. Je ne monte pas le gain à l’aveugle.'};
  if(peakDb>=-1){const target=gainDb===null?null:Math.max(min,half(gainDb-6));return {state:'clip',deltaDb:-6,targetGainDb:target,title:'Ça sature',message:'Le signal touche le plafond : la vraie crête est peut-être plus haute. Je propose de baisser de 6 dB puis de remesurer. Si l’instrument lui-même distord (pédale, DI), corrige-le à la source.'};}
- const wanted=TARGET_PEAK-peakDb;
- if(Math.abs(wanted)<=GAIN_OK_WINDOW)return {state:'ok',deltaDb:0,targetGainDb:gainDb,title:'Gain bien réglé',message:`Niveau max à ${fmt(half(peakDb))} : dans la bonne zone (−9 à −3 dB). Je m’en sers pour caler le compresseur et le gate.`};
+ const targetPeak=gainHeadroom(headroom).targetPeakDb,wanted=targetPeak-peakDb;
+ if(Math.abs(wanted)<=GAIN_OK_WINDOW)return {state:'ok',deltaDb:0,targetGainDb:gainDb,title:'Gain bien réglé',message:headroom==='extra'?`Niveau max à ${fmt(half(peakDb))} : dans la zone −12 à −6 dB. Le seuil du compresseur reste un point de départ ; vérifie sa réduction à l’écoute.`:`Niveau max à ${fmt(half(peakDb))} : dans la zone −9 à −3 dB. Le seuil du compresseur reste un point de départ ; vérifie sa réduction à l’écoute.`};
  const delta=half(Math.max(-MAX_GAIN_DOWN,Math.min(MAX_GAIN_UP,wanted)));
  if(gainDb===null)return {state:wanted>0?'raise':'lower',deltaDb:delta,targetGainDb:null,title:wanted>0?'Signal trop faible':'Signal trop fort',message:'Cette tranche ne passe pas par un préampli de la console (retour USB ou entrée coupée) : ajuste le niveau à la source.'};
  const target=Math.max(min,Math.min(max,half(gainDb+delta)));
@@ -154,8 +167,13 @@ export function gainProposal(peakDb:number,gainDb:number|null,min=-12,max=60):Ga
 }
 /** Compressor starts this many dB under the measured peak, per family (gentler on cymbals). */
 export const COMP_UNDER_PEAK:Record<Family,number>={voice:8,backing:8,guitar:6,bass:8,kick:6,snare:6,toms:6,cymbals:4,keys:6,edrums:6,track:6};
-export function thresholdsFrom(src:Source,peakDb:number,bleedDb?:number){
+export function thresholdsFrom(src:Source,peakDb:number,bleedDb?:number,sound?:CoachSound){
  const clamp=(v:number,lo:number,hi:number)=>half(Math.max(lo,Math.min(hi,v)));
+ if(sound==='natural'){
+  const preset=coachProcessingPreset(src.preset,sound);
+  return {compThrDb:preset.compressor.enabled&&src.compThr!==null?clamp(peakDb-(src.family==='bass'?6:5),-60,0):null,gateThrDb:null,
+   note:src.gateThr!==null?'Le gate reste désactivé : la repisse seule ne suffit pas à préserver les coups faibles. Vérifie un repos et une note faible dans l’Atelier.':''};
+ }
  const comp=src.compThr===null?null:clamp(peakDb-COMP_UNDER_PEAK[src.family],-60,0);
  let gate:number|null=null,note='';
  if(src.gateThr!==null){
@@ -192,7 +210,8 @@ export function levelReport(channel:number,samples:MeterSample[],now=Date.now())
 export class SoundCoach {
  constructor(private xr:XR18,private control:ConsoleControl,private library:LibraryStore){}
  profile():CoachProfile {
-  const p=this.library.list('coach-profile',1)[0]?.data as CoachProfile??{version:1,inputs:structuredClone(GROUP_TEMPLATE),completed:[]};
+  const stored=this.library.list('coach-profile',1)[0]?.data as CoachProfile??{version:1,inputs:structuredClone(GROUP_TEMPLATE),completed:[]};
+  const p=(stored.sound as string)==='inears-natural'?validateProfile(stored):stored;
   return p.musicians?p:{...p,musicians:suggestMusicians(p.inputs)};
  }
  /** Measurements belong to the server: a profile sent by the browser never overwrites them. */
@@ -207,18 +226,19 @@ export class SoundCoach {
   }
   const saved=this.library.save('coach-profile','Ma préparation',p);return {...p,id:saved.id};
  }
- catalog(){return {sources:SOURCES,presets:this.presetSummaries(),roles:ROLES,recipes:MONITOR_RECIPES,ownLevel:OWN_LEVEL,templates:TEMPLATES,drumKit:DRUM_KIT,steps:STEPS,symptoms:SYMPTOMS,template:GROUP_TEMPLATE,profile:this.profile(),status:this.xr.status(),aiConfigured:Boolean(process.env.XR18_OPENAI_API_KEY&&process.env.XR18_OPENAI_MODEL)};}
+ catalog(){const profile=this.profile();return {sources:SOURCES,presets:this.presetSummaries(profile.sound),presetsBySound:Object.fromEntries(COACH_SOUNDS.map(s=>[s.id,this.presetSummaries(s.id)])),roles:ROLES,recipes:monitorRecipes(),recipesByListening:Object.fromEntries(MONITOR_LISTENING.map(m=>[m.id,monitorRecipes(m.id)])),ownLevel:OWN_LEVEL,templates:TEMPLATES,drumKit:DRUM_KIT,steps:STEPS,symptoms:SYMPTOMS,template:GROUP_TEMPLATE,profile,status:this.xr.status(),aiConfigured:Boolean(process.env.XR18_OPENAI_API_KEY&&process.env.XR18_OPENAI_MODEL)};}
  /** Plain-language card of what each instrument setting does. */
- presetSummaries(){
-  return Object.fromEntries(SOURCES.map(s=>{const p=PROCESSING_PRESETS.find(p=>p.id===s.preset)!;
+ presetSummaries(sound?:CoachSound){
+  return Object.fromEntries(SOURCES.map(s=>{const p=coachProcessingPreset(s.preset,sound),threshold=sound==='natural'?thresholdsFrom(s,gainHeadroom().targetPeakDb,undefined,sound).compThrDb:s.compThr;
    const db=(g:number)=>(g>0?'+':'')+g+' dB',hz=(f:number)=>f>=1000?(f/1000).toLocaleString('fr-BE')+' kHz':f+' Hz';
    const eq=p.eq.filter(b=>b.gainDb!==0).map(b=>`${db(b.gainDb)} à ${hz(b.frequencyHz)}`).join(', ');
    const pan=s.pan===0?'au centre':s.pan<0?`à gauche (${-s.pan} %)`:`à droite (${s.pan} %)`;
-   return [s.id,{title:p.name,description:p.description,advice:p.advice,lines:[
+   return [s.id,{title:sound==='natural'?s.label:p.name,description:p.description,advice:p.advice,lines:[
     p.hpfHz?`Coupe-bas à ${hz(p.hpfHz)} : retire le grondement inutile.`:'Pas de coupe-bas.',
     eq?`Égaliseur : ${eq}.`:'Égaliseur neutre.',
-    s.compThr!==null&&p.compressor.enabled?`Compresseur ${p.compressor.ratio}:1 à partir de ${s.compThr} dB (attaque ${p.compressor.attackMs} ms, relâchement ${p.compressor.releaseMs} ms) : vise ${p.compressor.targetReductionDb} de réduction.`:'Compresseur désactivé (le son est déjà contrôlé).',
+    threshold!==null&&p.compressor.enabled?sound==='natural'?`Compresseur ${p.compressor.ratio}:1 (attaque ${p.compressor.attackMs} ms, relâchement ${p.compressor.releaseMs} ms) : vise ${p.compressor.targetReductionDb} de réduction. Seuil à adapter au niveau mesuré.`:`Compresseur ${p.compressor.ratio}:1 à partir de ${threshold} dB (attaque ${p.compressor.attackMs} ms, relâchement ${p.compressor.releaseMs} ms) : vise ${p.compressor.targetReductionDb} de réduction.`:sound==='natural'?'Compresseur désactivé au départ.':'Compresseur désactivé (le son est déjà contrôlé).',
     s.gateThr!==null&&p.gate.enabled?`${p.gate.mode==='gate'?'Gate':'Expandeur'} à ${s.gateThr} dB : coupe la repisse des autres fûts entre les frappes.`:'Gate désactivé (ne coupe aucune fin de note).',
+    ...(sound==='natural'?[...(p.compressor.enabled?['Seuil de départ estimé : mesurer le gain, puis vérifier la réduction et les notes faibles à l’écoute.']:[]),...(s.gateThr!==null?[`Expandeur préparé, non activé : atténuation ${p.gate.rangeDb} dB, attaque ${p.gate.attackMs} ms, maintien ${p.gate.holdMs} ms, relâchement ${p.gate.releaseMs} ms.`]:[])]:[]),
     `Placé ${pan} dans la façade.`]}];}));
  }
  private input(channel:number){if(!Number.isInteger(channel)||channel<1||channel>16)throw Error('Canal 1 à 16 requis');return this.profile().inputs.find(i=>i.channel===channel);}
@@ -227,9 +247,10 @@ export class SoundCoach {
   return {...s,basis:'description',measuredAudio:false,canSuggest:['muddy','harsh','boomy','cutoff'].includes(symptom)};
  }
  /** Every value needed for one instrument, in human units (converted by preview). */
- static channelValues(i:Input,measured?:{compThrDb:number|null;gateThrDb:number|null}){
-  const s=source(i.source),p=PROCESSING_PRESETS.find(p=>p.id===s.preset)!,prefix=`/ch/${String(i.channel).padStart(2,'0')}`;
-  const comp=measured?.compThrDb??s.compThr,gate=measured?.gateThrDb??s.gateThr;
+ static channelValues(i:Input,measured?:{compThrDb:number|null;gateThrDb:number|null},sound?:CoachSound,headroom?:GainHeadroom){
+  const s=source(i.source),p=coachProcessingPreset(s.preset,sound),prefix=`/ch/${String(i.channel).padStart(2,'0')}`;
+  const thresholds=measured??(sound==='natural'?thresholdsFrom(s,gainHeadroom(headroom).targetPeakDb,undefined,sound):{compThrDb:s.compThr,gateThrDb:s.gateThr});
+  const comp=thresholds.compThrDb,gate=thresholds.gateThrDb;
   const preset={hpfHz:p.hpfHz,eq:p.eq,compressor:{...p.compressor,thresholdDb:comp,enabled:p.compressor.enabled&&s.compThr!==null},gate:{...p.gate,thresholdDb:gate,enabled:p.gate.enabled&&s.gateThr!==null}};
   const {values:wire}=processingCommands(i.channel,preset);
   const values:Record<string,Value>={};for(const [a,v] of Object.entries(wire))values[a]=fromWire(a,v);
@@ -245,11 +266,11 @@ export class SoundCoach {
   const inputs=profile.inputs.filter(i=>channel===undefined||i.channel===channel);if(!inputs.length)throw Error('Ajouter un instrument');
   const status=await this.calibrationStatus(),calibrated:string[]=[],estimated:string[]=[];
   const values:Record<string,Value>={};
-  for(const i of inputs){const c=status.find(c=>c.channel===i.channel);if(c?.valid&&c.thresholds){calibrated.push(i.name);Object.assign(values,SoundCoach.channelValues(i,c.thresholds));}else{estimated.push(i.name);Object.assign(values,SoundCoach.channelValues(i));}}
+  for(const i of inputs){const c=status.find(c=>c.channel===i.channel);if(c?.valid&&c.thresholds){calibrated.push(i.name);Object.assign(values,SoundCoach.channelValues(i,c.thresholds,profile.sound,profile.headroom));}else{estimated.push(i.name);Object.assign(values,SoundCoach.channelValues(i,undefined,profile.sound,profile.headroom));}}
   const one=inputs.length===1?source(inputs[0]!.source):null;
   const thresholdsNote=!estimated.length?' Seuils du compresseur et du gate calés sur ton signal mesuré.':calibrated.length?` Seuils calés sur la mesure pour : ${calibrated.join(', ')}. Valeurs de départ (gain pas encore mesuré) pour : ${estimated.join(', ')} — passe par l’étape 3.`:' Seuils = valeurs de départ : règle le gain à l’étape 3 pour que je les cale sur ton vrai signal.';
   return {...await this.control.preview(values),title:one?`Configuration complète : ${one.label.toLowerCase().startsWith(inputs[0]!.name.toLowerCase())?one.label:`${inputs[0]!.name} · ${one.label}`}`:`Configuration complète de ${inputs.length} instruments`,
-   explanation:'Nom, couleur, coupe-bas, égaliseur 4 bandes, compresseur, gate et position stéréo, selon les bonnes pratiques live pour chaque instrument.'+thresholdsNote+(inputs.some(i=>source(i.source).family==='track')?' Le backing track passe sur sa source USB et son entrée d’enregistrement est réglée pour l’enregistrer. Gain d’entrée, 48 V, volumes et mutes ne sont pas touchés.':' Gain d’entrée, 48 V, volumes, mutes et routage ne sont pas touchés ici.'),inputs:inputs.map(i=>`${i.name} (entrée ${i.channel})`)};
+   explanation:(profile.sound==='natural'?'Naturel : coupe-bas par instrument, EQ neutre, compression légère et gates désactivés. Les seuils sont des points de départ, à vérifier avec les musiciens. Les traitements de canal sont aussi entendus en façade et dans les autres retours qui les reçoivent.':'Nom, couleur, coupe-bas, égaliseur 4 bandes, compresseur, gate et position stéréo, selon les bonnes pratiques live pour chaque instrument.'+thresholdsNote)+(inputs.some(i=>source(i.source).family==='track')?' Le backing track passe sur sa source USB et son entrée d’enregistrement est réglée pour l’enregistrer. Gain d’entrée, 48 V, volumes et mutes ne sont pas touchés.':' Gain d’entrée, 48 V, volumes, mutes et routage ne sont pas touchés ici.'),inputs:inputs.map(i=>`${i.name} (entrée ${i.channel})`)};
  }
  /** Monitor mixes: one bus per musician, pre-fader sends shaped by role. */
  static earsValues(profile:CoachProfile,bus?:number){
@@ -261,7 +282,7 @@ export class SoundCoach {
    values[`/bus/${m.bus}/mix/on`]=1;values[`/bus/${m.bus}/mix/lr`]=0;values[`/bus/${m.bus}/mix/fader`]=-10;
    for(const i of profile.inputs){
     const a=`/ch/${String(i.channel).padStart(2,'0')}/mix/${String(m.bus).padStart(2,'0')}`;
-    values[a+'/tap']='PRE';values[a+'/level']=monitorLevel(m.role,source(i.source).family,m.channels.includes(i.channel));
+    values[a+'/tap']='PRE';values[a+'/level']=monitorLevel(m.role,source(i.source).family,m.channels.includes(i.channel),profile.tech?.monitors?.[m.bus]?.kind);
    }
   }
   return {values,musicians};
@@ -318,29 +339,31 @@ export class SoundCoach {
   this.saveProfile({...p,calibration:cal},true);
  }
  /** Per input: current gain, measured peak/bleed, whether the measure still matches the gain, thresholds. */
- async calibrationStatus(){
-  const p=this.profile(),out=[];
+ async calibrationStatus(options:{sound?:unknown;headroom?:unknown}={}){
+  if(options.sound!==undefined&&!isCoachSound(options.sound))throw Error('Profil sonore inconnu');
+  if(options.headroom!==undefined&&!isGainHeadroom(options.headroom))throw Error('Marge à l’entrée inconnue');
+  const p=this.profile(),sound=options.sound??p.sound,headroom=options.headroom??p.headroom,out=[];
   for(const i of p.inputs){
    const c=p.calibration?.[String(i.channel)],s=source(i.source);let gainDb:number|null=null,read=false;
    try{gainDb=(await this.currentGain(i.channel)).gainDb;read=true;}catch{gainDb=null;}
-   const valid=!!c&&read&&(c.gainDb===null?gainDb===null:gainDb!==null&&Math.abs(c.gainDb-gainDb)<.3);
+   const valid=!!c&&read&&(c.gainDb===null?gainDb===null:gainDb!==null&&Math.abs(c.gainDb-gainDb)<.3)&&(headroom===undefined||Math.abs(c.peakDb-gainHeadroom(headroom).targetPeakDb)<=GAIN_OK_WINDOW);
    out.push({channel:i.channel,name:i.name,source:i.source,gainDb,peakDb:c?.peakDb??null,bleedDb:c?.bleedDb??null,measuredAt:c?.at??null,valid,needsBleed:s.gateThr!==null,
-    state:!c?'todo':valid?'ok':'stale',thresholds:c&&valid?thresholdsFrom(s,c.peakDb,c.bleedDb):null});
+    state:!c?'todo':valid?'ok':'stale',thresholds:c&&valid?thresholdsFrom(s,c.peakDb,c.bleedDb,sound):null});
   }
   return out;
  }
- /** Measure the loudest passage, then propose the preamp gain that puts peaks near -6 dBFS. */
+ /** Measure the loudest passage, then propose preamp gain for the selected headroom target. */
  async gainCheck(channel:number,durationMs=4500){
   const input=this.input(channel);if(!input)throw Error('Attribuer un instrument à ce canal');
   const report=await this.measure(channel,durationMs);
   if(!report.available)return {report,decision:null,proposal:null};
   const {address,gainDb}=await this.currentGain(channel),p=address?descriptor(address):null;
-  const decision=gainProposal(report.maximumDb!,gainDb,p?.min,p?.max);
+  const decision=gainProposal(report.maximumDb!,gainDb,p?.min,p?.max,this.profile().headroom);
   // E-drums and keyboards send a line-level signal: much preamp gain only adds hiss. Their own output volume is the right knob.
   const fam=source(input.source).family;
   if((fam==='edrums'||fam==='keys')&&(decision.state==='raise'||decision.state==='limit')&&(decision.targetGainDb??gainDb??0)>LINE_GAIN_ADVICE_DB)
    decision.message+=` ${fam==='edrums'?'Une batterie électronique':'Un clavier'} sort un signal « ligne » : au-delà de +${LINE_GAIN_ADVICE_DB} dB de gain, monte plutôt le volume de sortie de ${fam==='edrums'?'son module (Master / Output)':'l’instrument'}, puis remesure. Le son sera plus propre (moins de souffle).`;
-  if(decision.state==='ok'){const old=this.profile().calibration?.[String(channel)];this.storeCalibration(channel,{peakDb:report.maximumDb!,gainDb,bleedDb:old&&old.gainDb===gainDb?old.bleedDb:undefined});return {report,decision,gainDb,proposal:null,thresholds:thresholdsFrom(source(input.source),report.maximumDb!)};}
+  if(decision.state==='ok'){const old=this.profile().calibration?.[String(channel)];this.storeCalibration(channel,{peakDb:report.maximumDb!,gainDb,bleedDb:old&&old.gainDb===gainDb?old.bleedDb:undefined});return {report,decision,gainDb,proposal:null,thresholds:thresholdsFrom(source(input.source),report.maximumDb!,undefined,this.profile().sound)};}
   if(!address||decision.targetGainDb===null||decision.targetGainDb===gainDb)return {report,decision,gainDb,proposal:null};
   const plan=await this.control.preview({[address]:decision.targetGainDb});
   return {report,decision,gainDb,proposal:{...plan,title:`Gain de ${input.name} : ${decision.deltaDb>0?'+':''}${String(decision.deltaDb).replace('.',',')} dB`,explanation:`${decision.message} Seul le gain du préampli de cette entrée change. Le 48 V n’est pas touché. Baisse le volume des retours si un musicien porte ses in-ear.`,inputs:[`${input.name} (entrée ${channel})`]}};
@@ -354,7 +377,7 @@ export class SoundCoach {
   const bleed=report.maximumDb!;
   if(bleed>status.peakDb!-3)return {report,thresholds:null,message:'Le niveau mesuré ressemble à l’instrument lui-même. Pendant cette mesure, cet instrument doit se taire et les autres jouer.'};
   this.storeCalibration(channel,{bleedDb:bleed});
-  return {report,thresholds:thresholdsFrom(source(input.source),status.peakDb!,bleed)};
+  return {report,thresholds:thresholdsFrom(source(input.source),status.peakDb!,bleed,this.profile().sound)};
  }
  async measure(channel:number,durationMs=4500){
   if(!this.input(channel))throw Error('Attribuer un instrument à ce canal');

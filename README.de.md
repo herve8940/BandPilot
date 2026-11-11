@@ -14,7 +14,7 @@ BandPilot ist eine kostenlose lokale App zur Steuerung von Behringer X-Air und M
 
 ## Versionen und Verfügbarkeit
 
-Desktop: [neueste stabile Version](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.1 Vorabversion**, separates APK.
+Desktop: [neueste stabile Version](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.2 Vorabversion**, separates APK.
 
 [Downloads und Einschränkungen](https://herve8940.github.io/BandPilot/de.html#download)
 
@@ -28,9 +28,9 @@ Die erste eigenständige Android-Version ist als signierte APK verfügbar. Keine
 - **Effekte für Quellen** — Wähle einen passenden Effekt für Stimme oder Instrument, prüfe den Vorschlag und dosiere ihn für jeden Monitormix. Übernimm das Ergebnis oder stelle die vorherigen Einstellungen wieder her.
 - **Eigenständiges Android** — Installiere die APK auf einem kompatiblen Tablet und verbinde es direkt per WLAN mit dem Mischpult. Oberfläche, Steuerung und Daten laufen auf dem Tablet: ohne PC oder Docker.
 
-[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.1/BandPilot-Android-2.4.0-android.1-universal.apk) · [Android-Anleitung (FR)](docs/ANDROID.md)
+[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.2/BandPilot-Android-2.4.0-android.2-universal.apk) · [Android-Anleitung (FR)](docs/ANDROID.md)
 
-Erste Version: 2.4.0-android.1. Android 8+ und Android System WebView 111+. APK für ARM mit 32/64 Bit und x86_64; Hoch- und Querformat. Installation und Start auf einem Xiaomi Redmi Pad mit Android 14 geprüft; Funktion vom Nutzer bestätigt. Andere Tablets und Mischpultkombinationen müssen noch geprüft werden. Geräte mit 16-KB-Speicherseiten sind nicht zertifiziert. REAPER und die auf Aufnahmen basierende Klangwerkstatt bleiben Desktop-Funktionen.
+Erste Version: 2.4.0-android.2. Android 8+ und Android System WebView 111+. APK für ARM mit 32/64 Bit und x86_64; Hoch- und Querformat. Installation und Start auf einem Xiaomi Redmi Pad mit Android 14 geprüft; Funktion vom Nutzer bestätigt. Andere Tablets und Mischpultkombinationen müssen noch geprüft werden. Geräte mit 16-KB-Speicherseiten sind nicht zertifiziert. REAPER und die auf Aufnahmen basierende Klangwerkstatt bleiben Desktop-Funktionen.
 
 
 ## Funktionen

@@ -1,3 +1,5 @@
+import type {CoachSound} from '../shared/coach-sound.js';
+
 export type ProcessingPreset = {
  id:string; instrument:string; name:string; description:string;
  hpfHz:number|null;
@@ -33,3 +35,33 @@ export const PROCESSING_PRESETS:ProcessingPreset[]=[
 ];
 export const PROCESSING_SOURCES=[{name:"Sound On Sound — Mixing Essentials",url:sos},{name:"Shure — Audio settings (compression et gate)",url:shure},{name:"Behringer — Manuel X AIR XR18",url:xr}];
 
+/** Separate from the rock catalog: selecting a sound never mutates shared presets. */
+export function coachProcessingPreset(id:string,sound:CoachSound='live-rock'):ProcessingPreset{
+ const base=PROCESSING_PRESETS.find(p=>p.id===id);
+ if(!base)throw Error('Preset inconnu');
+ const p=structuredClone(base);
+ if(sound==='live-rock')return p;
+ p.description='Point de départ naturel : conserver les attaques et la lisibilité.';
+ p.eq=p.eq.map(b=>({...b,gainDb:0}));
+ p.compressor.makeupDb=0;
+ // A loud peak minus a constant is not a measurement of the softest note.
+ // Prepare gentle timing/range, but leave activation to a verified gate trial.
+ p.gate={...p.gate,enabled:false,mode:'expander',rangeDb:9};
+ p.advice='EQ neutre hors coupe-bas. Ajuste le seuil du compresseur en observant sa réduction et en écoutant le groupe.';
+ switch(id){
+  case 'lead-rock': p.compressor=comp(3,12,130,'2–4 dB');p.gate.rangeDb=6;break;
+  case 'backing-vocal': p.compressor=comp(2,15,150,'1–3 dB');p.gate.rangeDb=6;break;
+  case 'bass-di': p.compressor=comp(3,25,130,'3–4 dB');break;
+  case 'kick': p.compressor=comp(3,12,110,'2–3 dB');break;
+  case 'snare': p.hpfHz=85;p.compressor=comp(3,12,130,'2–4 dB');p.gate.rangeDb=6;break;
+  case 'toms':case 'tom1':case 'tom2':case 'tom3':
+   p.compressor={...p.compressor,ratio:2,targetReductionDb:'0–3 dB'};
+   break;
+  case 'overheads':case 'hihat':case 'electric-rhythm':case 'electric-solo':
+   p.compressor.enabled=false;p.compressor.targetReductionDb='aucune';break;
+  case 'acoustic-guitar':case 'keys': p.compressor={...p.compressor,ratio:2,targetReductionDb:'1–3 dB'};break;
+ }
+ if(['kick','snare','toms','tom1','tom2','tom3'].includes(id))p.advice+=' Le gate reste désactivé. Vérifie un repos et une note faible dans l’Atelier avant de proposer un expandeur.';
+ if(['overheads','hihat','electric-rhythm','electric-solo'].includes(id))p.advice='Commence sans compression ni gate. Ajuste le coupe-bas et le niveau envoyé dans chaque retour, puis écoute.';
+ return p;
+}

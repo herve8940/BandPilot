@@ -100,7 +100,59 @@ test('moving an input to another socket keeps its musician assignment',async()=>
   const {InputsStep}=await import('../src/CoachSetup');let current:any={version:1,completed:[],inputs:[{channel:1,source:'lead-rock',name:'Chant'}],musicians:[{name:'Hervé',bus:1,role:'chant',channels:[1]}]};
   const data:any={sources:[{id:'lead-rock',name:'Chant',label:'Chant',group:'Voix',color:1}],presets:{},templates:[],drumKit:[]};
   function Harness(){const[p,set]=f.React.useState(current);return <InputsStep data={data} profile={p} setProfile={v=>{current=v;set(v);}} admin busy={false} canApply onApplyChannel={()=>{}} onApplyAll={()=>{}} onSave={async()=>true} notify={()=>{}} onNext={()=>{}} onBlank={()=>{}}/>;}
-  await f.mount(<Harness/>);await f.React.act(async()=>{const select=f.dom.window.document.querySelector('select');select.value='4';select.dispatchEvent(new f.dom.window.Event('change',{bubbles:true}));});
+  await f.mount(<Harness/>);await f.React.act(async()=>{const select=f.dom.window.document.querySelector('.coach-inputs select');select.value='4';select.dispatchEvent(new f.dom.window.Event('change',{bubbles:true}));});
   assert.equal(current.inputs[0].channel,4);assert.deepEqual(current.musicians[0].channels,[4]);
+ }finally{await f.close();}
+});
+
+test('sound choice updates instrument cards locally and sends the chosen profile only on preparation',async()=>{
+ const f=await fixture();try{
+  const {InputsStep}=await import('../src/CoachSetup');let current:any={version:1,completed:[],headroom:'standard',musicians:[{name:'Batterie',bus:1,role:'batterie',channels:[1]}],tech:{monitors:{1:{kind:'wedge'}}},inputs:[{channel:1,source:'tom1',name:'Tom 1'}]},prepared:any=null;
+  const card=(title:string)=>({title,description:'',advice:'',lines:[title]});
+  const data:any={sources:[{id:'tom1',name:'Tom 1',label:'Tom 1',group:'Batterie',family:'toms',color:4}],presets:{tom1:card('Rock')},presetsBySound:{'live-rock':{tom1:card('Gate rock')},'natural':{tom1:card('Expandeur préparé, non activé')}},templates:[],drumKit:[]};
+  function Harness(){const [profile,set]=f.React.useState(current);return <InputsStep data={data} profile={profile} setProfile={p=>{current=p;set(p);}} admin busy={false} canApply onApplyChannel={p=>{prepared=p;}} onApplyAll={p=>{prepared=p;}} onSave={async()=>true} notify={()=>{}} onNext={()=>{}} onBlank={()=>{}}/>;}
+  await f.mount(<Harness/>);assert.match(f.dom.window.document.body.textContent,/Gate rock/);
+  const select=f.dom.window.document.querySelector('select[aria-label="Base sonore"]') as HTMLSelectElement;
+  await f.React.act(async()=>{select.value='natural';select.dispatchEvent(new f.dom.window.Event('change',{bubbles:true}));});
+  assert.equal(current.sound,'natural');assert.equal(prepared,null);
+  assert.equal(current.headroom,'standard');assert.equal(current.tech.monitors[1].kind,'wedge');
+  assert.match(f.dom.window.document.body.textContent,/Expandeur préparé, non activé/);const headroom=f.dom.window.document.querySelector('select[aria-label="Marge à l’entrée"]') as HTMLSelectElement;
+  await f.React.act(async()=>{headroom.value='extra';headroom.dispatchEvent(new f.dom.window.Event('change',{bubbles:true}));});
+  assert.equal(current.sound,'natural');assert.equal(current.headroom,'extra');assert.equal(current.tech.monitors[1].kind,'wedge');assert.equal(prepared,null);
+  await f.click('Préparer les réglages');assert.equal(prepared.sound,'natural');assert.equal(prepared.headroom,'extra');
+ }finally{await f.close();}
+});
+
+
+test('each musician chooses a listening type locally without changing others or the processing style',async()=>{
+ const f=await fixture();try{
+  const {EarsStep}=await import('../src/CoachSetup');let current:any={version:1,completed:[],sound:'live-rock',headroom:'extra',inputs:[{channel:1,source:'overheads',name:'OH'}],musicians:[{name:'A',bus:1,role:'batterie',channels:[1]},{name:'B',bus:2,role:'batterie',channels:[1]}],tech:{monitors:{2:{kind:'wedge',equipment:'Wedge B'}}}},applied:any=null;
+  const recipes={batterie:{cymbals:-90}},personal={batterie:{cymbals:-26}};
+  const data:any={sources:[{id:'overheads',family:'cymbals',color:4}],roles:[{id:'batterie',label:'Batterie',hint:''}],recipes,recipesByListening:{'in-ear':personal,headphones:personal,wedge:recipes},ownLevel:-3};
+  function Harness(){const[p,set]=f.React.useState(current);return <EarsStep data={data} profile={p} setProfile={v=>{current=v;set(v);}} admin busy={false} canApply onSuggest={()=>{}} onApply={v=>{applied=v;}} onShare={()=>{}} onSave={()=>{}}/>;}
+  await f.mount(<Harness/>);
+  const select=f.dom.window.document.querySelector('select[aria-label="Écoute de A"]') as HTMLSelectElement;
+  await f.React.act(async()=>{select.value='in-ear';select.dispatchEvent(new f.dom.window.Event('change',{bubbles:true}));});
+  assert.equal(current.tech.monitors[1].kind,'in-ear');assert.equal(current.tech.monitors[2].kind,'wedge');
+  assert.equal(current.sound,'live-rock');assert.equal(current.headroom,'extra');assert.equal(applied,null);assert.equal(current.tech.monitors[2].equipment,'Wedge B');
+  const mixes=f.dom.window.document.querySelectorAll('.mixbars');assert.match(mixes[0].textContent,/-26 dB/);assert.match(mixes[1].textContent,/coupé/);
+  const bus=f.dom.window.document.querySelector('.coach-musician select') as HTMLSelectElement;
+  await f.React.act(async()=>{bus.value='3';bus.dispatchEvent(new f.dom.window.Event('change',{bubbles:true}));});
+  assert.equal(current.musicians[0].bus,3);assert.equal(current.tech.monitors[1],undefined);assert.equal(current.tech.monitors[3].kind,'in-ear');assert.equal(current.tech.monitors[2].equipment,'Wedge B');
+ }finally{await f.close();}
+});
+
+test('Android support shows logs, exports them and installs only after explicit confirmation',async()=>{
+ const f=await fixture();try{
+  let confirms=0,installs=0,exports=0;
+  f.dom.window.bandpilotSupport={status:async()=>({configured:false}),checkUpdate:async()=>({available:true,version:'2.4.0-android.2',phase:'ready',automaticEnabled:false,automatic:{}}),installUpdate:async()=>{installs++;return {permissionRequired:true};},exportLogs:async()=>{exports++;return {saved:true};},openUpdate:async()=>({})};
+  f.dom.window.confirm=()=>++confirms>1;
+  globalThis.fetch=async(path:any)=>new Response(JSON.stringify(path==='/api/auth'?{user:{role:'admin'}}:path==='/api/diagnostics/report'?{events:[{event:'android.engine_start'}]}:{version:'2.4.0-android.2'}));
+  const {SupportCenter}=await import('../src/SupportCenter');await f.mount(<SupportCenter/>);
+  assert.equal(installs,0);assert.doesNotMatch(f.dom.window.document.body.textContent,/installée automatiquement quand tu quitteras/);
+  await f.click('Installer');assert.equal(installs,0);await f.click('Installer');assert.equal(installs,1);
+  await f.click('Signaler un problème');assert.match(f.dom.window.document.body.textContent,/Autorise BandPilot/);
+  await f.click('Afficher les logs');assert.match(f.dom.window.document.querySelector('pre').textContent,/android.engine_start/);
+  await f.click('Exporter les logs');assert.equal(exports,1);assert.equal(installs,1);
  }finally{await f.close();}
 });

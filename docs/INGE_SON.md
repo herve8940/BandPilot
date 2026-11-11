@@ -17,6 +17,36 @@ L’accueil propose un parcours pour préparer le groupe sans connaître les nom
 
 Les coches du parcours indiquent les étapes confirmées par l’utilisateur, pas une qualification automatique de la balance. La préparation et ces coches sont conservées dans SQLite.
 
+## Des choix indépendants pour différents groupes (DEV)
+
+BandPilot est conçu pour être diffusé à des utilisateurs aux besoins différents. Une répétition sert à découvrir des cas à traiter et à valider l’application ; ses réglages ne deviennent pas une norme pour tous les groupes. Les presets restent des points de départ, à adapter aux sources, au placement des micros, au système d’écoute et aux mesures disponibles.
+
+Trois choix sont séparés :
+
+| Choix | Où | Effet |
+|---|---|---|
+| **Base sonore : Rock live / Naturel** | Dire qui est branché où | Traitements des canaux selon l’instrument |
+| **Marge à l’entrée : Standard / Plus de marge** | Dire qui est branché où, utilisée à l’étape des gains | Cible de crête −6 / −9 dBFS, avec une zone de ±3 dB |
+| **Écoute : in-ears / casque / retour de scène** | Préparer les retours, pour chaque musicien | Mix de retour initial selon le rôle et l’écoute |
+
+Un son Naturel peut donc alimenter des retours de scène, et Rock live peut alimenter des in-ears avec davantage de marge. Un groupe peut mélanger les types d’écoute. Le type de retour est partagé avec la fiche technique : le modifier dans une page met à jour le même choix dans l’autre. Changer un choix conserve les deux autres. Le type d’écoute inconnu reste explicite et conserve la recette historique : BandPilot ne devine pas l’équipement.
+
+Sans choix renseigné, les profils existants conservent Rock live, la marge standard et les retours historiques. Si la fiche technique précise déjà le type de retour, le coach utilise cette information pour sa prochaine proposition. L’ancien choix expérimental `inears-natural` est repris en Naturel + Plus de marge + in-ears, sans écraser des choix indépendants déjà renseignés. Cette reprise ne modifie pas la console. Enregistrer une préférence ne transmet aucun réglage audio ; **Préparer les réglages** affiche les changements avant application, avec sauvegarde et annulation.
+
+### Traitement Naturel
+
+Les coupe-bas restent adaptés aux instruments. Les quatre gains d’EQ sont remis à zéro dans la proposition, le gain de compensation vaut 0 dB et la compression est modérée : chant 3:1 (2–4 dB de réduction visés), kick 3:1 (2–3 dB), snare 3:1 (2–4 dB), toms 2:1 (0–3 dB), basse 3:1 (3–4 dB). Guitares électriques, overheads et charleston commencent sans compression. Ces traitements de canal sont partagés par les sorties qui les reçoivent ; ce choix n’installe pas une chaîne séparée par musicien.
+
+Les **gates restent désactivés** en Naturel. Pour les fûts, les paramètres d’un expandeur 2:1 à atténuation limitée (6 dB pour la snare, 9 dB pour kick/toms) sont préparés mais non activés. Une mesure de repisse seule ne prouve pas que les coups faibles seront conservés. Utiliser les repères repos/note faible de l’Atelier sur une prise adaptée, puis écouter avant de garder. Un enregistrement ayant déjà imprimé le gate ne permet pas de retrouver les notes coupées.
+
+### Marge et écoute
+
+**Plus de marge** vise −9 dBFS, dans une zone de −12 à −6 dBFS, quel que soit le style. Une ancienne mesure hors de la zone choisie est à refaire. Les seuils de compression restent des estimations issues de la crête, à ajuster avec la réduction affichée et l’écoute : ils ne constituent pas une analyse de la dynamique musicale. La marge d’entrée ne choisit pas le point de prélèvement de l’enregistrement USB.
+
+Pour le batteur aux in-ears ou au casque, le mix proposé conserve des toms à −18 dB et des overheads à −26 dB. Pour le retour de scène et l’écoute non précisée, la recette historique reste disponible. Ce sont des niveaux d’envoi initiaux, pas des niveaux acoustiques dans les oreilles, ni une garantie adaptée à tous les casques. Chaque musicien ajuste ensuite son propre mix selon son isolation, le son de la pièce et ses préférences.
+
+Les valeurs des tableaux historiques ci-dessous décrivent la base **Rock live**, la marge **Standard** et le mix de retour historique. Elles ne constituent pas un réglage imposé à tous les utilisateurs.
+
 ## Configuration complète par instrument
 
 Chaque instrument reçoit nom, couleur, coupe-bas, égaliseur 4 bandes, compresseur (taux, attaque, relâchement, seuil de départ, genou doux, détection RMS), gate et position stéréo. Les seuils du tableau sont des **points de départ** ; dès que le gain d’un instrument est mesuré (étape 3), ils sont remplacés par des seuils calculés sur le signal réel.

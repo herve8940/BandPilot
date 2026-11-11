@@ -1,10 +1,12 @@
+import {MONITOR_LISTENING,type MonitorListening} from './coach-sound.js';
+
 export const CONNECTION_TYPES=['micro','di','line'] as const;
 export const STAND_TYPES=['none','short','tall','clip'] as const;
 export const EQUIPMENT_PROVIDERS=['band','venue'] as const;
 export type TechInput={connection?:typeof CONNECTION_TYPES[number];phantom?:boolean;stereoWith?:number;microphone?:string;stand?:typeof STAND_TYPES[number];provider?:typeof EQUIPMENT_PROVIDERS[number];notes?:string};
 // Keep row/column for existing riders; x/y allow free placement in the stage area.
 export type StagePosition={column:number;row:number;x?:number;y?:number};
-export type TechMonitor={kind?:'in-ear'|'wedge';mode?:'mono'|'stereo';equipment?:string;notes?:string;power?:boolean};
+export type TechMonitor={kind?:MonitorListening;mode?:'mono'|'stereo';equipment?:string;notes?:string;power?:boolean};
 export type TechRider={
  inputs?:Record<string,TechInput>;positions?:Record<string,StagePosition>;monitors?:Record<string,TechMonitor>;
  bandName?:string;contactName?:string;contactEmail?:string;contactPhone?:string;
@@ -65,7 +67,7 @@ export function validateTechRider(value:unknown,channels:Set<number>,buses:Set<n
  for(const [bus,m] of Object.entries(value.monitors??{})){
   if(!buses.has(Number(bus))||String(Number(bus))!==bus)continue;
   if(!record(m))throw Error('Retour de scène invalide');
-  result.monitors![bus]={kind:choice(m.kind,['in-ear','wedge']),mode:choice(m.mode,['mono','stereo']),equipment:text(m.equipment,120),notes:text(m.notes,300),power:bool(m.power)};
+  result.monitors![bus]={kind:choice(m.kind,MONITOR_LISTENING.map(m=>m.id)),mode:choice(m.mode,['mono','stereo']),equipment:text(m.equipment,120),notes:text(m.notes,300),power:bool(m.power)};
  }
  return result;
 }

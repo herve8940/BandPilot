@@ -119,3 +119,99 @@ test('guided gain staging: measure, raise the preamp, re-measure, then threshold
   assert.match((await coach.prepare(6)).explanation,/étape 3/);
  }finally{clearInterval(pump);library.close();}
 });
+
+test('natural processing persists without console writes and produces a conservative reversible proposal',async()=>{
+ const {xr,library,coach}=setup();try{
+  const inputs=[{channel:1,source:'lead-rock',name:'Chant'},{channel:2,source:'snare',name:'Snare'},{channel:3,source:'tom1',name:'Tom 1'},{channel:4,source:'electric-solo',name:'Guitare'},{channel:5,source:'oh-left',name:'OH 1'}];
+  const before=xr.parameterState();
+  coach.saveProfile({version:1,inputs,completed:[],sound:'natural',headroom:'extra'});
+  assert.equal(coach.profile().sound,'natural');assert.deepEqual(xr.parameterState(),before);
+  assert.throws(()=>coach.saveProfile({version:1,inputs,completed:[],sound:'invented'}),/Profil sonore/);
+  const catalog=coach.catalog();assert.match(catalog.presets['tom1']!.lines.join(' '),/non activé/);
+  assert.ok(catalog.presetsBySound['live-rock']!['tom1']!.lines.some(l=>/Gate à/.test(l)));
+  const proposal=await coach.prepare();assert.deepEqual(xr.parameterState(),before);
+  for(const c of proposal.changes)assert.doesNotMatch(c.address,/headamp|phantom|routing|fader|mix\/on|\/mix\/\d/);
+  await coach.apply(proposal.token,true);
+  const read=async(a:string)=>fromWire(a,await xr.readParameter(a));
+  for(let c=1;c<=5;c++){
+   assert.equal(await read(`/ch/0${c}/gate/on`),0);
+   for(let b=1;b<=4;b++)assert.equal(await read(`/ch/0${c}/eq/${b}/g`),0);
+   assert.equal(await read(`/ch/0${c}/dyn/mgain`),0);
+  }
+  assert.equal(await read('/ch/01/dyn/thr'),-14);
+  assert.equal(await read('/ch/03/gate/mode'),1);assert.equal(await read('/ch/03/gate/range'),9);
+  assert.equal(await read('/ch/04/dyn/on'),0);assert.equal(await read('/ch/05/dyn/on'),0);
+  const undo=await coach.undo();await coach.apply(undo.token,true);
+  assert.equal(await read('/ch/01/config/name'),'');assert.equal(await read('/ch/03/gate/on'),1);
+  // Selecting the new sound must not mutate shared presets used by legacy profiles.
+  const legacy=SoundCoach.channelValues(inputs[2]!);assert.equal(legacy['/ch/03/gate/on'],1);assert.equal(legacy['/ch/03/eq/1/g'],2);
+ }finally{xr.close();library.close();}
+});
+test('extra headroom is independent of processing, which never derives a natural gate from a loud peak and leaves disabled compressors off',()=>{
+ const voice=SOURCES.find(s=>s.id==='lead-rock')!,tom=SOURCES.find(s=>s.id==='tom1')!,guitar=SOURCES.find(s=>s.id==='electric-solo')!;
+ assert.equal(gainProposal(-4,20).state,'ok');
+ assert.equal(gainProposal(-4,20,-12,60,'extra').targetGainDb,15);
+ for(const peak of [-12,-9,-6])assert.equal(gainProposal(peak,20,-12,60,'extra').state,'ok');
+ assert.equal(gainProposal(-70,20,-12,60,'extra').targetGainDb,null);
+ assert.equal(gainProposal(-20,null,-12,60,'extra').targetGainDb,null);
+ assert.equal(thresholdsFrom(voice,-9,undefined,'natural').compThrDb,-14);
+ for(const bleed of [undefined,-60,-25,-10])assert.equal(thresholdsFrom(tom,-9,bleed,'natural').gateThrDb,null);
+ assert.equal(thresholdsFrom(guitar,-9,undefined,'natural').compThrDb,null);
+});
+test('listening type controls each monitor mix independently of sound and headroom',()=>{
+ const inputs=TEMPLATES.find(t=>t.id==='rock-drums')!.inputs,musicians=suggestMusicians(inputs),profile={version:1 as const,inputs,musicians,completed:[]};
+ const legacy=SoundCoach.earsValues(profile).values;
+ assert.deepEqual(SoundCoach.earsValues({...profile,sound:'natural',headroom:'extra'}).values,legacy);
+ const personal={...profile,tech:{monitors:Object.fromEntries(musicians.map(m=>[m.bus,{kind:m.role==='batterie'?'in-ear' as const:'wedge' as const}]))}};
+ const natural=SoundCoach.earsValues(personal).values;
+ for(const sound of ['live-rock','natural'] as const)for(const headroom of ['standard','extra'] as const)assert.deepEqual(SoundCoach.earsValues({...personal,sound,headroom}).values,natural);
+ const headphones=SoundCoach.earsValues({...personal,tech:{monitors:Object.fromEntries(musicians.map(m=>[m.bus,{kind:'headphones' as const}]))}}).values;
+ assert.equal(headphones['/ch/11/mix/05/level'],-26);
+ // Wedge musicians retain every send when another musician chooses in-ears.
+ for(const [a,v] of Object.entries(legacy))if(!a.includes('/mix/05/'))assert.equal(natural[a],v,a);
+ assert.equal(legacy['/ch/11/mix/05/level'],-90);assert.equal(natural['/ch/11/mix/05/level'],-26);
+ assert.equal(natural['/ch/08/mix/05/level'],-18);assert.equal(natural['/ch/11/mix/05/tap'],'PRE');
+ assert.equal(natural['/bus/5/mix/lr'],0);
+});
+
+test('draft headroom rechecks the peak independently of style without saving or losing calibration',async()=>{
+ const {xr,library,coach}=setup();try{
+  const inputs=[{channel:1,source:'snare',name:'Snare'}];
+  coach.saveProfile({version:1,inputs,completed:[],calibration:{'1':{peakDb:-4,gainDb:12,at:new Date().toISOString()}}},true);
+  (coach as any).currentGain=async()=>({gainDb:12});
+  assert.equal((await coach.calibrationStatus())[0]!.valid,true);
+  assert.equal((await coach.calibrationStatus({sound:'natural',headroom:'extra'}))[0]!.state,'stale');
+  assert.equal((await coach.calibrationStatus({sound:'natural',headroom:'standard'}))[0]!.valid,true);
+  assert.equal((await coach.calibrationStatus({sound:'live-rock',headroom:'extra'}))[0]!.state,'stale');
+  assert.equal(coach.profile().sound,undefined);assert.equal(coach.profile().headroom,undefined);
+  await assert.rejects(coach.calibrationStatus({headroom:'unknown'}),/Marge/);
+  await assert.rejects(coach.calibrationStatus({sound:'unknown'}),/Profil sonore/);
+  coach.saveProfile({...coach.profile(),calibration:{'1':{peakDb:-9,gainDb:12,bleedDb:-35,at:new Date().toISOString()}}},true);
+  const status=(await coach.calibrationStatus({sound:'natural',headroom:'extra'}))[0]!;assert.equal(status.valid,true);assert.equal(status.thresholds!.gateThrDb,null);
+  coach.saveProfile({...coach.profile(),sound:'natural',headroom:'extra'});assert.equal(coach.profile().calibration!['1']!.bleedDb,-35);
+ }finally{xr.close();library.close();}
+});
+
+
+test('old DEV sound migrates explicitly, while existing and new independent preferences survive saving',()=>{
+ const {xr,library,coach}=setup();try{
+  const inputs=TEMPLATES.find(t=>t.id==='rock-drums')!.inputs,musicians=suggestMusicians(inputs);
+  const profile={version:1 as const,inputs,musicians,completed:[]};
+  assert.deepEqual(validateProfile(profile),profile);
+  const legacy={...profile,sound:'inears-natural',tech:{monitors:{1:{kind:'wedge',equipment:'Mon retour'}}}};
+  library.save('coach-profile','Legacy DEV',legacy);
+  const before=xr.parameterState(),migrated=coach.profile();
+  assert.equal(migrated.sound,'natural');assert.equal(migrated.headroom,'extra');
+  assert.equal(migrated.tech!.monitors![1]!.kind,'wedge');assert.equal(migrated.tech!.monitors![5]!.kind,'in-ear');
+  assert.equal(validateProfile({...legacy,headroom:'standard'}).headroom,'standard');
+  assert.equal(validateProfile({...legacy,musicians:undefined}).tech!.monitors![5]!.kind,'in-ear');
+  coach.saveProfile({...migrated,sound:'live-rock',headroom:'extra'});
+  assert.equal(coach.profile().headroom,'extra');assert.deepEqual(coach.profile().musicians,migrated.musicians);assert.equal(coach.profile().tech!.monitors![1]!.equipment,'Mon retour');assert.equal(coach.profile().tech!.monitors![5]!.kind,'in-ear');
+  assert.deepEqual(xr.parameterState(),before);
+  assert.throws(()=>validateProfile({...profile,headroom:'invented'}),/Marge/);
+  assert.throws(()=>validateProfile({...profile,tech:{monitors:{1:{kind:'invented'}}}}),/Option/);
+  coach.saveProfile({...profile,tech:{monitors:{5:{kind:'headphones',mode:'mono',notes:'Casque du batteur'}}}});
+  assert.equal(coach.profile().tech!.monitors![5]!.kind,'headphones');
+  assert.equal(SoundCoach.earsValues(coach.profile()).values['/ch/11/mix/05/level'],-26);
+ }finally{xr.close();library.close();}
+});

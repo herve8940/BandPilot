@@ -1,8 +1,8 @@
 # BandPilot Android autonome
 
-Version Android initiale disponible : **2.4.0-android.1**, issue du moteur BandPilot 2.3.3.
+Version Android disponible : **2.4.0-android.2**, avec les mises à jour vérifiées, les logs et les nouveaux choix du coach.
 
-[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.1/BandPilot-Android-2.4.0-android.1-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
+[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.2/BandPilot-Android-2.4.0-android.2-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
 
 L’APK embarque l’interface et le moteur OSC. La tablette échange directement avec la console sur le Wi-Fi ; aucun PC, Docker ou accès Internet n’est nécessaire au pilotage. Les données restent dans le stockage privé de l’application. Une mise à jour avec la même signature conserve ces données ; une désinstallation les supprime.
 
@@ -32,7 +32,11 @@ REAPER, l’enregistrement USB multipiste et l’Atelier qui analyse les prises 
 
 L’export PDF utilise le panneau d’impression Android (**Enregistrer au format PDF**). Les fichiers JSON utilisent le sélecteur de fichiers Android. Le rapport debug peut être enregistré ou copié dans une nouvelle issue GitHub ouverte dans le navigateur, après lecture et confirmation ; aucune issue n’est envoyée automatiquement.
 
-La recherche de mise à jour consulte uniquement les releases portant le préfixe `android-v` et proposant un APK correspondant. Elle nécessite Internet, mais son échec n’empêche pas le démarrage ou le contrôle local. Une mise à jour est téléchargée et installée après décision de l’utilisateur.
+La recherche automatique à l’ouverture puis toutes les six heures pendant l’utilisation consulte uniquement les releases portant le préfixe `android-v` et proposant un APK correspondant. Elle nécessite Internet, mais son échec n’empêche pas le démarrage ou le contrôle local. Dans **Aide, logs et mises à jour**, le téléchargement automatique est une option explicite, désactivée par défaut et conservée sur cet appareil. Le téléchargement manuel reste disponible. Les APK sont vérifiés (taille et SHA-256 fourni par GitHub), puis leur identité, leur version et leur signature sont comparées à l’application installée. Sans empreinte, seul le lien de téléchargement manuel est proposé.
+
+**Installer** demande une confirmation, puis Android présente son installateur. Si nécessaire, Android demande d’autoriser BandPilot comme source d’installation ; revenir ensuite dans l’app et appuyer à nouveau sur Installer. Le contrôle de la console est suspendu avant d’ouvrir l’installateur. Une session n’est jamais interrompue par un téléchargement automatique. Si l’installation est annulée, le contrôle doit être réactivé dans Réglages. Une mise à jour conserve les profils ; ne pas désinstaller l’application.
+
+Le journal consultable montre les 100 derniers événements. Son export comprend les journaux bornés du moteur et d’Android, après masquage des informations sensibles ; aucun partage n’est automatique. Les nouveaux choix **Rock live / Naturel**, marge d’entrée et écoute de chaque musicien sont indépendants et facultatifs. Les anciens profils conservent leur comportement et enregistrer une préférence n’envoie pas de réglage à la console.
 
 ## Construire
 
@@ -79,3 +83,9 @@ Les clés de signature, jetons de démarrage, dossiers de données et rapports p
 - [nodejs-mobile](https://github.com/nodejs-mobile/nodejs-mobile/tree/v18.20.4), licence Node.js et notices des dépendances incluses dans sa distribution source.
 - [sql.js](https://github.com/sql-js/sql.js/tree/v1.13.0), licence MIT ; SQLite dans le domaine public.
 - Android SDK/NDK et WebView sous leurs licences respectives.
+
+## Validation de 2.4.0-android.2
+
+Les tests du moteur couvrent aussi les anciens profils, les groupes avec écoutes mixtes et les marges d’entrée. Les tests de mise à jour vérifient les versions, les empreintes, les tailles, les redirections, les coupures réseau et la désactivation du téléchargement automatique. Les tests Android vérifient les logs dans l’interface et le refus d’un APK altéré ou d’une réinstallation de la même version. Le fournisseur de fichiers n’expose en lecture que l’APK préparé. Cette validation sur émulateur ne certifie pas les appareils physiques ni la prise en charge des pages de 16 Ko.
+
+Les futures versions doivent conserver `applicationId` et la clé de signature, augmenter `versionCode` et `versionName` ainsi que `android/runtime/package*.json`, puis publier un APK nommé `BandPilot-Android-VERSION-universal.apk` dans une release non expérimentale `android-vVERSION`. Le client récupère l’empreinte SHA-256 de l’asset GitHub. Les secrets de signature restent hors du dépôt.

@@ -8,7 +8,7 @@ import './tech-rider-document.css';
 export const connectionLabels={micro:'Micro',di:'DI',line:'Ligne'};
 export const standLabels={none:'Sans pied',short:'Pied court',tall:'Pied perche',clip:'Pince'};
 export const providerLabels={band:'Groupe',venue:'Salle'};
-export const monitorLabels={'in-ear':'In-ear',wedge:'Enceinte de retour'};
+export const monitorLabels={'in-ear':'In-ear',headphones:'Casque',wedge:'Enceinte de retour'};
 const icons:Record<Role,typeof Mic2>={chant:Mic2,guitare:Guitar,basse:Guitar,batterie:Drum,clavier:Piano};
 export const phantomLabel=(value:boolean|undefined)=>value===true?'Requis':value===false?'Non requis':'À confirmer';
 const dateLabel=(date?:string)=>date?new Date(date.length===10?date+'T12:00:00':date).toLocaleDateString(getLocale()):'';

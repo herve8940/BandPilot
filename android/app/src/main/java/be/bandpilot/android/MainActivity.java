@@ -26,6 +26,7 @@ public final class MainActivity extends Activity {
  private String exportId;
  private ValueCallback<Uri[]> fileCallback;
  private boolean waiting=true;
+ private boolean installing;
  @Override public void onCreate(Bundle state){
   super.onCreate(state);getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
   root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(Color.rgb(16,26,44));
@@ -42,7 +43,7 @@ public final class MainActivity extends Activity {
    @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){String url=request.getUrl().toString();if(origin!=null&&url.startsWith(origin+"/"))return false;if(request.isForMainFrame()&&request.hasGesture())openExternal(url);return true;}
    @Override public void onPageFinished(WebView view,String url){if(origin!=null&&url.startsWith(origin+"/")){status.setVisibility(View.GONE);web.setVisibility(View.VISIBLE);}}
    @Override public void onReceivedError(WebView view,WebResourceRequest request,WebResourceError error){if(request.isForMainFrame())showFailure("L’interface n’a pas pu démarrer. Ferme puis rouvre BandPilot.\n"+error.getDescription());}
-   @Override public boolean onRenderProcessGone(WebView view,RenderProcessGoneDetail detail){showFailure("L’affichage Android s’est arrêté. Ferme puis rouvre BandPilot.");return true;}
+   @Override public boolean onRenderProcessGone(WebView view,RenderProcessGoneDetail detail){AndroidLog.event(MainActivity.this,"renderer_stopped");showFailure("L’affichage Android s’est arrêté. Ferme puis rouvre BandPilot.");return true;}
   });
   web.setWebChromeClient(new WebChromeClient(){
    @Override public boolean onJsAlert(WebView view,String url,String message,JsResult result){new AlertDialog.Builder(MainActivity.this).setTitle("BandPilot").setMessage(message).setPositiveButton("OK",(d,w)->result.confirm()).setOnCancelListener(d->result.cancel()).show();return true;}
@@ -82,6 +83,11 @@ public final class MainActivity extends Activity {
       byte[] bytes=Base64.decode(input.getString("base64"),Base64.DEFAULT);if(bytes.length>10000000)throw new IOException("Fichier trop volumineux.");
       exportBytes=bytes;exportId=id;String name=input.optString("name","BandPilot.json").replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]","-");
       Intent save=new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(input.optString("mime","application/octet-stream")).putExtra(Intent.EXTRA_TITLE,name.substring(0,Math.min(name.length(),140)));startActivityForResult(save,41);break;
+     case "installUpdate":
+      if(installing)throw new IOException("Installation déjà en cours.");
+      if(UpdateInstaller.needsPermission(MainActivity.this)){answer(id,result("permissionRequired",true));break;}
+      installing=true;String version=input.getString("version");
+      new Thread(()->{try{UpdateInstaller.verify(MainActivity.this,version);UpdateInstaller.suspend();ui.post(()->{installing=false;if(isDestroyed())return;try{UpdateInstaller.launch(MainActivity.this);answer(id,result("opened",true));}catch(Exception e){answer(id,result("error","Installation Android indisponible."));}});}catch(Exception e){AndroidLog.event(MainActivity.this,"update_install_error");ui.post(()->{installing=false;answer(id,result("error",String.valueOf(e.getMessage())));});}},"BandPilot-update").start();break;
      case "open":openExternal(input.getString("url"));answer(id,result("opened",true));break;
      case "clipboard":getSystemService(android.content.ClipboardManager.class).setPrimaryClip(ClipData.newPlainText("BandPilot",input.getString("text")));answer(id,result("copied",true));break;
      case "print":printDocument(id,input.getString("html"),input.optString("name","BandPilot"));break;

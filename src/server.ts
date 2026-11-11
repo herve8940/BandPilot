@@ -1,6 +1,6 @@
 import {diagnosticEvents,sanitizeDiagnostic} from '../shared/diagnostic-report.js';
 import {nativeAccess} from './native-access.js';
-import {androidUpdate} from './android-updates.js';
+import {AndroidUpdates} from './android-update-manager.js';
 import {patchSignature,personalPatch} from '../shared/tech-rider.js';
 import {languageOrFrench} from '../shared/languages.js';
 import {MIXER_MODELS} from '../shared/mixer-models.js';
@@ -42,9 +42,14 @@ const processing = new ProcessingStore();
 const dbPath=process.env.XR18_DB_PATH??"data/xr18-studio.db";
 const diagnostics=new DiagnosticLog(join(dirname(dbPath),'logs','xr18-studio.log'));
 setDiagnosticLogger(diagnostics);
+function diagnosticLog(){
+ let native='';if(process.env.BANDPILOT_ANDROID==='1')for(const name of ['android.log.1','android.log'])try{native+=readFileSync(join(dirname(dbPath),'logs',name),'utf8');}catch{}
+ return [...diagnostics.read().split('\n'),...native.split('\n')].filter(Boolean).sort((a,b)=>{try{return String(JSON.parse(a).time).localeCompare(String(JSON.parse(b).time));}catch{return 0;}}).join('\n');
+}
 // Version shown in Réglages and written in the diagnostic log (set by the desktop app, else package.json).
 const APP_VERSION=process.env.XR18_APP_VERSION??(()=>{try{return JSON.parse(readFileSync(new URL('../../package.json',import.meta.url),'utf8')).version as string;}catch{return 'source';}})();
 const APP_BUILD=process.env.XR18_APP_BUILD??'source';
+const androidUpdates=process.env.BANDPILOT_ANDROID==='1'?new AndroidUpdates(join(dirname(dbPath),'updates'),APP_VERSION):undefined;
 diagnostic('startup',{build:APP_BUILD,version:APP_VERSION,platform:process.platform,arch:process.arch,node:process.version});
 const configPath=process.env.XR18_CONNECTION_PATH??join(dirname(dbPath),'connection.json');
 let config=await loadConnection(configPath,{mode:process.env.XR18_MODE==='real'?'real':'simulation',host:process.env.XR18_HOST??'192.168.1.1',port:Number(process.env.XR18_PORT??10024),enableWrites:process.env.XR18_ENABLE_WRITES==='true'});
@@ -115,9 +120,6 @@ const handler: http.RequestListener = async (req, res) => {
   if(process.env.BANDPILOT_ANDROID==='1'&&path==='/api/android/suspend'&&req.method==='POST'){
    show.manualOverride();await connection.suspend();res.end(JSON.stringify({ok:true}));return;
   }
-  if(process.env.BANDPILOT_ANDROID==='1'&&path==='/api/android/update'&&req.method==='GET'){
-   res.end(JSON.stringify(await androidUpdate(APP_VERSION)));return;
-  }
   if(process.env.BANDPILOT_ANDROID==='1'&&/^\/api\/(?:reaper|workshop)(?:\/|$)/.test(path)){
    res.writeHead(501);res.end(JSON.stringify({error:'REAPER et l’Atelier du son sont disponibles dans BandPilot sur ordinateur.'}));return;
   }
@@ -131,6 +133,16 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/auth/logout'&&req.method==='POST'){access.logout(req);res.setHeader('Set-Cookie','xr18_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');for(const ws of wss.clients)ws.terminate();res.end(JSON.stringify({ok:true}));return;}
   const user=access.user(req);
   if(path.startsWith('/api/')&&(!user||!permitted(user,req.method??'GET',path))){res.writeHead(user?403:401);res.end(JSON.stringify({error:user?'Droits insuffisants':'Connexion requise'}));return;}
+  if(androidUpdates&&path.startsWith('/api/android/update')){
+   if(user?.role!=='admin'){res.writeHead(403);res.end(JSON.stringify({error:'Administration requise'}));return;}
+   let result:unknown;
+   if(path==='/api/android/update'&&req.method==='GET')result=await androidUpdates.check(new URL(req.url!,'http://localhost').searchParams.get('force')==='true');
+   else if(path==='/api/android/update/status'&&req.method==='GET')result=androidUpdates.snapshot();
+   else if(path==='/api/android/update/preferences'&&req.method==='POST')result=await androidUpdates.setAutomatic((await body(req)).enabled);
+   else if(path==='/api/android/update/download'&&req.method==='POST'){void androidUpdates.stage();result=androidUpdates.snapshot();}
+   else{res.writeHead(404);res.end('{}');return;}
+   res.end(JSON.stringify(result));return;
+  }
   if(path==='/api/workspace'){
    try{if(req.method==='GET')res.end(JSON.stringify(database.workspace()));
    else if(req.method==='PUT')res.end(JSON.stringify(database.saveWorkspace(await body(req))));
@@ -183,13 +195,13 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/version'&&req.method==='GET'){res.end(JSON.stringify({version:APP_VERSION,build:APP_BUILD}));return;}
   if(path==='/api/diagnostics/report'&&req.method==='GET'){
     const state=xr18.status(),fx=vocalFx.status(),p=coach.profile();
-    res.end(JSON.stringify({schema:1,createdAt:new Date().toISOString(),app:{version:APP_VERSION,build:APP_BUILD},system:{platform:process.platform,arch:process.arch,node:process.version,electron:process.versions.electron},console:{mode:state.mode,model:state.model,connected:state.connected,writesEnabled:state.writesEnabled},group:{inputs:p.inputs.map(i=>({channel:i.channel,source:i.source})),monitors:(p.musicians??[]).map(m=>({bus:m.bus,channels:m.channels}))},ambience:fx.session?{slot:fx.session.slot,phase:fx.session.phase,sameConsole:fx.session.sameConsole,sourceMissing:fx.session.sourceMissing,channel:fx.session.choice.channel,ambience:fx.session.choice.ambience}:null,events:diagnosticEvents(diagnostics.read())}));return;
+    res.end(JSON.stringify({schema:1,createdAt:new Date().toISOString(),app:{version:APP_VERSION,build:APP_BUILD},system:{platform:process.platform,arch:process.arch,node:process.version,electron:process.versions.electron},console:{mode:state.mode,model:state.model,connected:state.connected,writesEnabled:state.writesEnabled},group:{inputs:p.inputs.map(i=>({channel:i.channel,source:i.source})),monitors:(p.musicians??[]).map(m=>({bus:m.bus,channels:m.channels}))},ambience:fx.session?{slot:fx.session.slot,phase:fx.session.phase,sameConsole:fx.session.sameConsole,sourceMissing:fx.session.sourceMissing,channel:fx.session.choice.channel,ambience:fx.session.choice.ambience}:null,events:diagnosticEvents(diagnosticLog())}));return;
   }
   if(path==='/api/diagnostics/event'&&req.method==='POST'){
     const d=await body(req);diagnostic('ui.error',sanitizeDiagnostic({action:String(d.action??'').slice(0,120),message:String(d.message??''),stack:String(d.stack??'')}) as Record<string,unknown>);res.end(JSON.stringify({ok:true}));return;
   }
   if(path==='/api/diagnostics/log'&&req.method==='GET'){
-    try{res.setHeader('Content-Type','text/plain; charset=utf-8');res.setHeader('Content-Disposition','attachment; filename="xr18-studio-diagnostic.log"');res.end(diagnostics.read());}
+    try{res.setHeader('Content-Type','text/plain; charset=utf-8');res.setHeader('Content-Disposition','attachment; filename="xr18-studio-diagnostic.log"');res.end(diagnosticLog().split('\n').map(line=>{try{return JSON.stringify(sanitizeDiagnostic(JSON.parse(line)));}catch{return '';}}).filter(Boolean).join('\n'));}
     catch{res.writeHead(503);res.end('Journal indisponible : vérifier les droits du dossier de données.');}return;
   }
   if(path==='/api/discovery'&&req.method==='GET'){
@@ -344,7 +356,7 @@ const handler: http.RequestListener = async (req, res) => {
       else if(path==='/api/coach/prepare')result=await coach.prepare(d.channel===undefined?undefined:Number(d.channel));
       else if(path==='/api/coach/gain')result=await coach.gainCheck(Number(d.channel));
       else if(path==='/api/coach/bleed')result=await coach.bleedCheck(Number(d.channel));
-      else if(path==='/api/coach/calibration')result=await coach.calibrationStatus();
+      else if(path==='/api/coach/calibration')result=await coach.calibrationStatus({sound:d.sound,headroom:d.headroom});
       else if(path==='/api/coach/ears')result=await coach.prepareEars(d.bus===undefined?undefined:Number(d.bus));
       else if(path==='/api/coach/ears/share'){
         // Personal QR link for every musician that has none yet on its bus.
