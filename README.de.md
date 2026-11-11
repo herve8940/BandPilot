@@ -74,7 +74,7 @@ Mehr Zeit zum Spielen, weniger Zeit beim Suchen nach Einstellungen. BandPilot hi
 
 Freiwillige Unterstützung schafft Zeit für Fehlerbehebungen, Mischpulttests und Anleitungen in fünf Sprachen. Erfahrungsberichte, Übersetzungen und das Weiterempfehlen des Projekts helfen ebenfalls.
 
-[So kannst du helfen](docs/SUPPORT_DE.md) · [Mitwirken](CONTRIBUTING.md)
+[Auf Ko-fi unterstützen](https://ko-fi.com/bandpilot) · [So kannst du helfen](docs/SUPPORT_DE.md) · [Mitwirken](CONTRIBUTING.md)
 <!-- support:end -->
 
 [Sicherheit](SECURITY.md) · [Daten und Datenschutz](docs/PRIVACY.md) · [Hilfe](SUPPORT.md) · [MIT](LICENSE)

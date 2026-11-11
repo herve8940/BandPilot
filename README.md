@@ -110,7 +110,7 @@ Plus de temps pour jouer, moins de temps à chercher un réglage. BandPilot aide
 
 Un soutien volontaire aide à consacrer du temps aux corrections, aux essais sur les consoles et aux guides en cinq langues. Un retour de terrain, une traduction ou un partage du projet sont aussi utiles.
 
-[Comment aider le projet](docs/SUPPORT_FR.md) · [Contribuer](CONTRIBUTING.md)
+[Soutenir sur Ko-fi](https://ko-fi.com/bandpilot) · [Comment aider le projet](docs/SUPPORT_FR.md) · [Contribuer](CONTRIBUTING.md)
 <!-- support:end -->
 
 [Sécurité](SECURITY.md) · [Données et confidentialité](docs/PRIVACY.md) · [Assistance](SUPPORT.md) · [MIT](LICENSE)
