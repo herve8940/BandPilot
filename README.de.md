@@ -4,7 +4,7 @@
 
 [Download](https://herve8940.github.io/BandPilot/de.html#download) · [Website](https://herve8940.github.io/BandPilot/de.html) · [Vollständiger Leitfaden](docs/USER_GUIDE_DE.md) · [Français](README.md) · [Videotour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
-BandPilot ist der neue Name von XR18 Studio: eine kostenlose lokale App für geführte Soundchecks, visuelle Mischpult-Steuerung, persönliche Monitorsteuerung am Telefon und REAPER-Proben. Windows, Intel/Apple Silicon macOS und Linux.
+BandPilot ist eine kostenlose lokale App zur Steuerung von Behringer X-Air und Midas M-Air: geführte Soundchecks, persönliche Monitormixe und REAPER-Proben am Computer. Windows, macOS, Linux und eigenständiges Android. BandPilot ist der neue Name von XR18 Studio.
 
 **Mehrsprachige App: Englisch, Französisch, Italienisch, Spanisch und Deutsch.** Wählen Sie Ihre Sprache unter **Einstellungen → Optionen · Sprache**; Ihre Auswahl wird auf diesem Gerät gespeichert. Musiker können auf ihren Telefonen ihre eigene Sprache wählen. Weitere Sprachen können auf Anfrage hinzugefügt werden.
 
@@ -14,9 +14,11 @@ BandPilot ist der neue Name von XR18 Studio: eine kostenlose lokale App für gef
 
 ## Versionen und Verfügbarkeit
 
-Desktop: **2.3.3 stabil** (Windows, macOS, Linux). Android: **2.4.0-android.1 Vorabversion**, separates APK. BandStudio: **2.3.4-dev.1 Windows-Vorabversion**, zum Testen mit der passenden BandStudio-Version; nicht Teil der stabilen Ausgabe.
+Desktop: [neueste stabile Version](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.1 Vorabversion**, separates APK.
 
-[Downloads und Einschränkungen](https://herve8940.github.io/BandPilot/de.html#download) · [BandStudio DEV](https://github.com/herve8940/BandPilot/releases/tag/bandstudio-integration-dev)
+[Downloads und Einschränkungen](https://herve8940.github.io/BandPilot/de.html#download)
+
+Um Instrumente zu trennen, an Liedtexten zu arbeiten und Songs für REAPER vorzubereiten, entdecke [BandStudio (auf Englisch)](https://herve8940.github.io/BandStudio/en.html), eine eigenständige, ergänzende App.
 
 ## Neu: Technical Rider, Effekte und Android
 

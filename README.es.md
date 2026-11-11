@@ -4,7 +4,7 @@
 
 [Descargar](https://herve8940.github.io/BandPilot/es.html#download) · [Sitio web](https://herve8940.github.io/BandPilot/es.html) · [Guía completa](docs/USER_GUIDE_ES.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
-BandPilot es el nuevo nombre de XR18 Studio: una aplicación local gratuita para pruebas de sonido guiadas, control visual de la mesa de mezclas, monitores telefónicos personales y ensayos de REAPER. Windows, Intel/Apple Silicon macOS y Linux.
+BandPilot es una aplicación local gratuita para controlar mesas Behringer X-Air y Midas M-Air, preparar pruebas de sonido guiadas, ajustar mezclas de monitores personales y ensayar con REAPER en ordenador. Windows, macOS, Linux y Android autónomo. BandPilot es el nuevo nombre de XR18 Studio.
 
 **Aplicación multilingüe: inglés, francés, italiano, español y alemán.** Seleccione su idioma en **Configuración → Opciones · Idioma**; su elección se guarda en este dispositivo. Los músicos pueden elegir su propio idioma en sus teléfonos. Se pueden agregar más idiomas a pedido.
 
@@ -14,9 +14,11 @@ BandPilot es el nuevo nombre de XR18 Studio: una aplicación local gratuita para
 
 ## Versiones y disponibilidad
 
-Escritorio: **2.3.3 estable** (Windows, macOS, Linux). Android: **2.4.0-android.1 preliminar**, APK independiente. BandStudio: **2.3.4-dev.1 preliminar para Windows**, para probar con la versión compatible de BandStudio; no forma parte de la versión estable.
+Escritorio: [última versión estable](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.1 preliminar**, APK independiente.
 
-[Descargas y límites](https://herve8940.github.io/BandPilot/es.html#download) · [BandStudio DEV](https://github.com/herve8940/BandPilot/releases/tag/bandstudio-integration-dev)
+[Descargas y límites](https://herve8940.github.io/BandPilot/es.html#download)
+
+Para separar instrumentos, trabajar las letras y preparar canciones para REAPER, descubre [BandStudio (en inglés)](https://herve8940.github.io/BandStudio/en.html), una aplicación independiente y complementaria.
 
 ## Novedades: ficha técnica, ambientes y Android
 

@@ -4,7 +4,7 @@
 
 [Download](https://herve8940.github.io/BandPilot/it.html#download) · [Sito web](https://herve8940.github.io/BandPilot/it.html) · [Guida completa](docs/USER_GUIDE_IT.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
-BandPilot è il nuovo nome di XR18 Studio: un'app locale gratuita per sound check guidati, controllo visivo del mixer, monitor telefonici personali e prove REAPER. Windows, Intel/Apple Silicon macOS e Linux.
+BandPilot è un’app locale gratuita per controllare i mixer Behringer X-Air e Midas M-Air, preparare soundcheck guidati, regolare i mix monitor personali e provare con REAPER su computer. Windows, macOS, Linux e Android autonomo. BandPilot è il nuovo nome di XR18 Studio.
 
 **App multilingue: inglese, francese, italiano, spagnolo e tedesco.** Seleziona la tua lingua in **Impostazioni → Opzioni · Lingua**; la tua scelta viene salvata su questo dispositivo. I musicisti possono scegliere la propria lingua sui propri telefoni. Su richiesta è possibile aggiungere altre lingue.
 
@@ -14,9 +14,11 @@ BandPilot è il nuovo nome di XR18 Studio: un'app locale gratuita per sound chec
 
 ## Versioni e disponibilità
 
-Desktop: **2.3.3 stabile** (Windows, macOS, Linux). Android: **2.4.0-android.1 in anteprima**, APK separato. BandStudio: **2.3.4-dev.1 in anteprima Windows**, da provare con la versione compatibile di BandStudio; non fa parte della versione stabile.
+Desktop: [ultima versione stabile](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.1 in anteprima**, APK separato.
 
-[Download e limiti](https://herve8940.github.io/BandPilot/it.html#download) · [BandStudio DEV](https://github.com/herve8940/BandPilot/releases/tag/bandstudio-integration-dev)
+[Download e limiti](https://herve8940.github.io/BandPilot/it.html#download)
+
+Per separare gli strumenti, lavorare sui testi e preparare brani per REAPER, scopri [BandStudio (in inglese)](https://herve8940.github.io/BandStudio/en.html), un’app indipendente e complementare.
 
 ## Novità: scheda tecnica, effetti e Android
 

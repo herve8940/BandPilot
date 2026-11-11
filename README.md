@@ -6,7 +6,7 @@
 
 [![Version](https://img.shields.io/github/v/release/herve8940/BandPilot)](https://github.com/herve8940/BandPilot/releases/latest) [![CI](https://github.com/herve8940/BandPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/herve8940/BandPilot/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
 
-Application gratuite pour préparer la balance, piloter la console, donner les retours aux musiciens et répéter avec REAPER. **BandPilot est le nouveau nom de XR18 Studio.**
+BandPilot est une application gratuite pour piloter les consoles Behringer X-Air et Midas M-Air, préparer la balance, régler les retours des musiciens et répéter avec REAPER sur ordinateur. **BandPilot est le nouveau nom de XR18 Studio.**
 
 [⬇ Télécharger](https://herve8940.github.io/BandPilot/#download) · [🌐 Site](https://herve8940.github.io/BandPilot/) · [📘 Guide FR](docs/USER_GUIDE_FR.md) · [English](README.en.md) · [🎬 Visite vidéo](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
@@ -22,9 +22,11 @@ Windows · Mac Intel et Apple Silicon · Linux · **Android autonome**
 
 ## Versions et disponibilité
 
-Bureau : **2.3.3 stable** (Windows, macOS, Linux). Android : **2.4.0-android.1 en préversion**, APK séparé. BandStudio : **2.3.4-dev.1 en préversion Windows**, à tester avec la version compatible de BandStudio ; ne fait pas partie de la version stable.
+Bureau : [dernière version stable](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android : **2.4.0-android.1 en préversion**, APK séparé.
 
-[Téléchargements et limites](https://herve8940.github.io/BandPilot/#download) · [BandStudio DEV](https://github.com/herve8940/BandPilot/releases/tag/bandstudio-integration-dev)
+[Téléchargements et limites](https://herve8940.github.io/BandPilot/#download)
+
+Pour séparer les instruments, travailler les paroles et préparer tes morceaux pour REAPER, découvre [BandStudio](https://herve8940.github.io/BandStudio/), une application indépendante et complémentaire.
 
 ## Nouveautés : fiche technique, ambiances et Android
 

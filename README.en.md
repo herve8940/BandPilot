@@ -4,7 +4,7 @@
 
 [Download](https://herve8940.github.io/BandPilot/en.html#download) · [Website](https://herve8940.github.io/BandPilot/en.html) · [Full guide](docs/USER_GUIDE_EN.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
-BandPilot is the new name of XR18 Studio: a free local app for guided sound checks, visual mixer control, personal phone monitors and REAPER rehearsals. Windows, Intel/Apple Silicon macOS and Linux.
+BandPilot is a free local app for Behringer X-Air and Midas M-Air mixer control, guided sound checks, personal monitor mixes and REAPER rehearsals on desktop. Windows, macOS, Linux and standalone Android. BandPilot is the new name of XR18 Studio.
 
 **Multilingual app: English, French, Italian, Spanish and German.** Select your language in **Settings → Options · Language**; your choice is saved on this device. Musicians can choose their own language on their phones. More languages can be added on request.
 
@@ -14,9 +14,11 @@ BandPilot is the new name of XR18 Studio: a free local app for guided sound chec
 
 ## Versions and availability
 
-Desktop: **2.3.3 stable** (Windows, macOS, Linux). Android: **2.4.0-android.1 prerelease**, separate APK. BandStudio: **2.3.4-dev.1 Windows prerelease**, for testing with the matching BandStudio version; not part of the stable release.
+Desktop: [latest stable release](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.1 prerelease**, separate APK.
 
-[Downloads and limitations](https://herve8940.github.io/BandPilot/en.html#download) · [BandStudio DEV](https://github.com/herve8940/BandPilot/releases/tag/bandstudio-integration-dev)
+[Downloads and limitations](https://herve8940.github.io/BandPilot/en.html#download)
+
+To separate instruments, work on lyrics and prepare songs for REAPER, discover [BandStudio](https://herve8940.github.io/BandStudio/en.html), an independent companion app.
 
 ## New: technical rider, source ambience and Android
 
