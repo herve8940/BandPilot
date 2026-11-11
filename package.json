@@ -1,6 +1,6 @@
 {
   "name": "xr18-studio",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "description": "BandPilot: free multilingual mixer control, guided soundchecks, PDF technical rider, stage plot and source ambience. Windows, macOS, Linux and standalone Android. REAPER on desktop; model-aware X-Air/M-Air support, partial X32.",
   "keywords": [
     "behringer",
@@ -117,7 +117,8 @@
     },
     "mac": {
       "target": [
-        "dmg"
+        "dmg",
+        "zip"
       ],
       "category": "public.app-category.music",
       "artifactName": "BandPilot-macOS-${version}-${arch}.${ext}",
@@ -127,7 +128,9 @@
           "_osc._udp",
           "_http._tcp"
         ]
-      }
+      },
+      "identity": "-",
+      "sign": "scripts/sign-mac.cjs"
     },
     "linux": {
       "target": [

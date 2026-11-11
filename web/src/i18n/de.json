@@ -2302,5 +2302,13 @@
   "Musiciens enregistrés. Aucun réglage audio modifié.": "Musiker gespeichert. Keine Audioeinstellung geändert.",
   "Instrument choisi. Enregistre ton groupe, puis utilise Préparer les réglages quand tu es prêt.": "Instrument ausgewählt. Speichere die Band und verwende Einstellungen vorbereiten, sobald du bereit bist.",
   "Source, canal 1 à 16 et nom de 12 caractères maximum requis": "Quelle, Kanal 1–16 und Name mit maximal 12 Zeichen erforderlich",
-  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Schließe dieses Fenster und bereite die Einstellungen erneut vor. Wurden sie nur teilweise angewendet, kannst du über „Letzte geführte Änderung rückgängig machen“ die Sicherung prüfen."
+  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Schließe dieses Fenster und bereite die Einstellungen erneut vor. Wurden sie nur teilweise angewendet, kannst du über „Letzte geführte Änderung rückgängig machen“ die Sicherung prüfen.",
+  "Téléchargement automatique en cours…": "Automatischer Download läuft…",
+  "La mise à jour sera installée automatiquement quand tu quitteras BandPilot.": "Das Update wird automatisch installiert, wenn du BandPilot beendest.",
+  "La mise à jour automatique a échoué. Réessaie ou utilise le téléchargement manuel.": "Das automatische Update ist fehlgeschlagen. Versuche es erneut oder lade es manuell herunter.",
+  "Cette installation nécessite une mise à jour manuelle.": "Diese Installation erfordert ein manuelles Update.",
+  "Impossible de vérifier les mises à jour. Réessaie plus tard.": "Updates können nicht geprüft werden. Versuche es später erneut.",
+  "Version locale non reconnue. Utilise le téléchargement manuel.": "Lokale Version nicht erkannt. Lade das Update manuell herunter.",
+  "Télécharger automatiquement les mises à jour et les installer à la fermeture": "Updates automatisch herunterladen und beim Beenden installieren",
+  "Les nouvelles versions sont proposées après leurs tests. Aucune mise à jour ne ferme une session en cours.": "Neue Versionen werden nach den Tests angeboten. Updates beenden keine laufende Sitzung."
 }

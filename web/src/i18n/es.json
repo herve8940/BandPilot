@@ -2302,5 +2302,13 @@
   "Musiciens enregistrés. Aucun réglage audio modifié.": "Músicos guardados. No se cambió ningún ajuste de audio.",
   "Instrument choisi. Enregistre ton groupe, puis utilise Préparer les réglages quand tu es prêt.": "Instrumento elegido. Guarda el grupo y usa Preparar ajustes cuando estés listo.",
   "Source, canal 1 à 16 et nom de 12 caractères maximum requis": "Se requieren fuente, canal 1–16 y nombre de hasta 12 caracteres",
-  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Cierra esta ventana y prepara los ajustes de nuevo. Si se aplicaron parcialmente, « Deshacer el último ajuste guiado » permite revisar la copia de seguridad."
+  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Cierra esta ventana y prepara los ajustes de nuevo. Si se aplicaron parcialmente, « Deshacer el último ajuste guiado » permite revisar la copia de seguridad.",
+  "Téléchargement automatique en cours…": "Descarga automática en curso…",
+  "La mise à jour sera installée automatiquement quand tu quitteras BandPilot.": "La actualización se instalará automáticamente al cerrar BandPilot.",
+  "La mise à jour automatique a échoué. Réessaie ou utilise le téléchargement manuel.": "La actualización automática ha fallado. Reinténtalo o descárgala manualmente.",
+  "Cette installation nécessite une mise à jour manuelle.": "Esta instalación requiere una actualización manual.",
+  "Impossible de vérifier les mises à jour. Réessaie plus tard.": "No se pueden comprobar las actualizaciones. Inténtalo más tarde.",
+  "Version locale non reconnue. Utilise le téléchargement manuel.": "Versión local no reconocida. Descarga la actualización manualmente.",
+  "Télécharger automatiquement les mises à jour et les installer à la fermeture": "Descargar actualizaciones automáticamente e instalarlas al cerrar",
+  "Les nouvelles versions sont proposées après leurs tests. Aucune mise à jour ne ferme une session en cours.": "Las nuevas versiones se ofrecen tras las pruebas. Las actualizaciones no cierran una sesión en curso."
 }

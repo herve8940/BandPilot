@@ -40,6 +40,8 @@ jobs:
         run: npm run desktop:package
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          # Our custom signer is ad hoc and requires no credentials, including PRs.
+          CSC_FOR_PULL_REQUEST: 'true'
       - name: Smoke test installed Windows application
         if: runner.os == 'Windows'
         shell: pwsh
@@ -70,6 +72,8 @@ jobs:
             node desktop/smoke.cjs $installedExe
             if ($LASTEXITCODE -ne 0) { throw 'Installed Windows application failed to start' }
           }
+      - name: Test automatic installation with the real update package
+        run: node scripts/test-update-package.cjs
       - name: Upload desktop installers
         if: always()
         uses: actions/upload-artifact@v4
@@ -78,6 +82,7 @@ jobs:
           path: |
             release/*.exe
             release/*.dmg
+            release/*.zip
             release/*.AppImage
             release/*.deb
           if-no-files-found: error
