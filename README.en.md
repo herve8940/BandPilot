@@ -75,7 +75,7 @@ More time playing, less time searching for a setting. BandPilot helps bands prep
 
 Voluntary support helps make time for fixes, mixer testing and guides in five languages. Field reports, translations and sharing the project also help.
 
-[Ways to help the project](docs/SUPPORT_EN.md) · [Contribute](CONTRIBUTING.md)
+[Support on Ko-fi](https://ko-fi.com/bandpilot) · [Ways to help the project](docs/SUPPORT_EN.md) · [Contribute](CONTRIBUTING.md)
 <!-- support:end -->
 
 [Security](SECURITY.md) · [Data and privacy](docs/PRIVACY.md) · [Help](SUPPORT.md) · [MIT](LICENSE)

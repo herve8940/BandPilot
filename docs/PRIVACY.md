@@ -22,7 +22,7 @@ Les noms et coordonnées d'une fiche technique peuvent apparaître dans ses PDF 
 | Recherche de mise à jour | GitHub : versions et métadonnées publiques ; le service reçoit les informations réseau habituelles, dont l'adresse IP | Au démarrage des applications qui proposent cette fonction et lors d'une recherche manuelle |
 | Rapport de problème | GitHub : description et diagnostic de l'aperçu ; une issue est publique | Action explicite de création/envoi ou copie dans le navigateur |
 | Conseiller IA facultatif | OpenAI : question, type de source, mode/état de connexion et langue ; aucun flux audio envoyé par ce conseiller | Clé et modèle configurés, puis accord explicite avant la question |
-| Liens externes | GitHub, documentation ou, une fois configuré, Ko-fi | Ouverture du lien par l'utilisateur |
+| Liens externes | GitHub, documentation ou Ko-fi | Ouverture du lien par l'utilisateur |
 
 Les filtres de diagnostic masquent plusieurs catégories de données sensibles. Une
 description libre ou capture peut encore contenir des informations personnelles : relis-la
@@ -43,8 +43,8 @@ d'audience ajoutée par BandPilot, ni formulaire de paiement, ni widget Ko-fi. L
 traite ses propres requêtes et journaux techniques. Les badges du README peuvent charger
 des ressources de GitHub et Shields.io.
 
-Ko-fi reste inactif tant qu'un compte vérifié n'est pas configuré. Après activation,
-un simple lien ouvre Ko-fi ; aucun paiement ne transite par BandPilot. Les règles des
+Un simple lien ouvre [la page Ko-fi de BandPilot](https://ko-fi.com/bandpilot) ;
+aucun paiement ne transite par BandPilot. Les règles des
 services externes s'appliquent lors de leur utilisation :
 [GitHub](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement),
 [OpenAI](https://openai.com/policies/privacy-policy/), [Ko-fi](https://ko-fi.com/Home/PrivacyPolicy).
@@ -74,8 +74,8 @@ or saving is refused. Environment-based configuration is the operator's responsi
 Disconnecting credentials does not remove already published content.
 
 The website adds no analytics or Ko-fi widget; GitHub Pages handles its hosting requests.
-README badges may load GitHub/Shields.io resources. Ko-fi is inactive until a verified
-project account is configured, then uses an external link. BandPilot processes no payments.
+README badges may load GitHub/Shields.io resources. Support uses an external link to
+[BandPilot on Ko-fi](https://ko-fi.com/bandpilot). BandPilot processes no payments.
 External providers' policies apply on their services. Back up local data before deletion;
 use the relevant provider to manage published content or payments. Never post private data
 in a public support request.

@@ -13,8 +13,9 @@ couverts. Cette revue n'est ni une certification juridique ni une certification 
   2.2 restent datées. Les anciens rapports et notes de version gardent leur contexte.
 - Contribution, assistance, règles d'échange, signalement de sécurité et traitement des
   données explicités. Les diagnostics publics demandent une relecture.
-- Soutien traduit en cinq langues, lié depuis README, pages et guides. Ko-fi est préparé
-  mais inactif faute de compte confirmé. Pas de faux bénéficiaire ni de paiement intégré.
+- Soutien traduit en cinq langues, lié depuis README, pages et guides. Après création
+  du compte par son propriétaire, les liens pointent vers [BandPilot sur Ko-fi](https://ko-fi.com/bandpilot).
+  Aucun paiement n'est intégré à BandPilot.
 - Installation CI avec le lockfile et permissions de lecture explicites. Vérification
   automatique des liens locaux et de la synchronisation des pages de soutien.
 - Texte MIT ajouté aux futurs paquets de bureau, en complément des notices tierces.
@@ -48,7 +49,8 @@ Cette revue documentaire ne modifie pas ces moteurs ni les installateurs publié
 - La disponibilité du signalement privé GitHub et des analyses de sécurité privées
   n'a pas pu être confirmée par le connecteur. La procédure prévoit ce cas.
 - Les tests matériels restent nécessaires pour les modèles et usages non validés.
-- L'intégration Ko-fi attend la création et la vérification du compte par son propriétaire.
+- Ko-fi indique la configuration du profil et la connexion aux paiements terminées ;
+  la page du projet affiche son formulaire de soutien. Aucun paiement de test n'a été effectué.
 - Les captures existantes n'ont pas été remplacées par de fausses captures de la dernière version.
 
 [État du projet](ETAT_DU_PROJET.md) · [Activation Ko-fi](KOFI_SETUP.md)

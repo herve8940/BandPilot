@@ -75,7 +75,7 @@ Più tempo per suonare, meno tempo a cercare una regolazione. BandPilot aiuta i 
 
 Il sostegno volontario aiuta a dedicare tempo alle correzioni, alle prove sui mixer e alle guide in cinque lingue. Anche segnalazioni, traduzioni e condivisioni sono utili.
 
-[Come aiutare il progetto](docs/SUPPORT_IT.md) · [Contribuisci](CONTRIBUTING.md)
+[Sostieni su Ko-fi](https://ko-fi.com/bandpilot) · [Come aiutare il progetto](docs/SUPPORT_IT.md) · [Contribuisci](CONTRIBUTING.md)
 <!-- support:end -->
 
 [Sicurezza](SECURITY.md) · [Dati e privacy](docs/PRIVACY.md) · [Assistenza](SUPPORT.md) · [MIT](LICENSE)

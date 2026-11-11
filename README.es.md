@@ -75,7 +75,7 @@ Más tiempo para tocar y menos buscando un ajuste. BandPilot ayuda a los grupos 
 
 El apoyo voluntario ayuda a dedicar tiempo a las correcciones, las pruebas con mesas y las guías en cinco idiomas. Los comentarios, las traducciones y compartir el proyecto también ayudan.
 
-[Cómo ayudar al proyecto](docs/SUPPORT_ES.md) · [Contribuir](CONTRIBUTING.md)
+[Apoyar en Ko-fi](https://ko-fi.com/bandpilot) · [Cómo ayudar al proyecto](docs/SUPPORT_ES.md) · [Contribuir](CONTRIBUTING.md)
 <!-- support:end -->
 
 [Seguridad](SECURITY.md) · [Datos y privacidad](docs/PRIVACY.md) · [Ayuda](SUPPORT.md) · [MIT](LICENSE)

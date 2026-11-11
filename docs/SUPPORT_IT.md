@@ -20,7 +20,7 @@ Il sostegno è libero e facoltativo. BandPilot resta disponibile gratuitamente c
 
 ## Sostegno economico
 
-Il sostegno economico non è ancora attivo. Nel frattempo, segnalazioni, prove e traduzioni aiutano BandPilot a crescere.
+[Sostieni su Ko-fi](https://ko-fi.com/bandpilot)
 
 Il link Ko-fi, quando disponibile, apre un servizio esterno. BandPilot non gestisce pagamenti e il sito non carica widget Ko-fi. Sulla pagina del servizio si applicano le sue condizioni.
 

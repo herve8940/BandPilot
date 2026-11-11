@@ -1,18 +1,20 @@
-# Activer Ko-fi pour BandPilot
+# Gérer le soutien Ko-fi de BandPilot
 
-L'intégration est préparée, **sans compte de paiement actif**. Aucun identifiant Ko-fi
-n'est deviné et aucun bouton de paiement ne pointe vers un compte d'exemple.
-Les pages proposent déjà les contributions non financières.
+Le compte du projet est [ko-fi.com/bandpilot](https://ko-fi.com/bandpilot).
+Le 11 novembre 2026, son propriétaire a terminé la configuration du profil et la
+connexion aux paiements dans Ko-fi. La page affiche le logo, la présentation de
+BandPilot et le formulaire de soutien. Aucun paiement de test n'a été effectué.
 
-## Étapes réservées au propriétaire du compte
+Les liens de soutien sont activés dans les cinq README, les pages du site et
+`.github/FUNDING.yml`. Les contributions non financières restent proposées.
 
-1. Crée ton compte sur [Ko-fi](https://ko-fi.com/). Choisis un nom public lié à BandPilot
-   si disponible ; vérifie l'adresse exacte de ta page.
-2. Connecte ton moyen de réception des paiements dans Ko-fi. Le service demande PayPal
-   ou Stripe ; suis ses instructions et vérifie les conditions/frais affichés dans ton compte.
-3. Renseigne la présentation ci-dessous et vérifie la page publique en étant déconnecté.
-4. Fournis uniquement l'URL publique de la page. Aucun mot de passe, jeton ou détail de
-   paiement n'est nécessaire pour l'intégration GitHub.
+## Gestion du compte par son propriétaire
+
+1. Gère le moyen de réception des paiements directement dans Ko-fi et chez PayPal
+   ou Stripe ; vérifie les conditions, frais, devise et montant affichés dans ton compte.
+2. Garde la présentation à jour et vérifie la page publique après chaque changement.
+3. Si l'adresse change, vérifie la nouvelle URL avant de synchroniser les liens du dépôt.
+   Aucun mot de passe, jeton ou détail de paiement n'est nécessaire pour cette intégration.
 
 Sources : [démarrer sur Ko-fi](https://help.ko-fi.com/hc/en-us/articles/360014098514-Getting-started-on-Ko-fi),
 [recevoir les paiements](https://help.ko-fi.com/hc/en-us/articles/115003980093-How-do-I-get-paid),
@@ -50,10 +52,10 @@ or guaranteed hardware compatibility. Feedback, translations and sharing also he
 
 ## Activation technique
 
-Depuis la racine du dépôt, remplace `IDENTIFIANT_VERIFIE` par l'identifiant réel de la page :
+Depuis la racine du dépôt, pour synchroniser le compte actuel :
 
 ```sh
-node scripts/sync-support.mjs --username IDENTIFIANT_VERIFIE
+node scripts/sync-support.mjs --username bandpilot
 node scripts/sync-support.mjs --check
 python3 scripts/check-docs.py
 ```
@@ -72,5 +74,5 @@ Pour retirer les liens financiers et conserver les contributions non financière
 node scripts/sync-support.mjs --disable
 ```
 
-Le script ne supprime que le fichier FUNDING qu'il a lui-même généré. La configuration
-initiale ne contient pas de FUNDING actif. `--check` vérifie la synchronisation sans écrire.
+Le script ne supprime que le fichier FUNDING qu'il a lui-même généré.
+`--check` vérifie la synchronisation sans écrire.
