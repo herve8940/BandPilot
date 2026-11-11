@@ -1,6 +1,6 @@
 # GitHub Pages site for BandPilot (Settings › Pages › Deploy from branch: main, folder /docs).
 title: BandPilot
-description: "BandPilot — application gratuite en cinq langues : console, fiche technique PDF, plan de scène et ambiances. Windows, macOS, Linux et Android autonome. REAPER sur ordinateur."
+description: "Pilote ta console XR18 / X-Air avec BandPilot : balance guidée, retours des musiciens et fiche technique. Gratuit sur Windows, macOS, Linux et Android."
 url: https://herve8940.github.io
 baseurl: /BandPilot
 lang: fr
