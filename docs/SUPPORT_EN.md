@@ -22,7 +22,7 @@ Support is voluntary and optional. BandPilot remains freely available under the 
 
 Financial support is not open yet. In the meantime, feedback, testing and translations help BandPilot move forward.
 
-Once activated, the Ko-fi link will open an external service. BandPilot does not process payments and this site loads no Ko-fi widget. The payment service’s terms apply on its page.
+The Ko-fi link, when available, opens an external service. BandPilot does not process payments and this site loads no Ko-fi widget. The payment service’s terms apply on its page.
 
 ## Other ways to help
 

@@ -22,7 +22,7 @@ El apoyo es libre y opcional. BandPilot sigue disponible gratis bajo la licencia
 
 El apoyo económico aún no está abierto. Mientras tanto, tus comentarios, pruebas y traducciones ayudan a mejorar BandPilot.
 
-Cuando se active, el enlace Ko-fi abrirá un servicio externo. BandPilot no procesa pagos y este sitio no carga widgets de Ko-fi. En la página del servicio se aplican sus condiciones.
+El enlace Ko-fi, cuando está disponible, abre un servicio externo. BandPilot no procesa pagos y este sitio no carga widgets de Ko-fi. En la página del servicio se aplican sus condiciones.
 
 ## Otras formas de ayudar
 

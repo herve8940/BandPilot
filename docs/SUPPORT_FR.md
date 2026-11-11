@@ -22,7 +22,7 @@ Le soutien est libre et facultatif. BandPilot reste disponible gratuitement sous
 
 Le soutien financier n’est pas encore ouvert. En attendant, tes retours, tes tests et tes traductions font avancer BandPilot.
 
-Lorsqu’il sera activé, le lien Ko-fi ouvrira un service externe. Aucun paiement n’est traité par BandPilot et aucun widget Ko-fi n’est chargé sur ce site. Les conditions du service de paiement s’appliquent sur sa page.
+Le lien Ko-fi, lorsqu’il est disponible, ouvre un service externe. Aucun paiement n’est traité par BandPilot et aucun widget Ko-fi n’est chargé sur ce site. Les conditions du service de paiement s’appliquent sur sa page.
 
 ## Aider autrement
 

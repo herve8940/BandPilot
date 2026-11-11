@@ -22,7 +22,7 @@ Die Unterstützung ist freiwillig. BandPilot bleibt unter der MIT-Lizenz kostenl
 
 Finanzielle Unterstützung ist noch nicht eingerichtet. In der Zwischenzeit helfen Rückmeldungen, Tests und Übersetzungen BandPilot weiter.
 
-Nach der Aktivierung öffnet der Ko-fi-Link einen externen Dienst. BandPilot verarbeitet keine Zahlungen und diese Website lädt kein Ko-fi-Widget. Auf der Seite des Zahlungsdienstes gelten dessen Bedingungen.
+Der Ko-fi-Link öffnet, wenn verfügbar, einen externen Dienst. BandPilot verarbeitet keine Zahlungen und diese Website lädt kein Ko-fi-Widget. Auf der Seite des Zahlungsdienstes gelten dessen Bedingungen.
 
 ## Weitere Möglichkeiten zu helfen
 
