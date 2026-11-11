@@ -27,5 +27,7 @@ contextBridge.exposeInMainWorld('bandpilotSupport',{
  send:id=>ipcRenderer.invoke('bandpilot-report-send',id),
  browser:id=>ipcRenderer.invoke('bandpilot-report-browser',id),
  checkUpdate:force=>ipcRenderer.invoke('bandpilot-update-check',force===true),
- openUpdate:()=>ipcRenderer.invoke('bandpilot-update-open')
+ openUpdate:()=>ipcRenderer.invoke('bandpilot-update-open'),
+ setAutomaticUpdates:value=>ipcRenderer.invoke('bandpilot-update-automatic',value),
+ onUpdate:callback=>{const listener=(_event,state)=>callback(state);ipcRenderer.on('bandpilot-update-state',listener);return()=>ipcRenderer.removeListener('bandpilot-update-state',listener);}
 });

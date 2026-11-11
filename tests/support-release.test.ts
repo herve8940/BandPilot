@@ -9,7 +9,7 @@ test('support exports exclude credentials, identity probes and personal paths wh
  assert.ok(safe.includes('/ch/01'));assert.ok(safe.includes('/api/coach/prepare'));
  assert.deepEqual(diagnosticEvents('{"event":"discovery.reply","hex":"private"}\n{"event":"coach.error","message":"lost reply"}'),[{event:'coach.error',message:'lost reply'}]);
 });
-test('updates require a newer stable published installer compatible with main and this architecture',async()=>{
+test('updates require a newer stable published installer for this architecture',async()=>{
  assert.equal(newer('2.10.0','2.9.9'),true);assert.equal(newer('2.3.2','2.3.2'),false);assert.equal(newer('2.3.3-dev.1','2.3.2'),false);
  const web='https://github.com/herve8940/BandPilot';
  let release={tag_name:'v2.3.3',html_url:web+'/releases/tag/v2.3.3',draft:false,prerelease:false,assets:[{name:'BandPilot-macOS-2.3.3-x64.dmg',state:'uploaded',size:100,browser_download_url:web+'/releases/download/v2.3.3/BandPilot-macOS-2.3.3-x64.dmg'}]};
@@ -17,7 +17,8 @@ test('updates require a newer stable published installer compatible with main an
  assert.equal((await checkUpdate(fetcher,'2.3.2','darwin','x64')).available,true);
  assert.equal((await checkUpdate(fetcher,'2.3.2','darwin','arm64')).available,false);
  release.prerelease=true;assert.equal((await checkUpdate(fetcher,'2.3.2','darwin','x64')).available,false);release.prerelease=false;
- main='2.3.2';assert.equal((await checkUpdate(fetcher,'2.3.2','darwin','x64')).available,false);main='2.3.3';
+ assert.equal((await checkUpdate(fetcher,'2.3.3-dev.1','darwin','x64')).available,true);
+ assert.equal((await checkUpdate(fetcher,'2.4.0-dev.1','darwin','x64')).available,false);
  release.assets[0]!.browser_download_url='https://example.com/untrusted';assert.equal((await checkUpdate(fetcher,'2.3.2','darwin','x64')).available,false);
  await assert.rejects(checkUpdate(async()=>new Response('',{status:403}),'2.3.2','darwin','x64'),/GitHub/);
 });

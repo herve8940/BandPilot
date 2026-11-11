@@ -70,6 +70,8 @@ jobs:
             node desktop/smoke.cjs $installedExe
             if ($LASTEXITCODE -ne 0) { throw 'Installed Windows application failed to start' }
           }
+      - name: Test automatic installation with the real update package
+        run: node scripts/test-update-package.cjs
       - name: Upload desktop installers
         if: always()
         uses: actions/upload-artifact@v4

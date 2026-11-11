@@ -1,10 +1,13 @@
 const {randomUUID}=require('node:crypto');
 const {join}=require('node:path');
 const {mkdirSync,readFileSync,writeFileSync,renameSync,rmSync,readdirSync,statSync}=require('node:fs');
-const {WEB,github,checkUpdate,createIssue,findIssue,issueContent}=require('./github-support.cjs');
+const {WEB,github,createIssue,findIssue,issueContent}=require('./github-support.cjs');
+const {createUpdates}=require('./updates.cjs');
 function registerSupport({app,win,ipcMain,dialog,shell,safeStorage,port,dataPath,sanitize,diagnostic,smoke}){
  const reports=new Map(),inflight=new Map(),directory=join(dataPath,'reports'),credentialPath=join(dataPath,'github-credentials.json');
- let token=null,updatePromise=null,updateState=null;
+ let token=null;
+ const updates=createUpdates({app,dataPath,smoke,diagnostic,notify:state=>{if(!win.webContents.isDestroyed?.())win.webContents.send?.('bandpilot-update-state',state);}});
+ win.webContents.once?.('did-finish-load',()=>void updates.markSuccessfulStart());
  const encrypted=()=>safeStorage.isEncryptionAvailable()&&safeStorage.getSelectedStorageBackend?.()!=='basic_text';
  // Do not access the OS keychain on a fresh install with no saved GitHub login.
  // Some desktops can prompt synchronously and block the first window.
@@ -58,12 +61,9 @@ function registerSupport({app,win,ipcMain,dialog,shell,safeStorage,port,dataPath
   const {clipboard}=require('electron');clipboard.writeText(issueContent(record.report).body);
   await shell.openExternal(`${WEB}/issues/new?title=${encodeURIComponent(title)}`);return {copied:true};
  });
- handle('bandpilot-update-check',async(force)=>{
-  if(smoke)return {available:false,current:app.getVersion()};
-  if(!force&&updateState)return updateState;
-  updatePromise??=checkUpdate(fetch,app.getVersion(),process.platform,process.arch).then(s=>(updateState=s)).finally(()=>{updatePromise=null;});return updatePromise;
- });
- handle('bandpilot-update-open',async()=>{if(!updateState?.available)throw Error('Vérifie les mises à jour avant de télécharger.');await shell.openExternal(updateState.downloadURL);return {opened:true};});
+ handle('bandpilot-update-check',force=>updates.check(force===true));
+ handle('bandpilot-update-automatic',value=>updates.setAutomatic(value));
+ handle('bandpilot-update-open',async()=>{const state=updates.snapshot();if(!state.available)throw Error('Vérifie les mises à jour avant de télécharger.');await shell.openExternal(state.downloadURL);return {opened:true};});
  win.webContents.on('render-process-gone',(_event,details)=>diagnostic('desktop.renderer_exit',{reason:details.reason,exitCode:details.exitCode}));
  process.on('uncaughtExceptionMonitor',error=>diagnostic('desktop.uncaught',{message:error.message,stack:error.stack}));
 }

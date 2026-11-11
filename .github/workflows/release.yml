@@ -2,13 +2,7 @@ name: Release desktop installers
 on:
   push:
     branches: [main]
-    paths: ['package.json', '.github/workflows/release.yml']
   workflow_dispatch:
-    inputs:
-      replace_version:
-        description: 'Rebuild an existing release: enter its exact version (for example 2.3.1)'
-        required: false
-        type: string
 permissions:
   contents: read
 concurrency:
@@ -20,40 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       needed: ${{ steps.version.outputs.needed }}
-      replacing: ${{ steps.version.outputs.replacing }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-      - name: Check whether this version is already published
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Allocate a new version for this main commit
         id: version
         env:
           GH_TOKEN: ${{ github.token }}
-          REPLACE_VERSION: ${{ inputs.replace_version }}
-        shell: bash
-        run: |
-          python3 - <<'PYTHON'
-          import json,os,urllib.request,urllib.error
-          version=json.load(open('package.json'))['version']
-          replacement=os.environ.get('REPLACE_VERSION', '')
-          if replacement and (os.environ['GITHUB_EVENT_NAME']!='workflow_dispatch' or replacement!=version):
-              raise SystemExit('Replacement requires a manual run with the exact package version.')
-          replacing=False
-          request=urllib.request.Request(f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/releases/tags/v{version}",headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
-          try:
-              with urllib.request.urlopen(request) as response:
-                  release=json.load(response)
-              replacing=bool(replacement)
-              if replacing and (release.get('immutable') or release.get('draft')):
-                  raise SystemExit('Cannot replace an immutable or draft release.')
-              needed=replacing
-              print('Explicit release rebuild requested.' if replacing else 'Version already exists; metadata-only changes do not rebuild or overwrite installers.')
-          except urllib.error.HTTPError as error:
-              if error.code!=404: raise
-              if replacement: raise SystemExit('The requested replacement release does not exist.')
-              needed=True
-          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
-              output.write('needed='+str(needed).lower()+'\n')
-              output.write('replacing='+str(replacing).lower()+'\n')
-          PYTHON
+        run: node scripts/release-version.cjs
   package:
     needs: prepare
     if: needs.prepare.outputs.needed == 'true'
@@ -77,6 +48,10 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - name: Apply release version to this build only
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: node scripts/release-version.cjs apply
       - run: npm ci
       - run: npm --prefix web ci
       - name: Frontend connection regressions
@@ -139,12 +114,15 @@ jobs:
           chmod +x "$image"
           "$image" --appimage-extract > /dev/null
           APPDIR="$PWD/squashfs-root" xvfb-run -a node desktop/smoke.cjs "$PWD/squashfs-root/AppRun"
+      - name: Test automatic installation with the real update package
+        run: node scripts/test-update-package.cjs
       - uses: actions/upload-artifact@v4
         with:
           name: installers-${{ matrix.name }}
           path: |
             release/*.exe
             release/*.dmg
+            release/*.zip
             release/*.AppImage
             release/*.deb
           if-no-files-found: error
@@ -155,6 +133,13 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply the same release version
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: node scripts/release-version.cjs apply
       - uses: actions/download-artifact@v4
         with:
           pattern: installers-*
@@ -168,34 +153,13 @@ jobs:
           import hashlib,json,pathlib
           root=pathlib.Path('installers')
           version=json.loads(pathlib.Path('package.json').read_text())['version']
-          expected=[f'BandPilot-Windows-{version}.exe',f'BandPilot-macOS-{version}-x64.dmg',f'BandPilot-macOS-{version}-arm64.dmg',f'BandPilot-Linux-{version}-x86_64.AppImage',f'BandPilot-Linux-{version}-amd64.deb']
+          expected=[f'BandPilot-Windows-{version}.exe',f'BandPilot-macOS-{version}-x64.dmg',f'BandPilot-macOS-{version}-arm64.dmg',f'BandPilot-Linux-{version}-x86_64.AppImage',f'BandPilot-Linux-{version}-amd64.deb',f'BandPilot-macOS-{version}-x64.zip',f'BandPilot-macOS-{version}-arm64.zip']
           for name in expected:
               assert (root/name).is_file(), f'Missing package: {name}'
           files=sorted(p for p in root.iterdir() if p.is_file())
           (root/'SHA256SUMS.txt').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in files))
           PY
-      - name: Back up the release before replacing its installers
-        if: needs.prepare.outputs.replacing == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPLACE_VERSION: ${{ inputs.replace_version }}
-        run: bash scripts/rebuild-release.sh backup
-      - uses: actions/upload-artifact@v4
-        if: needs.prepare.outputs.replacing == 'true'
-        with:
-          name: release-before-rebuild-${{ github.run_id }}
-          path: release-backup/
-          retention-days: 90
-          if-no-files-found: error
-          compression-level: 0
-      - name: Replace the explicitly requested release
-        if: needs.prepare.outputs.replacing == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPLACE_VERSION: ${{ inputs.replace_version }}
-        run: bash scripts/rebuild-release.sh publish
       - name: Publish version after every platform passed
-        if: needs.prepare.outputs.replacing != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -207,7 +171,10 @@ jobs:
             echo "Release already exists. Refusing to overwrite published installers."
             exit 1
           fi
-          gh release create "$tag" installers/* --target "$GITHUB_SHA" --title "BandPilot $version" --notes-file docs/RELEASE_NOTES.md --draft
+          # The notes identify the exact source, including documentation-only changes.
+          printf 'BandPilot %s\n\nBuilt and tested from main commit %s.\n\n' "$version" "$GITHUB_SHA" > release-notes.md
+          cat docs/RELEASE_NOTES.md >> release-notes.md
+          gh release create "$tag" installers/* --target "$GITHUB_SHA" --title "BandPilot $version" --notes-file release-notes.md --draft
           # A GitHub 5xx can arrive after the edit was applied. Re-read state before retrying.
           published=false
           for attempt in 1 2 3; do

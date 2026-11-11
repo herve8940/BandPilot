@@ -50,6 +50,22 @@ test('ambience recovery remains accessible when a foreign or missing source disa
  }finally{await f.close();}
 });
 
+test('automatic update progress is visible and opting out persists without installing or changing audio',async()=>{
+ const f=await fixture();try{
+  let listener:any,unsubscribed=false;const calls:any[]=[];
+  f.dom.window.bandpilotSupport={status:async()=>({configured:false}),checkUpdate:async()=>({available:false,automaticEnabled:true}),onUpdate:(fn:any)=>{listener=fn;return()=>{unsubscribed=true;};},setAutomaticUpdates:async(value:boolean)=>{calls.push(value);return {available:true,automaticEnabled:value,phase:'available',version:'2.3.4'};},openUpdate:async()=>{calls.push('manual');return {};}};
+  const {SupportCenter}=await import('../src/SupportCenter');await f.mount(<SupportCenter/>);
+  await f.React.act(async()=>listener({available:true,version:'2.3.4',automaticEnabled:true,automatic:{},phase:'downloading',progress:42}));
+  assert.match(f.dom.window.document.querySelector('.update-notice').textContent,/42%/);
+  await f.React.act(async()=>listener({available:true,version:'2.3.4',automaticEnabled:true,automatic:{},phase:'ready'}));
+  assert.match(f.dom.window.document.querySelector('.update-notice').textContent,/quitteras BandPilot/);
+  await f.click('Signaler un problème');
+  await f.React.act(async()=>{f.dom.window.document.querySelector('input[type=checkbox]').click();await new Promise(r=>setTimeout(r,0));});
+  assert.deepEqual(calls,[false]);assert.equal(f.dom.window.document.querySelector('input[type=checkbox]').checked,false);
+  await f.React.act(async()=>f.root.unmount());assert.equal(unsubscribed,true);
+ }finally{await f.close();}
+});
+
 test('a failed instrument validation is visible inside its dialog and cannot resend a consumed plan',async()=>{
  const f=await fixture();try{
   const {SoundCoach}=await import('../src/SoundCoach');let applied=0;

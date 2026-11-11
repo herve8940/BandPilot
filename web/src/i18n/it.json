@@ -2302,5 +2302,13 @@
   "Musiciens enregistrés. Aucun réglage audio modifié.": "Musicisti salvati. Nessuna impostazione audio modificata.",
   "Instrument choisi. Enregistre ton groupe, puis utilise Préparer les réglages quand tu es prêt.": "Strumento selezionato. Salva il gruppo, poi usa Prepara impostazioni quando sei pronto.",
   "Source, canal 1 à 16 et nom de 12 caractères maximum requis": "Servono sorgente, canale 1–16 e nome fino a 12 caratteri",
-  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Chiudi questa finestra e prepara nuovamente le impostazioni. Se sono state applicate solo in parte, « Annulla l’ultima modifica guidata » permette di rivedere il backup."
+  "Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.": "Chiudi questa finestra e prepara nuovamente le impostazioni. Se sono state applicate solo in parte, « Annulla l’ultima modifica guidata » permette di rivedere il backup.",
+  "Téléchargement automatique en cours…": "Download automatico in corso…",
+  "La mise à jour sera installée automatiquement quand tu quitteras BandPilot.": "L’aggiornamento verrà installato automaticamente quando chiudi BandPilot.",
+  "La mise à jour automatique a échoué. Réessaie ou utilise le téléchargement manuel.": "L’aggiornamento automatico non è riuscito. Riprova o scaricalo manualmente.",
+  "Cette installation nécessite une mise à jour manuelle.": "Questa installazione richiede un aggiornamento manuale.",
+  "Impossible de vérifier les mises à jour. Réessaie plus tard.": "Impossibile verificare gli aggiornamenti. Riprova più tardi.",
+  "Version locale non reconnue. Utilise le téléchargement manuel.": "Versione locale non riconosciuta. Scarica l’aggiornamento manualmente.",
+  "Télécharger automatiquement les mises à jour et les installer à la fermeture": "Scaricare automaticamente gli aggiornamenti e installarli alla chiusura",
+  "Les nouvelles versions sont proposées après leurs tests. Aucune mise à jour ne ferme une session en cours.": "Le nuove versioni vengono proposte dopo i test. Gli aggiornamenti non chiudono le sessioni in corso."
 }

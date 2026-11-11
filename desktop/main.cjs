@@ -11,6 +11,9 @@ if(!process.argv.includes('--smoke-test')){
   mkdirSync(legacyData,{recursive:true});app.setPath('userData',legacyData);
 }
 let win;
+// A single installed instance owns the staged application update.
+if(!process.argv.includes('--smoke-test')&&!app.requestSingleInstanceLock()){app.quit();process.exit(0);}
+app.on('second-instance',()=>{if(win){if(win.isMinimized())win.restore();win.focus();}});
 const {languageCodes,normalizeLanguage,label:languageLabel}=require("./languages.cjs");
 let language="fr";
 const label=(fr,en)=>languageLabel(language,fr,en);

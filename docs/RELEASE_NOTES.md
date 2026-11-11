@@ -1,3 +1,18 @@
+# Mises à jour automatiques depuis main
+
+- Chaque modification de `main` déclenche la construction et les tests des quatre cibles de bureau. Une version stable unique est publiée seulement après leur réussite. Les publications sont sérialisées ; si plusieurs changements arrivent pendant une construction, GitHub peut regrouper les changements en attente dans le prochain build.
+- Sur les installations modifiables macOS, Windows et Linux AppImage : recherche au démarrage puis toutes les heures, téléchargement automatique, vérification SHA-256 fournie par GitHub, installation à la fermeture normale de BandPilot. Aucun redémarrage forcé pendant une session.
+- L’option peut être désactivée dans « Signaler un problème ». Elle est enregistrée séparément des profils audio. Une désactivation annule le téléchargement et l’installation en attente.
+- macOS utilise une archive ZIP de l’application avec signature ad hoc vérifiée, sans modifier Gatekeeper ni les attributs de quarantaine. L’ancienne application est conservée jusqu’au démarrage réussi de la nouvelle. Les volumes en lecture seule et les emplacements sans droit d’écriture restent en installation manuelle.
+- Linux `.deb` reste soumis à l’installation par le gestionnaire de paquets. Les permissions du système ne sont pas contournées. Android conserve son circuit de mise à jour séparé.
+- Les versions installées `-dev` peuvent rejoindre une version stable équivalente ou supérieure. Les versions anciennes doivent installer une fois cette nouvelle édition pour bénéficier de l’automatisation.
+
+## English
+
+Desktop builds now follow main after all four platform builds and tests succeed. Each release has a unique stable version and identifies its source commit. Writable macOS, Windows and Linux AppImage installations download verified updates in the background and install on normal quit. The setting can be disabled without changing audio profiles. System-managed Debian packages and unwritable locations retain manual installation. Existing older apps need a one-time installation of this updater-enabled version. Android remains separate.
+
+---
+
 # BandPilot — nouveautés
 
 ## Android 2.4.0-android.1 · 8 novembre 2026
