@@ -96,7 +96,8 @@
       "node_modules/**/*",
       "package.json",
       "!**/*.map",
-      "THIRD_PARTY_NOTICES.txt"
+      "THIRD_PARTY_NOTICES.txt",
+      "LICENSE"
     ],
     "extraResources": [
       {

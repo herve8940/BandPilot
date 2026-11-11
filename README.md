@@ -8,7 +8,7 @@
 
 Application gratuite pour préparer la balance, piloter la console, donner les retours aux musiciens et répéter avec REAPER. **BandPilot est le nouveau nom de XR18 Studio.**
 
-[⬇ Télécharger](https://github.com/herve8940/BandPilot/releases/latest) · [🌐 Site](https://herve8940.github.io/BandPilot/) · [📘 Guide FR](docs/USER_GUIDE_FR.md) · [English](README.en.md) · [🎬 Visite vidéo](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
+[⬇ Télécharger](https://herve8940.github.io/BandPilot/#download) · [🌐 Site](https://herve8940.github.io/BandPilot/) · [📘 Guide FR](docs/USER_GUIDE_FR.md) · [English](README.en.md) · [🎬 Visite vidéo](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
 **Application multilingue : français, anglais, italien, espagnol et allemand.** Choisis la langue dans **Réglages → Options · Langue** ; le choix est mémorisé sur cet appareil. Les musiciens peuvent choisir leur langue sur leur téléphone. D’autres langues peuvent être ajoutées suivant la demande.
 
@@ -19,6 +19,12 @@ Application gratuite pour préparer la balance, piloter la console, donner les r
 Windows · Mac Intel et Apple Silicon · Linux · **Android autonome**
 
 </div>
+
+## Versions et disponibilité
+
+Bureau : **2.3.3 stable** (Windows, macOS, Linux). Android : **2.4.0-android.1 en préversion**, APK séparé. BandStudio : **2.3.4-dev.1 en préversion Windows**, à tester avec la version compatible de BandStudio ; ne fait pas partie de la version stable.
+
+[Téléchargements et limites](https://herve8940.github.io/BandPilot/#download) · [BandStudio DEV](https://github.com/herve8940/BandPilot/releases/tag/bandstudio-integration-dev)
 
 ## Nouveautés : fiche technique, ambiances et Android
 
@@ -63,7 +69,7 @@ La détection ne constitue pas une certification de toutes les fonctions. [Matri
 2. Explore la simulation, puis détecte ta console en lecture seule.
 3. Récupère **Table → PC** et conserve une sauvegarde avant d’activer le contrôle.
 4. Suis [Mon ingé son](docs/TUTO_MON_INGE_SON.md), puis vérifie le résultat à l’oreille.
-5. Pour répéter, installe le pont **REAPER 1.2.3**, sauvegarde tes projets et redémarre REAPER.
+5. Pour répéter, installe le pont **REAPER 1.5.0**, sauvegarde tes projets et redémarre REAPER.
 
 La simulation de console ne simule pas REAPER : REC capture ses véritables entrées audio. Les installateurs peuvent ne pas être signés/notariés.
 
@@ -96,3 +102,15 @@ Correctif de démarrage : [panneau de connexion 2.2.1](docs/hotfix-2.2.1.md).
 ## BandPilot 2.2.2
 
 [Console personnelle et régie des retours](docs/WORKSPACES.md) : disposition par modèle et taille d’écran, mix/EQ/compression par musicien, parcours du signal. Inclut le [correctif REAPER 1.2.3](docs/hotfix-2.2.2.md).
+
+<!-- support:start -->
+## Soutenir BandPilot
+
+Plus de temps pour jouer, moins de temps à chercher un réglage. BandPilot aide les groupes à préparer leur balance et à retrouver leurs repères, avec un outil gratuit et ouvert.
+
+Un soutien volontaire aide à consacrer du temps aux corrections, aux essais sur les consoles et aux guides en cinq langues. Un retour de terrain, une traduction ou un partage du projet sont aussi utiles.
+
+[Comment aider le projet](docs/SUPPORT_FR.md) · [Contribuer](CONTRIBUTING.md)
+<!-- support:end -->
+
+[Sécurité](SECURITY.md) · [Données et confidentialité](docs/PRIVACY.md) · [Assistance](SUPPORT.md) · [MIT](LICENSE)

@@ -2,7 +2,7 @@
 
 **La tua band. Il tuo mixer. Il tuo suono.**
 
-[Download](https://github.com/herve8940/BandPilot/releases/latest) · [Sito web](https://herve8940.github.io/BandPilot/it.html) · [Guida completa](docs/USER_GUIDE_IT.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
+[Download](https://herve8940.github.io/BandPilot/it.html#download) · [Sito web](https://herve8940.github.io/BandPilot/it.html) · [Guida completa](docs/USER_GUIDE_IT.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
 
 BandPilot è il nuovo nome di XR18 Studio: un'app locale gratuita per sound check guidati, controllo visivo del mixer, monitor telefonici personali e prove REAPER. Windows, Intel/Apple Silicon macOS e Linux.
 
@@ -11,6 +11,12 @@ BandPilot è il nuovo nome di XR18 Studio: un'app locale gratuita per sound chec
 [Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
 ![Mixer esperto BandPilot 2.2.4 in simulazione](docs/images/bandpilot-2.2.4/expert-canal-it.jpg)
+
+## Versioni e disponibilità
+
+Desktop: **2.3.3 stabile** (Windows, macOS, Linux). Android: **2.4.0-android.1 in anteprima**, APK separato. BandStudio: **2.3.4-dev.1 in anteprima Windows**, da provare con la versione compatibile di BandStudio; non fa parte della versione stabile.
+
+[Download e limiti](https://herve8940.github.io/BandPilot/it.html#download) · [BandStudio DEV](https://github.com/herve8940/BandPilot/releases/tag/bandstudio-integration-dev)
 
 ## Novità: scheda tecnica, effetti e Android
 
@@ -44,7 +50,7 @@ Il funzionamento locale non richiede account o Internet; mixer, computer e telef
 
 ## Inizia
 
-Effettua il backup delle scene, installa il pacchetto corrispondente, esplora la simulazione, scopri l'hardware di sola lettura, quindi seleziona **Mixer → PC** prima di abilitare il controllo. Segui il [tutorial illustrato per allenatori](docs/TUTO_MON_INGE_SON_IT.md). Installa il bridge **1.2.3** da Rehearse, salva i progetti e riavvia REAPER. La simulazione del mixer non simula gli ingressi audio REAPER. I pacchetti potrebbero non essere firmati/non autenticati.
+Effettua il backup delle scene, installa il pacchetto corrispondente, esplora la simulazione, scopri l'hardware di sola lettura, quindi seleziona **Mixer → PC** prima di abilitare il controllo. Segui il [tutorial illustrato per allenatori](docs/TUTO_MON_INGE_SON_IT.md). Installa il bridge **1.5.0** da Rehearse, salva i progetti e riavvia REAPER. La simulazione del mixer non simula gli ingressi audio REAPER. I pacchetti potrebbero non essere firmati/non autenticati.
 
 [Video illustrato e trascrizione](docs/VIDEO_TOUR.md) · [Note sulla versione](docs/RELEASE_NOTES.md) · [Correzioni manuali](docs/corrections-tests-manuels.md)
 
@@ -61,3 +67,15 @@ Correzione all'avvio: [pannello di connessione 2.2.1](docs/hotfix-2.2.1.md).
 ##BandPilot 2.2.2
 
 [Layout personali e console monitor](docs/WORKSPACES.md#english): layout specifici per modello/schermo, mix/equalizzazione/compressione per musicista e percorsi del segnale. Include la [correzione REAPER bridge 1.2.3](docs/hotfix-2.2.2.md).
+
+<!-- support:start -->
+## Sostieni BandPilot
+
+Più tempo per suonare, meno tempo a cercare una regolazione. BandPilot aiuta i gruppi a preparare il soundcheck e a ritrovare le proprie impostazioni con uno strumento gratuito e aperto.
+
+Il sostegno volontario aiuta a dedicare tempo alle correzioni, alle prove sui mixer e alle guide in cinque lingue. Anche segnalazioni, traduzioni e condivisioni sono utili.
+
+[Come aiutare il progetto](docs/SUPPORT_IT.md) · [Contribuisci](CONTRIBUTING.md)
+<!-- support:end -->
+
+[Sicurezza](SECURITY.md) · [Dati e privacy](docs/PRIVACY.md) · [Assistenza](SUPPORT.md) · [MIT](LICENSE)

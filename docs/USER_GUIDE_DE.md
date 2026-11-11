@@ -1,6 +1,8 @@
-# BandPilot 2.2 – bebilderte Anleitung
+# BandPilot – bebilderte Anleitung
 
-**Neu in 2.2.2:** [persönliche Layouts, Monitorpult und REAPER-Fix](WORKSPACES.md#english).
+Desktop: **2.3.3 stabil** (Windows, macOS, Linux). Android: **2.4.0-android.1 Vorabversion**, separates APK. BandStudio: **2.3.4-dev.1 Windows-Vorabversion**, zum Testen mit der passenden BandStudio-Version; nicht Teil der stabilen Ausgabe.
+
+Die Screenshots aus 2.2.4 zeigen eine frühere Version in der Simulation. Spätere Änderungen stehen in den Versionshinweisen. [2.3.3](RELEASE_NOTES.md) · [Android (FR)](ANDROID.md)
 
 [Français](USER_GUIDE_FR.md) · [Soundcheck-Coach](TUTO_MON_INGE_SON_DE.md) · [Videotour](VIDEO_TOUR.md) · [Detaillierte Kompatibilität](multi-model.md)
 
@@ -16,7 +18,7 @@ BandPilot ist der neue Name von XR18 Studio. Es vereint Mischpultsteuerung, gef�
 
 ## 1. Installieren und bewahren Sie Ihre Daten
 
-Verwenden Sie die [offiziellen Versionen](https://github.com/herve8940/BandPilot/releases/latest): Windows `.exe`, Intel Mac `x64.dmg`, Apple Silicon Mac `arm64.dmg`, Linux `.deb` oder `.AppImage`. Schließen Sie die alte App vor der Installation. Ältere XR18 Studio-Datenkennungen bleiben erhalten; Exportieren Sie wichtige Szenen vor dem Aktualisieren. Bestehende REAPER-Projekte werden nicht automatisch konvertiert.
+Verwenden Sie die [offiziellen Versionen](https://herve8940.github.io/BandPilot/de.html#download): Windows `.exe`, Intel Mac `x64.dmg`, Apple Silicon Mac `arm64.dmg`, Linux `.deb` oder `.AppImage`. Schließen Sie die alte App vor der Installation. Ältere XR18 Studio-Datenkennungen bleiben erhalten; Exportieren Sie wichtige Szenen vor dem Aktualisieren. Bestehende REAPER-Projekte werden nicht automatisch konvertiert.
 
 Installateure sind möglicherweise nicht signiert oder nicht notariell beglaubigt. Wenn das Betriebssystem eine App blockiert, überprüfen Sie deren Herkunft und lesen Sie die Systemmeldung. macOS erfordert die Berechtigung für ein lokales Netzwerk. Windows benötigt möglicherweise eine Erlaubnis für Ihr entsprechendes privates Netzwerk.
 
@@ -74,7 +76,7 @@ Bereits geöffnete Telefone folgen schreibgeschützten/kontrollierten Änderunge
 
 <h2 id="reaper">8. REAPER-Proben und Aufnahme</h2>
 
-REAPER ist eine separate Software mit eigener Installation und Lizenz. Installieren Sie Bridge **1.2.3** von Rehearse, speichern Sie Projekte und starten Sie dann REAPER neu, um die aktualisierte Bridge zu laden. Aus Kompatibilitätsgründen bleiben die alten technischen Pfade erhalten.
+REAPER ist eine separate Software mit eigener Installation und Lizenz. Installieren Sie Bridge **1.5.0** von Rehearse, speichern Sie Projekte und starten Sie dann REAPER neu, um die aktualisierte Bridge zu laden. Aus Kompatibilitätsgründen bleiben die alten technischen Pfade erhalten.
 
 1. Aktualisieren Sie unter „Aufzeichnung“ die Konsole, wählen Sie Titel und Ziel aus, erstellen und öffnen Sie dann eine Sitzung. Bestehende Sitzungen werden nicht überschrieben. Überprüfen Sie das Audiogerät, die Eingangskanäle und die Abtastrate in REAPER.
 2. Die automatische Multitrack-Vorbereitung gilt für XR18/MR18/X18. Beim XR12/MR12 fehlt diese PC-Schnittstelle. Die X32-Karten-/Routing-Vorbereitung ist nicht verfügbar.
@@ -111,3 +113,15 @@ Optionale Konten trennen Administrator, zugewiesenen Busmusiker und schreibgesch
 ### Technischer Bühnenplan
 
 Musikerkarten, Eingangsliste und druckbarer Bühnenplan nutzen die Eingangs- und Monitorzuweisungen der Band.
+
+## Instrumentenprüfung und Hilfe (2.3.2–2.3.3)
+
+Das Speichern einer Band bereitet ihr Profil vor; geführte Audioänderungen benötigen Vorschau und Bestätigung. Bei einem Fehler lies die Meldung, schließe den Dialog und bereite einen neuen Vorschlag vor. Unterbrochene Änderungen behalten eine Sicherung zum geführten Rückgängigmachen. Miss den Gain nach einem Instrumentenwechsel neu. Die Effektwiederherstellung liest das Mischpult und überträgt die Zuordnung nur bei passenden Modellen, Effekten und Einstellungen; Archivieren einer Zuordnung ändert das Mischpult nicht.
+
+Der Zugang zum Technical Rider öffnet Musikerkarten und den druckbaren Bühnenplan. Berichte lassen sich prüfen, lokal speichern oder ausdrücklich auf GitHub veröffentlichen; Issues sind öffentlich. Die Updateprüfung beim Start bietet einen Download an, ohne die Installation zu erzwingen. Externe Anfragen sind auf der Datenschutzseite beschrieben.
+
+## BandPilot unterstützen
+
+Freiwillige Unterstützung schafft Zeit für Fehlerbehebungen, Mischpulttests und Anleitungen in fünf Sprachen. Erfahrungsberichte, Übersetzungen und das Weiterempfehlen des Projekts helfen ebenfalls.
+
+[So kannst du helfen](SUPPORT_DE.md) · [Daten und Datenschutz (FR / EN)](PRIVACY.md)
