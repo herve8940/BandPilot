@@ -2,6 +2,10 @@
 
 # BandPilot
 
+<!-- community-badge:start -->
+[![Discord](https://img.shields.io/badge/Discord-BandPilot-5865F2?logo=discord&logoColor=white)](https://discord.gg/FtWwEPmwE7)
+<!-- community-badge:end -->
+
 **Ton groupe. Ta console. Ton son.**
 
 [![Version](https://img.shields.io/github/v/release/herve8940/BandPilot)](https://github.com/herve8940/BandPilot/releases/latest) [![CI](https://github.com/herve8940/BandPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/herve8940/BandPilot/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
@@ -19,6 +23,17 @@ BandPilot est une application gratuite pour piloter les consoles Behringer X-Air
 Windows · Mac Intel et Apple Silicon · Linux · **Android autonome**
 
 </div>
+
+<!-- community:start -->
+
+## La communauté BandPilot sur Discord
+
+Un espace d’entraide entre musiciens pour préparer la balance, les retours, les répétitions et l’enregistrement. Tous les instruments, tous les groupes et tous les niveaux sont les bienvenus.
+
+Pose tes questions, partage ton expérience et propose des améliorations pour BandPilot. Échanges en français ou en anglais.
+
+**[Rejoindre le Discord](https://discord.gg/FtWwEPmwE7)** · [Découvrir les salons](docs/COMMUNITY_FR.md)
+<!-- community:end -->
 
 ## Versions et disponibilité
 

@@ -1,0 +1,4 @@
+.community-link{display:flex;align-items:center;gap:.5rem;min-height:42px;padding:.65rem;border:1px solid #53657b;border-radius:9px;color:#e6f4f4;background:#172438;text-decoration:none;line-height:1.35;font-size:13px}
+.community-link svg{flex:none}.community-link:hover{background:#243752}.community-link:focus-visible{outline:2px solid #81e0d6;outline-offset:3px}
+.rail-foot>.community-link{margin-bottom:8px}.rail-compact .rail-foot>.community-link{justify-content:center}.rail-compact .rail-foot>.community-link span{display:none}
+.support-dialog .community-link{display:inline-flex}.support-community{padding:12px 0;border-bottom:1px solid #35475d;margin-bottom:16px}

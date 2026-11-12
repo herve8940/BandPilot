@@ -22,7 +22,7 @@ Les noms et coordonnées d'une fiche technique peuvent apparaître dans ses PDF 
 | Recherche de mise à jour | GitHub : versions et métadonnées publiques ; le service reçoit les informations réseau habituelles, dont l'adresse IP | Au démarrage des applications qui proposent cette fonction et lors d'une recherche manuelle |
 | Rapport de problème | GitHub : description et diagnostic de l'aperçu ; une issue est publique | Action explicite de création/envoi ou copie dans le navigateur |
 | Conseiller IA facultatif | OpenAI : question, type de source, mode/état de connexion et langue ; aucun flux audio envoyé par ce conseiller | Clé et modèle configurés, puis accord explicite avant la question |
-| Liens externes | GitHub, documentation ou Ko-fi | Ouverture du lien par l'utilisateur |
+| Liens externes | GitHub, documentation, Discord ou Ko-fi | Ouverture du lien par l'utilisateur |
 
 Les filtres de diagnostic masquent plusieurs catégories de données sensibles. Une
 description libre ou capture peut encore contenir des informations personnelles : relis-la
@@ -35,6 +35,14 @@ du système ; le stockage est refusé si ce coffre n'est pas disponible. Les ins
 configurées par variables d'environnement sont administrées par leur propriétaire.
 Déconnecter GitHub ou retirer la configuration IA supprime les identifiants enregistrés
 par cette fonction, pas les publications déjà faites chez le service externe.
+
+## Communauté Discord
+
+Les liens Discord du site et de l’application ouvrent un service externe sur action
+de l’utilisateur. Aucun widget Discord n’est intégré et aucun diagnostic, réglage
+de console ou enregistrement n’est envoyé automatiquement à Discord. Ce que tu
+publies dans les salons est partagé avec leurs membres ; relis et masque les données
+privées avant envoi. Le compte Discord est facultatif pour utiliser BandPilot.
 
 ## Site et soutien
 
@@ -79,3 +87,8 @@ README badges may load GitHub/Shields.io resources. Support uses an external lin
 External providers' policies apply on their services. Back up local data before deletion;
 use the relevant provider to manage published content or payments. Never post private data
 in a public support request.
+
+Discord links open an external service only when selected. No Discord widget is
+embedded and no diagnostic, mixer setting or recording is automatically sent to
+Discord. Messages you post are shared with channel members. Review private data
+before posting. A Discord account is not required to use BandPilot.

@@ -5,6 +5,7 @@ import {sanitizeDiagnostic} from '../../shared/diagnostic-report';
 import {tx} from './i18n';
 import {isAndroid} from './platform';
 import './support.css';
+import {CommunityLink} from './CommunityLink';
 type Result={error?:string;[key:string]:any};
 type Bridge={directIssue?:boolean;status():Promise<Result>;connect(token:string|null):Promise<Result>;prepare(input:{summary:string;description:string}):Promise<Result>;export(id:string):Promise<Result>;send(id:string):Promise<Result>;browser(id:string):Promise<Result>;checkUpdate(force?:boolean):Promise<Result>;openUpdate():Promise<Result>;setAutomaticUpdates?(value:boolean):Promise<Result>;installUpdate?():Promise<Result>;exportLogs?():Promise<Result>;onUpdate?(callback:(state:Result)=>void):()=>void};
 declare global{interface Window{bandpilotSupport?:Bridge}}
@@ -57,6 +58,7 @@ export function SupportCenter(){
   {latestError&&!open&&<aside className="support-error-note" role="status"><span>{tx('Un problème a été enregistré dans le diagnostic.')}</span><button type="button" onClick={start}>{tx('Signaler')}</button><button type="button" aria-label={tx('Fermer')} onClick={()=>setLatestError('')}><X size={14}/></button></aside>}
   <dialog ref={dialog} className="support-dialog" aria-labelledby="support-title" onCancel={e=>{e.preventDefault();if(!busy)setOpen(false);}}>
    <header><div><h2 id="support-title">{tx(isAndroid?'Aide, logs et mises à jour':'Signaler un problème')}</h2><p>BandPilot {version.version} · {version.build||'source'}</p></div><button type="button" disabled={busy} aria-label={tx('Fermer')} onClick={()=>setOpen(false)}><X/></button></header>
+   <section className="support-community"><p>{tx('Une question ou une idée ? Échange avec les musiciens sur Discord. Les bugs restent suivis sur GitHub.')}</p><CommunityLink/></section>
    <section aria-label={tx('Journal de diagnostic')}><h3>{tx('Journal de diagnostic')}</h3><p>{tx('Consulte les événements récents ou enregistre le journal complet. Les informations sensibles sont masquées.')}</p><div className="support-actions"><button type="button" disabled={busy} onClick={()=>void showLogs()}>{tx('Afficher les logs')}</button><button type="button" disabled={busy} onClick={()=>void exportLogs()}>{tx('Exporter les logs')}</button></div>{logs!==null&&<pre aria-label={tx('Événements récents')}>{logs||tx('Aucun événement récent.')}</pre>}</section>
    <label>{tx('Que se passe-t-il ?')}<input maxLength={140} value={summary} disabled={busy} onChange={e=>{setSummary(e.target.value);setReport(null);}}/></label>
    <label>{tx('Étapes pour retrouver le problème')}<textarea rows={3} maxLength={1500} value={description} disabled={busy} onChange={e=>{setDescription(e.target.value);setReport(null);}}/></label>
