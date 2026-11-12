@@ -40,6 +40,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: node scripts/sync-community.mjs --check
       - run: node scripts/sync-support.mjs --check
       - run: python3 scripts/check-docs.py
       - name: Build GitHub Pages documentation

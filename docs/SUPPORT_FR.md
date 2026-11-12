@@ -28,4 +28,4 @@ Le lien Ko-fi, lorsqu’il est disponible, ouvre un service externe. Aucun paiem
 
 Signale un problème reproductible avec la version, le modèle de console et ton usage. Partage un test matériel en distinguant simulation et console réelle. Propose une traduction, une amélioration du guide ou fais découvrir BandPilot à un autre groupe. Relis les captures et journaux avant de les publier : retire les noms, coordonnées et informations privées.
 
-[Contribuer](https://github.com/herve8940/BandPilot/blob/main/CONTRIBUTING.md) · [Signaler un problème](https://github.com/herve8940/BandPilot/issues/new/choose) · [Données et confidentialité (FR / EN)](PRIVACY.md)
+[Discord](COMMUNITY_FR.md) · [Contribuer](https://github.com/herve8940/BandPilot/blob/main/CONTRIBUTING.md) · [Signaler un problème](https://github.com/herve8940/BandPilot/issues/new/choose) · [Données et confidentialité (FR / EN)](PRIVACY.md)

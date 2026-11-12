@@ -28,4 +28,4 @@ El enlace Ko-fi, cuando está disponible, abre un servicio externo. BandPilot no
 
 Describe un problema reproducible con la versión, el modelo de mesa y tu uso. Comparte pruebas de hardware distinguiendo la simulación de una mesa real. Propón una traducción, mejora una guía o presenta BandPilot a otro grupo. Revisa capturas y registros antes de publicarlos: elimina nombres, contactos e información privada.
 
-[Contribuir](https://github.com/herve8940/BandPilot/blob/main/CONTRIBUTING.md) · [Informar de un problema](https://github.com/herve8940/BandPilot/issues/new/choose) · [Datos y privacidad (FR / EN)](PRIVACY.md)
+[Discord](COMMUNITY_ES.md) · [Contribuir](https://github.com/herve8940/BandPilot/blob/main/CONTRIBUTING.md) · [Informar de un problema](https://github.com/herve8940/BandPilot/issues/new/choose) · [Datos y privacidad (FR / EN)](PRIVACY.md)

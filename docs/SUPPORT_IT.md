@@ -28,4 +28,4 @@ Il link Ko-fi, quando disponibile, apre un servizio esterno. BandPilot non gesti
 
 Segnala problemi riproducibili indicando versione, mixer e utilizzo. Condividi prove hardware distinguendo simulazione e mixer reale. Proponi una traduzione, migliora una guida o presenta BandPilot a un altro gruppo. Prima di pubblicare schermate o registri, rimuovi nomi, contatti e informazioni private.
 
-[Contribuisci](https://github.com/herve8940/BandPilot/blob/main/CONTRIBUTING.md) · [Segnala un problema](https://github.com/herve8940/BandPilot/issues/new/choose) · [Dati e privacy (FR / EN)](PRIVACY.md)
+[Discord](COMMUNITY_IT.md) · [Contribuisci](https://github.com/herve8940/BandPilot/blob/main/CONTRIBUTING.md) · [Segnala un problema](https://github.com/herve8940/BandPilot/issues/new/choose) · [Dati e privacy (FR / EN)](PRIVACY.md)

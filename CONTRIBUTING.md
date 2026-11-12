@@ -4,6 +4,13 @@ BandPilot est un projet indépendant, gratuit et open source sous [licence MIT](
 Retours de terrain, traductions et documentation comptent autant que le code.
 Le soutien financier est facultatif : [aider le projet](docs/SUPPORT_FR.md).
 
+## Échanger avec la communauté
+
+Rejoins le [Discord BandPilot](docs/COMMUNITY_FR.md) pour poser une question, partager
+un essai matériel, proposer une idée ou aider un autre musicien. Les salons couvrent
+l’entraide, les idées, les bugs et les nouvelles versions. Pour suivre une correction
+ou une demande précise, ouvre ensuite une issue GitHub.
+
 ## Signaler un problème
 
 Utilise les [formulaires GitHub](https://github.com/herve8940/BandPilot/issues/new/choose).
@@ -33,11 +40,12 @@ copies de projets REAPER ; la simulation de console ne simule pas l'enregistreme
 npm test
 npm run test:web
 npm run build:all
+node scripts/sync-community.mjs --check
 node scripts/sync-support.mjs --check
 python3 scripts/check-docs.py
 ```
 
-Pour la documentation seule, les deux dernières commandes suffisent. Pour un changement
+Pour la documentation seule, les trois dernières commandes suffisent. Pour un changement
 audio, ajoute des vérifications pertinentes et indique les essais physiques effectués
 ou encore nécessaires. Les tests automatiques ne certifient pas un concert.
 
@@ -57,13 +65,16 @@ et lance `node scripts/sync-support.mjs` ([activation Ko-fi](docs/KOFI_SETUP.md)
 
 ## English
 
+Join the [BandPilot Discord community](docs/COMMUNITY_EN.md) for questions, ideas and
+hardware experiences. Use GitHub Issues to track reproducible bugs and specific requests.
+
 Use the [issue forms](https://github.com/herve8940/BandPilot/issues/new/choose). Include
 exact release/channel, OS, mixer/firmware, reproduction steps, expected and actual results.
 Distinguish simulation from hardware and describe the listening setup. Issues are public:
 review screenshots/reports and remove private data. See [SECURITY.md](SECURITY.md) for
 vulnerabilities and [data/privacy](docs/PRIVACY.md#english) for external services.
 
-Use Node 22 and the commands above; documentation-only changes need the last two checks.
+Use Node 22 and the commands above; documentation-only changes need the last three checks.
 Add relevant coverage for behavior changes and disclose hardware tests still needed.
 Preserve old profiles, defaults, model-specific capabilities, guided confirmations and
 backups. Saving preferences must not itself send audio changes. Consider different
@@ -72,3 +83,5 @@ Update all five languages for user-facing changes. Do not distribute personal re
 
 Contributions use the MIT license. Follow the [community guidelines](CODE_OF_CONDUCT.md).
 Financial support is optional: [ways to help](docs/SUPPORT_EN.md).
+
+Pour les liens et présentations Discord, voir [la maintenance de la communauté](docs/DISCORD_SETUP.md).

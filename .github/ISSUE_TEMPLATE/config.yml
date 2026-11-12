@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
+  - name: 💬 Communauté Discord / Discord community
+    url: https://herve8940.github.io/BandPilot/COMMUNITY_FR.html
+    about: Entraide, astuces, idées et échanges entre musiciens (FR / EN) / Help, tips, ideas and conversations with musicians
   - name: 📘 Guides et téléchargements / Guides and downloads
     url: https://herve8940.github.io/BandPilot/#download
     about: Versions bureau et Android, guides en cinq langues / Desktop and Android releases, guides in five languages

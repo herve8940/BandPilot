@@ -28,4 +28,4 @@ Der Ko-fi-Link öffnet, wenn verfügbar, einen externen Dienst. BandPilot verarb
 
 Melde nachvollziehbare Probleme mit Version, Mischpultmodell und Einsatzzweck. Teile Hardwaretests und unterscheide Simulation von echten Geräten. Schlage eine Übersetzung vor, verbessere eine Anleitung oder empfehle BandPilot einer anderen Band. Entferne Namen, Kontaktdaten und private Informationen aus Screenshots und Protokollen, bevor du sie veröffentlichst.
 
-[Mitwirken](https://github.com/herve8940/BandPilot/blob/main/CONTRIBUTING.md) · [Problem melden](https://github.com/herve8940/BandPilot/issues/new/choose) · [Daten und Datenschutz (FR / EN)](PRIVACY.md)
+[Discord](COMMUNITY_DE.md) · [Mitwirken](https://github.com/herve8940/BandPilot/blob/main/CONTRIBUTING.md) · [Problem melden](https://github.com/herve8940/BandPilot/issues/new/choose) · [Daten und Datenschutz (FR / EN)](PRIVACY.md)

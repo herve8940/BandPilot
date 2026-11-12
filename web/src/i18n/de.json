@@ -2384,5 +2384,8 @@
   "Installation déjà en cours.": "Installation läuft bereits.",
   "Moteur indisponible.": "Engine nicht verfügbar.",
   "Suspension impossible.": "Steuerung kann nicht ausgesetzt werden.",
-  "Aide, logs et mises à jour": "Hilfe, Protokolle und Updates"
+  "Aide, logs et mises à jour": "Hilfe, Protokolle und Updates",
+  "Rejoindre la communauté Discord": "Der Discord-Community beitreten",
+  "Communauté Discord": "Discord-Community",
+  "Une question ou une idée ? Échange avec les musiciens sur Discord. Les bugs restent suivis sur GitHub.": "Eine Frage oder Idee? Tausche dich mit Musikern auf Discord aus. Fehler werden weiterhin auf GitHub verfolgt."
 }

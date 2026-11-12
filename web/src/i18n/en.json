@@ -2384,5 +2384,8 @@
   "Installation déjà en cours.": "Installation already in progress.",
   "Moteur indisponible.": "Engine unavailable.",
   "Suspension impossible.": "Unable to suspend control.",
-  "Aide, logs et mises à jour": "Help, logs and updates"
+  "Aide, logs et mises à jour": "Help, logs and updates",
+  "Rejoindre la communauté Discord": "Join the Discord community",
+  "Communauté Discord": "Discord community",
+  "Une question ou une idée ? Échange avec les musiciens sur Discord. Les bugs restent suivis sur GitHub.": "A question or an idea? Chat with musicians on Discord. Bugs are still tracked on GitHub."
 }

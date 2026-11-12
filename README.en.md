@@ -1,5 +1,9 @@
 # BandPilot
 
+<!-- community-badge:start -->
+[![Discord](https://img.shields.io/badge/Discord-BandPilot-5865F2?logo=discord&logoColor=white)](https://discord.gg/FtWwEPmwE7)
+<!-- community-badge:end -->
+
 **Your band. Your mixer. Your sound.**
 
 [Download](https://herve8940.github.io/BandPilot/en.html#download) · [Website](https://herve8940.github.io/BandPilot/en.html) · [Full guide](docs/USER_GUIDE_EN.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
@@ -11,6 +15,17 @@ BandPilot is a free local app for Behringer X-Air and Midas M-Air mixer control,
 [Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
 ![BandPilot 2.2.4 Expert mixer in simulation](docs/images/bandpilot-2.2.4/expert-canal-en.jpg)
+
+<!-- community:start -->
+
+## The BandPilot community on Discord
+
+A place for musicians to help each other with soundchecks, monitor mixes, rehearsals and recording. All instruments, bands and experience levels are welcome.
+
+Ask questions, share your experience and suggest improvements to BandPilot. Chat in French or English.
+
+**[Join the Discord](https://discord.gg/FtWwEPmwE7)** · [Explore the channels](docs/COMMUNITY_EN.md)
+<!-- community:end -->
 
 ## Versions and availability
 

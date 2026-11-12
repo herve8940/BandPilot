@@ -28,4 +28,4 @@ The Ko-fi link, when available, opens an external service. BandPilot does not pr
 
 Report a reproducible problem with the version, mixer model and your use case. Share hardware tests and distinguish simulation from a real mixer. Suggest a translation, improve a guide or introduce BandPilot to another band. Review screenshots and logs before posting: remove names, contact details and private information.
 
-[Contribute](https://github.com/herve8940/BandPilot/blob/main/CONTRIBUTING.md) · [Report a problem](https://github.com/herve8940/BandPilot/issues/new/choose) · [Data and privacy (FR / EN)](PRIVACY.md)
+[Discord](COMMUNITY_EN.md) · [Contribute](https://github.com/herve8940/BandPilot/blob/main/CONTRIBUTING.md) · [Report a problem](https://github.com/herve8940/BandPilot/issues/new/choose) · [Data and privacy (FR / EN)](PRIVACY.md)
