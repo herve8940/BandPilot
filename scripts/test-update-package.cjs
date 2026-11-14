@@ -16,7 +16,17 @@ async function main(){
   const downloaded=path.resolve('release',name);
   if(platform==='linux')await fs.writeFile(target,'previous application');else await fs.mkdir(target);
   const app={isPackaged:true,getAppPath:()=>path.join(target,'Contents/Resources/app.asar'),getPath:()=>path.join(target,'BandPilot.exe')};
-  const plan=await prepareInstall({app,platform,env:{APPIMAGE:target},downloaded,version,directory:root});
+  const request=path.join(root,'request.json'),response=path.join(root,'plan.json');
+  let plan;
+  if(platform==='darwin'){
+   await fs.writeFile(request,JSON.stringify({target,downloaded,version,directory:root,response}));
+   await exec(require('electron'),[path.resolve('scripts/test-update-electron.cjs'),request],{timeout:120000});
+   plan=JSON.parse(await fs.readFile(response,'utf8'));
+   // Include a real archive in the previous version, so cleanup is tested too.
+   await fs.mkdir(path.join(target,'Contents/Resources'),{recursive:true});
+   await fs.copyFile(path.join(plan.staged,'Contents/Resources/app.asar'),path.join(target,'Contents/Resources/app.asar'));
+   if((await fs.readdir(root)).some(name=>name.startsWith('unpack-')))throw Error('Temporary app was not removed');
+  }else plan=await prepareInstall({app,platform,env:{APPIMAGE:target},downloaded,version,directory:root});
   if(platform==='win32'){
    await launchInstall(plan,root);
    const executable=path.join(target,'BandPilot.exe');let installed=false;
@@ -32,6 +42,13 @@ async function main(){
    if(platform==='darwin'){
     await exec('/usr/bin/codesign',['--verify','--deep','--strict',target]);
     const result=await exec(process.execPath,['desktop/smoke.cjs',path.join(target,'Contents/MacOS/BandPilot')],{timeout:120000});console.log(result.stdout);
+    await fs.mkdir(path.join(root,'updates'));
+    await fs.writeFile(path.join(root,'updates/install.json'),JSON.stringify({version,target,backup:plan.backup}));
+    await exec(require('electron'),[path.resolve('scripts/test-update-electron.cjs'),request,'cleanup'],{timeout:120000});
+    for(const removed of [plan.backup,path.join(root,'updates/install.json')]){
+     try{await fs.access(removed);}catch(error){if(error.code==='ENOENT')continue;throw error;}
+     throw Error('Successful startup did not remove '+removed);
+    }
    }else if(!(await fs.readFile(target)).equals(await fs.readFile(downloaded)))throw Error('Installed AppImage differs from the verified payload');
   }
   console.log(`Automatic ${platform} update: staged, installed and verified in an isolated path.`);

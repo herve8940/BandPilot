@@ -1,3 +1,13 @@
+# Mise à jour macOS : préparation corrigée · 14 novembre 2026
+
+Le nettoyage des archives de l’application fonctionne maintenant dans Electron : il ne bloque plus la préparation de la mise à jour ni la suppression de l’ancienne version après un démarrage réussi. Les tests macOS exécutent ces deux étapes dans Electron avec le véritable paquet publié. Les versions déjà touchées doivent installer une fois cette édition pour bénéficier de la correction.
+
+## English
+
+Application archive cleanup now works inside Electron, allowing macOS updates to finish staging and removing the previous version after a successful launch. macOS package tests exercise both steps in Electron with the actual installer payload. Affected existing versions require a one-time installation of this fixed edition.
+
+---
+
 # Menu latéral : boutons alignés · 14 novembre 2026
 
 Les boutons Discord, aide, ouverture du menu et connexion sont maintenant alignés et régulièrement espacés dans le menu réduit. Dans une fenêtre basse, la navigation défile pour garder les commandes du bas accessibles. Le libellé de l’aide reste visible dans Réglages, même quand le menu est réduit.

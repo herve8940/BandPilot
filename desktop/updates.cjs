@@ -1,5 +1,8 @@
 const fs=require('node:fs');
 const fsp=require('node:fs/promises');
+// Electron treats .asar archives as virtual directories. Remove downloaded app
+// bundles through the real filesystem; keep fsp for reading our packaged helper.
+const disk=process.versions.electron?require('original-fs').promises:fsp;
 const path=require('node:path');
 const {createHash,randomUUID}=require('node:crypto');
 const {execFile,spawn}=require('node:child_process');
@@ -35,7 +38,7 @@ async function download(asset,destination,{fetcher=fetch,signal,onProgress=()=>{
   }
   if(size!==asset.size||hash.digest('hex')!==asset.sha256)throw Error('Update checksum mismatch');
   await file.sync();await file.close();await fsp.rename(partial,destination);
- }catch(error){await file.close().catch(()=>{});await fsp.rm(partial,{force:true});throw error;}
+ }catch(error){await file.close().catch(()=>{});await disk.rm(partial,{force:true});throw error;}
 }
 async function digest(file){const hash=createHash('sha256');for await(const chunk of fs.createReadStream(file))hash.update(chunk);return hash.digest('hex');}
 function targetFor(app,platform,env){
@@ -70,12 +73,12 @@ async function prepareInstall({app,platform,env=process.env,downloaded,version,d
     await exec('/usr/bin/codesign',['--verify','--deep','--strict',bundle]);
     await exec('/usr/bin/ditto',[bundle,staged]);
     await exec('/usr/bin/codesign',['--verify','--deep','--strict',staged]);
-   }finally{await fsp.rm(unpack,{recursive:true,force:true});}
+   }finally{await disk.rm(unpack,{recursive:true,force:true});}
   }else{
    await fsp.copyFile(downloaded,staged,fs.constants.COPYFILE_EXCL);await fsp.chmod(staged,0o755);
   }
   return {kind:platform,target,staged,identity:String(stat.ino),backup:target+`.previous-${randomUUID()}`,marker:path.join(directory,'installed'),downloaded,sha256:await digest(downloaded)};
- }catch(error){await fsp.rm(staged,{recursive:true,force:true});throw error;}
+ }catch(error){await disk.rm(staged,{recursive:true,force:true});throw error;}
 }
 async function launchInstall(plan,directory){
  if(await digest(plan.downloaded)!==plan.sha256)throw Error('Cached update checksum mismatch');
@@ -101,20 +104,20 @@ function createUpdates({app,dataPath,smoke=false,platform=process.platform,arch=
    const previous=JSON.parse(await fsp.readFile(receipt,'utf8'));
    const target=targetFor(app,platform,env);
    if(previous.version===app.getVersion()&&previous.target===target){
-    if(typeof previous.backup==='string'&&previous.backup.startsWith(target+'.previous-')&&/^[a-f0-9-]{36}$/.test(previous.backup.slice((target+'.previous-').length)))await fsp.rm(previous.backup,{recursive:true,force:true});
-    await fsp.rm(receipt,{force:true});
+    if(typeof previous.backup==='string'&&previous.backup.startsWith(target+'.previous-')&&/^[a-f0-9-]{36}$/.test(previous.backup.slice((target+'.previous-').length)))await disk.rm(previous.backup,{recursive:true,force:true});
+    await disk.rm(receipt,{force:true});
    }
   }catch(error){if(error.code!=='ENOENT')diagnostic('desktop.update_cleanup_error',{message:String(error)});}
   // Partial or old downloads are never executed after restarting the application.
   try{for(const name of await fsp.readdir(directory)){
    if(!/^[a-f0-9-]{36}-BandPilot-/.test(name))continue;
    const file=path.join(directory,name);
-   if(Date.now()-(await fsp.stat(file)).mtimeMs>7*24*60*60*1000)await fsp.rm(file,{force:true});
+   if(Date.now()-(await fsp.stat(file)).mtimeMs>7*24*60*60*1000)await disk.rm(file,{force:true});
   }}catch(error){if(error.code!=='ENOENT')diagnostic('desktop.update_cleanup_error',{message:String(error)});}
  };
  const snapshot=()=>({...state,automaticEnabled:automatic});
  const emit=patch=>{state={...state,...patch};notify(snapshot());return snapshot();};
- const discard=async()=>{if(plan?.staged)await fsp.rm(plan.staged,{recursive:true,force:true});plan=null;};
+ const discard=async()=>{if(plan?.staged)await disk.rm(plan.staged,{recursive:true,force:true});plan=null;};
  const stage=()=>{
   if(downloading)return downloading;
   if(!state.available||!state.automatic||!enabled)return Promise.resolve(snapshot());
@@ -133,7 +136,7 @@ function createUpdates({app,dataPath,smoke=false,platform=process.platform,arch=
    }catch(error){
     if(controller.signal.aborted)return emit({phase:'available'});
     diagnostic('desktop.update_error',{message:String(error)});return emit({phase:'error',updateError:true});
-   }finally{if(!plan)await fsp.rm(downloaded,{force:true});downloading=null;}
+   }finally{if(!plan)await disk.rm(downloaded,{force:true});downloading=null;}
   })();return downloading;
  };
  const check=async(force=false)=>{
