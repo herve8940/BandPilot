@@ -5,12 +5,12 @@ body{font-family:var(--font);-webkit-font-smoothing:antialiased}
 
 /* ---------- shell ---------- */
 .studio.app2{display:flex;min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px}
-.rail{position:sticky;top:0;height:100vh;width:248px;flex:0 0 248px;display:flex;flex-direction:column;gap:18px;padding:20px 14px;background:var(--surface);border-right:1px solid var(--line)}
-.rail-logo{display:flex;align-items:center;gap:12px;padding:0 8px 6px}
+.rail{position:sticky;top:0;height:100vh;width:248px;flex:0 0 248px;display:flex;flex-direction:column;gap:18px;padding:20px 14px;background:var(--surface);border-right:1px solid var(--line);overflow-x:hidden;overflow-y:auto}
+.rail-logo{display:flex;flex-shrink:0;align-items:center;gap:12px;padding:0 8px 6px}
 .rail-logo .logo-mark{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#2b7cf6);color:#05161a;box-shadow:0 6px 20px #3ee0e033}
 .rail-logo b{display:block;font-size:17px;letter-spacing:-.3px}.rail-logo em{font-style:normal;color:var(--accent)}
 .rail-logo small{display:block;font-size:11px;color:var(--text-2)}
-.rail-nav{display:grid;gap:6px}
+.rail-nav{display:grid;gap:6px;width:100%;min-width:0;min-height:0;overflow-y:auto;scrollbar-width:thin}
 .rail-space{border-radius:14px}
 .rail-space.active{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
 .rail-space-btn{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border:0;border-radius:14px;background:none;color:var(--text-2);text-align:left;cursor:pointer}
@@ -22,7 +22,10 @@ body{font-family:var(--font);-webkit-font-smoothing:antialiased}
 .rail-pages button{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 12px;border:0;border-radius:10px;background:none;color:var(--text-2);font-size:14px;font-weight:600;cursor:pointer;text-align:left}
 .rail-pages button:hover{color:var(--text);background:var(--surface-3)}
 .rail-pages button.active{color:var(--accent);background:var(--accent-soft)}
-.rail-foot{margin-top:auto}
+.rail-foot{display:grid;gap:8px;align-self:stretch;flex-shrink:0;min-width:0;margin-top:auto}
+.rail-foot>:is(.community-link,.support-open,.rail-toggle,.conn-card){width:100%;min-width:0;min-height:44px;margin:0;padding:10px;box-sizing:border-box}
+.rail-foot>:is(a,button)>svg{flex:none;width:18px;height:18px}
+.rail-foot>:is(a,button)>span{min-width:0;overflow-wrap:anywhere}
 .conn-card{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);text-align:left;cursor:pointer}
 .conn-card b{display:block;font-size:13px}.conn-card small{display:block;font-size:11px;color:var(--text-2)}
 .conn-card.ok svg{color:var(--ok)}.conn-card.sim svg{color:var(--warn)}.conn-card.off svg{color:var(--danger)}
@@ -89,6 +92,8 @@ body{font-family:var(--font);-webkit-font-smoothing:antialiased}
   .rail-logo{padding:0}
   .rail-space-btn{justify-content:center;padding:14px}
   .conn-card{justify-content:center}
+  .rail-foot>:is(.community-link,.support-open){justify-content:center}
+  .rail-foot>:is(.community-link,.support-open)>span{display:none}
   .subnav{display:flex}
 }
 @media (max-width:760px){
@@ -127,7 +132,7 @@ body{font-family:var(--font);-webkit-font-smoothing:antialiased}
 .studio.app2.rail-compact .rail{width:84px;flex-basis:84px;padding:16px 8px;align-items:center}
 .studio.app2.rail-compact .rail-logo div,.studio.app2.rail-compact .rail-space-btn span,.studio.app2.rail-compact .rail-pages,.studio.app2.rail-compact .conn-card span{display:none}
 .studio.app2.rail-compact .rail-logo{padding:0}
-.studio.app2.rail-compact .rail-space-btn,.studio.app2.rail-compact .conn-card,.studio.app2.rail-compact .rail-toggle{justify-content:center}
+.studio.app2.rail-compact .rail-space-btn,.studio.app2.rail-compact .rail-foot>:is(a,button){justify-content:center}
 .studio.app2.rail-compact .rail-space-btn{padding:14px}
 .studio.app2.rail-compact .subnav{display:flex;width:auto;order:1}
 .studio.app2.rail-compact .topbar-title{flex:0 1 auto}

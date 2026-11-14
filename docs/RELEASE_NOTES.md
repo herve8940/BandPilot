@@ -1,3 +1,13 @@
+# Menu latéral : boutons alignés · 14 novembre 2026
+
+Les boutons Discord, aide, ouverture du menu et connexion sont maintenant alignés et régulièrement espacés dans le menu réduit. Dans une fenêtre basse, la navigation défile pour garder les commandes du bas accessibles. Le libellé de l’aide reste visible dans Réglages, même quand le menu est réduit.
+
+## English
+
+Discord, help, sidebar and connection controls now have consistent spacing and centered icons in the collapsed menu. Navigation scrolls in shorter windows so the footer controls stay accessible. The help label in Settings stays visible when the sidebar is collapsed.
+
+---
+
 # Discord : aide et incidents depuis BandPilot · 14 novembre 2026
 
 - **Le bon salon, directement.** « Aide et incidents » donne accès à l’entraide, au guide de démarrage et aux suggestions. Le raccourci est aussi dans **Réglages**, sur téléphone et tablette.
