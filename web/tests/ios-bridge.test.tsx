@@ -22,6 +22,10 @@ test('iPad exports clicked diagnostics, rejects remote downloads and delegates P
   await w.bandpilotDocuments.saveTechRiderPDF({html:'<h1>Éric</h1>',filename:'fiche.pdf'});
   assert.deepEqual(calls.at(-1),{action:'print',input:{html:'<h1>Éric</h1>',name:'fiche.pdf'}});
   await w.bandpilotSupport.checkUpdate();assert.equal(calls.at(-1).action,'checkUpdate');
-  w.open('http://example.com');assert.equal(calls.at(-1).action,'checkUpdate','only HTTPS links leave the application');
+  await w.bandpilotSupport.copyText('Incident BandPilot — iPad');
+  assert.deepEqual(calls.at(-1),{action:'clipboard',input:{text:'Incident BandPilot — iPad'}});
+  const discord=w.document.createElement('a');discord.target='_blank';discord.href='https://discord.com/channels/1570533717917573260/1570534866049699882';w.document.body.append(discord);discord.click();
+  assert.deepEqual(calls.at(-1),{action:'open',input:{url:discord.href}});
+  w.open('http://example.com');assert.equal(calls.at(-1).action,'open','only HTTPS links leave the application');
  }finally{dom.window.close();for(const [k,d] of originals){if(d)Object.defineProperty(globalThis,k,d);else delete (globalThis as any)[k];}}
 });

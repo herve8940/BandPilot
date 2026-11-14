@@ -59,3 +59,13 @@ Une publication App Store nécessite un compte Apple Developer, un identifiant d
 Un lien App Store non répertorié peut être demandé à Apple, mais son acceptation n’est pas garantie et toute personne possédant le lien peut y accéder. TestFlight est réservé aux essais et ses builds expirent ; ce n’est pas une installation permanente. Le compte gratuit impose le renouvellement périodique de l’installation de développement.
 
 Avant soumission : essais sur un iPad physique compatible et une console, captures d’écran, page de confidentialité publique, déclarations App Store (confidentialité, chiffrement), métadonnées et validation de la signature. Ne jamais ajouter de certificat privé, de mot de passe ou de profil de provisionnement au dépôt.
+
+## Aide Discord dans le portage iPad
+
+Depuis le menu ou Réglages, **Aide et incidents** ouvre l’entraide, le guide et
+les suggestions dans les bons salons. Un incident est préparé localement avec
+la version de l’app : relire, copier avec le presse-papiers iPad, puis ouvrir
+`#bugs-tests` et envoyer le message soi-même. L’invitation au serveur reste
+accessible. Aucun rapport ou audio n’est transmis automatiquement. Les cinq
+langues de l’interface sont prises en charge. Cette intégration ne change pas
+le statut de développement du portage ni l’absence de publication App Store.

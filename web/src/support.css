@@ -12,3 +12,13 @@
 .update-notice{top:16px;right:16px;max-width:min(680px,calc(100vw - 32px))}.update-notice p{margin:5px 0;font-size:13px}.support-error-note{bottom:16px;right:16px;max-width:calc(100vw - 32px);font-size:13px}
 .coach-shortcuts{margin:16px 0}.coach-shortcuts button{min-height:46px}
 @media(max-width:600px){.support-dialog{padding:16px}.update-notice,.support-error-note{flex-wrap:wrap}.update-notice{top:8px;right:8px}.support-error-note{bottom:8px;right:8px}}
+
+.support-dialog h3{margin:0 0 8px;font-size:17px}
+.settings-support{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}.settings-support>*{flex:1 1 220px;min-height:44px;box-sizing:border-box}
+.support-dialog .support-actions .community-link{box-sizing:border-box;min-height:44px}
+.support-dialog .support-hint{font-size:13px;color:#bbcad8}
+.support-dialog .discord-preview{font:13px/1.5 ui-monospace,monospace;resize:vertical;min-height:150px}
+.support-dialog .support-advanced{border-top:1px solid #35475d;padding-top:18px;margin-bottom:24px}
+.support-dialog .support-advanced>summary{font-weight:600;margin-bottom:16px}
+.support-dialog button:focus-visible,.support-dialog summary:focus-visible{outline:2px solid #81e0d6;outline-offset:3px}
+@media(max-width:600px){.support-dialog .support-actions>*{max-width:100%;overflow-wrap:anywhere}.support-dialog .support-actions .community-link{width:100%}}

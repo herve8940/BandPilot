@@ -27,6 +27,7 @@ if(native){
  const report=(id:string)=>{const r=reports.get(id);if(!r)throw Error('Prépare le rapport avant de le partager.');return r;};
  const repository='https://github.com/herve8940/BandPilot';
  window.bandpilotSupport={
+  copyText:async text=>checked(call('clipboard',{text})),
   directIssue:false,status:async()=>({configured:false,repository}),
   connect:async()=>({error:'Utilise Créer dans le navigateur sur iPad.'}),send:async()=>({error:'Utilise Créer dans le navigateur sur iPad.'}),
   prepare:async input=>{const response=await fetch('/api/diagnostics/report');if(!response.ok)throw Error('Diagnostic indisponible');const r=await response.json();r.id=crypto.randomUUID();r.summary=sanitizeDiagnostic(input.summary);r.description=sanitizeDiagnostic(input.description);reports.set(r.id,r);if(reports.size>10)reports.delete(reports.keys().next().value!);return {id:r.id,content:JSON.stringify(r,null,2)};},

@@ -30,7 +30,7 @@ test('support checks updates on startup, previews the report and sends only afte
  const f=await fixture();try{
   const calls:string[]=[];f.dom.window.bandpilotSupport={status:async()=>({configured:true}),checkUpdate:async()=>{calls.push('check');return {available:true,version:'2.3.3'};},prepare:async()=>{calls.push('prepare');return {id:'id',content:'{"schema":1}'};},send:async()=>{calls.push('send');return {url:'https://github.com/herve8940/BandPilot/issues/42'};},export:async()=>({saved:true}),browser:async()=>({copied:true}),openUpdate:async()=>({opened:true})};
   const {SupportCenter}=await import('../src/SupportCenter');await f.mount(<SupportCenter/>);assert.deepEqual(calls,['check']);assert.match(f.dom.window.document.body.textContent,/2.3.3/);
-  await f.click('Signaler un problème');const input=f.dom.window.document.querySelector('input');
+  await f.click('Aide et incidents');const input=f.dom.window.document.querySelector('input');
   await f.React.act(async()=>{Object.getOwnPropertyDescriptor(f.dom.window.HTMLInputElement.prototype,'value')!.set!.call(input,'Erreur ajout');input.dispatchEvent(new f.dom.window.Event('input',{bubbles:true}));});
   await f.click('Préparer le rapport');assert.deepEqual(calls,['check','prepare']);
   await f.click('Créer l’issue sur GitHub');assert.ok(!calls.includes('send'));

@@ -166,8 +166,8 @@ app.whenReady().then(async () => {
       await win.webContents.executeJavaScript(`document.querySelector('.support-open').click()`);
       await waitForRenderer(`!!document.querySelector('.support-dialog[open]')`);
       await win.webContents.executeJavaScript(`(()=>{const input=document.querySelector('.support-dialog input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'Vérification de démarrage');input.dispatchEvent(new Event('input',{bubbles:true}));})()`);
-      await waitForRenderer(`!document.querySelector('.support-dialog button.primary').disabled`);
-      await win.webContents.executeJavaScript(`document.querySelector('.support-dialog button.primary').click()`);
+      await waitForRenderer(`!document.querySelector('.support-advanced button.primary').disabled`);
+      await win.webContents.executeJavaScript(`document.querySelector('.support-advanced').open=true;document.querySelector('.support-advanced button.primary').click()`);
       await waitForRenderer(`!!document.querySelector('.support-dialog pre')`);
       const report=await win.webContents.executeJavaScript(`JSON.parse(document.querySelector('.support-dialog pre').textContent)`);
       if(report.app.version!==app.getVersion()||report.console.mode!=='simulation'||!report.id||!report.app.build)throw Error('Diagnostic bridge returned an invalid report');
