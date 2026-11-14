@@ -1,5 +1,5 @@
 .support-open{display:flex;align-items:center;gap:.5rem;width:100%;padding:.65rem;border:1px solid #53657b;border-radius:9px;color:#e6f4f4;background:#172438;text-align:left}
-.rail-compact .support-open span{display:none}
+.rail-compact .rail-foot>.support-open span{display:none}
 .support-dialog{width:min(760px,94vw);max-height:88vh;overflow:auto;margin:auto;box-sizing:border-box;padding:24px;border:1px solid #547080;border-radius:16px;background:#101d2e;color:#edf5f7;box-shadow:0 24px 80px #0009}
 .support-dialog::backdrop{background:#060c16bb}
 .support-dialog header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
