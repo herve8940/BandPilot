@@ -1,3 +1,18 @@
+# Discord : aide et incidents depuis BandPilot · 14 novembre 2026
+
+- **Le bon salon, directement.** « Aide et incidents » donne accès à l’entraide, au guide de démarrage et aux suggestions. Le raccourci est aussi dans **Réglages**, sur téléphone et tablette.
+- **Signaler un incident simplement.** Saisir un résumé, les étapes et le contexte de console. Relire le message avec la version de BandPilot, le copier, puis ouvrir `#bugs-tests` pour le coller et l’envoyer. Aucun journal, audio ou message n’est envoyé automatiquement.
+- **Cinq langues.** Français, anglais, italien, espagnol et allemand. L’aide reste accessible si le serveur local est indisponible ; le diagnostic détaillé et les issues GitHub restent réservés aux administrateurs.
+- **Diffusion.** Interface commune Windows, macOS Intel/Apple Silicon, Linux et Android. Android est distribué séparément en **2.4.0-android.3**, avec la même signature et conservation des données lors d’une mise à jour. iPad reste un portage de développement, sans publication App Store.
+
+[Rejoindre Discord](https://discord.gg/FtWwEPmwE7) · [Guide des salons](https://herve8940.github.io/BandPilot/COMMUNITY_FR.html) · [Téléchargements](https://herve8940.github.io/BandPilot/#download)
+
+## English
+
+Help and issue reporting now open the right Discord channels from BandPilot, including Settings on small screens. Review and copy a short issue message with the app version, then paste and send it yourself in `#bugs-tests`. No logs, audio or messages are sent automatically. Available in five interface languages on desktop and Android; Android 2.4.0-android.3 is distributed as a separate signed APK. iPad remains a development port, not an App Store release.
+
+---
+
 # Mises à jour automatiques depuis main
 
 - Chaque modification de `main` déclenche la construction et les tests des quatre cibles de bureau. Une version stable unique est publiée seulement après leur réussite. Les publications sont sérialisées ; si plusieurs changements arrivent pendant une construction, GitHub peut regrouper les changements en attente dans le prochain build.

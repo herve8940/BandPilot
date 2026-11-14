@@ -33,11 +33,17 @@ Un espace d’entraide entre musiciens pour préparer la balance, les retours, l
 Pose tes questions, partage ton expérience et propose des améliorations pour BandPilot. Échanges en français ou en anglais.
 
 **[Rejoindre le Discord](https://discord.gg/FtWwEPmwE7)** · [Découvrir les salons](docs/COMMUNITY_FR.md)
+
+### Discord directement dans BandPilot
+
+Dans les nouvelles versions, ouvre « Aide et incidents » depuis le menu ou Réglages : aide dans #entraide-help, guide de démarrage, idées et signalement dans #bugs-tests. Le message d’incident est préparé avec la version de l’application ; relis-le, copie-le puis envoie-le toi-même dans Discord. Aucun journal ni audio n’est joint automatiquement.
+
+[Demander de l’aide](https://discord.com/channels/1570533717917573260/1570534770297806888) · [Signaler un incident](https://discord.com/channels/1570533717917573260/1570534866049699882)
 <!-- community:end -->
 
 ## Versions et disponibilité
 
-Bureau : [dernière version stable](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android : **2.4.0-android.2 en préversion**, APK séparé.
+Bureau : [dernière version stable](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android : **2.4.0-android.3 en préversion**, APK séparé.
 
 [Téléchargements et limites](https://herve8940.github.io/BandPilot/#download)
 
@@ -51,9 +57,9 @@ Première version Android disponible en APK signé. Installation durable, sans s
 - **Ambiances des sources** — Choisis une ambiance adaptée au chant ou à l’instrument, prévisualise l’essai et règle la quantité pour chaque musicien. Garde le résultat ou reviens aux réglages précédents.
 - **Android autonome** — Installe l’APK sur une tablette compatible et connecte-la directement à la console par Wi-Fi. L’interface, le moteur et les données sont sur la tablette : aucun PC ni Docker nécessaire.
 
-[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.2/BandPilot-Android-2.4.0-android.2-universal.apk) · [Guide Android](docs/ANDROID.md)
+[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.3/BandPilot-Android-2.4.0-android.3-universal.apk) · [Guide Android](docs/ANDROID.md)
 
-Première version : 2.4.0-android.2. Android 8 minimum, Android System WebView 111 minimum. APK ARM 32/64 bits et x86_64 ; affichage portrait et paysage. Installation et démarrage vérifiés sur une Xiaomi Redmi Pad sous Android 14 ; fonctionnement confirmé par son utilisateur. La compatibilité de chaque tablette et de chaque console reste à valider. Appareils à pages mémoire de 16 Ko non certifiés. REAPER et l’Atelier lié aux prises restent disponibles sur ordinateur.
+Version Android : 2.4.0-android.3. Android 8 minimum, Android System WebView 111 minimum. APK ARM 32/64 bits et x86_64 ; affichage portrait et paysage. Installation et démarrage vérifiés sur une Xiaomi Redmi Pad sous Android 14 ; fonctionnement confirmé par son utilisateur. La compatibilité de chaque tablette et de chaque console reste à valider. Appareils à pages mémoire de 16 Ko non certifiés. REAPER et l’Atelier lié aux prises restent disponibles sur ordinateur.
 
 ## Les fonctions
 

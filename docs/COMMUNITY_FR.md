@@ -15,16 +15,23 @@ Un espace d’entraide entre musiciens pour préparer la balance, les retours, l
 
 Pose tes questions, partage ton expérience et propose des améliorations pour BandPilot. Échanges en français ou en anglais.
 
+### Discord directement dans BandPilot
+
+Dans les nouvelles versions, ouvre « Aide et incidents » depuis le menu ou Réglages : aide dans #entraide-help, guide de démarrage, idées et signalement dans #bugs-tests. Le message d’incident est préparé avec la version de l’application ; relis-le, copie-le puis envoie-le toi-même dans Discord. Aucun journal ni audio n’est joint automatiquement.
+
+[Demander de l’aide](https://discord.com/channels/1570533717917573260/1570534770297806888) · [Signaler un incident](https://discord.com/channels/1570533717917573260/1570534866049699882)
+
 ## Choisir le bon salon
 
 | Salon | Pour quoi faire ? |
 |---|---|
 | #accueil-welcome | Accueil, règles et liens utiles · lecture seule |
 | #annonces-news | Versions et guides · lecture seule |
+| [#demarrer-start-here](https://discord.com/channels/1570533717917573260/1571098590925955082) | Guide de démarrage et premiers réglages |
 | #discussion-general | Présentations et discussions entre musiciens |
-| #entraide-help | Questions, configuration et dépannage |
-| #idees-feedback | Idées et retours d’expérience |
-| #bugs-tests | Bugs, essais et préversions |
+| [#entraide-help](https://discord.com/channels/1570533717917573260/1570534770297806888) | Questions, configuration et dépannage |
+| [#idees-feedback](https://discord.com/channels/1570533717917573260/1570534825700368424) | Idées et retours d’expérience |
+| [#bugs-tests](https://discord.com/channels/1570533717917573260/1570534866049699882) | Bugs, essais et préversions |
 
 Un salon vocal Général est aussi disponible pour échanger de vive voix.
 

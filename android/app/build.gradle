@@ -12,8 +12,8 @@ android {
   applicationId 'be.bandpilot.android'
   minSdk 26
   targetSdk 35
-  versionCode 2040002
-  versionName '2.4.0-android.2'
+  versionCode 2040003
+  versionName '2.4.0-android.3'
   buildConfigField 'String', 'RUNTIME_REV', '"' + runtimeRevision + '"'
   ndk { abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64' }
   externalNativeBuild { cmake { arguments '-DANDROID_STL=c++_shared', '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON' } }

@@ -15,16 +15,23 @@ Un espacio de ayuda entre músicos para pruebas de sonido, monitores, ensayos y 
 
 Haz preguntas, comparte tu experiencia y propone mejoras para BandPilot. Conversaciones en francés o inglés.
 
+### Discord directamente en BandPilot
+
+En las nuevas versiones, abre “Ayuda e incidencias” desde el menú o Ajustes: ayuda en #entraide-help, guía de inicio, ideas e incidencias en #bugs-tests. El mensaje incluye la versión de la app: revísalo, cópialo y envíalo tú en Discord. No se adjuntan registros ni audio automáticamente.
+
+[Pedir ayuda](https://discord.com/channels/1570533717917573260/1570534770297806888) · [Informar de una incidencia](https://discord.com/channels/1570533717917573260/1570534866049699882)
+
 ## Elige el canal adecuado
 
 | Canal | ¿Para qué sirve? |
 |---|---|
 | #accueil-welcome | Bienvenida, normas y enlaces útiles · solo lectura |
 | #annonces-news | Versiones y guías · solo lectura |
+| [#demarrer-start-here](https://discord.com/channels/1570533717917573260/1571098590925955082) | Guía de inicio y primeros ajustes |
 | #discussion-general | Presentaciones y conversaciones entre músicos |
-| #entraide-help | Preguntas, configuración y solución de problemas |
-| #idees-feedback | Ideas y experiencias de los usuarios |
-| #bugs-tests | Errores, pruebas y versiones preliminares |
+| [#entraide-help](https://discord.com/channels/1570533717917573260/1570534770297806888) | Preguntas, configuración y solución de problemas |
+| [#idees-feedback](https://discord.com/channels/1570533717917573260/1570534825700368424) | Ideas y experiencias de los usuarios |
+| [#bugs-tests](https://discord.com/channels/1570533717917573260/1570534866049699882) | Errores, pruebas y versiones preliminares |
 
 También está disponible el canal de voz Général para conversar en directo.
 

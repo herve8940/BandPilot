@@ -1,10 +1,10 @@
 # Installer BandPilot sur Android
 
-> **Préversion Android 2.4.0-android.2** : APK distribué séparément de la version stable de bureau 2.3.3.
+> **Préversion Android 2.4.0-android.3** : APK distribué séparément de la version stable de bureau.
 
-**BandPilot Android 2.4.0-android.2 est disponible en APK signé.** La tablette embarque l’interface, le moteur de console et les données : elle se connecte directement à la table par Wi-Fi, sans PC ni Docker.
+**BandPilot Android 2.4.0-android.3 est disponible en APK signé.** La tablette embarque l’interface, le moteur de console et les données : elle se connecte directement à la table par Wi-Fi, sans PC ni Docker.
 
-[Télécharger l’APK Android](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.2/BandPilot-Android-2.4.0-android.2-universal.apk) · [Version et sommes de contrôle](https://github.com/herve8940/BandPilot/releases/tag/android-v2.4.0-android.2)
+[Télécharger l’APK Android](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.3/BandPilot-Android-2.4.0-android.3-universal.apk) · [Version et sommes de contrôle](https://github.com/herve8940/BandPilot/releases/tag/android-v2.4.0-android.3)
 
 ## Compatibilité
 
