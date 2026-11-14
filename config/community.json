@@ -1,4 +1,11 @@
 {
   "name": "BandPilot — Communauté",
-  "inviteUrl": "https://discord.gg/FtWwEPmwE7"
+  "inviteUrl": "https://discord.gg/FtWwEPmwE7",
+  "serverId": "1570533717917573260",
+  "channels": {
+    "help": { "id": "1570534770297806888", "name": "entraide-help" },
+    "bugs": { "id": "1570534866049699882", "name": "bugs-tests" },
+    "guide": { "id": "1571098590925955082", "name": "demarrer-start-here" },
+    "ideas": { "id": "1570534825700368424", "name": "idees-feedback" }
+  }
 }

@@ -30,7 +30,7 @@ test('support checks updates on startup, previews the report and sends only afte
  const f=await fixture();try{
   const calls:string[]=[];f.dom.window.bandpilotSupport={status:async()=>({configured:true}),checkUpdate:async()=>{calls.push('check');return {available:true,version:'2.3.3'};},prepare:async()=>{calls.push('prepare');return {id:'id',content:'{"schema":1}'};},send:async()=>{calls.push('send');return {url:'https://github.com/herve8940/BandPilot/issues/42'};},export:async()=>({saved:true}),browser:async()=>({copied:true}),openUpdate:async()=>({opened:true})};
   const {SupportCenter}=await import('../src/SupportCenter');await f.mount(<SupportCenter/>);assert.deepEqual(calls,['check']);assert.match(f.dom.window.document.body.textContent,/2.3.3/);
-  await f.click('Signaler un problème');const input=f.dom.window.document.querySelector('input');
+  await f.click('Aide et incidents');const input=f.dom.window.document.querySelector('input');
   await f.React.act(async()=>{Object.getOwnPropertyDescriptor(f.dom.window.HTMLInputElement.prototype,'value')!.set!.call(input,'Erreur ajout');input.dispatchEvent(new f.dom.window.Event('input',{bubbles:true}));});
   await f.click('Préparer le rapport');assert.deepEqual(calls,['check','prepare']);
   await f.click('Créer l’issue sur GitHub');assert.ok(!calls.includes('send'));
@@ -59,7 +59,7 @@ test('automatic update progress is visible and opting out persists without insta
   assert.match(f.dom.window.document.querySelector('.update-notice').textContent,/42%/);
   await f.React.act(async()=>listener({available:true,version:'2.3.4',automaticEnabled:true,automatic:{},phase:'ready'}));
   assert.match(f.dom.window.document.querySelector('.update-notice').textContent,/quitteras BandPilot/);
-  await f.click('Signaler un problème');
+  await f.click('Aide et incidents');
   await f.React.act(async()=>{f.dom.window.document.querySelector('input[type=checkbox]').click();await new Promise(r=>setTimeout(r,0));});
   assert.deepEqual(calls,[false]);assert.equal(f.dom.window.document.querySelector('input[type=checkbox]').checked,false);
   await f.React.act(async()=>f.root.unmount());assert.equal(unsubscribed,true);
@@ -151,7 +151,7 @@ test('Android support shows logs, exports them and installs only after explicit 
   const {SupportCenter}=await import('../src/SupportCenter');await f.mount(<SupportCenter/>);
   assert.equal(installs,0);assert.doesNotMatch(f.dom.window.document.body.textContent,/installée automatiquement quand tu quitteras/);
   await f.click('Installer');assert.equal(installs,0);await f.click('Installer');assert.equal(installs,1);
-  await f.click('Signaler un problème');assert.match(f.dom.window.document.body.textContent,/Autorise BandPilot/);
+  await f.click('Aide et incidents');assert.match(f.dom.window.document.body.textContent,/Autorise BandPilot/);
   await f.click('Afficher les logs');assert.match(f.dom.window.document.querySelector('pre').textContent,/android.engine_start/);
   await f.click('Exporter les logs');assert.equal(exports,1);assert.equal(installs,1);
  }finally{await f.close();}

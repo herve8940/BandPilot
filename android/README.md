@@ -1,8 +1,8 @@
 # BandPilot Android autonome
 
-Version Android disponible : **2.4.0-android.2**, avec les mises à jour vérifiées, les logs et les nouveaux choix du coach.
+Version Android disponible : **2.4.0-android.3**, avec les mises à jour vérifiées, les logs et les nouveaux choix du coach.
 
-[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.2/BandPilot-Android-2.4.0-android.2-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
+[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.3/BandPilot-Android-2.4.0-android.3-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
 
 L’APK embarque l’interface et le moteur OSC. La tablette échange directement avec la console sur le Wi-Fi ; aucun PC, Docker ou accès Internet n’est nécessaire au pilotage. Les données restent dans le stockage privé de l’application. Une mise à jour avec la même signature conserve ces données ; une désinstallation les supprime.
 

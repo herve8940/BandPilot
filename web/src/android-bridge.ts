@@ -30,6 +30,7 @@ if(native){
  const resume=()=>{if(!document.hidden)void updateRequest('').catch(()=>{});};
  window.bandpilotSupport={
   directIssue:false,
+  copyText:async text=>call('clipboard',{text}),
   status:async()=>({configured:false,repository}),connect:async()=>({error:'Utilise Créer dans le navigateur sur Android.'}),
   prepare:async input=>{const response=await fetch('/api/diagnostics/report');if(!response.ok)throw Error('Diagnostic indisponible');const data=await response.json();data.id=crypto.randomUUID();data.summary=sanitizeDiagnostic(input.summary);data.description=sanitizeDiagnostic(input.description);reports.set(data.id,data);if(reports.size>10)reports.delete(reports.keys().next().value!);return {id:data.id,content:JSON.stringify(data,null,2)};},
   export:async id=>save(`BandPilot-debug-${id}.json`,new Blob([JSON.stringify(report(id),null,2)],{type:'application/json'})),
