@@ -1,10 +1,35 @@
 # Installer BandPilot sur Android
 
-> **Préversion Android 2.4.0-android.3** : APK distribué séparément de la version stable de bureau.
+> **Préversion Android 2.4.0-android.4** : APK distribué séparément de la version stable de bureau.
 
-**BandPilot Android 2.4.0-android.3 est disponible en APK signé.** La tablette embarque l’interface, le moteur de console et les données : elle se connecte directement à la table par Wi-Fi, sans PC ni Docker.
+**BandPilot Android 2.4.0-android.4 est disponible en APK signé.** La tablette embarque l’interface, le moteur de console et les données : elle se connecte directement à la table par Wi-Fi, sans PC ni Docker.
 
-[Télécharger l’APK Android](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.3/BandPilot-Android-2.4.0-android.3-universal.apk) · [Version et sommes de contrôle](https://github.com/herve8940/BandPilot/releases/tag/android-v2.4.0-android.3)
+[Télécharger l’APK Android](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.4/BandPilot-Android-2.4.0-android.4-universal.apk) · [Version et sommes de contrôle](https://github.com/herve8940/BandPilot/releases/tag/android-v2.4.0-android.4)
+
+## Nouveautés de 2.4.0-android.4
+
+Cette version reprend les derniers changements communs à la version ordinateur :
+statistiques d’utilisation désactivables et boutons du menu mieux alignés et
+accessibles dans les petites fenêtres.
+
+**Réglages → Aide et incidents** donne accès à l’entraide Discord, au guide et aux
+idées. Pour un bug, saisir le résumé et les étapes, relire le message avec la
+version Android, le copier puis le coller dans **#bugs-tests**. Les liens ouvrent
+Discord ou le navigateur. Aucun message, journal ni audio n’est envoyé
+automatiquement. [Rejoindre la communauté](https://discord.gg/FtWwEPmwE7).
+
+Au premier lancement, l’administrateur peut choisir **OK** ou **Désactiver** dans
+l’avis sur les statistiques. Le choix reste modifiable dans **Réglages →
+Statistiques anonymes**. Le compteur transmet au plus une fois par jour un numéro
+aléatoire d’installation, la version, la plateforme Android, le canal de
+distribution et le modèle de console. Il ne transmet ni nom, ni audio, ni scène,
+ni réglage, ni journal. Désactiver le compteur efface ce numéro de l’appareil.
+Voir les [détails sur les données](PRIVACY.md).
+
+Le compteur nécessite Internet ; le pilotage local de la console reste disponible
+sans Internet. Cette option ne change aucun réglage audio. Installer l’APK
+par-dessus l’ancienne version, **sans désinstaller**, conserve les profils et les
+préférences.
 
 ## Compatibilité
 

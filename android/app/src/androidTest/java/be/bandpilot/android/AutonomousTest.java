@@ -23,6 +23,7 @@ public class AutonomousTest {
  private WebView find(View v){if(v instanceof WebView)return (WebView)v;if(v instanceof ViewGroup){ViewGroup g=(ViewGroup)v;for(int i=0;i<g.getChildCount();i++){WebView w=find(g.getChildAt(i));if(w!=null)return w;}}return null;}
  private String js(String script)throws Exception{CountDownLatch latch=new CountDownLatch(1);String[] result={null};InstrumentationRegistry.getInstrumentation().runOnMainSync(()->web.evaluateJavascript(script,s->{result[0]=s;latch.countDown();}));assertTrue("JavaScript timeout",latch.await(15,TimeUnit.SECONDS));return result[0];}
  private void waitFor(String expression)throws Exception{for(int i=0;i<180;i++){if("true".equals(js(expression)))return;Thread.sleep(150);}fail("UI not ready: "+expression+"\n"+js("document.body.innerText.slice(-2500)"));}
+ private void reload()throws Exception{js("window.__testReloadPending=true;location.reload()");waitFor("!window.__testReloadPending && !!document.querySelector('.studio')");}
  private JSONObject api(String endpoint,JSONObject body)throws Exception{
   HttpURLConnection c=(HttpURLConnection)new URL("http://127.0.0.1:"+EngineService.readyPort()+endpoint).openConnection();c.setRequestProperty("X-BandPilot-Native-Token",EngineService.token);c.setReadTimeout(30000);
   if(body!=null){c.setRequestMethod("POST");c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");c.getOutputStream().write(body.toString().getBytes(StandardCharsets.UTF_8));}
@@ -33,6 +34,25 @@ public class AutonomousTest {
   activity=InstrumentationRegistry.getInstrumentation().startActivitySync(launch);
   InstrumentationRegistry.getInstrumentation().runOnMainSync(()->web=find(activity.getWindow().getDecorView()));
   waitFor("!!document.querySelector('.studio')");
+  InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{assertTrue("Keep the test emulator unlocked and the app in front",activity.hasWindowFocus());web.requestFocus();});
+  JSONObject usage=api("/api/usage-stats",null);
+  assertTrue("Usage counting is included in the Android runtime",usage.getBoolean("available"));
+  assertTrue("The native app can edit its own preference",usage.getBoolean("canEdit"));
+  if(!usage.getBoolean("noticeSeen")){
+   waitFor("!!document.querySelector('.usage-notice')");
+   js("[...document.querySelectorAll('.usage-notice button')].find(b=>b.textContent.trim()==='Désactiver').click()");
+   waitFor("!document.querySelector('.usage-notice')");
+  }else{
+   api("/api/usage-stats",new JSONObject().put("enabled",false));
+   reload();
+  }
+  usage=api("/api/usage-stats",null);
+  assertFalse("Automated device tests must not count as an installation",usage.getBoolean("enabled"));
+  assertTrue(usage.getBoolean("noticeSeen"));
+  js("document.querySelector('button[title=\"Réglages\"]').click()");
+  waitFor("!!document.querySelector('.usage-settings input')");
+  assertEquals("false",js("document.querySelector('.usage-settings input').checked"));
+  assertEquals("true",js("document.documentElement.scrollWidth <= window.innerWidth+2"));
   api("/api/connection",new JSONObject().put("mode","simulation").put("host","127.0.0.1").put("enableWrites",false));
   assertEquals("true",js("!!window.BandPilotAndroid && document.documentElement.dataset.platform==='android'"));
   assertEquals("false",js("[...document.querySelectorAll('.rail-space-btn')].some(b=>b.textContent.includes('Enregistrer et réécouter'))"));
@@ -61,10 +81,23 @@ public class AutonomousTest {
   assertTrue(api("/api/diagnostics/report",null).getJSONObject("app").getString("version").contains("android"));
   assertEquals("true",js("typeof window.bandpilotSupport.installUpdate==='function' && typeof window.bandpilotSupport.exportLogs==='function'"));
   js("document.querySelector('.support-open').click()");waitFor("!!document.querySelector('.support-dialog[open]')");
+  String[] discordChannels={"1570534770297806888","1571098590925955082","1570534825700368424","1570534866049699882"};
+  for(String id:discordChannels)assertEquals("Android opens Discord through the external-browser handler","true",js("!!document.querySelector('.support-dialog a[href=\"https://discord.com/channels/1570533717917573260/"+id+"\"][target=\"_self\"]')"));
+  assertEquals("true",js("!!document.querySelector('.support-dialog a[href=\"https://discord.gg/FtWwEPmwE7\"]')"));
+  js("(()=>{const i=document.querySelector('.support-dialog input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(i,'Test Android @everyone 192.0.2.1');i.dispatchEvent(new Event('input',{bubbles:true}));})()");
+  waitFor("!!document.querySelector('.discord-preview')");
+  assertEquals("true",js("document.querySelector('.discord-preview').value.includes('"+BuildConfig.VERSION_NAME+"') && document.querySelector('.discord-preview').value.includes('Android')"));
+  assertEquals("false",js("/@everyone|192\\.0\\.2\\.1/.test(document.querySelector('.discord-preview').value)"));
+  js("[...document.querySelectorAll('.discord-incident button')].find(b=>b.textContent.trim()==='Copier le message Discord').click()");
+  waitFor("document.querySelector('.discord-incident [role=status]')?.textContent.includes('Message copié')");
+  String[] copied={null};
+  InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{android.content.ClipboardManager clipboard=activity.getSystemService(android.content.ClipboardManager.class);android.content.ClipData clip=clipboard.getPrimaryClip();assertNotNull("Keep the test emulator unlocked for native clipboard access",clip);copied[0]=clip.getItemAt(0).coerceToText(activity).toString();});
+  assertEquals("The native clipboard receives exactly the reviewed Discord message",new JSONArray("["+js("document.querySelector('.discord-preview').value")+"]").getString(0),copied[0]);
   js("[...document.querySelectorAll('.support-dialog button')].find(b=>b.textContent.trim()==='Afficher les logs').click()");waitFor("!!document.querySelector('.support-dialog pre')");
   assertTrue(js("document.querySelector('.support-dialog pre').textContent").contains("android.engine_start"));
   assertTrue(api("/api/android/update/status",null).has("automaticEnabled"));
-  js("location.reload()");waitFor("!!document.querySelector('.studio')");
+  reload();
+  assertFalse("Usage preference survives a WebView reload",api("/api/usage-stats",null).getBoolean("enabled"));
   assertEquals("Basse Éric",api("/api/coach",null).getJSONObject("profile").getJSONArray("inputs").getJSONObject(inputs.length()-1).getString("name"));
  }
  // Actual UDP sockets inside Android. No PC or physical mixer participates.

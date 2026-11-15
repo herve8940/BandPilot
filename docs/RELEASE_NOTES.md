@@ -1,3 +1,19 @@
+# Android 2.4.0-android.4 · 15 novembre 2026
+
+- **Statistiques d’utilisation sur Android.** L’avis au premier lancement et l’option **Réglages → Statistiques anonymes** sont désormais inclus dans l’APK. Le compteur peut transmettre au plus une fois par jour un numéro aléatoire d’installation, la version, la plateforme, le canal et le modèle de console. Aucun nom, audio, réglage, scène ou journal n’est transmis par ce compteur. La désactivation efface le numéro local.
+- **Interface commune à jour.** Boutons du menu latéral alignés et accessibles dans les fenêtres basses, avec les raccourcis d’aide Discord.
+- **Discord sur Android.** Entraide, guide, idées et signalement de bug depuis **Réglages → Aide et incidents**. Le message d’incident inclut la version Android et se copie dans le presse-papiers natif, après relecture, pour être collé dans **#bugs-tests**. Aucun message ni diagnostic n’est envoyé automatiquement.
+- **Mise à jour sur place.** Même identifiant d’application et même clé de signature ; installer par-dessus l’ancienne version conserve les profils et préférences. Ne pas désinstaller.
+- **Périmètre inchangé.** Pilotage local disponible sans Internet, aucune modification audio liée au choix des statistiques. REAPER et son Atelier restent sur ordinateur ; les limites de compatibilité Android et console restent applicables.
+
+## English
+
+Android 2.4.0-android.4 includes the shared usage-counting notice and **Settings → Anonymous statistics**, plus the latest sidebar layout and Discord help. Open help, the guide, ideas and bug reporting from **Settings → Help and incidents**. Review an incident message with the Android version, copy it with the native clipboard and paste it into **#bugs-tests**. No message or diagnostic is sent automatically. The counter can send a random installation ID, version, platform, release/source channel and mixer model at most once a day. No names, audio, settings, scenes or logs are included. Disabling it removes the local ID. Install over the previous signed APK to preserve profiles and preferences. Local mixer control still works without Internet; REAPER features remain desktop-only.
+
+[APK and checksums](https://github.com/herve8940/BandPilot/releases/tag/android-v2.4.0-android.4) · [Données / Privacy](PRIVACY.md)
+
+---
+
 # Mise à jour macOS : préparation corrigée · 14 novembre 2026
 
 Le nettoyage des archives de l’application fonctionne maintenant dans Electron : il ne bloque plus la préparation de la mise à jour ni la suppression de l’ancienne version après un démarrage réussi. Les tests macOS exécutent ces deux étapes dans Electron avec le véritable paquet publié. Les versions déjà touchées doivent installer une fois cette édition pour bénéficier de la correction.
