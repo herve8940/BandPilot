@@ -21,6 +21,10 @@ public class PersistenceTest {
   Activity activity=InstrumentationRegistry.getInstrumentation().startActivitySync(new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
   InstrumentationRegistry.getInstrumentation().runOnMainSync(()->web=find(activity.getWindow().getDecorView()));
   waitFor("!!document.querySelector('.studio')");
+  js("document.querySelector('button[title=\"Réglages\"]').click()");
+  waitFor("!!document.querySelector('.usage-settings input')");
+  assertEquals("false",js("document.querySelector('.usage-settings input').checked"));
+  assertEquals("false",js("!!document.querySelector('.usage-notice')"));
   js("document.querySelector('button[title=\"Régler le son\"]').click()");waitFor("!!document.querySelector('.coach-journey')");
   js("[...document.querySelectorAll('.coach-journey button')].find(b=>b.textContent.trim().endsWith('Dire qui est branché où')).click()");waitFor("[...document.querySelectorAll('.coach-input2 input')].some(i=>i.value==='Basse Éric')");
   assertEquals("true",js("document.documentElement.scrollWidth <= window.innerWidth+2"));
