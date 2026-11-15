@@ -2410,5 +2410,15 @@
   "Message copié. Ouvre #bugs-tests, colle le message et envoie-le dans Discord.": "Mensaje copiado. Abre #bugs-tests, pega el mensaje y envíalo en Discord.",
   "Copie automatique indisponible. Le texte est sélectionné : copie-le manuellement, puis ouvre #bugs-tests.": "Copia automática no disponible. El texto está seleccionado: cópialo manualmente y abre #bugs-tests.",
   "Diagnostic détaillé et suivi GitHub": "Diagnóstico detallado y seguimiento en GitHub",
-  "Pour un problème reproductible, tu peux aussi préparer un rapport détaillé et ouvrir une issue GitHub.": "Para un problema reproducible, también puedes preparar un informe detallado y abrir una incidencia en GitHub."
+  "Pour un problème reproductible, tu peux aussi préparer un rapport détaillé et ouvrir une issue GitHub.": "Para un problema reproducible, también puedes preparar un informe detallado y abrir una incidencia en GitHub.",
+  "Statistiques anonymes": "Estadísticas anónimas",
+  "Aide-nous à savoir combien de musiciens utilisent BandPilot": "Ayúdanos a saber cuántos músicos usan BandPilot",
+  "BandPilot envoie au plus une fois par jour un numéro aléatoire, sa version, la plateforme et le modèle de console. Rien d’autre : ni nom, ni réglages, ni audio.": "Como máximo una vez al día, BandPilot envía un número aleatorio, su versión, la plataforma y el modelo de mesa. Nada más: ni nombre, ni ajustes, ni audio.",
+  "En savoir plus": "Más información",
+  "OK": "OK",
+  "Compter anonymement cette installation": "Contar esta instalación de forma anónima",
+  "Au plus une fois par jour : un numéro aléatoire, la version, la plateforme et le modèle de console. Désactiver efface ce numéro.": "Como máximo una vez al día: un número aleatorio, la versión, la plataforma y el modelo de mesa. Al desactivarlo se borra este número.",
+  "Seul un administrateur peut modifier ce réglage.": "Solo un administrador puede cambiar este ajuste.",
+  "Préférence invalide": "Preferencia no válida",
+  "Préférence non enregistrée": "Preferencia no guardada"
 }

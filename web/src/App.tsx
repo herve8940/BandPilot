@@ -2,6 +2,7 @@ import {isAndroid} from './platform';
 import {SupportButton,SupportCenter} from './SupportCenter';
 import {CommunityLink} from './CommunityLink';
 import {LanguageSettings} from "./LanguageSettings";
+import {UsageNotice,UsageSettings} from "./UsageStats";
 import {tx, getLocale, useLanguage} from "./i18n";
 import {MixerModelContext} from './MixerModel';
 import {DEFAULT_MIXER,type MixerProfile} from '../../shared/mixer-models';
@@ -376,6 +377,7 @@ export default function App() {
       {!isAndroid&&<WorkshopNotice onOpen={()=>{sessionStorage.setItem("bandpilot-workshop-view","true");setPage("rehearse");}}/>}
       {blankPlan && <PlanDialog plan={blankPlan} busy={blankBusy} canApply={canWrite} mode={isSim ? "simulation" : "real"} onClose={() => setBlankPlan(null)} onApply={() => void applyBlank()}/>}
       {notice && <div className="studio-alert" role="alert"><CircleAlert size={16}/><span>{tx(notice)}</span><button onClick={()=>setNotice("")}>{tx("Fermer")}</button></div>}
+      <UsageNotice/>
       {unsupportedX32 ? <section className="model-blocked"><h2>{tx(model.label)}{tx(" · adaptation en cours")}</h2><p>{tx("Le mélangeur 32 canaux, 16 bus, 8 DCA et 6 matrices est disponible. Les fonctions guidées, scènes complètes et retours sur téléphone nécessitent encore leur adaptateur X32.")}</p><button onClick={()=>setPage("console")}>{tx("Ouvrir le mélangeur ")}{tx(model.label)}</button></section> : page==="console"&&model.family==="x32" ? <div className="studio-work"><X32Console canWrite={canWrite}/></div> : page==="rehearse" ? <Rehearse onExpert={ch=>{setSelected(ch);localStorage.setItem("xr18-expert-view","channel");setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="concert" ? <Concert/> : page==="coach" ? <SoundCoach onWorkshop={isAndroid?undefined:()=>{sessionStorage.setItem("bandpilot-workshop-view","true");setPage("rehearse");}} status={status} online={socketOk} meters={meterState} onConnect={()=>setPage("settings")} onMonitors={()=>setPage("ears")} onExpert={(ch,view)=>{if(ch)setSelected(ch);try{localStorage.setItem("xr18-expert-view",view??"channel");}catch{}setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="console" ? consoleMode==="simple" ? <div className="content"><SimpleMixer simulation={isSim} canWrite={canWrite} onExpert={ch=>{if(ch)setSelected(ch);setExpertTab(ch?"eq":"mixer");setTab("mixer");setConsoleMode("expert");}}/></div> : <>
 
         <div className="studio-work">
@@ -394,6 +396,7 @@ export default function App() {
         {page==="scenes" && <ScenesPage mode={isSim ? "simulation" : "real"} canWrite={canWrite}/>}
         {page==="settings" && <div className="settings-support"><SupportButton/><CommunityLink destination="help"/></div>}
         {page==="settings" && <LanguageSettings/>}
+        {page==="settings" && <UsageSettings/>}
         {page==="settings" && <ConnectionPanel key={`connection:${model.id}`} status={status}/>}
         {page==="settings" && <StudioControl key={`studio-settings:${model.id}`} section="settings"/>}
         {page==="settings" && <section className="studio-panel pad"><div className="panel-title"><div><b>{tx("État du système")}</b><small>{tx("Paramètres de sécurité")}</small></div><Cable size={18}/></div><div className="settings-rows"><div><span>{tx("Mode d'exécution")}</span><b>{tx(isSim?"Simulation":"Console réelle")}</b></div><div><span>{tx("WebSocket")}</span><b>{tx(socketOk?"Connecté":"Déconnecté")}</b></div><div><span>{tx("Réponse OSC")}</span><b>{tx(status.connected?"Reçue / simulation":"Non confirmée")}</b></div><div><span>{tx("Écritures matérielles")}</span><b>{tx(!isSim&&status.writesEnabled?"Activées sur backend":"Désactivées")}</b></div><div><span>{tx("Accès multiappareils")}</span><b>{tx("HTTPS configurable")}</b></div></div><p className="disclaimer">{tx("Utilise le panneau de connexion pour détecter la console, activer le contrôle ou revenir en simulation.")}</p></section>}

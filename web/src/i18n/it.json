@@ -2410,5 +2410,15 @@
   "Message copié. Ouvre #bugs-tests, colle le message et envoie-le dans Discord.": "Messaggio copiato. Apri #bugs-tests, incolla il messaggio e invialo su Discord.",
   "Copie automatique indisponible. Le texte est sélectionné : copie-le manuellement, puis ouvre #bugs-tests.": "Copia automatica non disponibile. Il testo è selezionato: copialo manualmente, poi apri #bugs-tests.",
   "Diagnostic détaillé et suivi GitHub": "Diagnostica dettagliata e segnalazioni GitHub",
-  "Pour un problème reproductible, tu peux aussi préparer un rapport détaillé et ouvrir une issue GitHub.": "Per un problema riproducibile, puoi anche preparare un rapporto dettagliato e aprire una issue GitHub."
+  "Pour un problème reproductible, tu peux aussi préparer un rapport détaillé et ouvrir une issue GitHub.": "Per un problema riproducibile, puoi anche preparare un rapporto dettagliato e aprire una issue GitHub.",
+  "Statistiques anonymes": "Statistiche anonime",
+  "Aide-nous à savoir combien de musiciens utilisent BandPilot": "Aiutaci a sapere quanti musicisti usano BandPilot",
+  "BandPilot envoie au plus une fois par jour un numéro aléatoire, sa version, la plateforme et le modèle de console. Rien d’autre : ni nom, ni réglages, ni audio.": "Al massimo una volta al giorno BandPilot invia un numero casuale, la sua versione, la piattaforma e il modello di mixer. Nient’altro: nessun nome, nessuna impostazione, nessun audio.",
+  "En savoir plus": "Scopri di più",
+  "OK": "OK",
+  "Compter anonymement cette installation": "Conta questa installazione in modo anonimo",
+  "Au plus une fois par jour : un numéro aléatoire, la version, la plateforme et le modèle de console. Désactiver efface ce numéro.": "Al massimo una volta al giorno: un numero casuale, la versione, la piattaforma e il modello di mixer. Disattivando, questo numero viene cancellato.",
+  "Seul un administrateur peut modifier ce réglage.": "Solo un amministratore può modificare questa impostazione.",
+  "Préférence invalide": "Preferenza non valida",
+  "Préférence non enregistrée": "Preferenza non salvata"
 }
