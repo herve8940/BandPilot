@@ -27,6 +27,19 @@ export function validReport(value, now = today()) {
   return {id, day, version, platform, channel, model};
 }
 
+// The table is created on first use and old rows are cleaned once a day,
+// so the counter works without any console command or scheduled trigger.
+let readyDay = '';
+async function prepare(env) {
+  if (readyDay === today()) return;
+  await env.DB.batch([
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS pings (day TEXT NOT NULL, id TEXT NOT NULL, version TEXT NOT NULL, platform TEXT NOT NULL, channel TEXT NOT NULL, model TEXT NOT NULL, PRIMARY KEY (day, id))'),
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS pings_id ON pings (id)'),
+    env.DB.prepare('DELETE FROM pings WHERE day < ?1').bind(shift(today(), -RETENTION_DAYS)),
+  ]);
+  readyDay = today();
+}
+
 async function ping(request, env) {
   const length = Number(request.headers.get('Content-Length') ?? 0);
   if (length > 2048) return json({error: 'too large'}, 413);
@@ -34,6 +47,7 @@ async function ping(request, env) {
   try { body = JSON.parse(await request.text()); } catch { return json({error: 'invalid'}, 400); }
   const report = validReport(body);
   if (!report) return json({error: 'invalid'}, 400);
+  await prepare(env);
   await env.DB.prepare('INSERT OR IGNORE INTO pings (day, id, version, platform, channel, model) VALUES (?1, ?2, ?3, ?4, ?5, ?6)')
     .bind(report.day, report.id, report.version, report.platform, report.channel, report.model).run();
   return new Response(null, {status: 204});
@@ -42,6 +56,7 @@ async function ping(request, env) {
 async function stats(request, env) {
   const token = request.headers.get('Authorization') ?? '';
   if (!env.STATS_TOKEN || token !== 'Bearer ' + env.STATS_TOKEN) return json({error: 'unauthorized'}, 401);
+  await prepare(env);
   const days = Math.min(365, Math.max(1, Number(new URL(request.url).searchParams.get('days')) || 30));
   const from = shift(today(), -(days - 1));
   const all = async (sql, ...args) => (await env.DB.prepare(sql).bind(...args).all()).results;
@@ -65,8 +80,9 @@ export default {
     if (pathname === '/v1/stats' && request.method === 'GET') return stats(request, env);
     return json({error: 'not found'}, 404);
   },
-  // Daily clean-up: nothing older than about 13 months is kept.
+  // Optional daily clean-up (the same clean-up also runs on the first request of each day).
   async scheduled(event, env) {
-    await env.DB.prepare('DELETE FROM pings WHERE day < ?1').bind(shift(today(), -RETENTION_DAYS)).run();
+    readyDay = '';
+    await prepare(env);
   },
 };

@@ -9,7 +9,18 @@ la plateforme (`windows`, `macos`, `linux`, `android`), le canal (`release` ou
 `source`) et le modèle de console. Aucune adresse IP, aucun en-tête, aucun autre
 contenu. Les lignes de plus de 400 jours sont effacées chaque nuit.
 
-## Mise en service (une seule fois)
+## Mise en service depuis le tableau de bord (même sur téléphone)
+
+1. **Storage & Databases › D1 › Create** : nom `bandpilot-usage`, emplacement *Western Europe*.
+2. **Workers & Pages › Create › Worker** : nom `bandpilot-usage`, **Deploy**, puis **Edit code** :
+   remplace tout par le contenu de `worker.js`, puis **Deploy**.
+3. Dans le Worker, **Settings › Bindings › Add › D1 database** : nom de variable `DB`, base `bandpilot-usage`.
+4. **Settings › Variables and Secrets › Add** : type *Secret*, nom `STATS_TOKEN`, valeur = une longue phrase secrète.
+
+La table se crée toute seule au premier message et le nettoyage se fait chaque jour
+automatiquement : aucune commande ni tâche planifiée n'est nécessaire.
+
+## Mise en service en ligne de commande (une seule fois)
 
 1. Crée un compte gratuit sur <https://dash.cloudflare.com/sign-up>.
 2. Dans ce dossier :
