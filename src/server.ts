@@ -37,6 +37,8 @@ import { Access, permitted, sameOrigin, liveControlPermitted } from "./access.js
 import { LibraryStore } from "./library-store.js";
 import { ShowControl } from "./show-control.js";
 import { StudioApi, body } from "./studio-api.js";
+import {UsageStats,usagePlatform,usageDisabledByEnvironment} from './usage-stats.js';
+import {USAGE_ENDPOINT} from '../shared/usage-endpoint.js';
 const database = new StudioDatabase();
 const processing = new ProcessingStore();
 const dbPath=process.env.XR18_DB_PATH??"data/xr18-studio.db";
@@ -49,6 +51,7 @@ function diagnosticLog(){
 // Version shown in Réglages and written in the diagnostic log (set by the desktop app, else package.json).
 const APP_VERSION=process.env.XR18_APP_VERSION??(()=>{try{return JSON.parse(readFileSync(new URL('../../package.json',import.meta.url),'utf8')).version as string;}catch{return 'source';}})();
 const APP_BUILD=process.env.XR18_APP_BUILD??'source';
+const usage=new UsageStats(join(dirname(dbPath),'usage-stats.json'),{endpoint:process.env.BANDPILOT_USAGE_ENDPOINT??USAGE_ENDPOINT,version:APP_VERSION,build:APP_BUILD,platform:usagePlatform(),disabled:usageDisabledByEnvironment()});
 const androidUpdates=process.env.BANDPILOT_ANDROID==='1'?new AndroidUpdates(join(dirname(dbPath),'updates'),APP_VERSION):undefined;
 diagnostic('startup',{build:APP_BUILD,version:APP_VERSION,platform:process.platform,arch:process.arch,node:process.version});
 const configPath=process.env.XR18_CONNECTION_PATH??join(dirname(dbPath),'connection.json');
@@ -142,6 +145,13 @@ const handler: http.RequestListener = async (req, res) => {
    else if(path==='/api/android/update/download'&&req.method==='POST'){void androidUpdates.stage();result=androidUpdates.snapshot();}
    else{res.writeHead(404);res.end('{}');return;}
    res.end(JSON.stringify(result));return;
+  }
+  if(path==='/api/usage-stats'){
+   try{
+    if(req.method==='GET'){res.end(JSON.stringify({...await usage.snapshot(),canEdit:user?.role==='admin'}));return;}
+    if(req.method==='POST'){res.end(JSON.stringify({...await usage.update(await body(req)),canEdit:true}));return;}
+    res.writeHead(405);res.end('{}');
+   }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path==='/api/workspace'){
    try{if(req.method==='GET')res.end(JSON.stringify(database.workspace()));
@@ -600,7 +610,8 @@ server.listen(port, listenHost, () => {
 server.on('error',error=>{if(process.env.BANDPILOT_ANDROID==='1'&&(error as NodeJS.ErrnoException).code==='EADDRINUSE')server.listen(0,listenHost);else throw error;});
 const statusTimer=setInterval(()=>{for(const ws of wss.clients){const req=wsRequests.get(ws);if(!req||!access.user(req))ws.terminate();}const message=JSON.stringify({type:"status",status:xr18.status()});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);},2000);
 statusTimer.unref();
-function shutdown(){clearInterval(statusTimer);ears.close();xr18.close();database.close();access.close();library.close();for(const ws of wss.clients)ws.terminate();wss.close();server.close();}
+usage.start(()=>{const s=xr18.status();return s.mode==='real'&&s.connected&&s.model?String(s.model):s.mode==='simulation'?'simulation':'none';});
+function shutdown(){clearInterval(statusTimer);usage.close();ears.close();xr18.close();database.close();access.close();library.close();for(const ws of wss.clients)ws.terminate();wss.close();server.close();}
 process.once("SIGINT",shutdown);
 process.once("SIGTERM",shutdown);
 

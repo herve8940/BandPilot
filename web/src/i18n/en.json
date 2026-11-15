@@ -2410,5 +2410,15 @@
   "Message copié. Ouvre #bugs-tests, colle le message et envoie-le dans Discord.": "Message copied. Open #bugs-tests, paste the message and send it in Discord.",
   "Copie automatique indisponible. Le texte est sélectionné : copie-le manuellement, puis ouvre #bugs-tests.": "Automatic copying is unavailable. The text is selected: copy it manually, then open #bugs-tests.",
   "Diagnostic détaillé et suivi GitHub": "Detailed diagnostics and GitHub tracking",
-  "Pour un problème reproductible, tu peux aussi préparer un rapport détaillé et ouvrir une issue GitHub.": "For a reproducible problem, you can also prepare a detailed report and open a GitHub issue."
+  "Pour un problème reproductible, tu peux aussi préparer un rapport détaillé et ouvrir une issue GitHub.": "For a reproducible problem, you can also prepare a detailed report and open a GitHub issue.",
+  "Statistiques anonymes": "Anonymous statistics",
+  "Aide-nous à savoir combien de musiciens utilisent BandPilot": "Help us know how many musicians use BandPilot",
+  "BandPilot envoie au plus une fois par jour un numéro aléatoire, sa version, la plateforme et le modèle de console. Rien d’autre : ni nom, ni réglages, ni audio.": "At most once a day, BandPilot sends a random number, its version, the platform and the mixer model. Nothing else: no name, no settings, no audio.",
+  "En savoir plus": "Learn more",
+  "OK": "OK",
+  "Compter anonymement cette installation": "Count this installation anonymously",
+  "Au plus une fois par jour : un numéro aléatoire, la version, la plateforme et le modèle de console. Désactiver efface ce numéro.": "At most once a day: a random number, the version, the platform and the mixer model. Turning it off erases this number.",
+  "Seul un administrateur peut modifier ce réglage.": "Only an administrator can change this setting.",
+  "Préférence invalide": "Invalid preference",
+  "Préférence non enregistrée": "Preference not saved"
 }

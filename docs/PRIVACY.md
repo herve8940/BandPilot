@@ -20,6 +20,7 @@ Les noms et coordonnées d'une fiche technique peuvent apparaître dans ses PDF 
 | Fonction | Destination et données | Déclenchement |
 |---|---|---|
 | Recherche de mise à jour | GitHub : versions et métadonnées publiques ; le service reçoit les informations réseau habituelles, dont l'adresse IP | Au démarrage des applications qui proposent cette fonction et lors d'une recherche manuelle |
+| Statistiques anonymes | Compteur BandPilot : numéro aléatoire d'installation, version, plateforme, canal (release ou sources) et modèle de console ; aucune adresse IP conservée | Au plus une fois par jour, après l'avis affiché au premier lancement ; désactivable dans Paramètres |
 | Rapport de problème | GitHub : description et diagnostic de l'aperçu ; une issue est publique | Action explicite de création/envoi ou copie dans le navigateur |
 | Conseiller IA facultatif | OpenAI : question, type de source, mode/état de connexion et langue ; aucun flux audio envoyé par ce conseiller | Clé et modèle configurés, puis accord explicite avant la question |
 | Liens externes | GitHub, documentation, Discord ou Ko-fi | Ouverture du lien par l'utilisateur |
@@ -35,6 +36,29 @@ du système ; le stockage est refusé si ce coffre n'est pas disponible. Les ins
 configurées par variables d'environnement sont administrées par leur propriétaire.
 Déconnecter GitHub ou retirer la configuration IA supprime les identifiants enregistrés
 par cette fonction, pas les publications déjà faites chez le service externe.
+
+## Statistiques anonymes d'utilisation
+
+Pour savoir combien de musiciens utilisent BandPilot, l'application peut envoyer
+**au plus une fois par jour** un court message à un compteur exploité par le projet :
+
+- un numéro d'installation tiré au hasard (il ne permet pas de savoir qui tu es) ;
+- la version de BandPilot et la plateforme (Windows, macOS, Linux ou Android) ;
+- le canal (version publiée ou lancement depuis les sources) ;
+- le modèle de console connectée, `simulation` ou `none`.
+
+Rien d'autre : ni nom, ni adresse, ni réglage, ni scène, ni audio, ni journal. Le
+compteur ne conserve pas l'adresse IP et efface les données de plus de 400 jours. Les
+chiffres servent uniquement à mesurer l'audience de BandPilot (nombre d'installations,
+plateformes, versions et consoles utilisées) ; ils ne sont ni vendus ni croisés avec
+d'autres données. Le code du compteur est public dans `services/usage-counter`.
+
+Rien n'est envoyé avant l'affichage de l'avis au premier lancement. Désactive le
+comptage avec **Désactiver** dans cet avis ou dans **Paramètres › Statistiques
+anonymes** : le numéro aléatoire est alors effacé de l'appareil. La variable
+d'environnement `BANDPILOT_USAGE_STATS=0` le désactive aussi. Pour faire effacer les
+données déjà reçues, communique ce numéro (fichier `usage-stats.json` du dossier de
+données) via [l'assistance BandPilot](https://github.com/herve8940/BandPilot/blob/main/SUPPORT.md).
 
 ## Communauté Discord
 
@@ -87,6 +111,15 @@ README badges may load GitHub/Shields.io resources. Support uses an external lin
 External providers' policies apply on their services. Back up local data before deletion;
 use the relevant provider to manage published content or payments. Never post private data
 in a public support request.
+
+Anonymous usage statistics: at most once a day, BandPilot can send its usage counter a
+random installation number, the app version, the platform, the channel (release or
+source) and the connected mixer model (or `simulation`/`none`). Nothing else: no name,
+address, setting, scene, audio or log. The counter keeps no IP address, deletes data
+after 400 days and only measures BandPilot's audience; data is never sold or combined.
+Nothing is sent before the first-launch notice is shown. Turn it off with **Disable** in
+that notice or in **Settings › Anonymous statistics**, which erases the random number;
+`BANDPILOT_USAGE_STATS=0` also disables it. The counter's code is in `services/usage-counter`.
 
 Discord links open an external service only when selected. No Discord widget is
 embedded and no diagnostic, mixer setting or recording is automatically sent to

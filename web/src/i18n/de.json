@@ -2410,5 +2410,15 @@
   "Message copié. Ouvre #bugs-tests, colle le message et envoie-le dans Discord.": "Nachricht kopiert. Öffne #bugs-tests, füge die Nachricht ein und sende sie in Discord.",
   "Copie automatique indisponible. Le texte est sélectionné : copie-le manuellement, puis ouvre #bugs-tests.": "Automatisches Kopieren nicht verfügbar. Der Text ist ausgewählt: Kopiere ihn manuell und öffne #bugs-tests.",
   "Diagnostic détaillé et suivi GitHub": "Ausführliche Diagnose und GitHub-Nachverfolgung",
-  "Pour un problème reproductible, tu peux aussi préparer un rapport détaillé et ouvrir une issue GitHub.": "Bei einem reproduzierbaren Problem kannst du auch einen ausführlichen Bericht erstellen und ein GitHub-Issue öffnen."
+  "Pour un problème reproductible, tu peux aussi préparer un rapport détaillé et ouvrir une issue GitHub.": "Bei einem reproduzierbaren Problem kannst du auch einen ausführlichen Bericht erstellen und ein GitHub-Issue öffnen.",
+  "Statistiques anonymes": "Anonyme Statistik",
+  "Aide-nous à savoir combien de musiciens utilisent BandPilot": "Hilf uns zu erfahren, wie viele Musiker BandPilot nutzen",
+  "BandPilot envoie au plus une fois par jour un numéro aléatoire, sa version, la plateforme et le modèle de console. Rien d’autre : ni nom, ni réglages, ni audio.": "Höchstens einmal am Tag sendet BandPilot eine Zufallsnummer, seine Version, die Plattform und das Mischpultmodell. Sonst nichts: kein Name, keine Einstellungen, kein Audio.",
+  "En savoir plus": "Mehr erfahren",
+  "OK": "OK",
+  "Compter anonymement cette installation": "Diese Installation anonym zählen",
+  "Au plus une fois par jour : un numéro aléatoire, la version, la plateforme et le modèle de console. Désactiver efface ce numéro.": "Höchstens einmal am Tag: eine Zufallsnummer, die Version, die Plattform und das Mischpultmodell. Beim Ausschalten wird diese Nummer gelöscht.",
+  "Seul un administrateur peut modifier ce réglage.": "Nur ein Administrator kann diese Einstellung ändern.",
+  "Préférence invalide": "Ungültige Einstellung",
+  "Préférence non enregistrée": "Einstellung nicht gespeichert"
 }

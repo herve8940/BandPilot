@@ -1,0 +1,17 @@
+name = "bandpilot-usage"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+# Do not keep request logs: the counter must not store IP addresses.
+workers_dev = true
+
+[observability]
+enabled = false
+
+[triggers]
+crons = ["17 3 * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bandpilot-usage"
+# Replace with the id printed by: npx wrangler d1 create bandpilot-usage --location=weur
+database_id = "REPLACE_WITH_DATABASE_ID"
