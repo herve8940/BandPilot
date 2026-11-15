@@ -14,4 +14,4 @@ crons = ["17 3 * * *"]
 binding = "DB"
 database_name = "bandpilot-usage"
 # Replace with the id printed by: npx wrangler d1 create bandpilot-usage --location=weur
-database_id = "REPLACE_WITH_DATABASE_ID"
+database_id = "971d3f4e-f29e-4f65-a9e7-e5a0fcf14231"

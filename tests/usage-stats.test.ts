@@ -17,8 +17,8 @@ async function setup(options:{endpoint?:string;ok?:boolean;fail?:boolean;day?:st
  return {stats,path,sent,setDay:(value:string)=>{day=value;}};
 }
 
-test('the release build ships with the counter switched off until an address is configured',async()=>{
- assert.equal(USAGE_ENDPOINT,'');
+test('the release build points at the project counter, and an empty address switches everything off',async()=>{
+ assert.equal(usageEndpoint(USAGE_ENDPOINT),'https://bandpilot-usage.bandpilot.workers.dev/v1/ping');
  const {stats,sent}=await setup({endpoint:''});
  assert.deepEqual(await stats.snapshot(),{available:false,enabled:true,noticeSeen:false});
  await stats.update({noticeSeen:true});
