@@ -23,6 +23,7 @@ public class AutonomousTest {
  private WebView find(View v){if(v instanceof WebView)return (WebView)v;if(v instanceof ViewGroup){ViewGroup g=(ViewGroup)v;for(int i=0;i<g.getChildCount();i++){WebView w=find(g.getChildAt(i));if(w!=null)return w;}}return null;}
  private String js(String script)throws Exception{CountDownLatch latch=new CountDownLatch(1);String[] result={null};InstrumentationRegistry.getInstrumentation().runOnMainSync(()->web.evaluateJavascript(script,s->{result[0]=s;latch.countDown();}));assertTrue("JavaScript timeout",latch.await(15,TimeUnit.SECONDS));return result[0];}
  private void waitFor(String expression)throws Exception{for(int i=0;i<180;i++){if("true".equals(js(expression)))return;Thread.sleep(150);}fail("UI not ready: "+expression+"\n"+js("document.body.innerText.slice(-2500)"));}
+ private void reload()throws Exception{js("window.__testReloadPending=true;location.reload()");waitFor("!window.__testReloadPending && !!document.querySelector('.studio')");}
  private JSONObject api(String endpoint,JSONObject body)throws Exception{
   HttpURLConnection c=(HttpURLConnection)new URL("http://127.0.0.1:"+EngineService.readyPort()+endpoint).openConnection();c.setRequestProperty("X-BandPilot-Native-Token",EngineService.token);c.setReadTimeout(30000);
   if(body!=null){c.setRequestMethod("POST");c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");c.getOutputStream().write(body.toString().getBytes(StandardCharsets.UTF_8));}
@@ -33,7 +34,7 @@ public class AutonomousTest {
   activity=InstrumentationRegistry.getInstrumentation().startActivitySync(launch);
   InstrumentationRegistry.getInstrumentation().runOnMainSync(()->web=find(activity.getWindow().getDecorView()));
   waitFor("!!document.querySelector('.studio')");
-  waitFor("document.hasFocus()");
+  InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{assertTrue("Keep the test emulator unlocked and the app in front",activity.hasWindowFocus());web.requestFocus();});
   JSONObject usage=api("/api/usage-stats",null);
   assertTrue("Usage counting is included in the Android runtime",usage.getBoolean("available"));
   assertTrue("The native app can edit its own preference",usage.getBoolean("canEdit"));
@@ -43,7 +44,7 @@ public class AutonomousTest {
    waitFor("!document.querySelector('.usage-notice')");
   }else{
    api("/api/usage-stats",new JSONObject().put("enabled",false));
-   js("location.reload()");waitFor("!!document.querySelector('.studio')");
+   reload();
   }
   usage=api("/api/usage-stats",null);
   assertFalse("Automated device tests must not count as an installation",usage.getBoolean("enabled"));
@@ -95,7 +96,7 @@ public class AutonomousTest {
   js("[...document.querySelectorAll('.support-dialog button')].find(b=>b.textContent.trim()==='Afficher les logs').click()");waitFor("!!document.querySelector('.support-dialog pre')");
   assertTrue(js("document.querySelector('.support-dialog pre').textContent").contains("android.engine_start"));
   assertTrue(api("/api/android/update/status",null).has("automaticEnabled"));
-  js("location.reload()");waitFor("!!document.querySelector('.studio')");
+  reload();
   assertFalse("Usage preference survives a WebView reload",api("/api/usage-stats",null).getBoolean("enabled"));
   assertEquals("Basse Éric",api("/api/coach",null).getJSONObject("profile").getJSONArray("inputs").getJSONObject(inputs.length()-1).getString("name"));
  }
