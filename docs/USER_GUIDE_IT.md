@@ -90,11 +90,21 @@ REAPER è un software separato con la propria installazione e licenza. Installa 
 
 ## 9. Scene, note e scalette
 
+**Scene e preset per strumento · 2.3.14 / Android 2.4.0-android.5**
+
+In Console → Expert → Canale, usa Salva o Ripristina. Nella libreria dei preset scegli l’ingresso di destinazione e seleziona EQ, compressore o gate. Puoi anche estrarre i trattamenti da una scena completa salvata. Per annullare una prova, ripristina le impostazioni precedenti o un backup automatico.
+
+La libreria separa scene complete, preset, schede di soundcheck e backup automatici. Include importazione/esportazione JSON, richiamo dei file X-Air .scn supportati e scelta dello slot per i preset FX.
+
+Salvare o importare non modifica il suono. Il richiamo richiede anteprima e conferma, con backup preventivo. I preset di canale conservano gain, alimentazione phantom, livelli, mandate monitor e routing.
+
+Limiti: nessuna conversione tra modelli; richiamo mono bloccato sulle coppie stereo collegate. Richiamo .scn limitato a XR18/X18/MR18 e agli effetti HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY e MODD; gli altri file restano esportabili. Il supporto X32 rimane parziale.
+
 Una canzone ha bisogno di un titolo. Aggiungi brani alla setlist attiva e salva una setlist con nome. Le note e la setlist attiva vengono archiviate nel database dell'applicazione anche quando cambia la porta locale. Attendi lo stato di bozza salvata prima di chiudere. Le prove con nome rimangono registrazioni separate.
 
 ![Note persistenti e stato di salvataggio](images/bandpilot-2.2.4/notes.jpg)
 
-Cattura scene e importa/esporta JSON. I richiami mantengono un backup e richiedono un'anteprima valida; il richiamo guidato esclude l'alimentazione phantom per impostazione predefinita. Le scene tra modelli diversi non vengono convertite automaticamente. Il richiamo nativo `.scn` è un percorso sperimentale separato con limiti FX e conferme aggiuntive. Le scene complete di X32 non sono disponibili.
+Cattura scene e importa/esporta JSON. I richiami mantengono un backup e richiedono un'anteprima valida; il richiamo guidato esclude l'alimentazione phantom per impostazione predefinita. Le scene tra modelli diversi non vengono convertite automaticamente. I file nativi `.scn` supportati usano ora il richiamo guidato della libreria, con i limiti di modello ed effetti indicati sopra. Le scene complete di X32 non sono disponibili.
 
 ## 10. Analisi, spettacoli, resoconti e risoluzione dei problemi
 

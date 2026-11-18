@@ -17,7 +17,11 @@ test('manual override interrupts complete ReaCue recall and failed events are ne
   for(const a of Object.keys(scene.values))if(a.endsWith('/phantom'))delete scene.values[a];
   const saved=library.save('scene','ReaCue complete',scene);library.save('cue','Chorus',{songId:'song',section:'chorus',targetId:saved.id});
   xr.setFader(1,.6);show.arm(true);const event={eventId:'unique-1',songId:'song',section:'chorus'};
-  const recall=show.event(event);setTimeout(()=>show.manualOverride(),30);await assert.rejects(recall,/interrompu/);assert.equal(xr.listChannels()[0]?.fader,.6);
+  // Hold the backup read in flight so interruption does not depend on OS timer resolution.
+  const capture=show.console.capture.bind(show.console);let captured!:()=>void,resume!:()=>void;
+  const started=new Promise<void>(resolve=>{captured=resolve;}),pending=new Promise<void>(resolve=>{resume=resolve;});
+  show.console.capture=async()=>{const scene=await capture();captured();await pending;return scene;};
+  const recall=show.event(event);await started;show.manualOverride();resume();await assert.rejects(recall,/interrompu/);assert.equal(xr.listChannels()[0]?.fader,.6);
   show.arm(true);assert.equal((await show.event(event) as {duplicate?:boolean}).duplicate,true);assert.equal(xr.listChannels()[0]?.fader,.6);
  }finally{xr.close();library.close();}
 });

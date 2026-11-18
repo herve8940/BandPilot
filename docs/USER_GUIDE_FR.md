@@ -96,11 +96,21 @@ REAPER est un logiciel séparé, avec sa propre installation et licence. Dans **
 
 ## 9. Scènes, notes et setlists
 
+**Scènes et presets par instrument · 2.3.14 / Android 2.4.0-android.5**
+
+Dans Console → Expert → Canal, utilise Sauvegarder ou Restaurer. Dans Scènes et presets → Presets par piste, choisis l’entrée et coche EQ, compresseur ou gate. Tu peux aussi extraire ces traitements d’une scène complète enregistrée. Pour annuler un essai, utilise Revenir au réglage précédent ou les sauvegardes automatiques.
+
+La bibliothèque sépare scènes complètes, presets, fiches de balance et sauvegardes automatiques. Import/export JSON, rappel des fichiers X-Air .scn compatibles et choix du slot pour les presets FX.
+
+Enregistrer ou importer ne modifie pas le son. Chaque rappel demande un aperçu et une confirmation, avec sauvegarde préalable. Le rappel d’un preset de canal conserve gain, 48 V, volumes, retours et routage.
+
+Limites : pas de conversion entre modèles ; rappel de preset mono refusé sur une paire stéréo liée. Rappel .scn réservé à XR18/X18/MR18 et aux effets HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY et MODD ; les autres fichiers restent exportables. X32 demeure partielle.
+
 Dans Préparer, un titre est requis pour ajouter un morceau. Ajoute les titres à la setlist active puis sauvegarde une setlist nommée. Le brouillon de notes et la setlist active restent dans la base de l’application même si son port change. Attends l’indication **Brouillon sauvegardé sur cet ordinateur** avant de fermer ; les répétitions nommées restent des enregistrements distincts.
 
 ![Notes et statut de sauvegarde](images/bandpilot-2.2.4/notes.jpg)
 
-Les scènes complètes peuvent être capturées et exportées/importées en JSON. Le rappel fait une sauvegarde préalable et exige un aperçu valide ; le 48 V est exclu du rappel guidé par défaut. Une scène d’un autre modèle n’est pas convertie automatiquement. Les fichiers natifs `.scn` sont un parcours expérimental distinct, avec des limites FX et des confirmations supplémentaires. Les scènes complètes X32 sont indisponibles.
+Les scènes complètes peuvent être capturées et exportées/importées en JSON. Le rappel fait une sauvegarde préalable et exige un aperçu valide ; le 48 V est exclu du rappel guidé par défaut. Une scène d’un autre modèle n’est pas convertie automatiquement. Les fichiers natifs `.scn` compatibles utilisent désormais le rappel guidé de la bibliothèque, avec les limites de modèles et d’effets indiquées ci-dessus. Les scènes complètes X32 sont indisponibles.
 
 ## 10. Analyse, concert, comptes et dépannage
 

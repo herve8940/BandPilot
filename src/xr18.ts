@@ -97,14 +97,31 @@ export class XR18 extends EventEmitter {
       return checked;
     }
     if(!this.writes||!this.isLive())throw Error(`Écritures désactivées ou ${this.profile.label} déconnectée`);
-    const generation=this.generation;
+    const generation=this.generation,operation=this.operationEpoch;
+    const check=()=>{
+      if(generation!==this.generation)throw Error('Connexion modifiée pendant écriture');
+      if(operation!==this.operationEpoch||!this.writes||!this.isLive())throw Error('Opération interrompue');
+    };
     // Request readback after sending, never update optimistically.
     this.send(address,[p.type==='f'?oscFloat(checked as number):checked]);
-    const observed=await this.readParameter(address);
-    if(generation!==this.generation)throw Error('Connexion modifiée pendant écriture');
-    // The console quantizes floats (e.g. 201 steps for EQ frequency): compare within half a step.
-    if(typeof observed==='number'&&typeof checked==='number'?Math.abs(observed-checked)>readbackTolerance(address):observed!==checked)throw Error('Lecture différente : '+address);
-    return observed;
+    // A reply already in flight, or an immediate read before the console has settled,
+    // can still carry the old value. Re-query only: never replay the audio command.
+    for(const delay of [0,50,100]){
+      if(delay)await new Promise(resolve=>setTimeout(resolve,delay));
+      check();
+      let observed:Value;
+      try{observed=await this.readParameter(address);}
+      catch(error){
+        check();
+        if(delay!==100&&error instanceof Error&&error.message.startsWith('Pas de réponse '))continue;
+        throw error;
+      }
+      check();
+      const matches=typeof observed==='number'&&typeof checked==='number'?Math.abs(observed-checked)<=readbackTolerance(address):observed===checked;
+      if(matches)return observed;
+      if(delay===100)throw Error(`Lecture différente : ${address} (attendu ${JSON.stringify(checked)}, reçu ${JSON.stringify(observed)})`);
+    }
+    throw Error('Lecture non confirmée : '+address);
   }
   async applyParameters(values:Record<string,Value>,allowPhantom=false,tolerant=false){
     // Rehearsal: a scene recall or a bulk change never reopens the Main; everything else is applied.
@@ -397,7 +414,7 @@ export class XR18 extends EventEmitter {
       }
       const observed=await this.readFx(f.slot);
       // The console rounds each FX value to its own step (e.g. 0.333 → 0.32): accept one step of 0.02.
-      if(generation!==this.generation||observed.parameters.length<f.parameters.length||f.parameters.some((p,i)=>p.type!==observed.parameters[i]!.type||Math.abs(p.value-observed.parameters[i]!.value)>(p.type==='i'?0:.021)))throw Error('FX potentiellement partiel : lecture différente');
+      if(generation!==this.generation||observed.algorithm!==f.algorithm||observed.parameters.length<f.parameters.length||f.parameters.some((p,i)=>p.type!==observed.parameters[i]!.type||Math.abs(p.value-observed.parameters[i]!.value)>(p.type==='i'?0:.021)))throw Error('FX potentiellement partiel : lecture différente');
     }
     this.fxValues.set(f.slot,structuredClone(f));
   }

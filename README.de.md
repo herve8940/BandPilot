@@ -35,11 +35,23 @@ Stelle Fragen, teile Erfahrungen und schlage Verbesserungen für BandPilot vor. 
 
 ## Versionen und Verfügbarkeit
 
-Desktop: [neueste stabile Version](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.4 Vorabversion**, separates APK.
+Desktop: [neueste stabile Version](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.5 Vorabversion**, separates APK.
 
 [Downloads und Einschränkungen](https://herve8940.github.io/BandPilot/de.html#download)
 
 Um Instrumente zu trennen, an Liedtexten zu arbeiten und Songs für REAPER vorzubereiten, entdecke [BandStudio (auf Englisch)](https://herve8940.github.io/BandStudio/en.html), eine eigenständige, ergänzende App.
+
+## Szenen und Presets pro Instrument · 2.3.14 / Android 2.4.0-android.5
+
+Speichere EQ, Kompressor und Gate eines Eingangs und rufe nur die ausgewählten Bearbeitungen auf einem anderen Eingang desselben Mischpultmodells ab. Presets sind Ausgangspunkte, die an das Signal angepasst werden müssen.
+
+Die Bibliothek trennt vollständige Szenen, Presets, Soundcheck-Blätter und automatische Sicherungen. JSON-Import/Export, unterstützte X-Air-.scn-Dateien und die Wahl des Zielslots für FX-Presets sind enthalten.
+
+Speichern und Importieren ändern den Klang nicht. Ein Abruf erfordert Vorschau und Bestätigung sowie eine vorherige Sicherung. Kanal-Presets lassen Gain, Phantomspeisung, Pegel, Monitor-Sends und Routing unverändert.
+
+Grenzen: keine Umwandlung zwischen Modellen; Mono-Presets können nicht auf gekoppelte Stereopaare geladen werden. .scn-Abruf nur für XR18/X18/MR18 mit HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY und MODD; andere Dateien bleiben exportierbar. X32 wird weiterhin nur teilweise unterstützt.
+
+[Anleitung lesen](docs/USER_GUIDE_DE.md)
 
 ## Neu: Technical Rider, Effekte und Android
 
@@ -49,9 +61,9 @@ Die erste eigenständige Android-Version ist als signierte APK verfügbar. Keine
 - **Effekte für Quellen** — Wähle einen passenden Effekt für Stimme oder Instrument, prüfe den Vorschlag und dosiere ihn für jeden Monitormix. Übernimm das Ergebnis oder stelle die vorherigen Einstellungen wieder her.
 - **Eigenständiges Android** — Installiere die APK auf einem kompatiblen Tablet und verbinde es direkt per WLAN mit dem Mischpult. Oberfläche, Steuerung und Daten laufen auf dem Tablet: ohne PC oder Docker.
 
-[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.4/BandPilot-Android-2.4.0-android.4-universal.apk) · [Android-Anleitung (FR)](docs/ANDROID.md)
+[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.5/BandPilot-Android-2.4.0-android.5-universal.apk) · [Android-Anleitung (FR)](docs/ANDROID.md)
 
-Android-Version: 2.4.0-android.4. Android 8+ und Android System WebView 111+. APK für ARM mit 32/64 Bit und x86_64; Hoch- und Querformat. Installation und Start auf einem Xiaomi Redmi Pad mit Android 14 geprüft; Funktion vom Nutzer bestätigt. Andere Tablets und Mischpultkombinationen müssen noch geprüft werden. Geräte mit 16-KB-Speicherseiten sind nicht zertifiziert. REAPER und die auf Aufnahmen basierende Klangwerkstatt bleiben Desktop-Funktionen.
+Android-Version: 2.4.0-android.5. Android 8+ und Android System WebView 111+. APK für ARM mit 32/64 Bit und x86_64; Hoch- und Querformat. Installation und Start auf einem Xiaomi Redmi Pad mit Android 14 geprüft; Funktion vom Nutzer bestätigt. Andere Tablets und Mischpultkombinationen müssen noch geprüft werden. Geräte mit 16-KB-Speicherseiten sind nicht zertifiziert. REAPER und die auf Aufnahmen basierende Klangwerkstatt bleiben Desktop-Funktionen.
 
 
 ## Funktionen

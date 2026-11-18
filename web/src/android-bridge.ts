@@ -14,6 +14,10 @@ if(native){
   const base64=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(blob);});
   return call('save',{name,mime:blob.type||'application/octet-stream',base64});
  };
+ // Library exports use the same native document picker as desktop, with an awaited
+ // result so cancellation and write errors are shown by the library itself.
+ (window as any).bandpilotFiles={save:async(input:{filename:string;content:string})=>
+  save(input.filename,new Blob([input.content],{type:input.filename.toLowerCase().endsWith('.scn')?'text/plain':'application/json'}))};
  const click=HTMLAnchorElement.prototype.click;
  HTMLAnchorElement.prototype.click=function(){if(this.download){void fetch(this.href).then(r=>r.blob()).then(b=>save(this.download,b)).catch(e=>window.alert(e.message));}else click.call(this);};
  window.open=(url?:string|URL)=>{if(url&&String(url).startsWith('https://'))void call('open',{url:String(url)});return null;};

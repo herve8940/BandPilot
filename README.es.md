@@ -35,11 +35,23 @@ En las nuevas versiones, abre “Ayuda e incidencias” desde el menú o Ajustes
 
 ## Versiones y disponibilidad
 
-Escritorio: [última versión estable](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.4 preliminar**, APK independiente.
+Escritorio: [última versión estable](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.5 preliminar**, APK independiente.
 
 [Descargas y límites](https://herve8940.github.io/BandPilot/es.html#download)
 
 Para separar instrumentos, trabajar las letras y preparar canciones para REAPER, descubre [BandStudio (en inglés)](https://herve8940.github.io/BandStudio/en.html), una aplicación independiente y complementaria.
+
+## Escenas y presets por instrumento · 2.3.14 / Android 2.4.0-android.5
+
+Guarda EQ, compresor y gate de una entrada y recupera solo los tratamientos elegidos en otra entrada del mismo modelo de mesa. Los presets son puntos de partida que debes adaptar a la señal.
+
+La biblioteca separa escenas completas, presets, fichas de prueba de sonido y copias automáticas. Incluye importación/exportación JSON, recuperación de archivos X-Air .scn compatibles y elección de ranura para presets FX.
+
+Guardar o importar no cambia el sonido. La recuperación requiere vista previa y confirmación, con copia de seguridad previa. Los presets de canal conservan ganancia, alimentación phantom, niveles, envíos de monitor y enrutamiento.
+
+Límites: sin conversión entre modelos; recuperación mono bloqueada en pares estéreo enlazados. Los archivos .scn se recuperan en XR18/X18/MR18 con efectos HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY y MODD; los demás archivos siguen siendo exportables. X32 sigue siendo parcial.
+
+[Leer la guía](docs/USER_GUIDE_ES.md)
 
 ## Novedades: ficha técnica, ambientes y Android
 
@@ -49,9 +61,9 @@ La primera versión Android autónoma está disponible como APK firmado. No requ
 - **Ambientes de las fuentes** — Elige un efecto adecuado para la voz o el instrumento, revisa la propuesta y ajusta la cantidad en el monitor de cada músico. Conserva el resultado o recupera los ajustes anteriores.
 - **Android autónomo** — Instala el APK en una tableta compatible y conéctala directamente a la mesa por Wi-Fi. La interfaz, el motor y los datos están en la tableta: sin PC ni Docker.
 
-[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.4/BandPilot-Android-2.4.0-android.4-universal.apk) · [Guía Android (FR)](docs/ANDROID.md)
+[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.5/BandPilot-Android-2.4.0-android.5-universal.apk) · [Guía Android (FR)](docs/ANDROID.md)
 
-Versión Android: 2.4.0-android.4. Android 8+ y Android System WebView 111+. APK para ARM de 32/64 bits y x86_64; orientación vertical y horizontal. Instalación y arranque comprobados en Xiaomi Redmi Pad con Android 14; funcionamiento confirmado por su usuario. Otras tabletas y combinaciones con mesas requieren validación. Dispositivos con páginas de memoria de 16 KB no certificados. REAPER y el Taller basado en grabaciones siguen en el ordenador.
+Versión Android: 2.4.0-android.5. Android 8+ y Android System WebView 111+. APK para ARM de 32/64 bits y x86_64; orientación vertical y horizontal. Instalación y arranque comprobados en Xiaomi Redmi Pad con Android 14; funcionamiento confirmado por su usuario. Otras tabletas y combinaciones con mesas requieren validación. Dispositivos con páginas de memoria de 16 KB no certificados. REAPER y el Taller basado en grabaciones siguen en el ordenador.
 
 
 ## Características

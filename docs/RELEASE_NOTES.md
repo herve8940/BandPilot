@@ -1,3 +1,24 @@
+# Scènes et presets · bureau 2.3.14 / Android 2.4.0-android.5 · 18 novembre 2026
+
+- **Presets par entrée** : sauvegarder EQ/coupe-bas, compresseur et gate, choisir les traitements à rappeler et l’entrée de destination ; extraction possible depuis une scène complète.
+- **Bibliothèque réorganisée** : scènes complètes, presets par piste, fiches de balance et historique automatique. Recherche, import/export JSON et fichiers X-Air `.scn`.
+- **Rappels contrôlés** : aperçu, confirmation, sauvegarde et retour au réglage précédent. Les presets de canal conservent gain, 48 V, volumes, retours et routage. Les scènes complètes peuvent modifier ces paramètres, sauf le 48 V exclu du rappel de bibliothèque.
+- **FX** : rappel sur le slot choisi et restauration de sa sauvegarde. Les rappels natifs `.scn` comprennent les effets pris en charge.
+- **Fiabilité** : une réponse OSC retardée entraîne une nouvelle lecture, sans rejouer la commande audio. Après un rappel interrompu, la sauvegarde de récupération reste immédiatement accessible.
+- **Exports natifs** : choix du fichier sur Windows, macOS, Linux et Android ; téléchargement lorsqu’on utilise un navigateur. Annulation et erreurs du dialogue sont traitées explicitement dans les applications natives.
+- **Compatibilité** : anciens fichiers conservés, pas de conversion implicite entre modèles, pas de rappel mono sur une paire liée. `.scn` limité à XR18/X18/MR18 et aux effets HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY et MODD ; les autres algorithmes restent archivables/exportables. X32 reste partielle. Les presets sont des points de départ.
+- **Plateformes** : tests serveur et interface, construction et démarrage des paquets Windows, macOS Intel/Apple Silicon et Linux ; validation Android ARM32/ARM64/x86_64 avec le moteur SQLite portable. Les tests logiciels ne certifient pas toutes les consoles physiques. Les essais utilisateur de cette évolution ont été réalisés sur Mac/XR18.
+
+## English
+
+Save and selectively recall input EQ/HPF, compressor and gate presets on another input of the same mixer model, or extract processing from a complete saved scene. The library now separates scenes, track presets, soundcheck sheets and automatic recovery backups. JSON import/export, supported native X-Air scene recall and FX destination-slot selection are included.
+
+Saving/importing does not apply mixer settings. Recall requires preview and confirmation, with a backup. Input presets preserve gain, phantom power, levels, sends and routing; complete scenes can change levels and routing but library recall excludes phantom power. Delayed OSC readback retries only the read, never the audio command. Recovery backups remain accessible after an interrupted recall. Native exports report cancellation and errors.
+
+No implicit model conversion or mono recall onto linked stereo pairs. Native `.scn` recall is limited to XR18/X18/MR18 with HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY and MODD effects. Unsupported files remain exportable. X32 remains partial. Software checks and package tests do not certify every physical mixer. Install the signed Android APK over the previous version to retain data; do not uninstall.
+
+---
+
 # Android 2.4.0-android.4 · 15 novembre 2026
 
 - **Statistiques d’utilisation sur Android.** L’avis au premier lancement et l’option **Réglages → Statistiques anonymes** sont désormais inclus dans l’APK. Le compteur peut transmettre au plus une fois par jour un numéro aléatoire d’installation, la version, la plateforme, le canal et le modèle de console. Aucun nom, audio, réglage, scène ou journal n’est transmis par ce compteur. La désactivation efface le numéro local.

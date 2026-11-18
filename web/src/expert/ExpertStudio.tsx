@@ -1,3 +1,4 @@
+import {ChannelPresetActions} from "../ChannelPresetActions";
 import {tx, getLocale} from "../i18n";
 import {useAirStrips} from '../xair/model-strips';
 import { Drum, Guitar, Piano, MicVocal, Headphones, Sparkles, SlidersHorizontal, Music2, Speaker } from "lucide-react";
@@ -80,6 +81,7 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel, simul
     {view === "channel" && <ChannelRail strip={strip} values={values} select={select} />}
     <div className="xs2-body" ref={bodyRef}>
       {view === "console" && <ConsoleView values={values} set={set} writable={writable} rehearsal={rehearsal} strip={strip} select={select} />}
+      {(view === "channel" || view === "console") && strip.kind === "ch" && <ChannelPresetActions key={`${model.id}:${strip.id}:${simulation}`} channel={Number(strip.short)} name={stripName(strip,values)} model={model.id} online={online} canWrite={writable} mode={simulation?'simulation':'real'}/>}
       {view === "console" && <ChannelPage {...channelProps} select={select} />}
       {view === "channel" && <FocusedChannel {...channelProps} select={select} />}
       {view === "fx" && <div className="xm xs2-legacy"><FxView {...props} /></div>}

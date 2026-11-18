@@ -6,7 +6,7 @@ import type {XR18} from './xr18.js';
 import type {LibraryStore} from './library-store.js';
 export type CompleteScene={model?:string;version:2;scope:'console';values:Record<string,Value>;fx:Awaited<ReturnType<XR18['readFx']>>[];missing?:string[]};
 export class ConsoleControl {
- private previews=new Map<string,{values:Record<string,Value>;before:Record<string,Value>;identity:string;expires:number}>();
+ private previews=new Map<string,{values:Record<string,Value>;before:Record<string,Value>;guards:Record<string,Value>;identity:string;expires:number}>();
  constructor(private xr:XR18,private library:LibraryStore){}
  identity(){const s=this.xr.status();return JSON.stringify([s.model,s.mode,s.host,s.port,s.writesEnabled,this.xr.connectionId()]);}
  private async readStable(address:string,identity:string,operation:number){
@@ -39,22 +39,24 @@ export class ConsoleControl {
   // way: the scene simply leaves that setting alone on recall.
   const skippable=(e:unknown)=>/Pas de réponse|hors plage/.test((e as Error).message);
   const read=async(a:string)=>{try{values[a]=await this.xr.readParameter(a);}catch(e){if(identity!==this.identity()||!skippable(e))throw e;if(/hors plage/.test((e as Error).message)){missing.push(a);diagnostic('capture.out_of_range',{address:a,error:(e as Error).message});return;}try{values[a]=await this.xr.readParameter(a);}catch(e2){if(!skippable(e2))throw e2;missing.push(a);}}};
-  for(let i=0;i<addresses.length;i+=8){if(identity!==this.identity())throw Error('Connexion modifiée');await Promise.all(addresses.slice(i,i+8).map(read));await new Promise(r=>setTimeout(r,5));}
+  // Pace UDP reads on hardware only; simulation reads local memory and needs no network delay.
+  for(let i=0;i<addresses.length;i+=8){if(identity!==this.identity())throw Error('Connexion modifiée');await Promise.all(addresses.slice(i,i+8).map(read));if(this.xr.mode==='real')await new Promise(r=>setTimeout(r,5));}
   if(missing.length>addresses.length*.05)throw Error(`La console n’a pas répondu pour ${missing.length} réglages : vérifie la connexion (câble ou Wi-Fi) puis recommence.`);
   const fx=[];for(let slot=1;slot<=4;slot++)fx.push(await this.xr.readFx(slot));
   return missing.length?{model:this.xr.model().id,version:2,scope:'console',values,fx,missing}:{model:this.xr.model().id,version:2,scope:'console',values,fx};
  }
- async preview(input:unknown,wire=false){
+ async preview(input:unknown,wire=false,guards:Record<string,Value>={}){
   if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length<1||Object.keys(input).length>1000)throw Error('1 à 1000 paramètres requis');
   const values:Record<string,Value>={},before:Record<string,Value>={};
   for(const [a,v] of Object.entries(input))values[a]=wire?validateWire(a,v):toWire(a,v);
   const identity=this.identity(),operation=this.xr.operationId();
+  for(const [address,expected] of Object.entries(guards))if(await this.readStable(address,identity,operation)!==expected)throw Error('État modifié : prévisualiser à nouveau');
   // A lost UDP reply can be retried once, only on the same uninterrupted transport.
   for(const a of Object.keys(values))before[a]=await this.readStable(a,identity,operation);
   if(this.previews.size>100)this.previews.clear();const token=randomUUID();
   // A preview stays valid 10 minutes: apply() re-reads every value first and refuses if anything moved
   // ("État modifié"), so the delay only has to cover a person reading the window.
-  this.previews.set(token,{values,before,identity,expires:Date.now()+PREVIEW_TTL_MS});
+  this.previews.set(token,{values,before,guards:{...guards},identity,expires:Date.now()+PREVIEW_TTL_MS});
   return {token,changes:Object.entries(values).map(([address,v])=>({address,before:fromWire(address,before[address]!),after:fromWire(address,v),sensitive:descriptor(address).sensitive})),phantom:Object.keys(values).some(a=>a.endsWith('/phantom'))};
  }
  async apply(token:unknown,allowPhantom=false,tolerant=false){
@@ -63,6 +65,7 @@ export class ConsoleControl {
   const operation=this.xr.operationId();
   this.previews.delete(token as string);
   if(Object.keys(p.values).some(a=>a.endsWith('/phantom'))&&!allowPhantom)throw Error('Confirmation 48 V requise');
+  for(const [address,expected] of Object.entries(p.guards))if(await this.readStable(address,p.identity,operation)!==expected)throw Error('État modifié : prévisualiser à nouveau');
   for(const [a,v] of Object.entries(p.before)){const current=await this.readStable(a,p.identity,operation);if(typeof v==='number'&&typeof current==='number'?Math.abs(v-current)>.003:current!==v)throw Error('État modifié : prévisualiser à nouveau');}
   if(p.identity!==this.identity()||operation!==this.xr.operationId())throw Error('Connexion modifiée ou opération interrompue');
   const backup=this.library.save('parameter-backup','Avant modification console',p.before);
