@@ -39,7 +39,8 @@ export class ConsoleControl {
   // way: the scene simply leaves that setting alone on recall.
   const skippable=(e:unknown)=>/Pas de réponse|hors plage/.test((e as Error).message);
   const read=async(a:string)=>{try{values[a]=await this.xr.readParameter(a);}catch(e){if(identity!==this.identity()||!skippable(e))throw e;if(/hors plage/.test((e as Error).message)){missing.push(a);diagnostic('capture.out_of_range',{address:a,error:(e as Error).message});return;}try{values[a]=await this.xr.readParameter(a);}catch(e2){if(!skippable(e2))throw e2;missing.push(a);}}};
-  for(let i=0;i<addresses.length;i+=8){if(identity!==this.identity())throw Error('Connexion modifiée');await Promise.all(addresses.slice(i,i+8).map(read));await new Promise(r=>setTimeout(r,5));}
+  // Pace UDP reads on hardware only; simulation reads local memory and needs no network delay.
+  for(let i=0;i<addresses.length;i+=8){if(identity!==this.identity())throw Error('Connexion modifiée');await Promise.all(addresses.slice(i,i+8).map(read));if(this.xr.mode==='real')await new Promise(r=>setTimeout(r,5));}
   if(missing.length>addresses.length*.05)throw Error(`La console n’a pas répondu pour ${missing.length} réglages : vérifie la connexion (câble ou Wi-Fi) puis recommence.`);
   const fx=[];for(let slot=1;slot<=4;slot++)fx.push(await this.xr.readFx(slot));
   return missing.length?{model:this.xr.model().id,version:2,scope:'console',values,fx,missing}:{model:this.xr.model().id,version:2,scope:'console',values,fx};
