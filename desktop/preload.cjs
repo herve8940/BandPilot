@@ -18,6 +18,9 @@ contextBridge.exposeInMainWorld('bandpilotLanguage',{
 contextBridge.exposeInMainWorld('bandpilotDocuments',{
  saveTechRiderPDF:input=>ipcRenderer.invoke('bandpilot-tech-rider-pdf',input)
 });
+contextBridge.exposeInMainWorld('bandpilotFiles',{
+ save:input=>ipcRenderer.invoke('bandpilot-library-export',input)
+});
 
 contextBridge.exposeInMainWorld('bandpilotSupport',{
  status:()=>ipcRenderer.invoke('bandpilot-support-status'),

@@ -72,6 +72,26 @@ jobs:
             node desktop/smoke.cjs $installedExe
             if ($LASTEXITCODE -ne 0) { throw 'Installed Windows application failed to start' }
           }
+      - name: Test macOS disk image, scenes and presets
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          image=$(find release -maxdepth 1 -name '*.dmg' -print -quit)
+          mount="$RUNNER_TEMP/bandpilot-dmg"
+          mkdir -p "$mount"
+          hdiutil attach "$image" -mountpoint "$mount" -nobrowse
+          trap 'hdiutil detach "$mount"' EXIT
+          node desktop/smoke.cjs "$mount/BandPilot.app/Contents/MacOS/BandPilot"
+      - name: Test Linux AppImage, scenes and presets
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          image=$(find release -maxdepth 1 -name '*.AppImage' -print -quit)
+          chmod +x "$image"
+          "$image" --appimage-extract > /dev/null
+          APPDIR="$PWD/squashfs-root" xvfb-run -a node desktop/smoke.cjs "$PWD/squashfs-root/AppRun"
       - name: Test automatic installation with the real update package
         run: node scripts/test-update-package.cjs
       - name: Upload desktop installers

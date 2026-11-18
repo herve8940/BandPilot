@@ -90,11 +90,21 @@ REAPER is separate software with its own installation and license. Install bridg
 
 ## 9. Scenes, notes and setlists
 
+**Scenes and per-instrument presets · 2.3.14 / Android 2.4.0-android.5**
+
+In Console → Expert → Channel, use Save or Restore. In Scenes and presets → Track presets, choose the destination input and select EQ, compressor or gate. Processing can also be extracted from a saved complete scene. Use the previous-settings action or automatic backups to undo a trial.
+
+The library separates complete scenes, presets, soundcheck sheets and automatic backups. JSON import/export, supported X-Air .scn recall and destination slot selection for FX presets are included.
+
+Saving or importing does not change the sound. Recall requires a preview and confirmation, with a backup first. Channel presets leave gain, phantom power, levels, monitor sends and routing unchanged.
+
+Limits: no cross-model conversion; mono preset recall is blocked on linked stereo pairs. Native .scn recall is limited to XR18/X18/MR18 and HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY and MODD effects; other files remain exportable. X32 support remains partial.
+
 A song needs a title. Add songs to the active setlist and save a named setlist. Notes and the active setlist are stored in the application database even when its local port changes. Wait for the saved-draft status before closing. Named rehearsals remain separate records.
 
 ![Persistent notes and save status](images/bandpilot-2.2.4/notes.jpg)
 
-Capture scenes and import/export JSON. Recalls keep a backup and require a valid preview; guided recall excludes phantom power by default. Cross-model scenes are not automatically converted. Native `.scn` recall is a separate experimental path with FX limits and additional confirmations. Complete X32 scenes are unavailable.
+Capture scenes and import/export JSON. Recalls keep a backup and require a valid preview; guided recall excludes phantom power by default. Cross-model scenes are not automatically converted. Supported native `.scn` files now use guided library recall, subject to the model and FX limits above. Complete X32 scenes are unavailable.
 
 ## 10. Analysis, shows, accounts and troubleshooting
 

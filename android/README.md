@@ -1,10 +1,10 @@
 # BandPilot Android autonome
 
-Version Android disponible : **2.4.0-android.4**, avec les statistiques d’utilisation désactivables, les dernières améliorations du menu et l’aide Discord.
+Version Android disponible : **2.4.0-android.5**, avec les statistiques d’utilisation désactivables, les dernières améliorations du menu et l’aide Discord.
 
-[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.4/BandPilot-Android-2.4.0-android.4-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
+[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.5/BandPilot-Android-2.4.0-android.5-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
 
-La version 2.4.0-android.4 inclut le compteur d’utilisation du code commun. Un avis
+La version 2.4.0-android.5 inclut le compteur d’utilisation du code commun. Un avis
 au premier lancement propose **OK** ou **Désactiver** ; le choix reste accessible
 dans **Réglages → Statistiques anonymes**. Le compteur transmet au plus une fois
 par jour un numéro aléatoire d’installation, la version, la plateforme, le canal

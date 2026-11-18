@@ -90,11 +90,21 @@ REAPER es un software independiente con su propia instalación y licencia. Insta
 
 ## 9. Escenas, notas y setlists
 
+**Escenas y presets por instrumento · 2.3.14 / Android 2.4.0-android.5**
+
+En Consola → Expert → Canal, usa Guardar o Restaurar. En la biblioteca de presets, elige la entrada de destino y selecciona EQ, compresor o gate. También puedes extraer tratamientos de una escena completa guardada. Para deshacer una prueba, restaura los ajustes anteriores o una copia automática.
+
+La biblioteca separa escenas completas, presets, fichas de prueba de sonido y copias automáticas. Incluye importación/exportación JSON, recuperación de archivos X-Air .scn compatibles y elección de ranura para presets FX.
+
+Guardar o importar no cambia el sonido. La recuperación requiere vista previa y confirmación, con copia de seguridad previa. Los presets de canal conservan ganancia, alimentación phantom, niveles, envíos de monitor y enrutamiento.
+
+Límites: sin conversión entre modelos; recuperación mono bloqueada en pares estéreo enlazados. Los archivos .scn se recuperan en XR18/X18/MR18 con efectos HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY y MODD; los demás archivos siguen siendo exportables. X32 sigue siendo parcial.
+
 Una canción necesita un título. Agregue canciones a la lista de canciones activa y guarde una lista de canciones con nombre. Las notas y la lista de configuración activa se almacenan en la base de datos de la aplicación incluso cuando cambia su puerto local. Espere el estado de borrador guardado antes de cerrar. Los ensayos nombrados siguen siendo registros separados.
 
 ![Notas persistentes y estado de guardado](images/bandpilot-2.2.4/notes.jpg)
 
-Capture escenas e importe/exporte JSON. Los retiros mantienen una copia de seguridad y requieren una vista previa válida; La recuperación guiada excluye la alimentación fantasma de forma predeterminada. Las escenas entre modelos no se convierten automáticamente. La recuperación nativa de `.scn` es una ruta experimental separada con límites de FX y confirmaciones adicionales. Las escenas X32 completas no están disponibles.
+Capture escenas e importe/exporte JSON. Los retiros mantienen una copia de seguridad y requieren una vista previa válida; La recuperación guiada excluye la alimentación fantasma de forma predeterminada. Las escenas entre modelos no se convierten automáticamente. Los archivos nativos `.scn` compatibles usan ahora la recuperación guiada de la biblioteca, con los límites de modelo y efectos indicados arriba. Las escenas X32 completas no están disponibles.
 
 ## 10. Análisis, shows, cuentas y solución de problemas
 

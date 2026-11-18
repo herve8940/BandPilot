@@ -30,6 +30,8 @@ public class AutonomousTest {
   int code=c.getResponseCode();InputStream in=code<400?c.getInputStream():c.getErrorStream();ByteArrayOutputStream bytes=new ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))!=-1)bytes.write(buffer,0,n);String text=bytes.toString("UTF-8");c.disconnect();assertTrue(endpoint+": "+text,code<400);return new JSONObject(text);
  }
  @Test public void offlineAppAndDirectUdp()throws Exception{
+  // The first-launch permission dialog must not obscure the UI under test.
+  if(android.os.Build.VERSION.SDK_INT>=33)InstrumentationRegistry.getInstrumentation().getUiAutomation().grantRuntimePermission(InstrumentationRegistry.getInstrumentation().getTargetContext().getPackageName(),android.Manifest.permission.POST_NOTIFICATIONS);
   Intent launch=new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
   activity=InstrumentationRegistry.getInstrumentation().startActivitySync(launch);
   InstrumentationRegistry.getInstrumentation().runOnMainSync(()->web=find(activity.getWindow().getDecorView()));
@@ -55,6 +57,7 @@ public class AutonomousTest {
   assertEquals("true",js("document.documentElement.scrollWidth <= window.innerWidth+2"));
   api("/api/connection",new JSONObject().put("mode","simulation").put("host","127.0.0.1").put("enableWrites",false));
   assertEquals("true",js("!!window.BandPilotAndroid && document.documentElement.dataset.platform==='android'"));
+  libraryPresets();
   assertEquals("false",js("[...document.querySelectorAll('.rail-space-btn')].some(b=>b.textContent.includes('Enregistrer et réécouter'))"));
   HttpURLConnection unauth=(HttpURLConnection)new URL("http://127.0.0.1:"+EngineService.readyPort()+"/api/status").openConnection();assertEquals(403,unauth.getResponseCode());unauth.disconnect();
   js("document.querySelector('button[title=\"Régler le son\"]').click()");waitFor("!!document.querySelector('.coach-journey')");
@@ -78,7 +81,9 @@ public class AutonomousTest {
    api("/api/android/suspend",new JSONObject());assertFalse(api("/api/status",null).getBoolean("writesEnabled"));
    api("/api/connection",new JSONObject().put("mode","simulation").put("host","127.0.0.1").put("enableWrites",false));
   }
-  assertTrue(api("/api/diagnostics/report",null).getJSONObject("app").getString("version").contains("android"));
+  String runtimeVersion=api("/api/diagnostics/report",null).getJSONObject("app").getString("version");
+  // Debug and release variants embed the same runtime; only the APK adds -debug.
+  assertEquals(BuildConfig.VERSION_NAME.replaceFirst("-debug$",""),runtimeVersion);
   assertEquals("true",js("typeof window.bandpilotSupport.installUpdate==='function' && typeof window.bandpilotSupport.exportLogs==='function'"));
   js("document.querySelector('.support-open').click()");waitFor("!!document.querySelector('.support-dialog[open]')");
   String[] discordChannels={"1570534770297806888","1571098590925955082","1570534825700368424","1570534866049699882"};
@@ -86,7 +91,7 @@ public class AutonomousTest {
   assertEquals("true",js("!!document.querySelector('.support-dialog a[href=\"https://discord.gg/FtWwEPmwE7\"]')"));
   js("(()=>{const i=document.querySelector('.support-dialog input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(i,'Test Android @everyone 192.0.2.1');i.dispatchEvent(new Event('input',{bubbles:true}));})()");
   waitFor("!!document.querySelector('.discord-preview')");
-  assertEquals("true",js("document.querySelector('.discord-preview').value.includes('"+BuildConfig.VERSION_NAME+"') && document.querySelector('.discord-preview').value.includes('Android')"));
+  waitFor("document.querySelector('.discord-preview').value.includes('"+runtimeVersion+"') && document.querySelector('.discord-preview').value.includes('Android')");
   assertEquals("false",js("/@everyone|192\\.0\\.2\\.1/.test(document.querySelector('.discord-preview').value)"));
   js("[...document.querySelectorAll('.discord-incident button')].find(b=>b.textContent.trim()==='Copier le message Discord').click()");
   waitFor("document.querySelector('.discord-incident [role=status]')?.textContent.includes('Message copié')");
@@ -99,6 +104,36 @@ public class AutonomousTest {
   reload();
   assertFalse("Usage preference survives a WebView reload",api("/api/usage-stats",null).getBoolean("enabled"));
   assertEquals("Basse Éric",api("/api/coach",null).getJSONObject("profile").getJSONArray("inputs").getJSONObject(inputs.length()-1).getString("name"));
+ }
+ private void libraryPresets()throws Exception{
+  assertEquals("true",js("typeof window.bandpilotFiles.save==='function'"));
+  js("document.querySelector('button[title=\"Sauvegarder ou rappeler une scène\"]').click()");
+  waitFor("!!document.querySelector('.preset-save:not([disabled])')");
+  js("[...document.querySelectorAll('.library-nav button')].find(b=>b.textContent.includes('Presets par piste')).click()");
+  js("(()=>{const input=document.querySelector('.preset-save input:not([type=checkbox])');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'Android preset test');input.dispatchEvent(new Event('input',{bubbles:true}));const boxes=document.querySelectorAll('.preset-save input[type=checkbox]');boxes[1].click();boxes[2].click();})()");
+  js("document.querySelector('.preset-save button.primary').click()");
+  waitFor("document.body.textContent.includes('Preset sauvegardé dans ta bibliothèque.') && !document.querySelector('.preset-save').disabled");
+  js("window.__libraryPreset=null;fetch('/api/library').then(r=>r.json()).then(rows=>{window.__libraryPreset=rows.find(e=>e.kind==='channel-preset'&&e.name==='Android preset test')})");
+  waitFor("!!window.__libraryPreset");
+  assertEquals("\"eq\"",js("window.__libraryPreset.data.sections.join(',')"));
+  js("(()=>{const input=document.querySelector('.scene-import-toolbar input'),data=new DataTransfer();data.items.add(new File([JSON.stringify({...window.__libraryPreset,name:'Android imported preset'})],'preset.json',{type:'application/json'}));input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()");
+  waitFor("[...document.querySelectorAll('.preset-row h4')].some(e=>e.textContent==='Android imported preset') && !document.querySelector('.preset-save').disabled");
+  js("[...document.querySelectorAll('.preset-row')].find(e=>e.querySelector('h4').textContent==='Android imported preset').querySelector('.preset-card-actions > button').click()");
+  js("(()=>{const select=document.querySelector('.preset-row select');select.value='7';select.dispatchEvent(new Event('change',{bubbles:true}));})()");
+  js("document.querySelector('.preset-row button.primary').click()");
+  waitFor("!!document.querySelector('.coach-dialog[open]')");
+  assertTrue(js("document.querySelector('.coach-dialog').textContent").contains("Canal 7"));
+  js("document.querySelector('.coach-dialog button.primary').click()");
+  waitFor("!document.querySelector('.coach-dialog') && document.body.textContent.includes('Preset appliqué.')");
+  JSONObject scene=api("/api/library",new JSONObject().put("kind","scene").put("name","Android scene test").put("complete",true));
+  assertEquals(2,scene.getJSONObject("data").getInt("version"));
+  JSONObject values=scene.getJSONObject("data").getJSONObject("values");
+  assertEquals(0,values.getInt("/headamp/07/phantom"));
+  assertEquals(.5,values.getDouble("/ch/07/mix/fader"),.00001);
+  reload();
+  js("document.querySelector('button[title=\"Sauvegarder ou rappeler une scène\"]').click()");
+  waitFor("document.body.textContent.includes('Android scene test') && document.body.textContent.includes('Android imported preset')");
+  assertEquals("true",js("document.documentElement.scrollWidth <= window.innerWidth+2"));
  }
  // Actual UDP sockets inside Android. No PC or physical mixer participates.
  static final class Mixer implements AutoCloseable{

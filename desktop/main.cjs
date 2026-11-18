@@ -75,6 +75,14 @@ app.whenReady().then(async () => {
     require('./support.cjs').registerSupport({app,win,ipcMain,dialog,shell,safeStorage,port,dataPath,sanitize:sanitizeDiagnostic,diagnostic,smoke});
     const appIcon=path.join(__dirname,"icon.png");
     const fromWindow=(event)=>event.sender===win.webContents&&event.senderFrame===win.webContents.mainFrame;
+    let exportingLibrary=false;
+    ipcMain.handle('bandpilot-library-export',async(event,input)=>{
+      if(!fromWindow(event)||exportingLibrary)return {error:label('Export indisponible.','Export unavailable.')};
+      exportingLibrary=true;
+      try{return await require('./library-export.cjs').saveLibraryFile({input,dialog,win,documents:app.getPath('documents'),title:label('Exporter','Export')});}
+      catch{return {error:label('Impossible d’enregistrer le fichier.','Unable to save the file.')};}
+      finally{exportingLibrary=false;}
+    });
     let exportingRider=false;
     ipcMain.handle('bandpilot-tech-rider-pdf',async(event,input)=>{
       if(!fromWindow(event)||exportingRider)return {error:label('Export PDF indisponible.','PDF export unavailable.')};
@@ -131,15 +139,17 @@ app.whenReady().then(async () => {
       // Exercise the actual connection screen, not only the first rendered page.
       await win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");
       let connectionReady=false;
-      for(let attempt=0;attempt<25;attempt++){
+      for(let attempt=0;attempt<150;attempt++){
         const check=await win.webContents.executeJavaScript(`({panels:[...document.querySelectorAll('h2')].filter(e=>e.textContent==='Connexion à ma console').length,controls:[...document.querySelectorAll('button')].filter(e=>e.textContent==='Détecter et connecter ma console').length})`);
+        if(check.panels===0)await win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");
         if(check.panels>1||check.controls>1)throw Error("Panneau de connexion dupliqué");
         if(check.panels===1&&check.controls===1){connectionReady=true;break;}
         await new Promise(resolve=>setTimeout(resolve,200));
       }
       if(!connectionReady)throw Error("Connexion locale : commandes administrateur non disponibles");
-      const waitForRenderer=async(predicate)=>{
-        for(let attempt=0;attempt<40;attempt++){
+      const waitForRenderer=async(predicate,timeoutMs=30000)=>{
+        const deadline=Date.now()+timeoutMs;
+        while(Date.now()<deadline){
           if(await win.webContents.executeJavaScript(predicate))return;
           await new Promise(resolve=>setTimeout(resolve,150));
         }
@@ -175,6 +185,7 @@ app.whenReady().then(async () => {
       const report=await win.webContents.executeJavaScript(`JSON.parse(document.querySelector('.support-dialog pre').textContent)`);
       if(report.app.version!==app.getVersion()||report.console.mode!=='simulation'||!report.id||!report.app.build)throw Error('Diagnostic bridge returned an invalid report');
       await screenshot('debug-report.png');
+      await require('./library-smoke.cjs')(win,waitForRenderer,screenshot);
       const mixerStatus=await (await fetch(`http://127.0.0.1:${port}/api/status`)).json();
       if(mixerStatus.mode!=='simulation'||mixerStatus.writesEnabled)throw Error('Language test changed mixer connection');
       const auth=await fetch(`http://127.0.0.1:${port}/api/auth`);

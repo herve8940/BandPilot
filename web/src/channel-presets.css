@@ -1,0 +1,91 @@
+/* Library and channel actions share the console's BandPilot tokens. */
+.scenes-page [hidden],.channel-preset-tools [hidden]{display:none!important}
+html .studio.app2 .scenes-page{max-width:1280px;width:100%;padding:28px;background:var(--bp-bg);border:0;box-shadow:none}
+.scenes-page .library-header{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:26px}
+.library-title{display:flex;align-items:center;gap:16px;min-width:0}
+.library-emblem,.library-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--bp-purple);background:var(--accent-soft);border:1px solid var(--bp-line);border-radius:13px;width:42px;height:42px}
+.library-emblem{width:58px;height:58px;border-radius:18px;background:var(--bp-selected);color:white}
+.scenes-page .library-eyebrow{display:block;color:var(--bp-purple);font-size:10px;font-weight:750;letter-spacing:.12em;margin-bottom:6px}
+.scenes-page .library-title h2{font-size:27px;margin:0;letter-spacing:-.035em}
+.scenes-page .library-title p{margin:6px 0 0;font-size:13px;line-height:1.6;max-width:540px}
+.scenes-page .scene-import-toolbar{flex-shrink:0;text-align:right}
+.scenes-page .scene-import-toolbar button{margin:0 0 5px}
+.scenes-page .scene-import-toolbar small{display:block;font-size:11px}
+.scenes-page button,.channel-preset-tools button{gap:7px}
+.scenes-page .library-nav{display:flex;gap:8px;padding:6px;margin-bottom:24px;background:var(--bp-panel);border:1px solid var(--bp-line);border-radius:16px}
+.scenes-page .library-nav button{flex:1;min-width:0;margin:0;padding:12px 14px;border:1px solid transparent;background:transparent;color:var(--bp-muted);min-height:52px}
+.scenes-page .library-nav button[aria-pressed=true]{background:var(--bp-selected);border-color:var(--bp-purple);color:white;box-shadow:0 4px 14px #0003}
+.scenes-page .library-nav small{margin-left:auto;padding:1px 7px;border-radius:6px;background:#0003;color:inherit;font-size:11px;font-variant-numeric:tabular-nums}
+.scenes-page .library-section{min-width:0}
+.scenes-page .library-section-heading{display:flex;gap:14px;align-items:center;justify-content:space-between;margin:0 0 18px}
+.scenes-page h3,.channel-preset-tools h3{margin:0;padding:0;border:0;font-size:17px;font-weight:700}
+.scenes-page .library-section-heading h3{display:flex;align-items:center;gap:9px}
+.scenes-page .library-section-heading p{margin:8px 0 0;max-width:760px}
+.library-count{padding:5px 12px;border:1px solid var(--bp-line);border-radius:10px;background:var(--bp-panel);color:var(--bp-purple);font-weight:700}
+.scenes-page .library-capture,.scenes-page .preset-create{padding:20px;margin:0 0 26px;background:var(--bp-card);border:1px solid var(--bp-line);border-radius:16px}
+.scenes-page fieldset.scene-save{margin:0}
+.scenes-page .library-capture .scene-more{border-top:1px solid var(--bp-line);padding-top:12px;margin-top:4px}
+.scenes-page .scene-more summary{margin-bottom:0;color:var(--bp-muted);font-size:12px}
+.scenes-page .scene-more[open] summary{margin-bottom:10px}
+.scenes-page .scene-row{gap:14px;padding:16px}
+.scenes-page .scene-row-title{display:flex;flex:1;flex-direction:column;min-width:0;overflow-wrap:anywhere}
+.scenes-page .scene-row-title b{font-size:14px}
+.scenes-page .scene-row small{font-size:11px;margin-top:4px}
+.scenes-page .scene-actions{align-items:center}
+.scenes-page .scene-actions button{min-height:36px;font-size:12px}
+.scenes-page .scene-autos{margin:0;padding:20px;border:1px solid var(--bp-line);border-radius:16px;background:var(--bp-card)}
+.scenes-page .scene-autos summary{color:var(--bp-text)}
+.scenes-page .library-empty{display:grid;place-items:center;min-height:140px;padding:28px;border:1px dashed var(--bp-line);border-radius:16px;background:var(--bp-panel);text-align:center;line-height:1.7}
+.scenes-page .scene-msg,.channel-preset-tools .preset-feedback{padding:12px 16px;border:1px solid var(--bp-line);border-radius:12px;background:var(--ok-soft);color:var(--bp-text)!important;overflow-wrap:anywhere}
+.scenes-page .scene-msg.error,.channel-preset-tools .preset-feedback.error{background:var(--danger-soft);color:#ffc9cf!important}
+.channel-presets{margin:0}
+.scenes-page .preset-create summary{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;list-style:none}
+.scenes-page .preset-create summary::-webkit-details-marker{display:none}
+.scenes-page .preset-create summary>svg{color:var(--bp-purple)}
+.scenes-page .preset-create summary>span{margin-left:auto;color:var(--bp-muted);font-size:11px;font-weight:400}
+.scenes-page .preset-create summary:after{content:'+';font-size:23px;font-weight:400;color:var(--bp-purple)}
+.scenes-page .preset-create[open] summary:after{content:'−'}
+.scenes-page .preset-create[open] summary{padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--bp-line)}
+.scenes-page .preset-save,.scenes-page .preset-recall,.channel-preset-tools fieldset{display:flex;flex-wrap:wrap;gap:16px;align-items:end;border:0;padding:0;margin:0;min-width:0}
+.scenes-page .preset-save>label,.scenes-page .preset-recall>label,.channel-preset-tools fieldset>label{display:flex;flex-direction:column;gap:7px;min-width:0;flex:1 1 220px;margin:0;color:var(--bp-muted);font-size:12px;font-weight:600}
+.scenes-page .preset-save input:not([type=checkbox]),.scenes-page .preset-save select,.scenes-page .preset-recall select,.channel-preset-tools input:not([type=checkbox]),.channel-preset-tools select{width:100%;min-width:0;min-height:42px;padding:10px 12px;font:inherit}
+.scenes-page .preset-sections,.channel-preset-tools .preset-sections{display:flex;flex-wrap:wrap;gap:8px;flex-basis:100%}
+.scenes-page .preset-sections label,.channel-preset-tools .preset-sections label{display:flex;flex:0 1 auto;flex-direction:row;align-items:center;gap:8px;min-width:0;margin:0;padding:10px 12px;border:1px solid var(--bp-line);border-radius:10px;cursor:pointer;color:var(--bp-muted);font-size:12px;font-weight:600}
+.scenes-page .preset-sections label.selected,.channel-preset-tools .preset-sections label.selected{border-color:var(--bp-purple);background:var(--accent-soft);color:var(--bp-text)}
+.scenes-page .preset-sections input[type=checkbox],.channel-preset-tools .preset-sections input[type=checkbox]{width:16px;height:16px;min-height:0;margin:0;padding:0;accent-color:var(--bp-purple);flex-shrink:0}
+.preset-note{flex-basis:100%;margin:0;font-size:12px;line-height:1.6;color:var(--bp-muted)}
+.scenes-page .library-search{display:flex;flex-direction:row;align-items:center;gap:8px;margin:0 0 18px;padding:0 12px;max-width:440px;background:var(--bp-panel);border:1px solid var(--bp-line);border-radius:12px;color:var(--bp-muted)}
+html .studio.app2 .scenes-page .library-search input{background:transparent;border:0;flex:1;min-width:0;box-shadow:none}
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:16px;margin-bottom:24px;align-items:start}
+.scenes-page .preset-card{padding:20px;background:var(--bp-card);border:1px solid var(--bp-line);border-radius:16px;min-width:0;box-shadow:0 8px 24px #03081726}
+.preset-card-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.preset-card-head>div{min-width:0;flex:1}
+.preset-card h4{margin:4px 0 0;font-size:16px;line-height:1.4;overflow-wrap:anywhere;letter-spacing:-.02em}
+.preset-card-head small{font-size:10px;letter-spacing:.06em}
+.preset-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.preset-tags span{padding:4px 8px;border-radius:6px;background:var(--accent-soft);border:1px solid var(--bp-line);font-size:10px;color:var(--bp-muted)}
+.preset-date{display:block;font-size:11px}
+.preset-card-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--bp-line)}
+.preset-card-actions>div{display:flex;gap:6px;margin-left:auto}
+.scenes-page .preset-card-actions button{margin:0;min-height:36px;padding:8px}
+.scenes-page .preset-card-actions>button{padding-inline:12px;color:var(--bp-text)}
+.scenes-page .preset-recall{padding-top:18px;margin-top:16px;border-top:1px solid var(--bp-line)}
+.channel-preset-tools{margin-bottom:18px;padding:14px 18px;border:1px solid var(--bp-line);border-radius:14px;background:var(--bp-card);color:var(--bp-text);font-size:13px}
+.channel-preset-tools>header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.preset-tools-label{display:flex;align-items:center;gap:10px;min-width:0}
+.preset-tools-label>svg{color:var(--bp-purple);flex-shrink:0}
+.preset-tools-label div{min-width:0;overflow-wrap:anywhere}
+.preset-tools-label small{display:block;font-size:11px;color:var(--bp-muted);margin-top:3px}
+.preset-tools-buttons{display:flex;gap:8px;flex-shrink:0}
+.channel-preset-tools button{display:inline-flex;justify-content:center;align-items:center;min-height:38px;padding:8px 12px;border:1px solid var(--bp-line);border-radius:10px;font:inherit;cursor:pointer}
+.channel-preset-tools button:disabled{opacity:.45;cursor:not-allowed}
+.channel-preset-tools button[aria-expanded=true]{border-color:var(--bp-purple);background:var(--accent-soft)}
+.preset-tools-content{margin-top:16px;padding-top:18px;border-top:1px solid var(--bp-line)}
+.preset-form-title{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.channel-preset-tools .preset-note{margin:10px 0 18px;max-width:760px}
+.preset-form-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-basis:100%;padding-top:4px}
+.preset-form-footer>span{font-size:11px;color:var(--bp-muted);max-width:480px;line-height:1.6}
+.preset-form-footer button{flex-shrink:0}
+.channel-preset-tools .preset-undo{margin-top:12px}
+@media(max-width:1000px){.scenes-page .library-header{align-items:flex-start;flex-direction:column;gap:18px}.scenes-page .scene-import-toolbar{display:flex;align-items:center;gap:12px}.scenes-page .scene-import-toolbar button{margin:0}.scenes-page .library-nav{flex-wrap:wrap}.scenes-page .library-nav button{flex:1 1 calc(50% - 8px)}}
+@media(max-width:650px){html .studio.app2 .scenes-page{padding:16px}.library-emblem{display:none}.scenes-page .library-title h2{font-size:24px}.scenes-page .library-nav button{padding:10px 8px;font-size:11px}.scenes-page .library-nav button svg{width:15px}.scenes-page .library-capture,.scenes-page .preset-create{padding:16px}.scenes-page .preset-create summary>span{display:none}.scenes-page .scene-row{flex-wrap:wrap}.scenes-page .scene-actions{flex-basis:100%}.channel-preset-tools{padding:14px}.channel-preset-tools>header{align-items:flex-start;flex-direction:column}.preset-tools-buttons{width:100%}.preset-tools-buttons button{flex:1}.preset-form-footer{align-items:stretch;flex-direction:column}.scenes-page .scene-save label{min-width:0;flex-basis:100%}.scenes-page .scene-save button{width:100%}}

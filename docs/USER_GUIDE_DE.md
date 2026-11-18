@@ -90,11 +90,21 @@ REAPER ist eine separate Software mit eigener Installation und Lizenz. Installie
 
 ## 9. Szenen, Notizen und Setlists
 
+**Szenen und Presets pro Instrument · 2.3.14 / Android 2.4.0-android.5**
+
+Unter Konsole → Expert → Kanal stehen Speichern und Wiederherstellen bereit. Wähle in der Preset-Bibliothek den Zieleingang sowie EQ, Kompressor oder Gate. Bearbeitungen lassen sich auch aus einer gespeicherten vollständigen Szene entnehmen. Nutze die vorherigen Einstellungen oder automatische Sicherungen, um einen Versuch rückgängig zu machen.
+
+Die Bibliothek trennt vollständige Szenen, Presets, Soundcheck-Blätter und automatische Sicherungen. JSON-Import/Export, unterstützte X-Air-.scn-Dateien und die Wahl des Zielslots für FX-Presets sind enthalten.
+
+Speichern und Importieren ändern den Klang nicht. Ein Abruf erfordert Vorschau und Bestätigung sowie eine vorherige Sicherung. Kanal-Presets lassen Gain, Phantomspeisung, Pegel, Monitor-Sends und Routing unverändert.
+
+Grenzen: keine Umwandlung zwischen Modellen; Mono-Presets können nicht auf gekoppelte Stereopaare geladen werden. .scn-Abruf nur für XR18/X18/MR18 mit HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY und MODD; andere Dateien bleiben exportierbar. X32 wird weiterhin nur teilweise unterstützt.
+
 Ein Lied braucht einen Titel. Fügen Sie Songs zur aktiven Setlist hinzu und speichern Sie eine benannte Setlist. Notizen und die aktive Setlist werden in der Anwendungsdatenbank gespeichert, auch wenn sich der lokale Port ändert. Warten Sie vor dem Schließen auf den Status „Gespeicherter Entwurf“. Benannte Proben bleiben separate Aufzeichnungen.
 
 ![Persistente Notizen und Speicherstatus](images/bandpilot-2.2.4/notes.jpg)
 
-Erfassen Sie Szenen und importieren/exportieren Sie JSON. Rückrufe führen ein Backup durch und erfordern eine gültige Vorschau; Der geführte Rückruf schließt Phantomspeisung standardmäßig aus. Modellübergreifende Szenen werden nicht automatisch konvertiert. Der native `.scn`-Rückruf ist ein separater experimenteller Pfad mit FX-Limits und zusätzlichen Bestätigungen. Vollständige X32-Szenen sind nicht verfügbar.
+Erfassen Sie Szenen und importieren/exportieren Sie JSON. Rückrufe führen ein Backup durch und erfordern eine gültige Vorschau; Der geführte Rückruf schließt Phantomspeisung standardmäßig aus. Modellübergreifende Szenen werden nicht automatisch konvertiert. Unterstützte native `.scn`-Dateien nutzen jetzt den geführten Bibliotheksabruf mit den oben genannten Modell- und Effektgrenzen. Vollständige X32-Szenen sind nicht verfügbar.
 
 ## 10. Analyse, Shows, Konten und Fehlerbehebung
 

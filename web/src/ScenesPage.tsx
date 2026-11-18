@@ -1,7 +1,11 @@
+import {Layers, SlidersHorizontal, ClipboardList, History, Upload, Save, Download, Trash2, RotateCcw} from "lucide-react";
 import {tx, getLocale} from "./i18n";
 import "./studio-control.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PlanDialog, type Plan } from "./SoundCoach";
+import {ChannelPresetsPanel} from './ChannelPresetsPanel';
+import {parseLibraryFile} from './library-files';
+import type {PresetSection} from '../../shared/channel-preset';
 
 type Entry = { id: string; kind: string; name: string; data: unknown; createdAt: string };
 type BalanceSheet = {sceneId:string;notes:string;updatedAt:string;patchChanged?:boolean};
@@ -16,10 +20,12 @@ async function api<T = any>(path: string, method = "GET", data?: unknown): Promi
 }
 const when = (iso: string) => new Date(iso).toLocaleString(getLocale(), { dateStyle: "short", timeStyle: "short" });
 // Saves made by the app itself before a change ("Avant …") are kept apart so they don't drown the user's scenes.
-const isAuto = (e: Entry) => e.kind === "parameter-backup" || (e.kind === "scene" && /^Avant /.test(e.name));
-const KIND_LABEL: Record<string, string> = { scene: "Scène complète", "native-scene": "Fichier .scn", "parameter-backup": "Sauvegarde automatique" };
+const isAuto = (e: Entry) => ['parameter-backup','fx-backup'].includes(e.kind) || (['scene','native-scene'].includes(e.kind) && /^(Avant |Sauvegarde (complète avant|avant))/.test(e.name));
+const KIND_LABEL: Record<string, string> = { scene: "Scène complète", "native-scene": "Fichier .scn", "parameter-backup": "Sauvegarde automatique", 'fx-backup':'Sauvegarde FX' };
 
 export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; canWrite: boolean }) {
+  const [section,setSection]=useState("scenes");
+  const fileInput=useRef<HTMLInputElement>(null);
   const [admin, setAdmin] = useState(false);
   useEffect(() => { void api<{ user: { role: string } | null }>("/api/auth").then(a => setAdmin(a.user?.role === "admin")).catch(() => undefined); }, []);
   const [entries, setEntries] = useState<Entry[]>([]), [name, setName] = useState(""), [busy, setBusy] = useState(""), [message, setMessage] = useState(""), [error, setError] = useState("");
@@ -29,19 +35,34 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
   useEffect(() => { void refresh().catch(e => setError(e.message)); }, []);
   const run = async (label: string, task: () => Promise<string | void>) => {
     setBusy(label); setMessage(""); setError("");
-    try { const done = await task(); await refresh(); if (done) setMessage(done); } catch (e) { setError((e as Error).message); } finally { setBusy(""); }
+    try { const done = await task(); await refresh(); if (done) setMessage(done); }
+    catch (e) { setError((e as Error).message); await refresh().catch(()=>undefined); }
+    finally { setBusy(""); }
   };
 
   const scenes = entries.filter(e => ["scene", "native-scene"].includes(e.kind) && !isAuto(e));
   const autos = entries.filter(isAuto).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   /** Build the "check before" window for any kind of saved state. */
-  const recall = (e: Entry) => run(`recall-${e.id}`, async () => {
+  const recall = (e: Entry,slot?:number) => run(`recall-${e.id}`, async () => {
+    if(e.kind==='fx'||e.kind==='fx-backup'){
+      const p=await api<{token:string;slot:number}>(`/api/library/${e.id}/preview`, 'POST', {slot});
+      setPending({plan:{token:p.token,title:`Rappeler « ${e.name} »`,explanation:tx('Ce preset remplace l’effet de l’emplacement indiqué. Tous les canaux qui l’utilisent sont concernés. Les envois et retours restent inchangés.'),inputs:[`FX ${p.slot}`],changes:[],detailsUnavailable:true},apply:async()=>{await api(`/api/library/${e.id}/apply`,'POST',{token:p.token,confirm:true});return 'Effet rappelé. Le réglage précédent est sauvegardé.';}});return;
+    }
     if (e.kind === "parameter-backup") {
       const plan = await api<Plan>("/api/console/restore", "POST", { backupId: e.id });
       setPending({ plan: { ...plan, title: `Revenir à « ${e.name} »`, explanation: `La console reprend les réglages sauvegardés le ${when(e.createdAt)}. Seuls les réglages concernés par cette sauvegarde bougent.` },
         apply: async () => { const r = await api<{ failed?: unknown[] }>("/api/console/apply", "POST", { token: plan.token, confirm: true, tolerant: true }); return r.failed?.length ? `Rappel fait, ${r.failed.length} réglage(s) non confirmé(s) par la console.` : `« ${e.name} » est rappelée.`; } });
       return;
+    }
+    if(e.kind==='native-scene'){
+      const p=await api<{token:string;changes:Change[];fxSlots:number[];omitted:string[]}>(`/api/library/${e.id}/preview`,'POST');
+      setPending({plan:{token:p.token,title:`Rappeler « ${e.name} »`,
+        explanation:tx('Les réglages présents dans ce fichier .scn seront rappelés, effets compris. Le 48 V reste inchangé. Baisse le son de la sono avant : volumes, mutes et routages peuvent bouger.')+(p.omitted.length?' '+tx('Les entrées 17 à 24 sans préampli physique restent uniquement dans le fichier exporté.'):''),
+        inputs:p.fxSlots.map(slot=>`FX ${slot}`),changes:p.changes,fxChanged:p.fxSlots.length>0},apply:async()=>{
+          await api(`/api/library/${e.id}/apply`,'POST',{token:p.token,confirm:true});
+          return 'Scène .scn rappelée, effets compris. L’état précédent est dans les sauvegardes automatiques. Le 48 V est resté inchangé.';
+        }});return;
     }
     if (e.kind === "scene" && mode === "real") {
       // Complete scene on the real console: only the settings that differ are sent (48 V excluded).
@@ -50,60 +71,81 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
         apply: async () => { await api("/api/mixer-sync/apply", "POST", { token: p.token, confirm: true, allowPhantom: false }); return `« ${e.name} » est rappelée. La console d’avant est gardée dans les sauvegardes automatiques.`; } });
       return;
     }
-    // Simulation, or a .scn file: recall through the library (48 V only with an explicit yes).
+    // BandPilot scene in simulation: phantom power remains unchanged.
     const p = await api<{ token: string }>(`/api/library/${e.id}/preview`, "POST", {excludePhantom:true});
-    setPending({ plan: { token: p.token, title: `Rappeler « ${e.name} »`, explanation: `Le 48 V reste inchangé pour les scènes BandPilot. Toute la console reprend ${e.kind === "native-scene" ? "ce fichier .scn" : "cette scène"}. Baisse le son de la sono avant : volumes, mutes et routages peuvent bouger.`, inputs: [], changes: [], detailsUnavailable: true },
+    setPending({ plan: { token: p.token, title: `Rappeler « ${e.name} »`, explanation: tx('Le 48 V reste inchangé pour les scènes BandPilot. Toute la console reprend cette scène. Baisse le son de la sono avant : volumes, mutes et routages peuvent bouger.'), inputs: [], changes: [], detailsUnavailable: true },
       apply: async () => {
-        const native = e.kind === "native-scene";
-        const allowPhantom = native && confirm(tx("Ce fichier .scn contient aussi l’alimentation 48 V des micros. L’appliquer peut faire claquer la sono : vérifie que les sorties sont basses. Continuer ?"));
-        if (native && !allowPhantom) return "Rappel annulé : rien n’a changé.";
-        const r = await api<{ ok?: boolean }>(`/api/library/${e.id}/apply`, "POST", { token: p.token, confirm: true, allowPhantom });
+        const r = await api<{ ok?: boolean }>(`/api/library/${e.id}/apply`, "POST", { token: p.token, confirm: true, allowPhantom:false });
         return r.ok === false ? "Rappel envoyé, mais certaines valeurs relues diffèrent : vérifie la console." : `« ${e.name} » est rappelée.`;
       } });
   });
 
   const applyPending = async () => {
     if (!pending) return; setApplying(true);
-    try { const done = await pending.apply(); setPending(null); setMessage(done); await refresh(); } catch (e) { setPending(null); setError((e as Error).message); } finally { setApplying(false); }
+    try { const done = await pending.apply(); setPending(null); setMessage(done); await refresh(); }
+    catch (e) { setPending(null); setError((e as Error).message); await refresh().catch(()=>undefined); }
+    finally { setApplying(false); }
   };
   const remove = (e: Entry) => { if (confirm(tx(`Supprimer « ${e.name} » ?`))) void run(`del-${e.id}`, async () => { await api(`/api/library/${e.id}`, "DELETE"); }); };
   const removeOldAutos = () => { const old = autos.slice(10); if (old.length && confirm(tx(`Supprimer les ${old.length} sauvegardes automatiques les plus anciennes ? Les 10 plus récentes sont gardées.`))) void run("clean", async () => { for (const e of old) await api(`/api/library/${e.id}`, "DELETE"); return `${old.length} anciennes sauvegardes supprimées.`; }); };
-  const download = (e: Entry) => {
+  const download = (e: Entry) => { void run('export',async()=>{
     const native = e.kind === "native-scene";
-    const blob = new Blob([native ? String(e.data) : JSON.stringify(e, null, 2)], { type: native ? "text/plain" : "application/json" });
+    const content=native ? String(e.data) : JSON.stringify(e.kind==='fx-backup'?{...e,kind:'fx'}:e, null, 2);
+    const filename=e.name.replace(/[^\p{L}\p{N}_-]/gu, "_") + (native ? ".scn" : ".json");
+    const desktop=(window as unknown as {bandpilotFiles?:{save:(input:{filename:string;content:string})=>Promise<{saved?:boolean;cancelled?:boolean;error?:string}>}}).bandpilotFiles;
+    if(desktop){const result=await desktop.save({filename,content});if(result.error)throw Error(result.error);return result.saved?'Fichier exporté.':undefined;}
+    const blob = new Blob([content], { type: native ? "text/plain" : "application/json" });
     const url = URL.createObjectURL(blob), a = document.createElement("a");
-    a.href = url; a.download = e.name.replace(/[^\p{L}\p{N}_-]/gu, "_") + (native ? ".scn" : ".json"); a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
+    a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return 'Export lancé dans les téléchargements.';
+  });};
   const importFile = (file: File) => run("import", async () => {
     if (file.size > 900000) throw Error("Fichier trop volumineux");
     const text = await file.text();
-    if (file.name.toLowerCase().endsWith(".scn")) await api("/api/library", "POST", { kind: "native-scene", name: file.name, data: text });
-    else { const v = JSON.parse(text); if (v.kind !== "scene") throw Error("Ce fichier n’est pas une scène BandPilot"); await api("/api/library", "POST", { kind: v.kind, name: v.name, data: v.data }); }
-    return `« ${file.name} » est importée. Clique sur « Rappeler… » pour l’envoyer à la console.`;
+    await api('/api/library','POST',parseLibraryFile(file.name,text));
+    return 'Import terminé dans ta bibliothèque. Aucun réglage envoyé à la console.';
   });
+  const recallPreset=(e:Entry,channel:number,sections:PresetSection[])=>{void run(`recall-${e.id}`,async()=>{
+    const p=await api<{token:string;changes:Change[]}>(`/api/library/${e.id}/preview`,'POST',{channel,sections});
+    setPending({plan:{...p,title:`Rappeler « ${e.name} »`,explanation:tx('Seuls les traitements cochés seront appliqués au canal choisi.'),inputs:[`${tx('Canal')} ${channel}`]},apply:async()=>{await api(`/api/library/${e.id}/apply`,'POST',{token:p.token,confirm:true});return 'Preset appliqué. Les réglages précédents sont dans les sauvegardes automatiques.';}});
+  });};
 
   const row = (e: Entry) => <div key={e.id} className="scene-row">
-    <div><b>{e.name}</b><small>{tx(KIND_LABEL[e.kind] ?? e.kind)} · {tx(when(e.createdAt))}</small></div>
+    <span className="library-icon">{isAuto(e)?<History size={20}/>:<Layers size={20}/>}</span><div className="scene-row-title"><b>{e.name}</b><small>{tx(KIND_LABEL[e.kind] ?? e.kind)} · {tx(when(e.createdAt))}</small></div>
     <div className="scene-actions">
-      {admin && <button type="button" className="primary" disabled={!!busy || !canWrite} title={tx(canWrite ? "Voir ce qui va changer, puis confirmer" : "Active le contrôle de la console dans Réglages")} onClick={() => void recall(e)}>{tx(busy === `recall-${e.id}` ? "Lecture de la console…" : "Rappeler…")}</button>}
-      <button type="button" disabled={!!busy} onClick={() => download(e)}>{tx("Exporter")}</button>
-      {admin && <button type="button" disabled={!!busy} onClick={() => remove(e)}>{tx("Supprimer")}</button>}
+      {admin && <button type="button" className="primary" disabled={!!busy || !canWrite} title={tx(canWrite ? "Voir ce qui va changer, puis confirmer" : "Active le contrôle de la console dans Réglages")} onClick={() => void recall(e)}><RotateCcw size={15}/>{tx(busy === `recall-${e.id}` ? "Lecture de la console…" : "Rappeler…")}</button>}
+      <button type="button" disabled={!!busy} onClick={() => download(e)}><Download size={15}/>{tx("Exporter")}</button>
+      {admin && <button type="button" disabled={!!busy} onClick={() => remove(e)}><Trash2 size={15}/>{tx("Supprimer")}</button>}
     </div>
   </div>;
 
   return <section className="studio-panel pad studio-control scenes-page">
-    <h2>{tx("Scènes")}</h2>
-    <p>{tx("Une scène, c’est une photo de toute la console : volumes, égaliseurs, effets, retours… Garde une bonne balance pour la retrouver au prochain concert.")}</p>
+    <header className="library-header">
+      <div className="library-title"><span className="library-emblem"><Layers size={26}/></span><div><span className="library-eyebrow">{tx('TES RÉGLAGES, À PORTÉE DE MAIN')}</span><h2>{tx("Scènes et presets")}</h2><p>{tx('Une balance complète ou le son d’un instrument, à retrouver au bon moment.')}</p></div></div>
+      {admin&&<div className="scene-import-toolbar"><button type="button" disabled={!!busy||applying} onClick={()=>fileInput.current?.click()}><Upload size={17}/>{tx('Importer une scène ou un preset')}</button><input ref={fileInput} type="file" hidden aria-label={tx('Importer une scène ou un preset')} disabled={!!busy} accept=".json,.scn" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void importFile(file);}}/><small>.json · .scn</small></div>}
+    </header>
+    <nav className="library-nav" aria-label={tx('Bibliothèque de réglages')}>
+      {[{id:'scenes',label:'Scènes complètes',count:scenes.length,Icon:Layers},{id:'presets',label:'Presets par piste',count:entries.filter(e=>['channel-preset','fx'].includes(e.kind)).length,Icon:SlidersHorizontal},{id:'sheets',label:'Fiches de balance',count:entries.filter(e=>e.kind==='balance-sheet').length,Icon:ClipboardList},{id:'history',label:'Historique',count:autos.length,Icon:History}].map(({id,label,count,Icon})=><button key={id} type="button" aria-pressed={section===id} onClick={()=>setSection(id)}><Icon size={18}/><span>{tx(label)}</span><small>{count}</small></button>)}
+    </nav>
+    {(message || error) && <p className={error ? "scene-msg error" : "scene-msg"} role={error ? "alert" : "status"}>{tx(error || message)}</p>}
+    {error&&/partiel/.test(error)&&autos.length>0&&<button type="button" onClick={()=>setSection('history')}><History size={16}/>{tx('Voir les sauvegardes automatiques')}</button>}
+    <div hidden={section!=='scenes'} className="library-section">
+    <div className="library-section-heading"><div><h3>{tx('Scènes complètes')}</h3><p>{tx("Une scène, c’est une photo de toute la console : volumes, égaliseurs, effets, retours… Garde une bonne balance pour la retrouver au prochain concert.")}</p></div></div>
+    <div className="library-capture">
     {admin && <fieldset disabled={!!busy} className="scene-save">
       <label>{tx("Nom de la scène")}<input value={name} maxLength={120} onChange={e => setName(e.target.value)} placeholder={tx("Ex. : Concert salle des fêtes")} /></label>
-      <button type="button" className="primary" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library", "POST", { kind: "scene", name: name.trim(), complete: true }); setName(""); return `Scène « ${name.trim()} » sauvegardée.`; })}>{tx(busy === "save" ? "Lecture de toute la console…" : "Sauvegarder l’état actuel")}</button>
+      <button type="button" className="primary" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library", "POST", { kind: "scene", name: name.trim(), complete: true }); setName(""); return `Scène « ${name.trim()} » sauvegardée.`; })}><Save size={17}/>{tx(busy === "save" ? "Lecture de toute la console…" : "Sauvegarder l’état actuel")}</button>
       <details className="scene-more"><summary>{tx("Plus d’options")}</summary>
         <button type="button" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library", "POST", { kind: "scene", name: name.trim(), complete: true, excludePhantom: true }); setName(""); return `Scène « ${name.trim()} » sauvegardée sans le 48 V.`; })}>{tx("Sauvegarder sans le 48 V (pour ReaCue)")}</button>
         <button type="button" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library/capture-native", "POST", { name: name.trim() }); setName(""); return `Fichier .scn « ${name.trim()} » créé : tu peux l’exporter et l’ouvrir dans X-AIR Edit.`; })}>{tx("Créer un fichier .scn (compatible X-AIR Edit)")}</button>
-        <label className="scene-import">{tx("Importer une scène (.json ou .scn)")}<input type="file" accept=".json,.scn" onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void importFile(f); }} /></label>
       </details>
     </fieldset>}
-    {(message || error) && <p className={error ? "scene-msg error" : "scene-msg"} role={error ? "alert" : "status"}>{tx(error || message)}</p>}
+    </div>
+    <div className="library-section-heading"><h3>{tx('Tes scènes (')}{scenes.length})</h3></div>
+    {scenes.length ? <div className="scene-list">{scenes.map(row)}</div> : <p className="library-empty">{tx("Aucune scène pour l’instant. Donne un nom ci-dessus et sauvegarde l’état actuel de la console.")}</p>}
+    </div>
+    <div hidden={section!=='presets'} className="library-section"><ChannelPresetsPanel entries={entries} admin={admin} busy={!!busy||applying} canWrite={canWrite} run={run} onRecall={recallPreset} onRecallFx={(e,slot)=>void recall(e,slot)} onExport={download} onRemove={remove}/></div>
+    <div hidden={section!=='sheets'} className="library-section">
     <section className="scene-list" aria-label={tx("Fiches de balance")}>
       <h3>{tx("Fiches de balance")}</h3>
       <p>{tx("Retrouve une scène validée, ses retours et les points à revérifier à la prochaine balance.")}</p>
@@ -134,14 +176,15 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
         </article>;
       })}
     </section>
-    <h3>{tx("Tes scènes (")}{tx(scenes.length)})</h3>
-    {scenes.length ? <div className="scene-list">{tx(scenes.map(row))}</div> : <p className="scene-empty">{tx("Aucune scène pour l’instant. Donne un nom ci-dessus et sauvegarde l’état actuel de la console.")}</p>}
-    <details className="scene-autos">
+    </div>
+    <div hidden={section!=='history'} className="library-section">
+    <details className="scene-autos" open>
       <summary>{tx("Sauvegardes automatiques (")}{tx(autos.length)}{tx(") — faites par l’appli juste avant chaque changement")}</summary>
       <p>{tx("Elles servent à revenir en arrière. Les 10 plus récentes sont affichées.")}</p>
       <div className="scene-list">{tx(autos.slice(0, 10).map(row))}</div>
       {admin && autos.length > 10 && <button type="button" disabled={!!busy} onClick={removeOldAutos}>{tx("Supprimer les ")}{tx(autos.length - 10)}{tx(" plus anciennes")}</button>}
     </details>
+    </div>
     {pending && <PlanDialog plan={pending.plan} busy={applying} canApply={canWrite} mode={mode} onClose={() => setPending(null)} onApply={() => void applyPending()} />}
   </section>;
 }

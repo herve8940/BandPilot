@@ -12,7 +12,7 @@ test('HTTP and websocket auth, guest denial and complete simulation recall',asyn
  const base=`http://127.0.0.1:${port}`;let cookie='';
  const call=(path:string,data?:unknown,method=data?'POST':'GET')=>fetch(base+path,{method,headers:{'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:data?JSON.stringify(data):undefined});
  try{
-  let ready=false;for(let i=0;i<100;i++){try{if((await call('/api/auth')).ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,50));}assert.ok(ready,logs);
+  let ready=false;for(let i=0;i<400;i++){try{if((await call('/api/auth')).ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,50));}assert.ok(ready,logs);
   assert.equal((await call('/api/auth/setup',{name:'Admin',password:'very-long-password'})).status,200);
   assert.equal((await call('/api/channels')).status,401);
   await new Promise<void>((resolve,reject)=>{const ws=new WebSocket(base.replace('http','ws')+'/ws');ws.once('unexpected-response',(_req,res)=>{assert.equal(res.statusCode,401);res.resume();resolve();});ws.once('open',()=>{ws.close();reject(Error('Anonymous WS allowed'));});ws.once('error',()=>{});});
@@ -40,10 +40,31 @@ test('HTTP and websocket auth, guest denial and complete simulation recall',asyn
   const created=await (await call('/api/library',{kind:'scene',name:'First'})).json() as {id:string};assert.ok(created.id);
   await call('/api/channels/1/fader',{value:.2});const preview=await (await call('/api/library/'+created.id+'/preview',{})).json() as {token:string};assert.equal((await call('/api/library/'+created.id+'/apply',{token:preview.token,confirm:true})).status,200);
   const channels=await (await call('/api/channels')).json() as {fader:number}[];assert.equal(channels[0]!.fader,.5);
+  // Library operations remain separate from console recall; imported presets are portable.
+  const preset=await (await call('/api/library/capture-channel',{name:'Test EQ',channel:1,sections:['eq']})).json() as {id:string;kind:string;data:any};
+  assert.equal(preset.kind,'channel-preset');
+  const imported=await (await call('/api/library',{kind:preset.kind,name:'Imported EQ',data:preset.data})).json() as {id:string};
+  assert.ok(imported.id);assert.notEqual(imported.id,preset.id);
+  assert.equal((await call('/api/library',{kind:preset.kind,name:'Invalid',data:{...preset.data,values:{...preset.data.values,'mix/fader':1}}})).status,400);
+  const presetPlan=await (await call(`/api/library/${imported.id}/preview`,{channel:3,sections:['eq']})).json() as {token:string;changes:{address:string}[]};
+  assert.ok(presetPlan.token);assert.ok(presetPlan.changes.every(c=>c.address.startsWith('/ch/03/')));
+  assert.equal((await call(`/api/library/${imported.id}/apply`,{token:presetPlan.token,confirm:false})).status,400);
+  assert.equal((await call(`/api/library/${imported.id}/apply`,{token:presetPlan.token,confirm:true})).status,200);
+  const effect=await (await call('/api/library/capture-fx',{name:'Room',slot:1})).json() as {id:string};
+  const effectPlan=await (await call(`/api/library/${effect.id}/preview`,{slot:4})).json() as {token:string;slot:number};assert.equal(effectPlan.slot,4);
+  assert.equal((await call(`/api/library/${effect.id}/apply`,{token:effectPlan.token,confirm:true})).status,200);
+  const legacyAfterFx=await (await call('/api/library',{kind:'scene',name:'Legacy after FX'})).json() as {data:{fx:{slot:number}[]}};
+  assert.ok(legacyAfterFx.data.fx.some(f=>f.slot===4),'legacy scene capture still includes the recalled FX');
+  const native=await (await call('/api/library',{kind:'native-scene',name:'Native fixture',data:'/ch/01/mix OFF -30 ON +0\n/headamp/01 +0 ON\n/fx/1 DLY ON\n/fx/1/par 50 1500 ST 1 1/2 +0 100 2k 100 25 25 2k'})).json() as {id:string};
+  const np=await (await call(`/api/library/${native.id}/preview`,{})).json() as {token:string;fxSlots:number[];phantom:boolean};assert.ok(np.token);assert.deepEqual(np.fxSlots,[1]);assert.equal(np.phantom,false);
+  assert.equal((await call(`/api/library/${native.id}/apply`,{token:np.token,confirm:true})).status,200);
+  const afterNative=await (await call('/api/library/capture-fx',{name:'Native FX',slot:1})).json() as {data:{algorithm:number;parameters:unknown[]}};assert.equal(afterNative.data.algorithm,10);assert.equal(afterNative.data.parameters.length,12);
   await call('/api/users',{name:'Guest',password:'guest-long-password',role:'guest',buses:[]});await call('/api/auth/logout',{});assert.equal((await call('/api/channels')).status,401);
   login=await call('/api/auth/login',{name:'Guest',password:'guest-long-password'});cookie=login.headers.get('set-cookie')!.split(';')[0]!;
   assert.equal((await call('/api/coach/prepare',{})).status,403);assert.equal((await call('/api/coach/ask',{channel:1,message:'test'})).status,403);
   assert.equal((await call('/api/console/preview',{values:{'/ch/01/mix/fader':0}})).status,403);
+  assert.equal((await call('/api/library/capture-channel',{name:'No',channel:1,sections:['eq']})).status,403);
+  assert.equal((await call(`/api/library/${imported.id}/apply`,{token:presetPlan.token,confirm:true})).status,403);
   assert.equal((await call('/api/mixer-sync')).status,403);assert.equal((await call('/api/mixer-sync/save-pc',{})).status,403);
   assert.equal((await call('/api/diagnostics/log')).status,403);
   assert.equal((await call('/api/discovery')).status,403);assert.equal((await call('/api/connection',{mode:'simulation'})).status,403);
