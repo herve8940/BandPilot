@@ -5,10 +5,7 @@ module.exports=async(win,wait,screenshot)=>{
   try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Live console smoke timed out: '+label)),30000);})]);}
   finally{clearTimeout(timer);}
  };
- const js=code=>{
-  console.log('Live console step: '+code.slice(0,180));
-  return bounded(win.webContents.executeJavaScript(code),code.slice(0,300));
- };
+ const js=code=>win.webContents.executeJavaScript(code);
  const api=(path,data)=>js(`(async()=>{const r=await fetch(${JSON.stringify(path)},{method:${data===undefined?"'GET'":"'POST'"},headers:{'Content-Type':'application/json'},body:${data===undefined?'undefined':JSON.stringify(JSON.stringify(data))}});const value=await r.json();if(!r.ok)throw Error(value.error);return value;})()`);
  if((await api('/api/status')).mode!=='simulation')throw Error('DEV smoke requires simulation');
  const {defaultFxParameters}=await import('../dist/shared/fx-parameters.js');
@@ -23,7 +20,7 @@ module.exports=async(win,wait,screenshot)=>{
  await wait(`!!document.querySelector('.rail-pages')`);
  await js(`[...document.querySelectorAll('.rail-pages button')].find(b=>b.textContent.trim()==='Console').click()`);
  const button=label=>js(`[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===${JSON.stringify(label)}).click()`);
- await wait(`document.body.textContent.includes('Lire le slot')`);await js(`document.querySelector('.studio-control').closest('details').open=true`);await button('Lire le slot');console.log('Live console: waiting for delay controls');await wait(`!!document.querySelector('.fx-tempo')`);
+ await wait(`document.body.textContent.includes('Lire le slot')`);await js(`document.querySelector('.studio-control').closest('details').open=true`);await button('Lire le slot');await wait(`!!document.querySelector('.fx-tempo')`);
  for(const [lang,expected] of [['en','Delay time'],['it','Tempo di delay'],['es','Tiempo de retardo'],['de','Verzögerungszeit'],['fr','Durée du délai']]){
   await js(`window.dispatchEvent(new Event('xr18-open-connection'))`);await wait(`!!document.querySelector('.bandpilot-language select')`);
   await js(`(()=>{const s=document.querySelector('.bandpilot-language select');s.value=${JSON.stringify(lang)};s.dispatchEvent(new Event('change',{bubbles:true}));})()`);

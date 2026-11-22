@@ -59,19 +59,31 @@ function createFixture(dataPath){
   }
   return snapshot(id,src.includes('["detail"]=true'));
  };
+ const pending=new Map(),blockedSince=new Map();
+ const attempt=(key,operation)=>{
+  try{operation();blockedSince.delete(key);return true;}
+  catch(error){
+   const since=blockedSince.get(key)??Date.now();
+   if(!['EPERM','EACCES','EBUSY'].includes(error.code)||Date.now()-since>=5000)throw error;
+   blockedSince.set(key,since);return false;
+  }
+ };
+ const atomic=(dest,text)=>attempt(dest,()=>{fs.writeFileSync(dest+'.tmp',text);fs.renameSync(dest+'.tmp',dest);});
  const tick=()=>{
   update();
   const heartbeat=path.join(mailbox,'heartbeat.txt');
-  fs.writeFileSync(heartbeat+'.tmp','BandPilotBridge/2\n1.5.0\n1700000000\nrehearsal-tabs/3\nrehearsal-tabs/4\nrehearsal-tabs/5\nrehearsal-tabs/6\nrehearsal-tabs/7\nrehearsal-tabs/9');
-  fs.renameSync(heartbeat+'.tmp',heartbeat);
+  atomic(heartbeat,'BandPilotBridge/2\n1.5.0\n1700000000\nrehearsal-tabs/3\nrehearsal-tabs/4\nrehearsal-tabs/5\nrehearsal-tabs/6\nrehearsal-tabs/7\nrehearsal-tabs/9');
   for(const file of fs.readdirSync(mailbox)){
    const id=/^request-([a-f0-9-]+)\.lua$/.exec(file)?.[1];
    if(!id)continue;
-   const req=path.join(mailbox,file),src=fs.readFileSync(req,'utf8');fs.unlinkSync(req);
+   const req=path.join(mailbox,file);let src;
+   if(!attempt(req,()=>{src=fs.readFileSync(req,'utf8');fs.unlinkSync(req);}))continue;
    let response;try{response={id,ok:true,result:answer(src)};}catch(e){response={id,ok:false,error:e.message};}
    const dest=path.join(mailbox,'response-'+id+'.json');
-   fs.writeFileSync(dest+'.tmp',JSON.stringify(response));fs.renameSync(dest+'.tmp',dest);
+   pending.set(dest,JSON.stringify(response));
   }
+  // Like the real Lua bridge, retry locked files without executing Rec twice.
+  for(const [dest,text] of pending)if(atomic(dest,text))pending.delete(dest);
  };
  tick();
  const loop=setInterval(tick,80);

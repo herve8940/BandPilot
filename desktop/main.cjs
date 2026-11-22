@@ -75,13 +75,11 @@ app.whenReady().then(async () => {
     }
     if(!ready)throw Error(label("Le serveur local BandPilot n'a pas démarré.","The local BandPilot server did not start."));
     win=new BrowserWindow({
-      // Windows smoke runs exercise the same visible window as an installed launch.
-      show:!smoke||process.platform==='win32',
+      show:!smoke,
       width:1440,height:900,minWidth:800,minHeight:600,
       icon:path.join(__dirname,"icon.png"),
       backgroundColor:"#0d1621",
-      // Hidden smoke windows must keep rendering just like a visible application.
-      webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,backgroundThrottling:!smoke,preload:path.join(__dirname,"preload.cjs")}
+      webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,preload:path.join(__dirname,"preload.cjs")}
     });
     const origin=`http://127.0.0.1:${port}`;
     const trusted=(contents,requestUrl,isMainFrame)=>{
@@ -177,9 +175,6 @@ app.whenReady().then(async () => {
     if(smoke){
       const execute=win.webContents.executeJavaScript.bind(win.webContents);
       win.webContents.executeJavaScript=async(code,...args)=>{
-        // Give native events a turn between successive synthetic interactions.
-        await new Promise(resolve=>setImmediate(resolve));
-        console.log('Native smoke script:',code.slice(0,160));
         let timer;
         try{return await Promise.race([execute(code,...args),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Smoke renderer script timed out')),30000);})]);}
         catch(error){console.error('Smoke script failed:',code);throw error;}
@@ -211,7 +206,7 @@ app.whenReady().then(async () => {
       };
       const screenshot=async(name)=>{if(process.env.XR18_SMOKE_SCREENSHOTS){mkdirSync(process.env.XR18_SMOKE_SCREENSHOTS,{recursive:true});writeFileSync(path.join(process.env.XR18_SMOKE_SCREENSHOTS,name),(await win.webContents.capturePage()).toPNG());}};
       const checkRehearsal=()=>require('./dev19-rehearsal-smoke.cjs').verify({
-        main:win,createWindow:()=>new BrowserWindow({show:false,width:390,height:730,webPreferences:{sandbox:true,contextIsolation:true,backgroundThrottling:false}}),
+        main:win,createWindow:()=>new BrowserWindow({show:false,width:390,height:730,webPreferences:{sandbox:true,contextIsolation:true}}),
         screenshot,fixture:rehearsalSmoke,port
       });
       if(process.argv.includes('--smoke-rehearsal-only')){
