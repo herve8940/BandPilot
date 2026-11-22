@@ -4,6 +4,9 @@ const { pathToFileURL } = require("node:url");
 const { mkdirSync, readFileSync, writeFileSync, renameSync } = require("node:fs");
 const net = require("node:net");
 const {loadAI,saveAI}=require("./ai-config.cjs");
+// Hosted Windows runners use a virtual display. Keep the full UI smoke suite
+// on Chromium's software renderer instead of depending on its graphics driver.
+if(process.platform==='win32'&&process.env.CI&&process.argv.includes('--smoke-test'))app.disableHardwareAcceleration();
 if(process.argv.includes('--smoke-test')&&process.env.XR18_SMOKE_DATA)app.setPath('userData',process.env.XR18_SMOKE_DATA);
 // Keep the existing data/profile directory across the display-name change.
 if(!process.argv.includes('--smoke-test')){
