@@ -1,8 +1,10 @@
 # BandPilot — illustrated guide
 
-Desktop: **2.3.3 stable** (Windows, macOS, Linux). Android: **2.4.0-android.1 prerelease**, separate APK. BandStudio: **2.3.4-dev.1 Windows prerelease**, for testing with the matching BandStudio version; not part of the stable release.
+This update concerns the Windows, Intel/Apple Silicon macOS and Linux desktop apps. Android remains a separate 2.4.0-android.5 release and does not include every desktop feature described here. BandStudio is an independent companion app.
 
-The 2.2.4 screenshots show an earlier version in simulation. See the release notes for subsequent changes. [2.3.3](RELEASE_NOTES.md) · [Android (FR)](ANDROID.md)
+**2.3.15 — [2.3.15 tutorial](NEW_2_3_15_EN.md)**
+
+Older general-guide screenshots and the 2.2 video tour are historical illustrations. This tutorial describes the 2.3.15 workflow.
 
 [Français](USER_GUIDE_FR.md) · [Sound-check coach](TUTO_MON_INGE_SON_EN.md) · [Video tour](VIDEO_TOUR.md) · [Detailed compatibility](multi-model.md)
 
@@ -76,29 +78,23 @@ Already open phones follow read-only/control changes without a reload. Profiles 
 
 <h2 id="reaper">8. REAPER rehearsals and recording</h2>
 
-REAPER is separate software with its own installation and license. Install bridge **1.5.0** from Rehearse, save projects, then restart REAPER to load the updated bridge. Legacy technical paths remain for compatibility.
+1. **Prepare REAPER** — Reinstall the bridge supplied with 2.3.15, even if it already displays version 1.5.0, then restart REAPER. Open one project per tab with its media. In Rehearse → With my songs, select the project and check its inputs, armed tracks, Original track and ending. REC creates a separate take in that project; verify real audio inputs before trying it.
 
-1. In Recording, refresh the console, choose tracks and destination, then create and open a session. Existing sessions are not overwritten. Verify the audio device, input channels and sample rate in REAPER.
-2. Automatic multitrack preparation is for XR18/MR18/X18. XR12/MR12 lack that PC interface. X32 card/routing preparation is unavailable.
-3. Open a prepared ReaCue project for **With my songs**, or use **Band only**. Songs, sections, tracks and takes come from the open project. Concert metadata uses the associated `.concert.lua`; copying only `.rpp` does not recreate it.
-4. Presence reflects armed REC tracks. Selecting a musician prepares their recording track and mutes the corresponding stem. Check actual arm and mute states, especially after switching project tabs.
-5. Record starts at the selected song. Stop saves the take; markers remain available while recording. Take, loop, presence and navigation changes are blocked during recording.
-6. Choose an available take in the time range; empty slots are ignored. **Original ReaCue** mutes REC tracks and opens stems; leaving it restores prior mute states.
-7. Put the cursor inside a section to loop it. Bounds and repeat are read back. A stop-loop button remains available outside sections.
+2. **Assign the manager** — In Monitors → Phones, create each musician’s monitor link and assign the rehearsal manager on their card. On the same local network, their QR opens My monitor, My song and Rehearse. The role can be revoked. The manager chooses a song, original, backing or take, the full song or a section, and available loop/count-in options.
 
-**Mixer simulation does not simulate REAPER: Record captures real audio inputs.** Bridge tests do not replace real playback and listening checks. Keep media available and use a copied project with its media for experiments.
+3. **Read chords and lyrics** — Open My song on a phone and select Chords, Lyrics or Both. The sheet follows the REAPER project and playback position. Full screen and keeping the screen awake are optional. If a BandStudio source sheet is offered, the manager checks its timing before sharing it; Return to exported sheet reverses this choice. Missing sheets are not generated automatically.
+
+[2.3.15 tutorial](NEW_2_3_15_EN.md)
 
 ## 9. Scenes, notes and setlists
 
-**Scenes and per-instrument presets · 2.3.14 / Android 2.4.0-android.5**
-
-In Console → Expert → Channel, use Save or Restore. In Scenes and presets → Track presets, choose the destination input and select EQ, compressor or gate. Processing can also be extracted from a saved complete scene. Use the previous-settings action or automatic backups to undo a trial.
+**2.3.15 — [2.3.15 tutorial](NEW_2_3_15_EN.md)**
 
 The library separates complete scenes, presets, soundcheck sheets and automatic backups. JSON import/export, supported X-Air .scn recall and destination slot selection for FX presets are included.
 
 Saving or importing does not change the sound. Recall requires a preview and confirmation, with a backup first. Channel presets leave gain, phantom power, levels, monitor sends and routing unchanged.
 
-Limits: no cross-model conversion; mono preset recall is blocked on linked stereo pairs. Native .scn recall is limited to XR18/X18/MR18 and HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY and MODD effects; other files remain exportable. X32 support remains partial.
+Selective input, output and FX recall, protection by parameter family, preview and backup. Explicit preset and portable scene conversion within the supported X-Air/M-Air scope. [2.3.15 tutorial](NEW_2_3_15_EN.md)
 
 A song needs a title. Add songs to the active setlist and save a named setlist. Notes and the active setlist are stored in the application database even when its local port changes. Wait for the saved-draft status before closing. Named rehearsals remain separate records.
 

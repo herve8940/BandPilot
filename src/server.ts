@@ -1,3 +1,6 @@
+import {ExpertViewLink} from './expert-view-link.js';
+import {EqRta,type RtaTarget} from './eq-rta.js';
+import {AdjustmentGroups} from './adjustment-groups.js';
 import {diagnosticEvents,sanitizeDiagnostic} from '../shared/diagnostic-report.js';
 import {nativeAccess} from './native-access.js';
 import {AndroidUpdates} from './android-update-manager.js';
@@ -27,6 +30,7 @@ import { resolve, extname, sep } from "node:path";
 import { WebSocketServer, WebSocket } from "ws";
 import {discoverXR18} from "./discovery.js";
 import {EarsShare} from "./ears.js";
+import {RehearsalDesk} from "./rehearsal-desk.js";
 import {blankSceneValues,BLANK_SCENE_TEXT} from "./blank-scene.js";
 import {ConnectionManager,loadConnection} from "./connection.js";
 import {dirname,join} from "node:path";
@@ -65,6 +69,7 @@ xr18.on('reset',()=>{dynamicsFrame=null;});
 const connection=new ConnectionManager(xr18,configPath,config);
 let discoveryPending:ReturnType<typeof discoverXR18>|undefined;
 const access=new Access(dbPath), library=new LibraryStore(dbPath);
+const adjustmentGroups=new AdjustmentGroups(dbPath);
 const show=new ShowControl(xr18,processing,library);
 const mixerSync=new MixerSync(xr18,show.console,library);
 const coach=new SoundCoach(xr18,show.console,library);
@@ -81,15 +86,28 @@ const instruments=():Instrument[]=>{
  }
  return out;
 };
-const analyzer=new Analyzer(xr18,instruments);
+const analyzer=new Analyzer(xr18,instruments,()=>Object.fromEntries(Object.entries(coach.profile().tech?.monitors??{}).map(([bus,m])=>[Number(bus),m.kind])));
+const eqRta=new EqRta(xr18,()=>analyzer.isActive());
 const bridge=new ReaperBridge();
 const reaper=new ReaperLink({transport:()=>bridge.transport(),actions:ids=>bridge.actions(ids)});
 const workshop=new Workshop(xr18,bridge,library,resolve(dirname(dbPath),'workshops'));
 const SONG_TAIL_S=8;
 /** Reads the console fresh: a session built on stale routing would record the wrong inputs. */
-let planCache:{at:number;plan:ReturnType<typeof planSession>}|undefined;
+let planCache:{at:number;connection:number;plan:Awaited<ReturnType<typeof reaperPlan>>}|undefined;
 /** Reading the whole console takes seconds: screens reuse a recent read, a new session always reads again. */
-async function recentPlan(){if(!planCache||Date.now()-planCache.at>60000)planCache={at:Date.now(),plan:await reaperPlan()};return structuredClone(planCache.plan);}
+let readingPlan:{connection:number;read:ReturnType<typeof reaperPlan>}|undefined;
+async function recentPlan(){
+ const connection=xr18.connectionId();
+ if(planCache?.connection===connection&&Date.now()-planCache.at<=60000)return structuredClone(planCache.plan);
+ if(readingPlan?.connection!==connection)readingPlan={connection,read:reaperPlan()};
+ const pending=readingPlan;
+ try{
+  const plan=await pending.read;
+  if(xr18.connectionId()!==connection)throw Error('Connexion modifiée');
+  planCache={connection,at:Date.now(),plan};
+  return structuredClone(plan);
+ }finally{if(readingPlan===pending)readingPlan=undefined;}
+}
 async function reaperPlan(){
  if(xr18.model().usbRecorder!=='interface')throw Error(xr18.model().usbChannels===0?'Ce modèle enregistre en stéréo sur clé USB ; pas d’interface USB multipiste vers REAPER.':'La carte audio X32 et son routage doivent être validés avant de préparer une session multipiste.');
  const simulation=xr18.mode==='simulation';let sampleRate:number|null=simulation?48000:null,usbMode:'18x18'|'2x2'|null=null;
@@ -101,14 +119,20 @@ async function reaperPlan(){
  }
  // The simulator has no real USB routing: its default values would all point to channel 1.
  const state=xr18.parameterState(),values=Object.fromEntries(Object.entries(state).filter(([a])=>!simulation||!a.startsWith('/routing/usb/')).map(([a,v])=>[a,v.value]));
- return planSession({values,instruments:instruments(),sampleRate,usbMode,simulation});
+ return {...planSession({values,instruments:instruments(),sampleRate,usbMode,simulation}),usbMode};
 }
 // Rehearsal mode survives a restart: the Main must not come back on by surprise.
 const rehearsalPath=join(dirname(configPath),'rehearsal.json');
 try{xr18.setRehearsal(JSON.parse(readFileSync(rehearsalPath,'utf8')).on===true);}catch{/* first start: off */}
+const expertViewLink=new ExpertViewLink();
 const studioApi=new StudioApi(xr18,access,library,show,()=>patchSignature(coach.profile()));
+const rehearsalDesk=new RehearsalDesk(bridge,()=>workshop.blocksRecording(),async()=>{
+ if(xr18.model().usbRecorder!=='interface')return [];
+ const plan=await recentPlan();
+ return plan.tracks.filter(t=>t.selected).map(({usb,name,stereo})=>({usb,name,stereo,available:plan.usbMode!=='2x2'||usb+Number(stereo)<=2}));
+});
 // Musicians' monitor mixes on the local network (QR links). Off until started from the app.
-const ears=new EarsShare(dbPath,xr18,()=>process.env.XR18_WEB_DIST,()=>studioApi.busy?'Une opération est en cours sur l’ordinateur, réessaie dans un instant':null,()=>show.manualOverride(),(bus,name)=>personalPatch(coach.profile(),bus,name));
+const ears=new EarsShare(dbPath,xr18,()=>process.env.XR18_WEB_DIST,()=>studioApi.busy?'Une opération est en cours sur l’ordinateur, réessaie dans un instant':null,()=>show.manualOverride(),(bus,name)=>personalPatch(coach.profile(),bus,name),rehearsalDesk);
 const listenHost=process.env.XR18_HTTP_HOST??'127.0.0.1';
 const tls=process.env.XR18_TLS_CERT&&process.env.XR18_TLS_KEY?{cert:await readFile(process.env.XR18_TLS_CERT),key:await readFile(process.env.XR18_TLS_KEY)}:undefined;
 if(!['127.0.0.1','localhost'].includes(listenHost)&&(!tls||!access.enabled()))throw Error('Accès réseau : HTTPS et comptes configurés requis.');
@@ -153,19 +177,64 @@ const handler: http.RequestListener = async (req, res) => {
     res.writeHead(405);res.end('{}');
    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
+  if(path==='/api/expert-view-link'){
+   if(user?.role!=='admin'){res.writeHead(403);res.end(JSON.stringify({error:'Administration requise'}));return;}
+   try{
+    const scope=show.console.identity();
+    if(req.method==='GET')res.end(JSON.stringify(expertViewLink.read(scope)));
+    else if(req.method==='POST')res.end(JSON.stringify(expertViewLink.publish(user.id,scope,xr18.model(),await body(req))));
+    else{res.writeHead(405);res.end('{}');}
+   }catch(error){res.writeHead(400);res.end(JSON.stringify({error:(error as Error).message}));}
+   return;
+  }
   if(path==='/api/workspace'){
    try{if(req.method==='GET')res.end(JSON.stringify(database.workspace()));
    else if(req.method==='PUT')res.end(JSON.stringify(database.saveWorkspace(await body(req))));
    else{res.writeHead(405);res.end('{}');}}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
-  if(workshop.blocksRecording()&&req.method!=='GET'&&(['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/show/presence','/api/show/original','/api/show/take','/api/show/track','/api/show/play','/api/show/loop','/api/show/goto','/api/mixer-sync/apply','/api/console/apply','/api/coach/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo','/api/coach/vocal-fx/keep','/api/analysis/listen','/api/reacue/event','/api/reacue/arm'].includes(path)||/^\/api\/library\/[^/]+\/apply$/.test(path))){res.writeHead(409);res.end(JSON.stringify({error:'Termine l’Atelier du son et restaure les sources avant cette action ; les réglages directs de canal restent disponibles dans Console'}));return;}
+  if(path==='/api/expert-surfaces'){
+   if(user?.role!=='admin'){res.writeHead(403);res.end(JSON.stringify({error:'Administration requise'}));return;}
+   try{
+    if(req.method==='GET')res.end(JSON.stringify(library.surfaces(new URL(req.url!,'http://localhost').searchParams.get('model'))));
+    else if(req.method==='POST')res.end(JSON.stringify(library.saveSurfaces(await body(req))));
+    else{res.writeHead(405);res.end('{}');}
+   }catch(error){res.writeHead(400);res.end(JSON.stringify({error:(error as Error).message}));}
+   return;
+  }
+  if(path.startsWith('/api/rehearsal-desk/')){
+   if(user?.role!=='admin'){res.writeHead(403);res.end(JSON.stringify({error:'Administration requise'}));return;}
+   const url=new URL(req.url!,'http://localhost'),route=path.slice('/api/rehearsal-desk/'.length);
+   try{
+    let result:unknown;
+    if(req.method==='GET'&&route==='state')result=await rehearsalDesk.state(url.searchParams.get('project')??undefined,true,url.searchParams.get('known')??undefined);
+    else if(req.method==='POST'&&route==='command')result=await rehearsalDesk.command(await body(req),true);
+    else if(req.method==='GET'&&route==='configured-inputs')result=await rehearsalDesk.configuredInputs();
+    else if(req.method==='GET'&&route==='peaks')result=await rehearsalDesk.peaks(url.searchParams.get('project'),url.searchParams.get('track'),url.searchParams.has('item')?Number(url.searchParams.get('item')):null,url.searchParams.has('take')?Number(url.searchParams.get('take')):null);
+    else{res.writeHead(405);res.end('{}');return;}
+    res.end(JSON.stringify(result));
+   }catch(error){res.writeHead(400);res.end(JSON.stringify({error:(error as Error).message}));}
+   return;
+  }
+  // Stored selections are metadata: never interrupt ReaCue or acquire an audio lock.
+  if(path==='/api/adjustment-groups'||path==='/api/adjustment-groups/remove'){
+   if(user?.role!=='admin'){res.writeHead(403);res.end(JSON.stringify({error:'Administration requise'}));return;}
+   try{
+    let result:unknown;
+    if(path==='/api/adjustment-groups'&&req.method==='GET')result=adjustmentGroups.list(new URL(req.url!,'http://localhost').searchParams.get('model'));
+    else if(path==='/api/adjustment-groups'&&req.method==='POST')result=adjustmentGroups.save(await body(req));
+    else if(path.endsWith('/remove')&&req.method==='POST')result=adjustmentGroups.remove(await body(req));
+    else{res.writeHead(405);res.end('{}');return;}
+    res.end(JSON.stringify(result));
+   }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
+  if(workshop.blocksRecording()&&req.method!=='GET'&&(['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/show/presence','/api/show/original','/api/show/take','/api/show/track','/api/show/play','/api/show/loop','/api/show/goto','/api/mixer-sync/apply','/api/console/apply','/api/monitor/copy/apply','/api/coach/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo','/api/coach/vocal-fx/keep','/api/analysis/listen','/api/reacue/event','/api/reacue/arm'].includes(path)||path.startsWith('/api/library/command-control/')&&!path.endsWith('/stop')||/^\/api\/library\/[^/]+\/apply$/.test(path))){res.writeHead(409);res.end(JSON.stringify({error:'Termine l’Atelier du son et restaure les sources avant cette action ; les réglages directs de canal restent disponibles dans Console'}));return;}
   if(path==='/api/reacue/stop'&&req.method==='POST'){show.arm(false);access.log(user!,'Arrêt ReaCue');res.end(JSON.stringify({ok:true}));return;}
-  const readOnlyCoach=['/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
+  const readOnlyCoach=['/api/library/command-control/stop','/api/library/live-group/stop','/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
     // Analysis only changes what the console's analyser looks at, never the sound: no global lock.
     '/api/reaper/plan','/api/reaper/session','/api/reaper/rec','/api/reaper/stop','/api/reaper/marker','/api/reaper/dismiss','/api/show/install','/api/show/goto','/api/show/loop','/api/show/take','/api/show/track','/api/show/play','/api/show/stop','/api/show/continue','/api/show/presence','/api/show/original','/api/show/rec',
-    '/api/analysis/start','/api/analysis/stop','/api/analysis/target','/api/analysis/scan','/api/analysis/dismiss','/api/analysis/release'].includes(path);
+    '/api/eq-rta/start','/api/eq-rta/read','/api/eq-rta/stop','/api/analysis/start','/api/analysis/stop','/api/analysis/target','/api/analysis/scan','/api/analysis/dismiss','/api/analysis/release'].includes(path);
   if(path.startsWith('/api/')&&req.method!=='GET'&&!readOnlyCoach){
-    const coachMetadata=(path.startsWith('/api/coach/')&&!['/api/coach/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo'].includes(path))||(path.startsWith('/api/mixer-sync')&&path!=='/api/mixer-sync/apply')||path.startsWith('/api/ears-share');
+    const coachMetadata=path==='/api/library/commands'||path.startsWith('/api/library/midi-scenes')||path==='/api/library/convert-channel'||path==='/api/library/capture-portable'||path==='/api/library/output-protections'||path==='/api/library/scene-protections'||(path.startsWith('/api/coach/')&&!['/api/coach/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo'].includes(path))||(path.startsWith('/api/mixer-sync')&&path!=='/api/mixer-sync/apply')||path.startsWith('/api/ears-share')||path==='/api/monitor/copy/preview';
     if(studioApi.busy&&!path.startsWith('/api/reacue')&&!coachMetadata){show.manualOverride();}
     if(studioApi.busy){res.writeHead(409);res.end(JSON.stringify({error:'Une opération est déjà en cours'}));return;}
     studioApi.busy=true;ownsWriteLock=true;
@@ -176,16 +245,17 @@ const handler: http.RequestListener = async (req, res) => {
   if(xr18.model().family==='x32'&&(path.startsWith('/api/ears-share')||path.startsWith('/api/coach')||path.startsWith('/api/mixer-sync')||path.startsWith('/api/reacue')||path.startsWith('/api/analysis')||path==='/api/rehearsal')){res.writeHead(409);res.end(JSON.stringify({error:'Cette fonction nécessite l’adaptateur avancé X32. Le mélangeur X32 reste disponible.'}));return;}
   if(path.startsWith('/api/ears-share')){
    try{
-    const m=/^\/api\/ears-share(?:\/(start|stop|musicians)(?:\/([a-f0-9-]{36})(?:\/(regenerate|qr))?)?)?$/.exec(path);
+    const m=/^\/api\/ears-share(?:\/(start|stop|musicians|manager)(?:\/([a-f0-9-]{36})(?:\/(regenerate|qr))?)?)?$/.exec(path);
     if(!m){res.writeHead(404);res.end(JSON.stringify({error:'Introuvable'}));return;}
     let result:unknown;
     if(req.method==='GET'&&!m[1])result=ears.status();
     else if(req.method==='POST'&&m[1]==='start')result=await ears.start();
     else if(req.method==='POST'&&m[1]==='stop')result=await ears.stop();
-    else if(req.method==='POST'&&m[1]==='musicians'&&!m[2]){const d=await body(req);ears.create(d.name,d.bus);result=ears.status();}
-    else if(req.method==='POST'&&m[3]==='regenerate'){ears.regenerate(m[2]!);result=ears.status();}
-    else if(req.method==='DELETE'&&m[2]&&!m[3]){ears.remove(m[2]);result=ears.status();}
-    else if(req.method==='GET'&&m[3]==='qr')result=await ears.qr(m[2]!,new URL(req.url!,'http://localhost').searchParams.get('host')??undefined);
+    else if(req.method==='POST'&&m[1]==='manager'&&!m[2]){ears.assignManager((await body(req)).id);result=ears.status();}
+    else if(req.method==='POST'&&m[1]==='musicians'&&!m[2]){const d=await body(req);if(d.stereo===true)await ears.createStereo(d.name,d.bus);else ears.create(d.name,d.bus);result=ears.status();}
+    else if(req.method==='POST'&&m[1]==='musicians'&&m[3]==='regenerate'){ears.regenerate(m[2]!);result=ears.status();}
+    else if(req.method==='DELETE'&&m[1]==='musicians'&&m[2]&&!m[3]){ears.remove(m[2]);result=ears.status();}
+    else if(req.method==='GET'&&m[1]==='musicians'&&m[3]==='qr')result=await ears.qr(m[2]!,new URL(req.url!,'http://localhost').searchParams.get('host')??undefined);
     else{res.writeHead(405);res.end(JSON.stringify({error:'Méthode non autorisée'}));return;}
     res.end(JSON.stringify(result));
    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}
@@ -219,7 +289,7 @@ const handler: http.RequestListener = async (req, res) => {
     catch(e){res.writeHead(503);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path==='/api/connection'&&req.method==='POST'){
-    try{const data=await body(req);if(data.mode==='real'&&xr18.mode==='simulation')await mixerSync.savePc();const status=await connection.change(data);res.end(JSON.stringify({status}));}
+    try{const data=await body(req);if(data.mode==='real'&&xr18.mode==='simulation')await mixerSync.savePc();await eqRta.releaseCurrent();const status=await connection.change(data);res.end(JSON.stringify({status}));}
     catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path==='/api/coach'&&req.method==='GET'){res.end(JSON.stringify({...coach.catalog(),role:user!.role}));return;}
@@ -335,9 +405,22 @@ const handler: http.RequestListener = async (req, res) => {
       res.end(JSON.stringify({on:xr18.isRehearsal(),mainOn:xr18.mainState().on}));
     }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
+  if(path.startsWith('/api/eq-rta')){
+    try{const d=req.method==='GET'?{}:await body(req);let result:unknown;
+      if(req.method==='GET'&&path==='/api/eq-rta')result=eqRta.info();
+      else if(req.method==='POST'&&path==='/api/eq-rta/start')result=await eqRta.start(d.target as RtaTarget,d.post);
+      else if(req.method==='POST'&&path==='/api/eq-rta/read')result=await eqRta.read(d.token);
+      else if(req.method==='POST'&&path==='/api/eq-rta/stop')result=await eqRta.stop(d.token);
+      else throw Error('Méthode non autorisée');
+      res.end(JSON.stringify(result));
+    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+  }
   if(path.startsWith('/api/analysis')){
     try{
       let result:unknown;const d:any=req.method==='POST'?await body(req):{};
+      // Check after reading the body: a second client may reserve the analyser
+      // while this request is still arriving. No await before the action below.
+      if(['/api/analysis/start','/api/analysis/target','/api/analysis/scan'].includes(path)&&eqRta.busy()){res.writeHead(409);res.end(JSON.stringify({error:'L’analyseur est déjà utilisé. Arrête l’autre analyse avant de lancer ce spectre.'}));return;}
       if(req.method==='GET'&&path==='/api/analysis')result=analyzer.snapshot();
       else if(path==='/api/analysis/start')result=analyzer.start(d.target);
       else if(path==='/api/analysis/stop')result=analyzer.stop();
@@ -433,7 +516,7 @@ const handler: http.RequestListener = async (req, res) => {
   if(req.method==='GET'&&path==='/api/dynamics'){
     xr18.subscribeAnalysis();
     const frame=xr18.status().connected&&dynamicsFrame&&Date.now()-dynamicsFrame.at<2000?dynamicsFrame:null;
-    res.end(JSON.stringify({frame}));return;
+    res.end(JSON.stringify({frame,connectionId:xr18.connectionId(),model:xr18.model().id,mode:xr18.mode}));return;
   }
   if (req.method === "GET" && path === "/api/meters") {res.end(JSON.stringify(xr18.meterState()));return;}
   if (req.method === "GET" && path === "/api/channels") { res.end(JSON.stringify(xr18.listChannels())); return; }
@@ -611,7 +694,8 @@ server.on('error',error=>{if(process.env.BANDPILOT_ANDROID==='1'&&(error as Node
 const statusTimer=setInterval(()=>{for(const ws of wss.clients){const req=wsRequests.get(ws);if(!req||!access.user(req))ws.terminate();}const message=JSON.stringify({type:"status",status:xr18.status()});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);},2000);
 statusTimer.unref();
 usage.start(()=>{const s=xr18.status();return s.mode==='real'&&s.connected&&s.model?String(s.model):s.mode==='simulation'?'simulation':'none';});
-function shutdown(){clearInterval(statusTimer);usage.close();ears.close();xr18.close();database.close();access.close();library.close();for(const ws of wss.clients)ws.terminate();wss.close();server.close();}
+export async function stopMeasurements(){await eqRta.close().catch(()=>{});}
+async function shutdown(){await stopMeasurements();clearInterval(statusTimer);usage.close();ears.close();xr18.close();database.close();access.close();library.close();adjustmentGroups.close();for(const ws of wss.clients)ws.terminate();wss.close();server.close();}
 process.once("SIGINT",shutdown);
 process.once("SIGTERM",shutdown);
 

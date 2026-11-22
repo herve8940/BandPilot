@@ -4,8 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Two pages: the full app (index.html, local only) and the musicians' monitor page
-  // (ears.html, served on the local network by the QR-link server).
+  // The desktop and the musician page served through a personal QR link.
   build: { rollupOptions: { input: { main: "index.html", ears: "ears.html" } } },
   server: { host: "127.0.0.1", port: 5173, proxy: {
     "/api": "http://127.0.0.1:3000",

@@ -41,18 +41,19 @@ Desktop: [latest stable release](https://github.com/herve8940/BandPilot/releases
 
 To separate instruments, work on lyrics and prepare songs for REAPER, discover [BandStudio](https://herve8940.github.io/BandStudio/en.html), an independent companion app.
 
-## Scenes and per-instrument presets · 2.3.14 / Android 2.4.0-android.5
+## Mixer control, MIDI and phone rehearsals · 2.3.15
 
-Save an input’s EQ, compressor and gate, then recall only the selected processing on another input of the same mixer model. Presets are starting points to adapt to your signal.
+BandPilot 2.3.15 brings together new mixer controls, selective recall, software groups, MIDI and REAPER rehearsals on musicians’ phones.
 
-The library separates complete scenes, presets, soundcheck sheets and automatic backups. JSON import/export, supported X-Air .scn recall and destination slot selection for FX presets are included.
+- **Mixer and monitors** — Custom banks and surfaces, software groups, stereo pairs, meters and RTA. Available controls and destinations depend on the connected model and selected mix.
+- **Scenes and presets** — Selective input, output and FX recall, protection by parameter family, preview and backup. Explicit preset and portable scene conversion within the supported X-Air/M-Air scope.
+- **Effects and analysis** — Named editors for the 61 X-Air algorithms, tap tempo and 31-band GEQ/True EQ on supported outputs. Microphone measurements and correction proposals require user review and explicit application.
+- **MIDI and commands** — Fader and mute learning, absolute or relative CC, notes, Program Change, favorite commands and conditions. Explicit session activation and backups for supported commands.
+- **Rehearsal and song sheets** — Open REAPER project tabs, sections, loops, count-in, separate takes and a phone rehearsal manager. Compatible BandStudio song sheets provide chords and lyrics with an optional full-screen view.
 
-Saving or importing does not change the sound. Recall requires a preview and confirmation, with a backup first. Channel presets leave gain, phantom power, levels, monitor sends and routing unchanged.
+This update concerns the Windows, Intel/Apple Silicon macOS and Linux desktop apps. Android remains a separate 2.4.0-android.5 release and does not include every desktop feature described here. BandStudio is an independent companion app.
 
-Limits: no cross-model conversion; mono preset recall is blocked on linked stereo pairs. Native .scn recall is limited to XR18/X18/MR18 and HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY and MODD effects; other files remain exportable. X32 support remains partial.
-
-[Read the guide](docs/USER_GUIDE_EN.md)
-
+[2.3.15 tutorial](docs/NEW_2_3_15_EN.md)
 ## New: technical rider, source ambience and Android
 
 The first standalone Android version is available as a signed APK. No weekly re-signing is required. REAPER remains on desktop.

@@ -1,0 +1,37 @@
+/** Uses the temporary simulation profile from desktop/smoke.cjs only. */
+module.exports=async(win,wait,screenshot)=>{
+ const js=code=>win.webContents.executeJavaScript(code);
+ const api=(path,data)=>js(`(async()=>{const r=await fetch(${JSON.stringify(path)},{method:${data===undefined?"'GET'":"'POST'"},headers:{'Content-Type':'application/json'},body:${data===undefined?'undefined':JSON.stringify(JSON.stringify(data))}});const v=await r.json();if(!r.ok)throw Error(v.error);return v;})()`);
+ if((await api('/api/status')).mode!=='simulation')throw Error('Scene mapping smoke requires simulation');
+ const set=async values=>{const p=await api('/api/console/preview',{values});if(p.token)await api('/api/console/apply',{token:p.token,confirm:true});};
+ const read=async address=>(await api('/api/console/parameters?prefix='+encodeURIComponent(address))).parameters.find(p=>p.address===address).state.value;
+ const button=(scope,label)=>js(`[...document.querySelectorAll(${JSON.stringify(scope+' button')})].find(b=>b.textContent.trim()===${JSON.stringify(label)}).click()`);
+ const select=(selector,value)=>js(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});e.value=${JSON.stringify(value)};e.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+ await set({'/config/chlink/1-2':0,'/config/chlink/7-8':0,'/ch/01/config/name':'Saved voice','/ch/07/config/name':'Live keys','/ch/01/eq/1/g':4,'/ch/07/eq/1/g':-3});
+ const saved=await api('/api/library',{kind:'scene',name:'DEV scene mapping',complete:true});await set({'/ch/01/eq/1/g':-2,'/ch/07/mix/01/level':-26});
+ const addresses=['/ch/01/eq/1/g','/ch/07/eq/1/g','/ch/07/mix/01/level','/headamp/07/gain','/ch/07/config/name'],before=await Promise.all(addresses.map(read));
+ await js(`document.querySelector('button[title="Sauvegarder ou rappeler une scène"]').click()`);
+ await wait(`[...document.querySelectorAll('.scene-row')].some(e=>e.textContent.includes(${JSON.stringify(saved.name)}))`);
+ await js(`[...document.querySelectorAll('.scene-row')].find(e=>e.textContent.includes(${JSON.stringify(saved.name)})).querySelector('button:nth-child(2)').click()`);
+ await wait(`document.querySelectorAll('.scene-recall-channels input').length===16`);
+ await js(`document.querySelector('.scene-recall-channels input').click();document.querySelectorAll('.scene-recall-sections input')[1].click();document.querySelectorAll('.scene-recall-sections input')[2].click()`);
+ await wait(`!!document.querySelector('.scene-mapping-rows select')`);await select('.scene-mapping-rows select','7');
+ if(JSON.stringify(await Promise.all(addresses.map(read)))!==JSON.stringify(before))throw Error('Mapping draft wrote audio');
+ const capture=async name=>{await js(`document.querySelector('.scene-recall-mapping').scrollIntoView({block:'center',behavior:'instant'})`);await new Promise(r=>setTimeout(r,300));await screenshot(name);};
+ await capture('scene-mapping.png');
+ await button('.scene-recall-panel','Prévisualiser la sélection');await wait(`!!document.querySelector('.coach-dialog[open]')`);
+ if(!await js(`document.querySelector('.coach-dialog').textContent.includes('Dans la scène : Canal 1 · Saved voice → Sur la console : Canal 7 · Live keys')`))throw Error('Mapping summary missing source or destination');
+ await screenshot('scene-mapping-preview.png');await button('.coach-dialog','Annuler, ne rien changer');
+ if(JSON.stringify(await Promise.all(addresses.map(read)))!==JSON.stringify(before))throw Error('Mapping preview wrote audio');
+ await button('.scene-recall-panel','Prévisualiser la sélection');await wait(`!!document.querySelector('.coach-dialog[open]')`);await button('.coach-dialog','Essayer en simulation');await wait(`!document.querySelector('.coach-dialog')&&document.querySelector('.scene-recall-panel [role=status]')?.textContent.includes('Sélection appliquée')`);
+ const after=await Promise.all(addresses.map(read));if(after[1]!==saved.data.values['/ch/01/eq/1/g']||after.some((v,i)=>i!==1&&v!==before[i]))throw Error('Mapping affected the wrong input or family');
+ await button('.scene-recall-panel','Annuler le rappel sélectif');await wait(`!!document.querySelector('.coach-dialog[open]')`);await button('.coach-dialog','Essayer en simulation');await wait(`!document.querySelector('.coach-dialog')`);
+ if(JSON.stringify(await Promise.all(addresses.map(read)))!==JSON.stringify(before))throw Error('Mapped undo failed to restore destination');
+ await js(`document.querySelectorAll('.scene-recall-channels input')[6].click()`);
+ if(!await js(`document.querySelector('.scene-recall-panel button[type=submit]').disabled&&document.querySelector('.scene-recall-mapping [role=alert]').textContent.includes('sans doublon')`))throw Error('Duplicate destination accepted');
+ const size=win.getSize(),minimum=win.getMinimumSize();win.setMinimumSize(360,600);win.setSize(480,850);await capture('scene-mapping-small.png');
+ if(await js(`(()=>{const e=document.querySelector('.scene-recall-mapping');return e.scrollWidth>e.clientWidth+2||e.getBoundingClientRect().width>innerWidth||document.documentElement.scrollWidth>innerWidth;})()`))throw Error('Mapping panel overflows small screen');
+ win.setMinimumSize(...minimum);win.setSize(...size);
+ await button('.scene-recall-mapping','Garder les numéros de la scène');if(!await js(`[...document.querySelectorAll('.scene-mapping-rows select')].map(e=>e.value).join(',')==='1,7'`))throw Error('Identity mapping reset failed');
+ console.log('Scene mapping: source/destination names, draft/cancel without audio, scoped apply, exact undo, duplicate protection, reset and small layout passed.');
+};

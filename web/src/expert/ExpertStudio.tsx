@@ -1,4 +1,14 @@
+import {SurfaceEditor} from './SurfaceEditor';
+import {ExpertViewLink} from './ExpertViewLink';
+import {GainCompensationPanel,RoomEqPanel} from './MixPreparation';
+import {BatchEdit} from './BatchEdit';
+import {useParameterLinks} from './parameter-links';
+import {GroupStrip,useBankGroups} from './GroupStrips';
+import {ConsoleCommands} from './ConsoleCommands';
+import {MidiControls} from './MidiControls';
 import {ChannelPresetActions} from "../ChannelPresetActions";
+import {useGroupSpill,GroupSpillNotice} from './group-spill';
+import {GroupedAdjustments} from '../GroupedAdjustments';
 import {tx, getLocale} from "../i18n";
 import {useAirStrips} from '../xair/model-strips';
 import { Drum, Guitar, Piano, MicVocal, Headphones, Sparkles, SlidersHorizontal, Music2, Speaker } from "lucide-react";
@@ -16,10 +26,10 @@ import "../xair-mixer.css";
 import "./expert.css";
 import "./expert-v3.css";
 
-type View = "console" | "channel" | "fx" | "routing" | "analysis" | "recording";
+type View = "midi" | "console" | "channel" | "fx" | "routing" | "analysis" | "recording" | "surface";
 const VIEWS: { id: View; label: string }[] = [
-  { id: "channel", label: "Canal" }, { id: "console", label: "Mélangeur" },
-  { id: "fx", label: "Effets" }, { id: "routing", label: "Routage" }, { id: "analysis", label: "Analyse" }, { id: "recording", label: "Enregistrement" },
+  { id: "midi", label: "MIDI" }, { id: "channel", label: "Canal" }, { id: "console", label: "Mélangeur" },
+  { id: "surface", label: "Surfaces" }, { id: "fx", label: "Effets" }, { id: "routing", label: "Routage" }, { id: "analysis", label: "Analyse" }, { id: "recording", label: "Enregistrement" },
 ];
 async function api<T = any>(path: string, data?: unknown): Promise<T> {
   const r = await fetch(path, { method: data === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: data === undefined ? undefined : JSON.stringify(data) });
@@ -31,6 +41,7 @@ const earsLabel = (values: Values, b: number) => { const n = values[`/bus/${b}/c
 
 /** Small EQ curve of a strip (high-pass included), drawn on 60×26. */
 function eqPath(values: Values, prefix: string) {
+  if([1,2].includes(Number(values[`${prefix}/eq/mode`])))return "";
   if (!values[`${prefix}/eq/1/f`] && values[`${prefix}/eq/1/f`] !== 0) return "M0 13 H60";
   const bands = readEq(values, prefix, 4), on = num(values, `${prefix}/eq/on`, 1) === 1;
   const hp = num(values, `${prefix}/preamp/hpon`) === 1 ? logMap(num(values, `${prefix}/preamp/hpf`), 20, 400) : undefined;
@@ -42,14 +53,18 @@ function eqPath(values: Values, prefix: string) {
 export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel, simulation = false }: { simulation?: boolean; canWrite: boolean; selectedChannel?: number; onSelectChannel?: (n: number) => void }) {
   const {ALL,MAIN,OUTPUTS,INPUTS,BUSES,FXSENDS,model}=useAirStrips();
   const live = useLiveMixer();
-  const { values, set, confirmed, online, message, clearMessage } = live;
+  const { values, set:setDirect, confirmed, online, message, messageKind, clearMessage } = live;
   const [view, setView] = useState<View>(() => { try { return VIEWS.find(v=>v.id===localStorage.getItem("xr18-expert-view"))?.id || "channel"; } catch { return "channel"; } });
   const [selectedId, setSelectedId] = useState(selectedChannel ? `ch${selectedChannel}` : "ch1");
   const [rehearsal, setRehearsal] = useState(false), [recoCount, setRecoCount] = useState(0), [notice, setNotice] = useState(""), [error, setError] = useState("");
+  const spill=useGroupSpill(`${model.id}:${simulation}:${view}`);
   const bodyRef = useRef<HTMLDivElement>(null);
   const writable = canWrite && online;
+  const links=useParameterLinks(model,writable&&(view==='console'||view==='channel'),setDirect);
+  const set=links.set;
   const strip = ALL.find(s => s.id === selectedId) ?? INPUTS[0]!;
   const go = (v: View) => { setView(v); bodyRef.current?.scrollTo({ top: 0, left: 0 }); try { localStorage.setItem("xr18-expert-view", v); } catch { /* convenience only */ } };
+  useEffect(()=>{const open=()=>go("midi");window.addEventListener("bandpilot-open-midi",open);return()=>window.removeEventListener("bandpilot-open-midi",open);},[]);
   const select = (s: Strip) => { setSelectedId(s.id); if (s.kind === "ch") onSelectChannel?.(Number(s.short)); };
   useEffect(() => { if (selectedChannel) setSelectedId(`ch${selectedChannel}`); }, [selectedChannel]);
   useEffect(() => { void api<{ on: boolean }>("/api/rehearsal").then(r => setRehearsal(r.on)).catch(() => undefined); }, []);
@@ -77,11 +92,27 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel, simul
       </button>
       <span className={`xs2-pill ${online ? "live" : "off"}`}><span className="xs2-dot" />{tx(online ? (simulation ? "Simulation modifiable" : writable ? "Contrôle actif" : "Lecture seule") : "Hors ligne")}</span>
     </header>
-    {(message || notice || error) && <div className={`xs2-msg${error || message ? " error" : ""}`} role="status">{tx(error || message || notice)}<button type="button" aria-label={tx("Fermer")} onClick={() => { clearMessage(); setNotice(""); setError(""); }}>{tx("×")}</button></div>}
+    {(message || notice || error) && <div className={`xs2-msg ${error ? 'error' : message ? messageKind : ''}`} role={error || (message && messageKind === 'error') ? 'alert' : 'status'}>{tx(error || message || notice)}<button type="button" aria-label={tx("Fermer")} onClick={() => { clearMessage(); setNotice(""); setError(""); }}>{tx("×")}</button></div>}
     {view === "channel" && <ChannelRail strip={strip} values={values} select={select} />}
     <div className="xs2-body" ref={bodyRef}>
-      {view === "console" && <ConsoleView values={values} set={set} writable={writable} rehearsal={rehearsal} strip={strip} select={select} />}
+      <ExpertViewLink view={view} channel={strip.kind==='ch'?Number(strip.short):selectedChannel??1} scope={`${model.id}:${simulation}`}
+        onReceive={({view,channel})=>{
+          if(channel>=1&&channel<=model.channels){setSelectedId(`ch${channel}`);onSelectChannel?.(channel);}
+          setView(view);
+        }}/>
+      {view==='midi'&&<MidiControls values={values} set={set} canWrite={writable} openInitially mode={simulation?'simulation':'real'}/>}
+      {view==='console'&&<ConsoleCommands key={`commands:${model.id}:${simulation}`} canWrite={writable} mode={simulation?'simulation':'real'}/>}
+      {view==='console'&&<GroupedAdjustments key={`${model.id}:${simulation}`} model={model.id} canWrite={writable} mode={simulation?'simulation':'real'} onSpill={spill.show}/>}
+      {(view==='console'||view==='channel')&&links.links.length>0&&<div className="parameter-links-switch">
+        <button type="button" className="xs2-btn" disabled={!writable} aria-pressed={links.active} onClick={()=>links.active?links.stop():links.start()}>{tx(links.active?'Désactiver les liens de pistes':'Activer les liens de pistes')}</button>
+        {links.error&&<p role="alert">{tx(links.error)}</p>}
+      </div>}
+      {view==='console'&&<BatchEdit key={model.id} model={model} values={values} writable={writable} mode={simulation?'simulation':'real'} links={links.links} onLinks={links.save}/>}
+      {view === "console" && <ConsoleView mode={simulation?'simulation':'real'} spill={spill} values={values} set={set} writable={writable} rehearsal={rehearsal} strip={strip} select={select} />}
       {(view === "channel" || view === "console") && strip.kind === "ch" && <ChannelPresetActions key={`${model.id}:${strip.id}:${simulation}`} channel={Number(strip.short)} name={stripName(strip,values)} model={model.id} online={online} canWrite={writable} mode={simulation?'simulation':'real'}/>}
+      {(view==='channel'||view==='console')&&strip.kind==='ch'&&<GainCompensationPanel key={`${model.id}:${strip.id}:${simulation}`} model={model.id} channel={Number(strip.short)} canWrite={writable} mode={simulation?'simulation':'real'}/>}
+      {view==='analysis'&&<RoomEqPanel key={`${model.id}:${simulation}`} model={model.id} outputs={model.monitorOutputs} canWrite={writable} mode={simulation?'simulation':'real'}/>}
+      {view === "surface" && <SurfaceEditor key={model.id} values={values} set={setDirect} canWrite={writable} rehearsal={rehearsal} openChannel={s=>props.open(s,'channel')}/> }
       {view === "console" && <ChannelPage {...channelProps} select={select} />}
       {view === "channel" && <FocusedChannel {...channelProps} select={select} />}
       {view === "fx" && <div className="xm xs2-legacy"><FxView {...props} /></div>}
@@ -96,49 +127,62 @@ export function ExpertStudio({ canWrite, selectedChannel, onSelectChannel, simul
 function Lock() { return <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>; }
 
 // ---------------- Console ----------------
-function ConsoleView({ values, set, writable, rehearsal, strip, select }: { values: Values; set: SetFn; writable: boolean; rehearsal: boolean; strip: Strip; select: (s: Strip) => void }) {
+function ConsoleView({ mode, spill, values, set, writable, rehearsal, strip, select }: {mode:'real'|'simulation';spill:ReturnType<typeof useGroupSpill>;values: Values; set: SetFn; writable: boolean; rehearsal: boolean; strip: Strip; select: (s: Strip) => void }) {
   const {ALL,MAIN,OUTPUTS,INPUTS,BUSES,FXSENDS,model}=useAirStrips();
-  const [layer, setLayer] = useState(() => rehearsal ? 1 : 0);
-  const [bank, setBank] = useState<"inputs" | "returns">("inputs");
-  useEffect(() => { if (rehearsal && layer === 0) setLayer(1); }, [rehearsal, layer]);
-  const levels = useMeters();
+  const [manualLayer, setLayer] = useState(() => rehearsal ? 1 : 0);
+  const [groupsOnly,setGroupsOnly]=useState(false);
+  const levels=useMeters();
+  const groups=useBankGroups(model.id);
+  const groupStrips:Strip[]=groups.map(group=>({id:'grp-'+group.id,kind:'dca',prefix:'',short:tx('Groupe'),fallback:group.name,meters:[]}));
+  const strips=[...ALL,...groupStrips];
   const used = (s: Strip) => s.kind !== "ch" || stripName(s, values) !== s.fallback || (levels[s.meters[0]!] ?? -128) > -60;
   const desk=useDeskLayout(model.id);
+  const customBank=!groupsOnly?desk.layout.banks.find(b=>b.id===desk.layout.activeBank):undefined;
+  const bank=customBank?customBank.id:desk.layout.activeBank==='returns'?'returns':'inputs';
+  const pinnedLayer=customBank?.mix!==undefined&&customBank.mix<=model.monitorOutputs?customBank.mix:undefined;
+  const requestedLayer=pinnedLayer??manualLayer;
+  const layer=rehearsal&&requestedLayer===0?1:requestedLayer;
+  const setBank=(activeBank:string)=>{setGroupsOnly(false);spill.clear();desk.update({activeBank});};
+  const visibleStrips=spill.channels?INPUTS.filter(s=>s.kind==='ch'&&spill.channels!.includes(Number(s.short))):groupsOnly?groupStrips:customBank?customBank.strips.flatMap(id=>strips.find(s=>s.id===id)??[]):INPUTS.filter(s=>(bank==='inputs'?s.kind==='ch':s.kind!=='ch')&&!desk.layout.hidden.includes(s.id));
   const color = (s: Strip) => stripColor(num(values, `${s.prefix}/config/color`));
   return <div className={`expert-console density-${desk.layout.density}`}>
-    <DeskLayoutTools strips={INPUTS} values={values} desk={desk}/>
-    <button type="button" className="desk-output-toggle" aria-expanded={desk.layout.outputs} onClick={()=>desk.update({outputs:!desk.layout.outputs})}>{tx(desk.layout.outputs?"Replier les sorties et le Master":"Afficher les sorties et le Master")}</button>
+    <DeskLayoutTools strips={INPUTS} allStrips={strips} monitorOutputs={model.monitorOutputs} values={values} desk={desk}/>
+    <MidiControls values={values} set={set} canWrite={writable}/>
     <div className="main">
-      <div className="expert-bankbar"><div role="group" aria-label={tx("Banque de tranches")}><button type="button" aria-pressed={bank === "inputs"} onClick={() => setBank("inputs")}>{tx("Entrées 1–")}{tx(model.channels)}</button><button type="button" aria-pressed={bank === "returns"} onClick={() => setBank("returns")}>{tx("Aux + retours FX")}</button></div><button type="button" className="xs2-btn" onClick={() => document.getElementById("expert-channel-parameters")?.scrollIntoView({ block: "start" })}>{tx("Paramètres de ")}{stripName(strip, values)} ↓</button></div>
+      {spill.channels&&<GroupSpillNotice clear={spill.clear}/>}
+      <div className="expert-bankbar"><div role="group" aria-label={tx("Banque de tranches")}><button type="button" aria-pressed={!groupsOnly&&bank === "inputs"} onClick={() => setBank("inputs")}>{tx("Entrées 1–")}{tx(model.channels)}</button><button type="button" aria-pressed={!groupsOnly&&bank === "returns"} onClick={() => setBank("returns")}>{tx("Aux + retours FX")}</button>{groups.length>0&&<button type="button" aria-pressed={groupsOnly} onClick={()=>{spill.clear();setGroupsOnly(true);}}>{tx('Groupes logiciels')}</button>}{desk.layout.banks.map(b=><button type="button" key={b.id} aria-pressed={bank===b.id} onClick={()=>setBank(b.id)}>{b.name}</button>)}</div><button type="button" className="xs2-btn" onClick={() => document.getElementById("expert-channel-parameters")?.scrollIntoView({ block: "start" })}>{tx("Paramètres de ")}{stripName(strip, values)} ↓</button></div>
       <div className="xs2-bar">
         <span className="label">{tx("Les faders règlent")}</span>
-        <button type="button" className={`xs2-chip${layer === 0 ? " on" : ""}${rehearsal ? " locked" : ""}`} disabled={rehearsal} onClick={() => setLayer(0)} title={tx(rehearsal ? "Main coupé en répétition" : "Le mix de la façade")}>{rehearsal && <Lock />}{tx(" Façade")}</button>
-        {BUSES.map((b, i) => <button key={b.id} type="button" className={`xs2-chip${layer === i + 1 ? " on" : ""}`} onClick={() => setLayer(i + 1)}>{i < model.monitorOutputs ? earsLabel(values, i + 1) : tx(`Bus ${i + 1} interne`)}</button>)}
-        {FXSENDS.map((f, i) => <button key={f.id} type="button" className={`xs2-chip${layer === i + 7 ? " on" : ""}`} onClick={() => setLayer(i + 7)}>{tx("FX ")}{tx(i + 1)}</button>)}
+        <button type="button" className={`xs2-chip${layer === 0 ? " on" : ""}${rehearsal ? " locked" : ""}`} disabled={rehearsal||pinnedLayer!==undefined} onClick={() => setLayer(0)} title={tx(rehearsal ? "Main coupé en répétition" : "Le mix de la façade")}>{rehearsal && <Lock />}{tx(" Façade")}</button>
+        {BUSES.map((b, i) => <button key={b.id} type="button" className={`xs2-chip${layer === i + 1 ? " on" : ""}`} disabled={pinnedLayer!==undefined} onClick={() => setLayer(i + 1)}>{i < model.monitorOutputs ? earsLabel(values, i + 1) : tx(`Bus ${i + 1} interne`)}</button>)}
+        {FXSENDS.map((f, i) => <button key={f.id} type="button" className={`xs2-chip${layer === i + 7 ? " on" : ""}`} disabled={pinnedLayer!==undefined} onClick={() => setLayer(i + 7)}>{tx("FX ")}{tx(i + 1)}</button>)}
       </div>
-      <div className="xs2-strips" role="list" aria-label={tx("Tranches")}>
-        {INPUTS.filter(s => (bank === "inputs" ? s.kind === "ch" : s.kind !== "ch") && !desk.layout.hidden.includes(s.id)).map(s => {
-          const fa = faderAddress(s, layer), oa = onAddress(s), so = soloAddress(s), on = num(values, oa, 1) === 1;
+      <div className={`xs2-strips${customBank ? " expert-custom-strips" : ""}`} role="list" aria-label={tx("Tranches")}>
+        {visibleStrips.map(s => {
+          const group=groups.find(group=>'grp-'+group.id===s.id);
+          if(group)return <GroupStrip key={`${group.id}:${group.revision}:${layer}:${mode}`} group={group} layer={layer} canWrite={writable&&layer<=model.monitorOutputs} mode={mode} onSpill={()=>spill.show(group.channels)}/>;
+          const inputStrip=["ch","aux","fxrtn"].includes(s.kind),stripLayer=inputStrip?layer:0,locked=!writable||(rehearsal&&s.kind==="lr");
+          const fa = faderAddress(s, stripLayer), oa = onAddress(s), so = soloAddress(s), on = num(values, oa, 1) === 1;
           const gain = gainControl(s, values,model.micPreamps);
           const comp = s.kind === "ch" && num(values, `${s.prefix}/dyn/on`) === 1;
           return <div key={s.id} role="listitem" className={`xs2-strip${s.id === strip.id ? " sel" : ""}${used(s) ? "" : " idle"}`} onClick={() => select(s)}>
             <i className="tag" style={{ background: color(s) }} />
             <button type="button" className="name" onClick={() => { select(s); document.getElementById("expert-channel-parameters")?.scrollIntoView({ block: "start" }); }} title={tx(`Paramètres de ${stripName(s, values)}`)}>{stripName(s, values)}</button>
             <span className="ch">{tx(s.short)}</span>
-            <div className="expert-strip-overview"><span>{tx(gain ? `${gain.label.split(" ")[0]} ${(gain.lo + num(values, gain.address) * (gain.hi - gain.lo)).toFixed(0)} dB` : "—")}</span>{s.kind === "ch" && <span>{tx("Gate ")}{tx(num(values, `${s.prefix}/gate/on`) === 1 ? "ON" : "OFF")}</span>}</div>
+            {!customBank?.compactStrips&&<><div className="expert-strip-overview"><span>{tx(gain ? `${gain.label.split(" ")[0]} ${(gain.lo + num(values, gain.address) * (gain.hi - gain.lo)).toFixed(0)} dB` : "—")}</span>{s.kind === "ch" && <span>{tx("Gate ")}{tx(num(values, `${s.prefix}/gate/on`) === 1 ? "ON" : "OFF")}</span>}</div>
             <svg className="eq" viewBox="0 0 60 26" aria-hidden="true"><path d="M0 13 H60" stroke="#222A34" /><path d={eqPath(values, s.prefix)} fill="none" stroke={color(s)} strokeWidth="1.6" /></svg>
             <span className="dyn" title={tx("Compresseur")}><span className={comp ? "on" : ""}>{tx(s.kind === "ch" ? (comp ? `${Number(RATIOS[num(values, `${s.prefix}/dyn/ratio`)])}:1` : "—") : "")}</span></span>
-            <div className="fz"><Fader label={tx(`${layer ? "Envoi" : "Fader"} ${stripName(s, values)}`)} value={num(values, fa)} disabled={!writable} reset={layer ? 0 : .75} accent={color(s)} onChange={v => set(fa, v)} /><Meter indexes={s.meters} /></div>
+            </>}<div className="fz"><Fader label={tx(`${stripLayer ? "Envoi" : "Fader"} ${stripName(s, values)}`)} value={num(values, fa)} disabled={locked} reset={stripLayer ? 0 : .75} accent={color(s)} onChange={v => set(fa, v)} /><Meter indexes={s.meters} /></div>
             <span className="db">{tx(dbText(num(values, fa)))}</span>
             <span className="ms">
-              <button type="button" className={on ? "" : "mute"} disabled={!writable} aria-label={tx(`Mute ${stripName(s, values)}`)} aria-pressed={!on} onClick={e => { e.stopPropagation(); set(oa, on ? 0 : 1); }}>{tx("M")}</button>
-              {so && <button type="button" className={values[so] === 1 ? "solo" : ""} disabled={!writable} aria-label={tx(`Solo ${stripName(s, values)}`)} aria-pressed={values[so] === 1} onClick={e => { e.stopPropagation(); set(so, values[so] === 1 ? 0 : 1); }}>{tx("S")}</button>}
+              <button type="button" className={on ? "" : "mute"} disabled={locked} aria-label={tx(`Mute ${stripName(s, values)}`)} aria-pressed={!on} onClick={e => { e.stopPropagation(); set(oa, on ? 0 : 1); }}>{tx("M")}</button>
+              {so && <button type="button" className={values[so] === 1 ? "solo" : ""} disabled={locked} aria-label={tx(`Solo ${stripName(s, values)}`)} aria-pressed={values[so] === 1} onClick={e => { e.stopPropagation(); set(so, values[so] === 1 ? 0 : 1); }}>{tx("S")}</button>}
             </span>
           </div>;
         })}
       </div>
     </div>
-    {desk.layout.outputs&&<section className="expert-output-bank" aria-label={tx("Faders des sorties et groupes")}>
+    {desk.layout.outputs&&!spill.channels&&<section className="expert-output-bank" aria-label={tx("Faders des sorties et groupes")}>
       <h3>{tx("Sorties et groupes ")}<small>{tx("Bus 1–")}{tx(model.buses)}{tx(" · Départs FX · DCA · Main LR")}</small></h3>
       <div className="xs2-strips expert-output-strips" role="list" aria-label={tx("Sorties et groupes")}>
         {[...OUTPUTS, MAIN].map(output => {
@@ -154,7 +198,7 @@ function ConsoleView({ values, set, writable, rehearsal, strip, select }: { valu
         })}
       </div>
     </section>}
-    {!INPUTS.some(s=>(bank==="inputs"?s.kind==="ch":s.kind!=="ch")&&!desk.layout.hidden.includes(s.id))&&<p role="status">{tx("Aucune tranche visible dans cette banque. Utilise « Ma console » pour les réafficher.")}</p>}
+    {!visibleStrips.length&&<p role="status">{tx("Aucune tranche visible. Utilise « Personnaliser » pour les réafficher.")}</p>}
   </div>;
 }
 
@@ -252,6 +296,7 @@ function EqOverview({ strip, values, open }: { strip: Strip; values: Values; ope
     const observer = new ResizeObserver(entries => { const r = entries[0]?.contentRect; if (r && r.width > 0 && r.height > 0) setSize({ w: r.width, h: r.height }); });
     observer.observe(svgRef.current); return () => observer.disconnect();
   }, []);
+  if([1,2].includes(Number(values[`${strip.prefix}/eq/mode`])))return <section className="visual-eq-overview"><header><b>{tx('Égaliseur graphique de sortie')}</b><button type="button" onClick={open}>{tx('Ouvrir EQ ↗')}</button></header></section>;
   const { w, h } = size, plotH = Math.max(20, h - 20), zero = plotH / 2;
   const xOf = (f: number) => Math.log(f / 20) / Math.log(1000) * w;
   const yOf = (db: number) => zero - Math.max(-18, Math.min(18, db)) / 18 * zero;

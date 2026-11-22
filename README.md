@@ -49,18 +49,19 @@ Bureau : [dernière version stable](https://github.com/herve8940/BandPilot/relea
 
 Pour séparer les instruments, travailler les paroles et préparer tes morceaux pour REAPER, découvre [BandStudio](https://herve8940.github.io/BandStudio/), une application indépendante et complémentaire.
 
-## Scènes et presets par instrument · 2.3.14 / Android 2.4.0-android.5
+## Console, MIDI et répétition sur téléphone · 2.3.15
 
-Sauvegarde l’EQ, le compresseur et le gate d’une entrée, puis rappelle seulement les traitements choisis sur une autre entrée du même modèle. Les presets sont des points de départ à adapter au signal.
+BandPilot 2.3.15 réunit les nouvelles commandes de console, les rappels sélectifs, les groupes logiciels, le MIDI et la répétition REAPER sur les téléphones des musiciens.
 
-La bibliothèque sépare scènes complètes, presets, fiches de balance et sauvegardes automatiques. Import/export JSON, rappel des fichiers X-Air .scn compatibles et choix du slot pour les presets FX.
+- **Console et retours** — Banques et surfaces personnalisables, groupes logiciels, paires stéréo, vumètres et RTA. Les réglages et destinations proposés dépendent du modèle connecté et du mix sélectionné.
+- **Scènes et presets** — Rappels sélectifs des entrées, sorties et FX, protections par famille de réglages, aperçu et sauvegarde. Conversion explicite de presets et de scènes portables au sein de X-Air/M-Air, dans le périmètre pris en charge.
+- **Effets et analyse** — Éditeurs nommés pour les 61 algorithmes X-Air, tap tempo, GEQ/True EQ 31 bandes sur les sorties compatibles. Mesure acoustique au micro et propositions de correction à vérifier, avec application volontaire.
+- **MIDI et commandes** — Apprentissage des faders et mutes, CC absolus ou relatifs, notes, Program Change, commandes favorites et conditions. Activation explicite pour la session et sauvegarde avant les commandes prises en charge.
+- **Répétition et fiches** — Projets REAPER ouverts par onglet, sections, boucles, décompte, prises séparées et gestionnaire sur téléphone. Accords et paroles disponibles dans les fiches compatibles BandStudio, avec affichage plein écran.
 
-Enregistrer ou importer ne modifie pas le son. Chaque rappel demande un aperçu et une confirmation, avec sauvegarde préalable. Le rappel d’un preset de canal conserve gain, 48 V, volumes, retours et routage.
+Cette évolution concerne les applications de bureau Windows, macOS Intel/Apple Silicon et Linux. Android reste distribué séparément en 2.4.0-android.5 ; ses fonctions ne sont pas toutes celles de cette version de bureau. BandStudio est une application complémentaire indépendante.
 
-Limites : pas de conversion entre modèles ; rappel de preset mono refusé sur une paire stéréo liée. Rappel .scn réservé à XR18/X18/MR18 et aux effets HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY et MODD ; les autres fichiers restent exportables. X32 demeure partielle.
-
-[Lire le guide](docs/USER_GUIDE_FR.md)
-
+[Tutoriel des nouveautés 2.3.15](docs/NEW_2_3_15_FR.md)
 ## Nouveautés : fiche technique, ambiances et Android
 
 Première version Android disponible en APK signé. Installation durable, sans signature à renouveler tous les sept jours. REAPER reste sur ordinateur.
@@ -113,7 +114,7 @@ La simulation de console ne simule pas REAPER : REC capture ses véritables entr
 - [Guide complet FR](docs/USER_GUIDE_FR.md) · [Full English guide](docs/USER_GUIDE_EN.md)
 - [Mon ingé son FR](docs/TUTO_MON_INGE_SON.md) · [English coach tutorial](docs/TUTO_MON_INGE_SON_EN.md)
 - [Visite vidéo et transcription](docs/VIDEO_TOUR.md) — montage de six captures en simulation, 42 secondes, sous-titres FR/EN/IT/ES/DE.
-- [Nouveautés 2.3.3](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
+- [Nouveautés et historique](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
 - [Contrôles X-Air détaillés](docs/GUIDE_CONSOLE.md) · [Architecture et API](docs/SQLITE_API.md)
 
 ## Développement

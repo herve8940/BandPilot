@@ -1,11 +1,12 @@
 /** Client of XR18_Studio_Bridge.lua, the script that runs inside Reaper (same file exchange as ReaCue's bridge). */
 import {randomUUID} from 'node:crypto';
-import {existsSync,statSync} from 'node:fs';
+import {existsSync,readFileSync,statSync} from 'node:fs';
 import {appendFile,copyFile,mkdir,readFile,rename,rm,writeFile} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {dirname,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import type {Transport} from './reaper.js';
+import {REHEARSAL_BRIDGE} from '../shared/rehearsal-desk.js';
 
 export type Take={valid?:boolean;index:number;name:string;file:string;active:boolean};
 export type Item={pos:number;length:number;takes:Take[]};
@@ -43,20 +44,24 @@ export class ReaperBridge{
  private reads=new Map<string,Promise<unknown>>();
  constructor(private resources=reaperResources(),private timeoutMs=3000){}
  private get dir(){return join(this.resources,'XR18Studio');}
+ supportsRehearsal(){
+  try{return readFileSync(join(this.dir,'heartbeat.txt'),'utf8').split(/\r?\n/).slice(3).includes(REHEARSAL_BRIDGE);}catch{return false;}
+ }
  installed(){return existsSync(join(this.resources,'Scripts','XR18 Studio','XR18_Studio_Bridge.lua'));}
  alive(){
   try{return Date.now()-statSync(join(this.dir,'heartbeat.txt')).mtimeMs<8000;}catch{return false;}
  }
  async call<T=unknown>(cmd:string,args:object={}):Promise<T>{
   // Polling and waveform requests must never build an unbounded queue ahead of Rec/Stop.
-  const read=(cmd==='state'||cmd==='transport')&&Object.keys(args).length===0;
-  if(read&&this.reads.has(cmd))return this.reads.get(cmd) as Promise<T>;
+  const read=((cmd==='state'||cmd==='transport')&&Object.keys(args).length===0)||cmd==='rehearsal_state'||cmd==='rehearsal_sheet_clock';
+  const readKey=cmd==='rehearsal_state'?cmd+JSON.stringify(args):cmd;
+  if(read&&this.reads.has(readKey))return this.reads.get(readKey) as Promise<T>;
   const next=new Promise<T>((resolve,reject)=>{
-   this.queue.push({priority:(cmd==='peaks'||cmd==='workshop_measure'||cmd==='workshop_measure_batch')?3:cmd==='state'?2:read?1:0,run:async()=>{
+   this.queue.push({priority:(cmd==='peaks'||cmd==='rehearsal_peaks'||cmd==='workshop_measure'||cmd==='workshop_measure_batch')?3:cmd==='state'||cmd==='rehearsal_state'||cmd==='rehearsal_sheet_clock'?2:read?1:0,run:async()=>{
     try{resolve(await this.exchange<T>(cmd,args));}catch(e){reject(e);}
    }});
   });
-  if(read){this.reads.set(cmd,next);void next.finally(()=>this.reads.delete(cmd)).catch(()=>undefined);}
+  if(read){this.reads.set(readKey,next);void next.finally(()=>this.reads.delete(readKey)).catch(()=>undefined);}
   void this.drain();return next;
  }
  private async drain(){
@@ -71,14 +76,17 @@ export class ReaperBridge{
   const isolated=/^BandPilotBridge\/2\r?\n/.test(heartbeat);
   const req=join(this.dir,isolated?`request-${id}.lua`:'request.lua'),res=join(this.dir,isolated?`response-${id}.json`:'response.json');
   await retry(()=>rm(res,{force:true}));await writeFile(req+'.tmp',toLua({id,cmd,args}));await retry(()=>rename(req+'.tmp',req));
+  if(isolated&&heartbeat.includes('rehearsal-tabs/3'))await writeFile(join(this.dir,'requests.ready'),'1').catch(()=>undefined);
   const end=Date.now()+(cmd==='workshop_create'?Math.max(15000,this.timeoutMs):cmd==='workshop_measure_batch'?Math.max(6000,this.timeoutMs):this.timeoutMs);
   while(Date.now()<end){
    try{
     const data=JSON.parse(await readFile(res,'utf8'));
     if(data.id!==id&&data.id!==undefined){/* Never delete a response owned by another legacy client. */}
-    else{await retry(()=>rm(res,{force:true}));if(!data.ok)throw Object.assign(Error(data.error??'Erreur du pont'),{bridge:true});return data.result as T;}
+    else{
+     if(cmd==='rehearsal_sheet_clock'&&data.ok&&data.result?.project)data.result.sampledAt=statSync(res).mtimeMs;
+     await retry(()=>rm(res,{force:true}));if(!data.ok)throw Object.assign(Error(data.error??'Erreur du pont'),{bridge:true});return data.result as T;}
    }catch(e){if((e as {bridge?:boolean}).bridge)throw e;}
-   await new Promise(r=>setTimeout(r,30));
+   await new Promise(r=>setTimeout(r,cmd.startsWith('rehearsal_')?10:30));
   }
   await rm(req,{force:true}).catch(()=>undefined);
   if(isolated)await rm(res,{force:true}).catch(()=>undefined);
@@ -92,11 +100,11 @@ export class ReaperBridge{
  async install(source=defaultScript()){
   const scripts=join(this.resources,'Scripts'),target=join(scripts,'XR18 Studio','XR18_Studio_Bridge.lua'),startup=join(scripts,'__startup.lua');
   if(!existsSync(this.resources))throw Error('Dossier de Reaper introuvable : ouvre Reaper une première fois.');
-  await mkdir(dirname(target),{recursive:true});await copyFile(source,target);for(const name of ['BandPilot_Workshop.lua','BandPilot_Spectrum.lua'])await copyFile(join(dirname(source),name),join(dirname(target),name));
+  await mkdir(dirname(target),{recursive:true});await copyFile(source,target);for(const name of ['BandPilot_Workshop.lua','BandPilot_Spectrum.lua','BandPilot_Rehearsal.lua'])await copyFile(join(dirname(source),name),join(dirname(target),name));
   const line='dofile(reaper.GetResourcePath() .. "/Scripts/XR18 Studio/XR18_Studio_Bridge.lua") -- XR18 Studio';
   const current=existsSync(startup)?await readFile(startup,'utf8'):'';
   if(!current.includes('XR18_Studio_Bridge.lua'))await appendFile(startup,(current&&!current.endsWith('\n')?'\n':'')+line+'\n');
-  return {installed:true,restartNeeded:!this.alive()};
+  return {installed:true,restartNeeded:!this.alive()||!this.supportsRehearsal()};
  }
 }
 export function defaultScript(){

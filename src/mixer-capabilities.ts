@@ -9,7 +9,7 @@ export function supportsMixerAddress(p:MixerProfile,a:string):boolean {
  if(p.family==='xair'){
   if(head&&Number(head[1])>p.micPreamps)return false;
   if(!p.usbChannels&&(a.startsWith('/routing/usb/')||a.includes('/preamp/rtnsw')))return false;
-  return AIR_PARAMETER_ADDRESSES.has(a)||/^\/-stat\/solosw\/(0[1-9]|1[0-6])$/.test(a)||/^\/fx\/[1-4]\/par$/.test(a)||a.startsWith('/-prefs/');
+  return AIR_PARAMETER_ADDRESSES.has(a)||/^\/-stat\/solosw\/(0[1-9]|1[0-6])$/.test(a)||/^\/-stat\/rta\/(source|pos)$/.test(a)||/^\/fx\/[1-4]\/par$/.test(a)||a.startsWith('/-prefs/');
  }
  if(head||a.startsWith('/routing/')||a.startsWith('/config/')||a.startsWith('/fx/')||a.startsWith('/rtn/')||a.startsWith('/fxsend/')||a.startsWith('/-stat/'))return false;
  const config=/^config\/(name|color)$/;

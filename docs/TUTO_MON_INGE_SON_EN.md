@@ -1,4 +1,8 @@
-# BandPilot 2.2 — sound-check coach, step by step
+# BandPilot — sound-check coach, step by step
+
+**2.3.15 — [2.3.15 tutorial](NEW_2_3_15_EN.md)**
+
+This update concerns the Windows, Intel/Apple Silicon macOS and Linux desktop apps. Android remains a separate 2.4.0-android.5 release and does not include every desktop feature described here. BandStudio is an independent companion app.
 
 [Français](TUTO_MON_INGE_SON.md) · [English](TUTO_MON_INGE_SON_EN.md) · [Italiano](TUTO_MON_INGE_SON_IT.md) · [Español](TUTO_MON_INGE_SON_ES.md) · [Deutsch](TUTO_MON_INGE_SON_DE.md)
 

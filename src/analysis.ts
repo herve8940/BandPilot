@@ -1,3 +1,4 @@
+import type {MonitorListening} from '../shared/coach-sound.js';
 import {EventEmitter} from 'node:events';
 import {XR18} from './xr18.js';
 import {fromWire,toWire,PARAMETERS,type Value} from './parameters.js';
@@ -58,7 +59,7 @@ export function familyFromName(name:string):Family|null{
  if(/clav|key|piano|synth|orgue/.test(n))return 'keys';
  return null;
 }
-/** Lowest useful frequency per family: below, a microphone only brings rumble. */
+/** Conservative trial frequencies, never proof that the lower band is unwanted. */
 const HPF_BY_FAMILY:Partial<Record<Family,number>>={voice:100,backing:120,guitar:90,snare:90,toms:70,cymbals:250};
 
 type Params=(address:string)=>Value|undefined;
@@ -78,12 +79,12 @@ function eqCut(prefix:string,band:number,f:number,g:number,q:number):Record<stri
 /** Sound-engineer rules. Pure function: spectra per channel, recent levels and gain reduction, current settings. */
 export function recommend(input:{
  instruments:Instrument[];spectra:Record<number,number[]>;params:Params;
- compGr:Record<number,number>;busPeak:Record<number,number>;busNames:Record<number,string>;usedBuses:number[];
+ compGr:Record<number,number>;busPeak:Record<number,number>;busNames:Record<number,string>;usedBuses:number[];monitorContexts?:Record<number,MonitorListening|undefined>;
 }):Recommendation[]{
  const {instruments,spectra,params:p,compGr,busPeak,busNames}=input,out:Recommendation[]=[];
  const named=(c:number)=>instruments.find(i=>i.channel===c);
- const busLabel=(b:number)=>busNames[b]?.trim()?`Ears ${busNames[b]}`:`Ears bus ${b}`;
- const allEars='tous les ears';
+ const busLabel=(b:number)=>busNames[b]?.trim()?`Retour ${busNames[b]}`:`Bus ${b}`;
+ const allEars='canal partagé';
  // 1. Rumble: high-pass filter too low (or off) on sources that have nothing useful down there.
  for(const ins of instruments){
   const spec=spectra[ins.channel],cut=ins.family?HPF_BY_FAMILY[ins.family]:undefined;if(!spec||!cut)continue;
@@ -92,7 +93,7 @@ export function recommend(input:{
   const low=level(spec,20,cut*0.85),body=level(spec,cut*2,cut*8);
   if(low>body-15&&body>-90)out.push({id:`hpf-${ins.channel}`,severity:'important',channel:ins.channel,where:`${ins.name} · ${allEars}`,zone:'Sub',
    title:`Coupe-bas de ${ins.name} ${on===1&&Number.isFinite(f)?`de ${Math.round(f)} → `:'à '}${cut} Hz`,
-   why:`Le micro capte du grondement sous ${cut} Hz (${Math.round(low-body)>0?'+':''}${sg(Math.round(low-body))} dB par rapport au corps du son). Rien d’utile pour ${ins.name.toLowerCase()} à cet endroit : couper allège tous les ears.`,
+   why:`Énergie mesurée sous ${cut} Hz : ${sg(Math.round(low-body))} dB par rapport au corps du son. Un coupe-bas est une piste à écouter ; cette énergie peut aussi appartenir à l’instrument.`,
    changes:{[`${pre}/preamp/hpon`]:1,[`${pre}/preamp/hpf`]:cut}});
  }
  // 2. Kick and bass on top of each other.
@@ -106,7 +107,7 @@ export function recommend(input:{
    const pre=`/ch/${pad(bass.channel)}`,band=freeBand(p,pre,f);if(band===null)continue;
    out.push({id:`mask-kick-bass-${bass.channel}`,severity:'important',channel:bass.channel,where:`${bass.name} ↔ ${kick.name} · ${allEars}`,zone:'Grave',
     title:`Creuser ${bass.name} de −3 dB à ${hz(f)}`,
-    why:`${bass.name} et ${kick.name} remplissent la même zone (${hz(f/1.25)}–${hz(f*1.25)}) : le grave devient flou. ${kick.name} garde cette place, ${bass.name.toLowerCase()} se décale juste au-dessus.`,
+    why:`${bass.name} et ${kick.name} remplissent la même zone (${hz(f/1.25)}–${hz(f*1.25)}) : un masquage est possible. Essaie cette réduction seulement si elle améliore la place choisie pour chaque instrument.`,
     changes:eqCut(pre,band,f,-3,1.4)});
   }
  }
@@ -120,7 +121,7 @@ export function recommend(input:{
    const pre=`/ch/${pad(gtr.channel)}`,band=freeBand(p,pre,f);if(band===null)continue;
    out.push({id:`mask-voice-${gtr.channel}`,severity:'conseil',channel:gtr.channel,where:`${gtr.name} ↔ ${voice.name} · ${allEars}`,zone:'Présence',
     title:`${gtr.name} −2,5 dB à ${hz(f)} (Q 2)`,
-    why:`${gtr.name} occupe la zone de présence de ${voice.name.toLowerCase()} (${hz(2000)}–${hz(4500)}) : la voix se comprend moins bien dans les ears et le chanteur monte son volume.`,
+    why:`${gtr.name} occupe la zone de présence de ${voice.name.toLowerCase()} (${hz(2000)}–${hz(4500)}) : un masquage est possible. Les spectres mesurés séparément ne prouvent pas une perte d’intelligibilité dans chaque mix.`,
     changes:eqCut(pre,band,f,-2.5,2)});
   }
  }
@@ -133,48 +134,43 @@ export function recommend(input:{
   const f=bandFreq(best),pre=`/ch/${pad(ins.channel)}`,band=freeBand(p,pre,f);if(band===null)continue;
   out.push({id:`res-${ins.channel}`,severity:'conseil',channel:ins.channel,where:`${ins.name} · ${allEars}`,zone:f<350?'Bas-méd.':f<1200?'Médium':f<2500?'Haut-méd.':'Présence',
    title:`Résonance de ${ins.name} à ${hz(f)} : −3 dB (Q 4)`,
-   why:`Une bande étroite ressort de ${Math.round(excess)} dB au-dessus de ses voisines : son qui « sonne » ou siffle, et premier endroit où un larsen démarre dans les retours.`,
+   why:`Une bande étroite ressort de ${Math.round(excess)} dB au-dessus de ses voisines : il peut s’agir d’une résonance ou d’une note tenue. Vérifie à l’écoute avant de réduire ; ce relevé ne prédit pas un larsen.`,
    changes:eqCut(pre,band,f,-3,4)});
  }
  // 5. Compressor squashing too hard.
  for(const ins of instruments){
   const gr=compGr[ins.channel];if(gr===undefined||gr>-8)continue;
   const pre=`/ch/${pad(ins.channel)}`,thr=Number(p(`${pre}/dyn/thr`));if(Number(p(`${pre}/dyn/on`))!==1||!Number.isFinite(thr))continue;
-  const next=Math.min(0,Math.round((thr+Math.abs(gr)-4)*2)/2);
+  const next=Math.min(0,Math.round((thr+3)*2)/2);
   out.push({id:`comp-${ins.channel}`,severity:'conseil',channel:ins.channel,where:`${ins.name} · ${allEars}`,
    title:`Compresseur de ${ins.name} : seuil ${sg(thr)} → ${sg(next)} dB`,
-   why:`Il retire jusqu’à ${Math.round(-gr)} dB : le son est écrasé et perd sa dynamique. Visé : environ 4 dB de réduction sur les passages forts.`,
+   why:`Réduction mesurée jusqu’à ${Math.round(-gr)} dB. Elle peut être voulue : essaie un seuil relevé de 3 dB uniquement si les transitoires te semblent trop réduites, puis compare les niveaux.`,
    changes:{[`${pre}/dyn/thr`]:next}});
  }
  // 6. Ear safety: a monitor mix close to clipping.
  for(const b of input.usedBuses){
   const peak=busPeak[b];if(peak===undefined||peak<=-3)continue;
   const pre=`/bus/${b}`;
-  if(Number(p(`${pre}/dyn/on`))!==1){
-   out.push({id:`limit-${b}`,severity:'securite',bus:b,where:busLabel(b),
-    title:`Limiteur de protection sur ${busLabel(b)}`,
-    why:`Crêtes à ${sg(peak)} dB, trop près du maximum. Un limiteur à −6 dB garantit qu’aucun pic ne dépasse ce niveau dans les oreilles.`,
-    changes:{[`${pre}/dyn/on`]:1,[`${pre}/dyn/mode`]:0,[`${pre}/dyn/ratio`]:11,[`${pre}/dyn/thr`]:-6,[`${pre}/dyn/knee`]:0,[`${pre}/dyn/attack`]:1,[`${pre}/dyn/release`]:100,[`${pre}/dyn/mgain`]:0}});
-  }else{
-   const fader=Number(p(`${pre}/mix/fader`));if(!Number.isFinite(fader))continue;
-   out.push({id:`ear-${b}`,severity:'securite',bus:b,where:busLabel(b),
-    title:`${busLabel(b)} : −3 dB`,
-    why:`Crêtes à ${sg(peak)} dB : le limiteur travaille sans arrêt. Baisser le mix de 3 dB rend le son plus propre dans l’oreille.`,
-    changes:{[`${pre}/mix/fader`]:Math.max(-90,Math.round((fader-3)*2)/2)}});
-  }
+  const fader=Number(p(`${pre}/mix/fader`));if(!Number.isFinite(fader))continue;
+  const context=input.monitorContexts?.[b];
+  const note=context==='wedge'?'Vérifie le niveau de scène et les amplificateurs.':context==='in-ear'||context==='headphones'?'Le niveau acoustique dépend aussi du casque, des écouteurs et de leur amplificateur.':'Le type d’écoute est inconnu : vérifie le système branché sur ce retour.';
+  out.push({id:`ear-${b}`,severity:'securite',bus:b,where:busLabel(b),title:`${busLabel(b)} : essayer −3 dB`,
+   why:`Crêtes mesurées à ${sg(peak)} dBFS : vérifie la marge à cette étape du signal. Baisser ce fader est un essai, sans réparer une saturation en amont.\n${note}`,
+   changes:{[`${pre}/mix/fader`]:Math.max(-90,Math.round((fader-3)*2)/2)}});
  }
  const order:Record<Severity,number>={securite:0,important:1,conseil:2};
  return out.filter(r=>Object.keys(r.changes).every(a=>PARAMETERS[a])).sort((a,b)=>order[a.severity]-order[b.severity]);
 }
 
 export class Analyzer extends EventEmitter{
+ isActive(){return this.active||this.scanning;}
  private active=false;private target:Target={kind:'lr',n:0};private live:number[]|null=null;private liveAt=0;private lastEmit=0;
  private spectra:Record<number,number[]>={};private scanFrames:number[][]|null=null;private scanning=false;private lastScanAt:string|null=null;
  private grSamples:{at:number;comp:number[]}[]=[];private busSamples:{at:number;bus:number[]}[]=[];
  private dismissed=new Set<string>();private ab=new Map<string,Record<string,Value>>();
  // A recommendation being compared A/B stays available even once B makes the rule silent.
  private pinned=new Map<string,Recommendation>();
- constructor(private xr:XR18,private instruments:()=>Instrument[]){
+ constructor(private xr:XR18,private instruments:()=>Instrument[],private monitorContexts:()=>Record<number,MonitorListening|undefined>=()=>({})){
   super();
   xr.on('rta',({bands}:{bands:number[]})=>{
    if(this.scanFrames){this.scanFrames.push(bands);return;}
@@ -192,7 +188,7 @@ export class Analyzer extends EventEmitter{
  private label(t:Target){
   const v=this.xr.parameterState();
   if(t.kind==='lr')return 'Main';
-  if(t.kind==='bus'){const n=String(v[`/bus/${t.n}/config/name`]?.value??'').trim();return n?`Ears ${n}`:`Ears bus ${t.n}`;}
+  if(t.kind==='bus'){const n=String(v[`/bus/${t.n}/config/name`]?.value??'').trim();return n?`Retour ${n}`:`Bus ${t.n}`;}
   return this.instruments().find(i=>i.channel===t.n)?.name??`Canal ${t.n}`;
  }
  start(target?:Target){
@@ -203,11 +199,11 @@ export class Analyzer extends EventEmitter{
  }
  stop(){this.active=false;this.xr.stopAnalysisStream();this.emit('state');return this.snapshot();}
  setTarget(target:Target){this.validate(target);this.target=target;this.live=null;if(this.active)this.xr.setRtaSource(this.code(target));this.emit('state');return this.snapshot();}
- private validate(t:Target){if(!t||!['bus','lr','ch'].includes(t.kind)||(t.kind==='bus'&&!(t.n>=1&&t.n<=6))||(t.kind==='ch'&&!(t.n>=1&&t.n<=16)))throw Error('Source d’analyse invalide');}
+ private validate(t:Target){if(!t||!['bus','lr','ch'].includes(t.kind)||(t.kind==='bus'&&!(t.n>=1&&Number.isInteger(t.n)&&t.n<=this.xr.model().monitorOutputs))||(t.kind==='ch'&&!(t.n>=1&&Number.isInteger(t.n)&&t.n<=this.xr.model().channels)))throw Error('Source d’analyse invalide');}
  /** In rehearsal the band only hears the ears: listen to the first monitor mix that carries sound. */
  private defaultTarget():Target{
   if(!this.xr.isRehearsal())return {kind:'lr',n:0};
-  const all=this.xr.meterState().all??[];let best=1,lvl=-200;for(let b=1;b<=6;b++){const v=all[25+b]??-128;if(v>lvl){lvl=v;best=b;}}
+  const all=this.xr.meterState().all??[];let best=1,lvl=-200;for(let b=1;b<=this.xr.model().monitorOutputs;b++){const v=all[25+b]??-128;if(v>lvl){lvl=v;best=b;}}
   return {kind:'bus',n:best};
  }
  /** Listen to each instrument that plays, one after the other (the analyser has one source at a time). */
@@ -237,8 +233,8 @@ export class Analyzer extends EventEmitter{
   for(const s of this.grSamples)s.comp.forEach((g,i)=>{compGr[i+1]=Math.min(compGr[i+1]??0,g);});
   for(const s of this.busSamples)s.bus.forEach((l,i)=>{busPeak[i+1]=Math.max(busPeak[i+1]??-128,l);});
   const busNames:Record<number,string>={};const usedBuses:number[]=[];
-  for(let b=1;b<=6;b++){busNames[b]=String(v[`/bus/${b}/config/name`]?.value??'');if(busNames[b]!.trim()||(busPeak[b]??-128)>-60)usedBuses.push(b);}
-  const list=recommend({instruments:this.instruments(),spectra:this.spectra,params:p,compGr,busPeak,busNames,usedBuses});
+  for(let b=1;b<=this.xr.model().monitorOutputs;b++){busNames[b]=String(v[`/bus/${b}/config/name`]?.value??'');if(busNames[b]!.trim()||(busPeak[b]??-128)>-60)usedBuses.push(b);}
+  const list=recommend({instruments:this.instruments(),spectra:this.spectra,params:p,compGr,busPeak,busNames,usedBuses,monitorContexts:this.monitorContexts()});
   for(const r of this.pinned.values())if(!list.some(x=>x.id===r.id))list.unshift(r);
   for(const r of list)if(!this.pinned.has(r.id))r.current=Object.fromEntries(Object.keys(r.changes).map(a=>[a,p(a)??null]));
   return list.filter(r=>!this.dismissed.has(r.id));

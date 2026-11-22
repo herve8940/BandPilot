@@ -68,7 +68,7 @@ local function regions()
   end
   return out
 end
-local function items_of(tr)
+local function items_of(tr,project)
   local out = {}
   for i = 0, r.CountTrackMediaItems(tr) - 1 do
     local it = r.GetTrackMediaItem(tr, i)
@@ -77,7 +77,7 @@ local function items_of(tr)
       local t = r.GetTake(it, k)
       local file = ""
       if t and not r.TakeIsMIDI(t) then file = r.GetMediaSourceFileName(r.GetMediaItemTake_Source(t), "") end
-      takes[#takes + 1] = { index = k, name = t and r.GetTakeName(t) or "", file = file, valid = t ~= nil and r.ValidatePtr2(0, t, "MediaItem_Take*"), active = t ~= nil and t == active }
+      takes[#takes + 1] = { index = k, name = t and r.GetTakeName(t) or "", file = file, valid = t ~= nil and r.ValidatePtr2(project or 0, t, "MediaItem_Take*"), active = t ~= nil and t == active }
     end
     out[#out + 1] = { pos = r.GetMediaItemInfo_Value(it, "D_POSITION"), length = r.GetMediaItemInfo_Value(it, "D_LENGTH"), takes = takes }
   end
@@ -138,13 +138,16 @@ function H.transport()
     pos = (play & 1) == 1 and r.GetPlayPosition() or r.GetCursorPosition() }
 end
 -- Plusieurs actions dans le même tour : rien ne peut s'intercaler entre « aller à la fin » et « Rec ».
-function H.action(a) for _, id in ipairs(a.ids) do r.Main_OnCommand(id, 0) end return H.transport() end
+local rehearsal
+function H.action(a)
+  assert(not rehearsal or not rehearsal.active(), "Utilise le transport de la page Répéter pour cette prise ou lecture.")
+  for _, id in ipairs(a.ids) do r.Main_OnCommand(id, 0) end return H.transport() end
 -- Forme d'onde lue par Reaper : marche aussi pour MP3, FLAC, etc.
-function H.peaks(a)
-  local tr = assert(r.GetTrack(0, a.track), "piste introuvable")
+local function track_peaks(tr,a)
   local it = assert(r.GetTrackMediaItem(tr, a.item), "élément introuvable")
   local take = assert(r.GetTake(it, a.take), "prise introuvable")
   local pos, len = r.GetMediaItemInfo_Value(it, "D_POSITION"), r.GetMediaItemInfo_Value(it, "D_LENGTH")
+  if len<=0 then return {peaks={}} end
   local n = math.max(1, math.min(a.buckets, 2000))
   local buf = r.new_array(n * 2)
   local ret = r.GetMediaItemTake_Peaks(take, n / len, pos, 1, n, 0, buf)
@@ -156,6 +159,7 @@ function H.peaks(a)
   end
   return { peaks = out }
 end
+function H.peaks(a) return track_peaks(assert(r.GetTrack(0,a.track),"piste introuvable"),a) end
 function H.goto_pos(a) r.SetEditCurPos(a.pos, true, true); return { pos = a.pos } end
 function H.set_loop(a)
   editable(a)
@@ -232,6 +236,23 @@ end
 
 local workshop_file = debug.getinfo(1, 'S').source:sub(2):gsub('[^/\\]+$', '') .. 'BandPilot_Workshop.lua'
 dofile(workshop_file)(H, r, {each_track=each_track, track_name=track_name})
+-- The module is lazy so old bridge fixtures and existing commands do not depend on the new transport.
+local function load_rehearsal()
+  if not rehearsal then rehearsal=dofile(workshop_file:gsub("BandPilot_Workshop.lua$","BandPilot_Rehearsal.lua"))(H,r,{items=items_of,peaks=track_peaks}) end
+end
+for _,name in ipairs({"goto_pos","set_loop","track_mute","select_take","apply_presence","listen_original","workshop_create","workshop_audition","workshop_compare","workshop_close"}) do
+  local command = H[name]
+  if command then
+    H[name] = function(a)
+      assert(not rehearsal or not rehearsal.active(), "Utilise le transport de la page Répéter pour cette prise ou lecture.")
+      return command(a)
+    end
+  end
+end
+function H.rehearsal_state(a) load_rehearsal(); return H.rehearsal_state(a) end
+function H.rehearsal_command(a) load_rehearsal(); return H.rehearsal_command(a) end
+function H.rehearsal_sheet_clock(a) load_rehearsal(); return H.rehearsal_sheet_clock(a) end
+function H.rehearsal_peaks(a) load_rehearsal(); return H.rehearsal_peaks(a) end
 
 local function handle(src)
   local chunk = load("return " .. src, "request", "t", {})
@@ -256,22 +277,32 @@ local function process_request(path, response)
   local ok, text = pcall(function() return json(handle(src)) end)
   if ok then pending_responses[response] = text end
 end
-local beat = 0
+local beat, lastScan = 0, -1
+local WAKE = DIR .. SEP .. "requests.ready"
 local function loop()
   local now = r.time_precise()
-  if now - beat > 2 then beat = now; pcall(write_atomic, BEAT, "BandPilotBridge/2\n" .. VERSION .. "\n" .. tostring(os.time())) end
+  if rehearsal then pcall(rehearsal.tick) end
+  if now - beat > 2 then beat = now; pcall(write_atomic, BEAT, "BandPilotBridge/2\n" .. VERSION .. "\n" .. tostring(os.time()) .. "\nrehearsal-tabs/2\nrehearsal-tabs/3\nrehearsal-tabs/4\nrehearsal-tabs/5\nrehearsal-tabs/6\nrehearsal-tabs/7\nrehearsal-tabs/8\nrehearsal-tabs/9") end
   pcall(process_request, REQ, RES) -- compatibility with previously installed BandPilot versions
-  local requests = {}
-  local i = 0
-  while true do
-    local name = r.EnumerateFiles(DIR, i)
-    if not name then break end
-    local id = name:match("^request%-([%x%-]+)%.lua$")
-    if id then requests[#requests + 1] = {name=name, id=id} end
-    i = i + 1
-  end
-  for _, req in ipairs(requests) do
-    pcall(process_request, DIR .. SEP .. req.name, DIR .. SEP .. "response-" .. req.id .. ".json")
+  -- REAPER caches directory listings. A request signals after its atomic rename;
+  -- older clients and missed signals are picked up by the periodic scan.
+  local signalled=read_file(WAKE)
+  if signalled or now-lastScan>=0.18 then
+    if signalled then os.remove(WAKE) end
+    lastScan=now
+    r.EnumerateFiles(DIR,-1)
+    local requests = {}
+    local i = 0
+    while true do
+      local name = r.EnumerateFiles(DIR, i)
+      if not name then break end
+      local id = name:match("^request%-([%x%-]+)%.lua$")
+      if id then requests[#requests + 1] = {name=name, id=id} end
+      i = i + 1
+    end
+    for _, req in ipairs(requests) do
+      pcall(process_request, DIR .. SEP .. req.name, DIR .. SEP .. "response-" .. req.id .. ".json")
+    end
   end
   -- Windows/antivirus can briefly lock files. Retain the result and retry without rerunning Rec.
   for path, text in pairs(pending_responses) do
@@ -280,6 +311,6 @@ local function loop()
   r.defer(loop)
 end
 if not XR18_BRIDGE_NO_LOOP then
-  r.atexit(function() os.remove(BEAT) end)
+  r.atexit(function() if rehearsal then pcall(rehearsal.exit) end; os.remove(BEAT) end)
   loop()
 end

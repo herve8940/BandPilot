@@ -1,3 +1,4 @@
+import {defaultFxParameters} from '../shared/fx-parameters.js';
 import {DEFAULT_MIXER,identifyMixer,type MixerProfile,type MixerModelId} from '../shared/mixer-models.js';
 import {supportsMixerAddress,toMixerAddress,fromMixerAddress} from './mixer-capabilities.js';
 import {PARAMETERS,descriptor,validateWire,defaultWire,readbackTolerance,type Value} from "./parameters.js";
@@ -88,7 +89,7 @@ export class XR18 extends EventEmitter {
     this.supported(address);if(this.profile.channels===12&&address.endsWith('/config/insrc')&&typeof value==='number'&&value>=12&&value!==16)throw Error('Entrée physique absente sur '+this.profile.label);const checked=validateWire(address,value),p=descriptor(address);this.guardMain(address,checked);
     if(address.endsWith('/phantom')&&!allowPhantom)throw Error('Confirmation 48 V requise');
     if(this.mode==='simulation'){
-      const fxType=/^\/fx\/([1-4])\/type$/.exec(address);if(fxType&&this.fxValues.get(Number(fxType[1]))?.algorithm!==checked)this.fxValues.set(Number(fxType[1]),{slot:Number(fxType[1]),algorithm:checked as number,parameters:[]});
+      const fxType=/^\/fx\/([1-4])\/type$/.exec(address);if(fxType&&this.fxValues.get(Number(fxType[1]))?.algorithm!==checked)this.fxValues.set(Number(fxType[1]),{slot:Number(fxType[1]),algorithm:checked as number,parameters:this.mode==='simulation'?defaultFxParameters(checked as number):[]});
       this.remember(address,checked);if(this.advancedAddresses.has(address)){const state={value:checked,updatedAt:new Date().toISOString()};this.advanced.set(address,state);this.emit('advanced',{address,...state});}
       const c=/^\/ch\/(\d{2})\/mix\/(fader|on)$/.exec(address);
       if(c){if(c[2]==='fader')this.setFader(Number(c[1]),checked as number);else this.setOn(Number(c[1]),checked===1);}
@@ -123,12 +124,12 @@ export class XR18 extends EventEmitter {
     }
     throw Error('Lecture non confirmée : '+address);
   }
-  async applyParameters(values:Record<string,Value>,allowPhantom=false,tolerant=false){
+  async applyParameters(values:Record<string,Value>,allowPhantom=false,tolerant=false,assertActive:()=>void=()=>{}){
     // Rehearsal: a scene recall or a bulk change never reopens the Main; everything else is applied.
     if(this.rehearsal&&'/lr/mix/on' in values&&Number(values['/lr/mix/on'])!==0){values={...values};delete values['/lr/mix/on'];this.emit('warning','Mode Répétition : Main laissé coupé');}
     for(const [a,v] of Object.entries(values)){validateWire(a,v);if(a.endsWith('/phantom')&&!allowPhantom)throw Error('Confirmation 48 V requise');}
     const generation=this.generation,operation=this.operationEpoch;
-    const check=()=>{if(generation!==this.generation||operation!==this.operationEpoch)throw Error('Opération interrompue');};
+    const check=()=>{assertActive();if(generation!==this.generation||operation!==this.operationEpoch)throw Error('Opération interrompue');};
     const failed:string[]=[];
     for(const [a,v] of Object.entries(values)){
       check();
@@ -386,7 +387,7 @@ export class XR18 extends EventEmitter {
   async readFx(slot:number){
     if(this.profile.family!=='xair')throw Error('Processeurs FX X32 : adaptateur distinct requis');
     if(!Number.isInteger(slot)||slot<1||slot>4)throw Error('Slot FX 1..4 requis');
-    if(this.mode==='simulation')return structuredClone(this.fxValues.get(slot)??{slot,algorithm:0,parameters:[]});
+    if(this.mode==='simulation')return structuredClone(this.fxValues.get(slot)??{slot,algorithm:0,parameters:defaultFxParameters(0)});
     const algorithm=await this.readParameter(`/fx/${slot}/type`);const reply=await this.query(`/fx/${slot}/par`);
     if(typeof algorithm!=='number'||!reply.args.length||reply.args.length>64||!reply.tags||!/^[fi]+$/.test(reply.tags))throw Error('Vecteur FX typé absent');
     // The XR18 always answers 64 values; the slots the effect does not use come back as NaN.
@@ -400,7 +401,7 @@ export class XR18 extends EventEmitter {
   async applyFx(f:{slot:number;algorithm:number;parameters:{type:'f'|'i';value:number}[]}){
     if(this.profile.family!=='xair')throw Error('FX X32 : protocole distinct, application indisponible');
     if(!Number.isInteger(f.slot)||f.slot<1||f.slot>4||!Number.isInteger(f.algorithm)||f.algorithm<0||f.algorithm>60||f.parameters.length>64||f.parameters.some(p=>!Number.isFinite(p.value)||(p.type==='f'&&(p.value<0||p.value>1))||(p.type==='i'&&(!Number.isInteger(p.value)||p.value<0||p.value>127))))throw Error('FX invalide');
-    if(this.mode==='simulation'){this.fxValues.set(f.slot,structuredClone(f));await this.writeParameter(`/fx/${f.slot}/type`,f.algorithm);return;}
+    if(this.mode==='simulation'){if(!f.parameters.length)f={...f,parameters:defaultFxParameters(f.algorithm)};this.fxValues.set(f.slot,structuredClone(f));await this.writeParameter(`/fx/${f.slot}/type`,f.algorithm);return;}
     if(!this.writes||!this.isLive())throw Error(`Écritures désactivées ou ${this.profile.label} déconnectée`);
     const generation=this.generation,operation=this.operationEpoch;
     await this.writeParameter(`/fx/${f.slot}/type`,f.algorithm);

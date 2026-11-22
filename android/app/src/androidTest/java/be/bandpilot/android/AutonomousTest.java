@@ -58,6 +58,7 @@ public class AutonomousTest {
   api("/api/connection",new JSONObject().put("mode","simulation").put("host","127.0.0.1").put("enableWrites",false));
   assertEquals("true",js("!!window.BandPilotAndroid && document.documentElement.dataset.platform==='android'"));
   libraryPresets();
+  liveConsole();
   assertEquals("false",js("[...document.querySelectorAll('.rail-space-btn')].some(b=>b.textContent.includes('Enregistrer et réécouter'))"));
   HttpURLConnection unauth=(HttpURLConnection)new URL("http://127.0.0.1:"+EngineService.readyPort()+"/api/status").openConnection();assertEquals(403,unauth.getResponseCode());unauth.disconnect();
   js("document.querySelector('button[title=\"Régler le son\"]').click()");waitFor("!!document.querySelector('.coach-journey')");
@@ -104,6 +105,30 @@ public class AutonomousTest {
   reload();
   assertFalse("Usage preference survives a WebView reload",api("/api/usage-stats",null).getBoolean("enabled"));
   assertEquals("Basse Éric",api("/api/coach",null).getJSONObject("profile").getJSONArray("inputs").getJSONObject(inputs.length()-1).getString("name"));
+ }
+ private void liveConsole()throws Exception{
+  JSONObject before=api("/api/console/fx?slot=1",null);
+  // Synthetic stereo delay: float controls and three integer enums in the native order.
+  JSONArray parameters=new JSONArray();double[] vals={1,(500.0-1)/2999,0,4,4,.5,.5,.8,.5,.2,.2,.8};
+  for(int i=0;i<vals.length;i++)parameters.put(new JSONObject().put("type",i>=2&&i<=4?"i":"f").put("value",vals[i]));
+  JSONObject wanted=new JSONObject().put("slot",1).put("algorithm",10).put("parameters",parameters);
+  JSONObject preview=api("/api/library/fx-edit/preview",new JSONObject().put("expected",before).put("data",wanted));
+  JSONObject result=api("/api/library/fx-edit/apply",new JSONObject().put("token",preview.getString("token")).put("confirm",true));
+  assertEquals(10,api("/api/console/fx?slot=1",null).getInt("algorithm"));
+  JSONObject undo=api("/api/library/"+result.getString("backupId")+"/preview",new JSONObject());
+  api("/api/library/"+result.getString("backupId")+"/apply",new JSONObject().put("token",undo.getString("token")).put("confirm",true));
+  assertEquals(before.toString(),api("/api/console/fx?slot=1",null).toString());
+  JSONObject copy=api("/api/monitor/copy/preview",new JSONObject().put("source",1).put("target",3));
+  assertTrue(copy.getJSONArray("changes").length()>0);
+  JSONObject copied=api("/api/monitor/copy/apply",new JSONObject().put("token",copy.getString("token")).put("confirm",true));
+  JSONObject restore=api("/api/library/"+copied.getString("backupId")+"/preview",new JSONObject());
+  api("/api/library/"+copied.getString("backupId")+"/apply",new JSONObject().put("token",restore.getString("token")).put("confirm",true));
+  JSONObject pair=api("/api/console/preview",new JSONObject().put("values",new JSONObject().put("/config/buslink/1-2",1)));
+  api("/api/console/apply",new JSONObject().put("token",pair.getString("token")).put("confirm",true));
+  JSONObject sharing=api("/api/ears-share/musicians",new JSONObject().put("name","Android stereo test").put("bus",1).put("stereo",true));
+  assertTrue(sharing.toString().contains("Android stereo test"));
+  JSONObject unpair=api("/api/console/preview",new JSONObject().put("values",new JSONObject().put("/config/buslink/1-2",0)));
+  api("/api/console/apply",new JSONObject().put("token",unpair.getString("token")).put("confirm",true));
  }
  private void libraryPresets()throws Exception{
   assertEquals("true",js("typeof window.bandpilotFiles.save==='function'"));

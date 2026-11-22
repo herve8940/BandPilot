@@ -1,8 +1,10 @@
 # BandPilot — guía ilustrada
 
-Escritorio: **2.3.3 estable** (Windows, macOS, Linux). Android: **2.4.0-android.1 preliminar**, APK independiente. BandStudio: **2.3.4-dev.1 preliminar para Windows**, para probar con la versión compatible de BandStudio; no forma parte de la versión estable.
+Esta actualización corresponde a las aplicaciones de escritorio Windows, macOS Intel/Apple Silicon y Linux. Android sigue como distribución separada 2.4.0-android.5 y no incluye todas las funciones de escritorio descritas. BandStudio es una aplicación complementaria independiente.
 
-Las capturas 2.2.4 muestran una versión anterior en simulación. Consulta las notas de versión para los cambios posteriores. [2.3.3](RELEASE_NOTES.md) · [Android (FR)](ANDROID.md)
+**2.3.15 — [Tutorial de novedades 2.3.15](NEW_2_3_15_ES.md)**
+
+Las capturas anteriores de la guía general y el vídeo 2.2 son ilustraciones históricas. Este tutorial describe el recorrido 2.3.15.
 
 [Français](USER_GUIDE_FR.md) · [Preparador de prueba de sonido](TUTO_MON_INGE_SON_ES.md) · [Recorrido en vídeo](VIDEO_TOUR.md) · [Compatibilidad detallada](multi-model.md)
 
@@ -76,29 +78,23 @@ Los teléfonos ya abiertos siguen cambios de control/solo lectura sin recarga. L
 
 <h2 id="reaper">8. REAPER ensayos y grabación</h2>
 
-REAPER es un software independiente con su propia instalación y licencia. Instale el puente **1.5.0** desde Ensayo, guarde los proyectos y luego reinicie REAPER para cargar el puente actualizado. Se mantienen las rutas técnicas heredadas por razones de compatibilidad.
+1. **Preparar REAPER** — Reinstala el puente incluido con 2.3.15 aunque indique ya 1.5.0 y reinicia REAPER. Abre un proyecto por pestaña con sus medios. En Ensayar → Con mis canciones, selecciona el proyecto y verifica entradas, pistas armadas, pista Original y final. REC crea una toma separada en ese proyecto; comprueba antes las entradas de audio reales.
 
-1. En Grabación, actualice la consola, elija las pistas y el destino, luego cree y abra una sesión. Las sesiones existentes no se sobrescriben. Verifique el dispositivo de audio, los canales de entrada y la frecuencia de muestreo en REAPER.
-2. La preparación multipista automática es para XR18/MR18/X18. XR12/MR12 carecen de esa interfaz de PC. La preparación de enrutamiento/tarjeta X32 no está disponible.
-3. Abra un proyecto ReaCue preparado para **Con mis canciones**, o use **Solo banda**. Las canciones, secciones, pistas y tomas provienen del proyecto abierto. Los metadatos del concierto utilizan el `.concert.lua` asociado; copiar solo `.rpp` no lo recrea.
-4. La presencia refleja pistas REC armadas. Al seleccionar un músico, se prepara su pista de grabación y se silencia la plica correspondiente. Verifique los estados reales de armado y silencio, especialmente después de cambiar de pestaña del proyecto.
-5. La grabación comienza en la canción seleccionada. Detener guarda la toma; Los marcadores permanecen disponibles durante la grabación. Los cambios de toma, bucle, presencia y navegación se bloquean durante la grabación.
-6. Elija una toma disponible en el rango de tiempo; las ranuras vacías se ignoran. **ReaCue original** silencia las pistas REC y abre las plicas; dejarlo restaura los estados de silencio anteriores.
-7. Coloque el cursor dentro de una sección para realizar un bucle. Los límites y las repeticiones se vuelven a leer. Un botón de parada permanece disponible fuera de las secciones.
+2. **Asignar al responsable** — En Monitores → Teléfonos crea el enlace de cada músico y asigna al responsable en su ficha. En la misma red local, su QR abre Mi monitor, Mi canción y Ensayar. El rol es revocable. El responsable elige canción, original, acompañamiento o toma, canción completa o sección, bucle y cuenta previa disponibles.
 
-**La simulación de la mesa de mezclas no simula REAPER: la grabación captura entradas de audio reales.** Las pruebas de puente no reemplazan la reproducción real y las comprobaciones de escucha. Mantenga los medios disponibles y utilice un proyecto copiado con sus medios para experimentos.
+3. **Leer acordes y letras** — En el teléfono abre Mi canción y elige Acordes, Letras o Ambos. La ficha sigue el proyecto y la posición REAPER. Pantalla completa y mantener la pantalla encendida son opcionales. Si se ofrece una ficha fuente BandStudio, el responsable verifica la sincronización antes de compartirla; Volver a la ficha exportada revierte la elección. Las fichas ausentes no se generan automáticamente.
+
+[Tutorial de novedades 2.3.15](NEW_2_3_15_ES.md)
 
 ## 9. Escenas, notas y setlists
 
-**Escenas y presets por instrumento · 2.3.14 / Android 2.4.0-android.5**
-
-En Consola → Expert → Canal, usa Guardar o Restaurar. En la biblioteca de presets, elige la entrada de destino y selecciona EQ, compresor o gate. También puedes extraer tratamientos de una escena completa guardada. Para deshacer una prueba, restaura los ajustes anteriores o una copia automática.
+**2.3.15 — [Tutorial de novedades 2.3.15](NEW_2_3_15_ES.md)**
 
 La biblioteca separa escenas completas, presets, fichas de prueba de sonido y copias automáticas. Incluye importación/exportación JSON, recuperación de archivos X-Air .scn compatibles y elección de ranura para presets FX.
 
 Guardar o importar no cambia el sonido. La recuperación requiere vista previa y confirmación, con copia de seguridad previa. Los presets de canal conservan ganancia, alimentación phantom, niveles, envíos de monitor y enrutamiento.
 
-Límites: sin conversión entre modelos; recuperación mono bloqueada en pares estéreo enlazados. Los archivos .scn se recuperan en XR18/X18/MR18 con efectos HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY y MODD; los demás archivos siguen siendo exportables. X32 sigue siendo parcial.
+Recuperación selectiva de entradas, salidas y FX, protecciones por familia de parámetros, vista previa y copia de seguridad. Conversión explícita de presets y escenas portables dentro del alcance X-Air/M-Air compatible. [Tutorial de novedades 2.3.15](NEW_2_3_15_ES.md)
 
 Una canción necesita un título. Agregue canciones a la lista de canciones activa y guarde una lista de canciones con nombre. Las notas y la lista de configuración activa se almacenan en la base de datos de la aplicación incluso cuando cambia su puerto local. Espere el estado de borrador guardado antes de cerrar. Los ensayos nombrados siguen siendo registros separados.
 

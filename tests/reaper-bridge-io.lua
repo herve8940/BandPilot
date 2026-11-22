@@ -21,14 +21,19 @@ os.rename=function(a,b)
  if fail_once and b==dir..sep..'response.json' then fail_once=false;return nil,'permission denied' end
  files[b]=files[a];files[a]=nil;return true
 end
+local listing
 reaper={
  GetResourcePath=function()return '/virtual'end,RecursiveCreateDirectory=function()end,
  time_precise=function()return 10 end,defer=function(fn)next_loop=fn end,atexit=function()end,
  Main_OnCommand=function()actions=actions+1 end,GetPlayState=function()return 5 end,
  GetPlayPosition=function()return 1 end,GetCursorPosition=function()return 0 end,
  EnumerateFiles=function(_,i)
-  local names={} for path in pairs(files)do names[#names+1]=path:sub(#dir+2)end
-  table.sort(names);return names[i+1]
+  if i==-1 then listing=nil;return end
+  if not listing then
+    listing={} for path in pairs(files)do listing[#listing+1]=path:sub(#dir+2)end
+    table.sort(listing)
+  end
+  return listing[i+1]
  end
 }
 files[dir..sep..'request.lua']='{id="legacy",cmd="action",args={ids={1013}}}'
@@ -45,5 +50,9 @@ next_loop()
 assert(actions==1,'retry must never toggle Rec a second time')
 assert(files[dir..sep..'response.json']:find('"id":"legacy"',1,true))
 assert(files[dir..sep..'heartbeat.txt']:find('BandPilotBridge/2',1,true))
+files[dir..sep..'request-c3.lua']='{id="c3",cmd="transport"}'
+files[dir..sep..'requests.ready']='1'
+next_loop()
+assert(files[dir..sep..'response-c3.json'],'a fresh request must run before the next heartbeat')
 io.open,os.remove,os.rename=native_io,native_remove,native_rename
 print('REAPER bridge I/O regressions passed')

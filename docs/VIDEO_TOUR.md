@@ -1,5 +1,7 @@
 # BandPilot 2.2 — visite vidéo / video tour
 
+Cette vidéo montre la version 2.2 en simulation. Pour les commandes actuelles, voir le [tutoriel 2.3.15](NEW_2_3_15_FR.md) / [English](NEW_2_3_15_EN.md).
+
 Cette vidéo de **42 secondes** est un montage de six captures réelles de l’interface en simulation. Ce n’est pas un enregistrement d’une balance réelle, une démonstration sonore ni une validation de console. Sans son ; active les sous-titres français, anglais, italien, espagnol ou allemand.
 
 This **42-second** video is an illustrated tour assembled from six actual simulation screenshots, not live sound-check footage or hardware validation. No audio; French, English, Italian, Spanish and German captions are available.

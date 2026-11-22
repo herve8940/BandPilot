@@ -1,3 +1,7 @@
+import {PortableScenesPanel} from './PortableScenesPanel';
+import {OutputProtectionsPanel} from './OutputProtectionsPanel';
+import {OutputSceneRecallPanel} from './OutputSceneRecallPanel';
+import {SceneProtectionsPanel} from './SceneProtectionsPanel';
 import {Layers, SlidersHorizontal, ClipboardList, History, Upload, Save, Download, Trash2, RotateCcw} from "lucide-react";
 import {tx, getLocale} from "./i18n";
 import "./studio-control.css";
@@ -5,7 +9,8 @@ import { useEffect, useRef, useState } from "react";
 import { PlanDialog, type Plan } from "./SoundCoach";
 import {ChannelPresetsPanel} from './ChannelPresetsPanel';
 import {parseLibraryFile} from './library-files';
-import type {PresetSection} from '../../shared/channel-preset';
+import type {ChannelPreset,PresetSection} from '../../shared/channel-preset';
+import {SceneRecallPanel} from './SceneRecallPanel';
 
 type Entry = { id: string; kind: string; name: string; data: unknown; createdAt: string };
 type BalanceSheet = {sceneId:string;notes:string;updatedAt:string;patchChanged?:boolean};
@@ -20,11 +25,13 @@ async function api<T = any>(path: string, method = "GET", data?: unknown): Promi
 }
 const when = (iso: string) => new Date(iso).toLocaleString(getLocale(), { dateStyle: "short", timeStyle: "short" });
 // Saves made by the app itself before a change ("Avant …") are kept apart so they don't drown the user's scenes.
-const isAuto = (e: Entry) => ['parameter-backup','fx-backup'].includes(e.kind) || (['scene','native-scene'].includes(e.kind) && /^(Avant |Sauvegarde (complète avant|avant))/.test(e.name));
-const KIND_LABEL: Record<string, string> = { scene: "Scène complète", "native-scene": "Fichier .scn", "parameter-backup": "Sauvegarde automatique", 'fx-backup':'Sauvegarde FX' };
+const isAuto = (e: Entry) => ['parameter-backup','fx-backup','scene-recall-backup','output-recall-backup','channel-operation-backup','mix-preparation-backup','portable-scene-backup'].includes(e.kind) || (['scene','native-scene'].includes(e.kind) && /^(Avant |Sauvegarde (complète avant|avant))/.test(e.name));
+const KIND_LABEL: Record<string, string> = { scene: "Scène complète", "native-scene": "Fichier .scn", "parameter-backup": "Sauvegarde automatique", 'fx-backup':'Sauvegarde FX', 'output-recall-backup':'Sauvegarde des sorties et FX','scene-recall-backup':'Sauvegarde du rappel sélectif','channel-operation-backup':'Sauvegarde des entrées','mix-preparation-backup':'Sauvegarde de préparation du mix','portable-scene-backup':'Sauvegarde du rappel portable' };
 
 export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; canWrite: boolean }) {
   const [section,setSection]=useState("scenes");
+  const [outputBackup,setOutputBackup]=useState<Entry|null>(null);
+  const [selective,setSelective]=useState<Entry|null>(null);
   const fileInput=useRef<HTMLInputElement>(null);
   const [admin, setAdmin] = useState(false);
   useEffect(() => { void api<{ user: { role: string } | null }>("/api/auth").then(a => setAdmin(a.user?.role === "admin")).catch(() => undefined); }, []);
@@ -45,6 +52,12 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
 
   /** Build the "check before" window for any kind of saved state. */
   const recall = (e: Entry,slot?:number) => run(`recall-${e.id}`, async () => {
+    if(e.kind==='output-recall-backup'){setOutputBackup(e);return;}
+    if(e.kind==='scene-recall-backup'||e.kind==='channel-operation-backup'||e.kind==='mix-preparation-backup'||e.kind==='portable-scene-backup'){
+      const p=await api<{token:string|null;changes:Change[];stereoLink?:Plan['stereoLink'];excluded?:Plan['excluded']}>(`/api/library/${e.id}/preview`,'POST',{});
+      if(!p.token)return p.excluded?.length?'Les protections conservent les réglages concernés. Aucun changement à appliquer.':'Rien ne change dans la sélection. Aucun réglage envoyé.';
+      setPending({plan:{...p,token:p.token,title:tx(e.kind==='channel-operation-backup'?'Revenir au réglage précédent':'Annuler le rappel sélectif'),explanation:tx('Seuls les réglages de cette sauvegarde seront restaurés.'),inputs:[]},apply:async()=>{await api(`/api/library/${e.id}/apply`,'POST',{token:p.token,confirm:true});return 'Sélection appliquée. Les réglages précédents sont dans l’historique.';}});return;
+    }
     if(e.kind==='fx'||e.kind==='fx-backup'){
       const p=await api<{token:string;slot:number}>(`/api/library/${e.id}/preview`, 'POST', {slot});
       setPending({plan:{token:p.token,title:`Rappeler « ${e.name} »`,explanation:tx('Ce preset remplace l’effet de l’emplacement indiqué. Tous les canaux qui l’utilisent sont concernés. Les envois et retours restent inchangés.'),inputs:[`FX ${p.slot}`],changes:[],detailsUnavailable:true},apply:async()=>{await api(`/api/library/${e.id}/apply`,'POST',{token:p.token,confirm:true});return 'Effet rappelé. Le réglage précédent est sauvegardé.';}});return;
@@ -102,19 +115,24 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
   const importFile = (file: File) => run("import", async () => {
     if (file.size > 900000) throw Error("Fichier trop volumineux");
     const text = await file.text();
-    await api('/api/library','POST',parseLibraryFile(file.name,text));
+    const parsed=parseLibraryFile(file.name,text);
+    await api('/api/library','POST',parsed);
+    if(parsed.kind==='portable-scene')setSection('portable');
     return 'Import terminé dans ta bibliothèque. Aucun réglage envoyé à la console.';
   });
   const recallPreset=(e:Entry,channel:number,sections:PresetSection[])=>{void run(`recall-${e.id}`,async()=>{
     const p=await api<{token:string;changes:Change[]}>(`/api/library/${e.id}/preview`,'POST',{channel,sections});
-    setPending({plan:{...p,title:`Rappeler « ${e.name} »`,explanation:tx('Seuls les traitements cochés seront appliqués au canal choisi.'),inputs:[`${tx('Canal')} ${channel}`]},apply:async()=>{await api(`/api/library/${e.id}/apply`,'POST',{token:p.token,confirm:true});return 'Preset appliqué. Les réglages précédents sont dans les sauvegardes automatiques.';}});
+    if(!p.token)return 'Rien ne change dans la sélection. Aucun réglage envoyé.';
+    const stereo=(e.data as ChannelPreset).version===2;
+    setPending({plan:{...p,title:`Rappeler « ${e.name} »`,explanation:tx(stereo?'Seuls les traitements cochés seront appliqués aux deux entrées.':'Seuls les traitements cochés seront appliqués au canal choisi.'),inputs:[stereo?`${tx('Paire stéréo')} ${channel}–${channel+1}`:`${tx('Canal')} ${channel}`]},apply:async()=>{await api(`/api/library/${e.id}/apply`,'POST',{token:p.token,confirm:true});return 'Preset appliqué. Les réglages précédents sont dans les sauvegardes automatiques.';}});
   });};
 
   const row = (e: Entry) => <div key={e.id} className="scene-row">
-    <span className="library-icon">{isAuto(e)?<History size={20}/>:<Layers size={20}/>}</span><div className="scene-row-title"><b>{e.name}</b><small>{tx(KIND_LABEL[e.kind] ?? e.kind)} · {tx(when(e.createdAt))}</small></div>
+    <span className="library-icon">{isAuto(e)?<History size={20}/>:<Layers size={20}/>}</span><div className="scene-row-title"><b>{isAuto(e)?tx(e.name):e.name}</b><small>{tx(KIND_LABEL[e.kind] ?? e.kind)} · {tx(when(e.createdAt))}</small></div>
     <div className="scene-actions">
       {admin && <button type="button" className="primary" disabled={!!busy || !canWrite} title={tx(canWrite ? "Voir ce qui va changer, puis confirmer" : "Active le contrôle de la console dans Réglages")} onClick={() => void recall(e)}><RotateCcw size={15}/>{tx(busy === `recall-${e.id}` ? "Lecture de la console…" : "Rappeler…")}</button>}
-      <button type="button" disabled={!!busy} onClick={() => download(e)}><Download size={15}/>{tx("Exporter")}</button>
+      {admin&&(e.kind==='native-scene'||e.kind==='scene'&&(e.data as {version?:number})?.version===2)&&<button type="button" disabled={!!busy||applying||!canWrite} onClick={()=>setSelective(e)}><SlidersHorizontal size={15}/>{tx('Rappel sélectif…')}</button>}
+      {!['scene-recall-backup','output-recall-backup','channel-operation-backup','mix-preparation-backup','portable-scene-backup'].includes(e.kind)&&<button type="button" disabled={!!busy} onClick={() => download(e)}><Download size={15}/>{tx("Exporter")}</button>}
       {admin && <button type="button" disabled={!!busy} onClick={() => remove(e)}><Trash2 size={15}/>{tx("Supprimer")}</button>}
     </div>
   </div>;
@@ -125,11 +143,15 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
       {admin&&<div className="scene-import-toolbar"><button type="button" disabled={!!busy||applying} onClick={()=>fileInput.current?.click()}><Upload size={17}/>{tx('Importer une scène ou un preset')}</button><input ref={fileInput} type="file" hidden aria-label={tx('Importer une scène ou un preset')} disabled={!!busy} accept=".json,.scn" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void importFile(file);}}/><small>.json · .scn</small></div>}
     </header>
     <nav className="library-nav" aria-label={tx('Bibliothèque de réglages')}>
-      {[{id:'scenes',label:'Scènes complètes',count:scenes.length,Icon:Layers},{id:'presets',label:'Presets par piste',count:entries.filter(e=>['channel-preset','fx'].includes(e.kind)).length,Icon:SlidersHorizontal},{id:'sheets',label:'Fiches de balance',count:entries.filter(e=>e.kind==='balance-sheet').length,Icon:ClipboardList},{id:'history',label:'Historique',count:autos.length,Icon:History}].map(({id,label,count,Icon})=><button key={id} type="button" aria-pressed={section===id} onClick={()=>setSection(id)}><Icon size={18}/><span>{tx(label)}</span><small>{count}</small></button>)}
+      {[{id:'scenes',label:'Scènes complètes',count:scenes.length,Icon:Layers},{id:'portable',label:'Scènes portables',count:entries.filter(e=>e.kind==='portable-scene').length,Icon:Layers},{id:'presets',label:'Presets par piste',count:entries.filter(e=>['channel-preset','fx'].includes(e.kind)).length,Icon:SlidersHorizontal},{id:'sheets',label:'Fiches de balance',count:entries.filter(e=>e.kind==='balance-sheet').length,Icon:ClipboardList},{id:'history',label:'Historique',count:autos.length,Icon:History}].map(({id,label,count,Icon})=><button key={id} type="button" aria-pressed={section===id} onClick={()=>setSection(id)}><Icon size={18}/><span>{tx(label)}</span><small>{count}</small></button>)}
     </nav>
     {(message || error) && <p className={error ? "scene-msg error" : "scene-msg"} role={error ? "alert" : "status"}>{tx(error || message)}</p>}
     {error&&/partiel/.test(error)&&autos.length>0&&<button type="button" onClick={()=>setSection('history')}><History size={16}/>{tx('Voir les sauvegardes automatiques')}</button>}
     <div hidden={section!=='scenes'} className="library-section">
+    {admin&&<SceneProtectionsPanel disabled={!!busy||applying} onSaved={()=>{setPending(null);}}/>}
+    {admin&&<OutputProtectionsPanel/>}
+    {outputBackup&&<><button type="button" onClick={()=>setOutputBackup(null)}>{tx('Fermer')}</button><OutputSceneRecallPanel key={outputBackup.id} entry={outputBackup} canWrite={canWrite} onUpdated={refresh}/></>}
+    {selective&&<SceneRecallPanel key={`${selective.id}-${mode}`} entry={selective} mode={mode} canWrite={canWrite} onClose={()=>setSelective(null)} onUpdated={refresh}/>}
     <div className="library-section-heading"><div><h3>{tx('Scènes complètes')}</h3><p>{tx("Une scène, c’est une photo de toute la console : volumes, égaliseurs, effets, retours… Garde une bonne balance pour la retrouver au prochain concert.")}</p></div></div>
     <div className="library-capture">
     {admin && <fieldset disabled={!!busy} className="scene-save">
@@ -144,6 +166,13 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
     <div className="library-section-heading"><h3>{tx('Tes scènes (')}{scenes.length})</h3></div>
     {scenes.length ? <div className="scene-list">{scenes.map(row)}</div> : <p className="library-empty">{tx("Aucune scène pour l’instant. Donne un nom ci-dessus et sauvegarde l’état actuel de la console.")}</p>}
     </div>
+    {section==='portable'&&<PortableScenesPanel key={mode} entries={entries.filter(e=>e.kind==='portable-scene')}
+      sources={scenes.filter(e=>e.kind==='native-scene'||(e.data as {version?:number}).version===2)}
+      admin={admin} busy={!!busy||applying} canWrite={canWrite} run={run} onExport={download} onRemove={remove}
+      onPreview={(e,plan)=>setPending({plan,apply:async()=>{
+        await api(`/api/library/${e.id}/apply`,'POST',{token:plan.token,confirm:true});
+        return 'Sélection appliquée. Les réglages précédents sont dans l’historique.';
+      }})}/>}
     <div hidden={section!=='presets'} className="library-section"><ChannelPresetsPanel entries={entries} admin={admin} busy={!!busy||applying} canWrite={canWrite} run={run} onRecall={recallPreset} onRecallFx={(e,slot)=>void recall(e,slot)} onExport={download} onRemove={remove}/></div>
     <div hidden={section!=='sheets'} className="library-section">
     <section className="scene-list" aria-label={tx("Fiches de balance")}>

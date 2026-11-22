@@ -1,3 +1,43 @@
+# BandPilot 2.3.15 · Console, MIDI et répétition sur téléphone · 22 novembre 2026
+
+BandPilot 2.3.15 réunit les nouvelles commandes de console, les rappels sélectifs, les groupes logiciels, le MIDI et la répétition REAPER sur les téléphones des musiciens.
+
+- **Console et retours** — Banques et surfaces personnalisables, groupes logiciels, paires stéréo, vumètres et RTA. Les réglages et destinations proposés dépendent du modèle connecté et du mix sélectionné.
+- **Scènes et presets** — Rappels sélectifs des entrées, sorties et FX, protections par famille de réglages, aperçu et sauvegarde. Conversion explicite de presets et de scènes portables au sein de X-Air/M-Air, dans le périmètre pris en charge.
+- **Effets et analyse** — Éditeurs nommés pour les 61 algorithmes X-Air, tap tempo, GEQ/True EQ 31 bandes sur les sorties compatibles. Mesure acoustique au micro et propositions de correction à vérifier, avec application volontaire.
+- **MIDI et commandes** — Apprentissage des faders et mutes, CC absolus ou relatifs, notes, Program Change, commandes favorites et conditions. Activation explicite pour la session et sauvegarde avant les commandes prises en charge.
+- **Répétition et fiches** — Projets REAPER ouverts par onglet, sections, boucles, décompte, prises séparées et gestionnaire sur téléphone. Accords et paroles disponibles dans les fiches compatibles BandStudio, avec affichage plein écran.
+
+Cette évolution concerne les applications de bureau Windows, macOS Intel/Apple Silicon et Linux. Android reste distribué séparément en 2.4.0-android.5 ; ses fonctions ne sont pas toutes celles de cette version de bureau. BandStudio est une application complémentaire indépendante.
+
+Installe à nouveau le pont livré avec 2.3.15, même si son numéro affiche déjà 1.5.0, puis redémarre REAPER. Ouvre un projet par onglet avec ses médias. Dans Répéter → Avec mes morceaux, sélectionne le projet, vérifie ses entrées et pistes armées, sa piste Original et sa fin. REC crée une prise séparée dans ce projet ; vérifie les véritables entrées audio avant l’essai.
+
+Les presets et corrections sont des points de départ. Une mesure au micro dépend de la calibration, du placement, du bruit et du trajet audio ; elle ne garantit pas un résultat sonore universel. Aucun traitement ne restaure un enregistrement déjà écrêté. Les conversions portables concernent des entrées mono indépendantes et des paramètres sélectionnés ; les pistes liées et conversions X32 ne sont pas incluses. X32 reste partielle et expérimentale. MIDI ne signifie pas prise en charge MCU/HUI, SysEx ou faders motorisés. Les tests logiciels et la simulation ne certifient pas chaque console, contrôleur ou installation acoustique. La simulation de console ne simule pas REAPER : un enregistrement utilise ses entrées réelles.
+
+[Tutoriel des nouveautés 2.3.15](NEW_2_3_15_FR.md)
+
+---
+
+# BandPilot 2.3.15 · Mixer control, MIDI and phone rehearsals · 22 novembre 2026
+
+BandPilot 2.3.15 brings together new mixer controls, selective recall, software groups, MIDI and REAPER rehearsals on musicians’ phones.
+
+- **Mixer and monitors** — Custom banks and surfaces, software groups, stereo pairs, meters and RTA. Available controls and destinations depend on the connected model and selected mix.
+- **Scenes and presets** — Selective input, output and FX recall, protection by parameter family, preview and backup. Explicit preset and portable scene conversion within the supported X-Air/M-Air scope.
+- **Effects and analysis** — Named editors for the 61 X-Air algorithms, tap tempo and 31-band GEQ/True EQ on supported outputs. Microphone measurements and correction proposals require user review and explicit application.
+- **MIDI and commands** — Fader and mute learning, absolute or relative CC, notes, Program Change, favorite commands and conditions. Explicit session activation and backups for supported commands.
+- **Rehearsal and song sheets** — Open REAPER project tabs, sections, loops, count-in, separate takes and a phone rehearsal manager. Compatible BandStudio song sheets provide chords and lyrics with an optional full-screen view.
+
+This update concerns the Windows, Intel/Apple Silicon macOS and Linux desktop apps. Android remains a separate 2.4.0-android.5 release and does not include every desktop feature described here. BandStudio is an independent companion app.
+
+Reinstall the bridge supplied with 2.3.15, even if it already displays version 1.5.0, then restart REAPER. Open one project per tab with its media. In Rehearse → With my songs, select the project and check its inputs, armed tracks, Original track and ending. REC creates a separate take in that project; verify real audio inputs before trying it.
+
+Presets and corrections are starting points. Microphone measurements depend on calibration, placement, background noise and signal path; they do not guarantee a universal sound. Processing cannot recover an already clipped recording. Portable conversion covers independent mono inputs and selected parameters; linked tracks and X32 conversion are excluded. X32 remains partial and experimental. MIDI does not imply MCU/HUI, SysEx or motorized-fader support. Software tests and simulation do not certify every mixer, controller or acoustic setup. Mixer simulation does not simulate REAPER: recording uses its real audio inputs.
+
+[2.3.15 tutorial](NEW_2_3_15_EN.md)
+
+---
+
 # Scènes et presets · bureau 2.3.14 / Android 2.4.0-android.5 · 18 novembre 2026
 
 - **Presets par entrée** : sauvegarder EQ/coupe-bas, compresseur et gate, choisir les traitements à rappeler et l’entrée de destination ; extraction possible depuis une scène complète.

@@ -8,13 +8,14 @@ import type {LibraryStore} from './library-store.js';
 export class FxPresets {
   private plans=new Map<string,{id:string;desired:Fx;before:Fx;identity:string;expires:number}>();
   constructor(private xr:XR18,private control:ConsoleControl,private library:LibraryStore,private remember?:(fx:Fx)=>void){}
-  async preview(id:string,input:unknown,slot?:unknown){
+  async preview(id:string,input:unknown,slot?:unknown,expected?:unknown){
     if(this.xr.model().family!=='xair')throw Error('Presets FX disponibles uniquement pour X-Air / M-Air.');
     const desired=validateFx(input);
     if(slot!==undefined)desired.slot=slot as number;
     validateFx(desired);
     const identity=this.control.identity(),operation=this.xr.operationId(),before=await this.xr.readFx(desired.slot);
     if(identity!==this.control.identity()||operation!==this.xr.operationId())throw Error('Connexion modifiée');
+    if(expected!==undefined&&JSON.stringify(validateFx(expected))!==JSON.stringify(before))throw Error('État modifié : relire le slot avant de préparer les changements');
     if(this.plans.size>=100)this.plans.clear();
     const token=randomUUID();this.plans.set(token,{id,desired,before,identity,expires:Date.now()+PREVIEW_TTL_MS});
     return {token,slot:desired.slot,before,desired};

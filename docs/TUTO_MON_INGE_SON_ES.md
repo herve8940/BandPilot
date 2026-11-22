@@ -1,4 +1,8 @@
-# BandPilot 2.2 — entrenador de prueba de sonido, paso a paso
+# BandPilot — entrenador de prueba de sonido, paso a paso
+
+**2.3.15 — [Tutorial de novedades 2.3.15](NEW_2_3_15_ES.md)**
+
+Esta actualización corresponde a las aplicaciones de escritorio Windows, macOS Intel/Apple Silicon y Linux. Android sigue como distribución separada 2.4.0-android.5 y no incluye todas las funciones de escritorio descritas. BandStudio es una aplicación complementaria independiente.
 
 [Français](TUTO_MON_INGE_SON.md) · [English](TUTO_MON_INGE_SON_EN.md) · [Italiano](TUTO_MON_INGE_SON_IT.md) · [Español](TUTO_MON_INGE_SON_ES.md) · [Deutsch](TUTO_MON_INGE_SON_DE.md)
 

@@ -1,0 +1,16 @@
+import {useEffect,useState} from 'react';
+import {outputTargets,OUTPUT_SECTIONS,OUTPUT_LABELS,type OutputProtections,type OutputRule} from '../../shared/output-recall';
+import {presetApi,type PresetOptions} from './preset-controls';
+import {tx} from './i18n';
+export function OutputProtectionsPanel(){
+ const [open,setOpen]=useState(false);
+ const [saved,setSaved]=useState<OutputProtections|null>(null),[draft,setDraft]=useState<OutputRule[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ const load=async()=>{setBusy(true);setError('');try{const o=await presetApi<PresetOptions>('/api/library/preset-options');if(o.family!=='xair')return;const p=await presetApi<OutputProtections>('/api/library/output-protections');if(p.model!==o.model||!Array.isArray(p.rules))throw Error('Protections des sorties invalides.');setSaved(p);setDraft(p.rules);}catch(e){setError((e as Error).message);}finally{setBusy(false);}};
+ useEffect(()=>{void load();},[]);
+ if(!saved)return error?<p role="alert">{tx(error)}</p>:null;
+ const toggle=(target:string,section:OutputRule['sections'][number])=>setDraft(old=>{const sections=new Set(old.find(r=>r.target===target)?.sections??[]);sections.has(section)?sections.delete(section):sections.add(section);return [...old.filter(r=>r.target!==target),...(sections.size?[{target,sections:[...sections]}]:[])];});
+ const targets=[...outputTargets(saved.model),...Array.from({length:4},(_,i)=>({id:`fx:${i+1}`,label:`FX ${i+1}`}))];
+ const dirty=JSON.stringify(saved.rules)!==JSON.stringify(draft);
+ return <details className="scene-protections output-protections" onToggle={e=>setOpen(e.currentTarget.open)}><summary>{tx('Protections des sorties et FX')} · {saved.rules.length}</summary>{open&&<><p>{tx('Les familles cochées sont conservées lors du rappel des sorties et de son annulation. Sur une paire liée, les deux bus sont protégés. Les rappels complets restent bloqués tant qu’une protection est active.')}</p><fieldset disabled={busy}><div className="scene-protection-grid">{targets.map(t=><section key={t.id}><h4>{tx(t.label)}</h4>{(t.id.startsWith('fx:')?['fx'] as const:OUTPUT_SECTIONS).map(section=><label key={section}><input type="checkbox" aria-label={`${tx(t.label)} · ${tx(section==='fx'?'Slot FX complet':OUTPUT_LABELS[section])}`} checked={draft.some(r=>r.target===t.id&&r.sections.includes(section))} onChange={()=>toggle(t.id,section)}/>{tx(section==='fx'?'Slot FX complet':OUTPUT_LABELS[section])}</label>)}</section>)}</div>
+ <button type="button" disabled={!dirty} onClick={async()=>{setBusy(true);setError('');try{const p=await presetApi<OutputProtections>('/api/library/output-protections',{...saved,rules:draft});setSaved(p);setDraft(p.rules);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}}>{tx('Enregistrer les protections')}</button><button type="button" disabled={!dirty} onClick={()=>setDraft(saved.rules)}>{tx('Annuler les modifications')}</button><button type="button" disabled={!draft.length} onClick={()=>setDraft([])}>{tx('Retirer toutes les protections')}</button><button type="button" onClick={()=>void load()}>{tx('Recharger les protections')}</button></fieldset>{dirty&&<p role="status">{tx('Modifications non enregistrées : les protections actives restent inchangées.')}</p>}{error&&<p role="alert">{tx(error)}</p>}</>}</details>;
+}

@@ -1,0 +1,11 @@
+.studio-control.fx-editor .fx-preset-save { padding: 16px; border: 1px solid var(--g-line-2, #3d5071); border-radius: 12px; background: var(--g-panel-2, #172238); }
+.studio-control.fx-editor .fx-preset-save legend { padding: 0 8px; font-size: 14px; font-weight: 700; color: var(--g-text, #e9f1fa); }
+.studio-control.fx-editor .fx-preset-save button { background: #534095; border-color: #9e80e8; color: #fff; }
+.studio-control.fx-editor .fx-preset-save button:hover:not(:disabled) { background: #684fb9; }
+.studio-control.fx-editor .fx-feedback { padding: 12px 14px; border: 1px solid; border-radius: 10px; font-weight: 600; }
+.studio-control.fx-editor .fx-feedback.success { color: #a4eed8; border-color: #3a8877; background: #123831; }
+.studio-control.fx-editor .fx-feedback.error { color: #ffc0ce; border-color: #8a4563; background: #382139; }
+html .studio.app2 .studio-control.fx-editor input[aria-invalid=true] { border-color: #e4809a; }
+html .studio.app2 .studio-control.fx-editor .fx-field-error { display: block; margin-top: 8px; color: #ffc0ce; font: inherit; font-size: 12px; }
+.studio-control.fx-editor .fx-apply-actions { margin-top: 20px; }
+@media (max-width: 700px) { .studio-control.fx-editor .parameter-grid { grid-template-columns: minmax(0, 1fr); } }

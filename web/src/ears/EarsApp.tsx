@@ -1,3 +1,7 @@
+import {useScoreScreen} from './useScoreScreen';
+import {SongSheet} from './SongSheet';
+import {RehearsalDesk} from '../show/RehearsalDesk';
+import '../show/show.css';
 import type {PersonalPatchInput} from '../../../shared/tech-rider';
 import {LanguageSelect} from "../LanguageSettings";
 import {tx, getLocale, useLanguage} from "../i18n";
@@ -14,13 +18,14 @@ const token = location.pathname.split("/").filter(Boolean)[1] ?? "";
 
 function useEars() {
   const [conn, setConn] = useState<Conn>("connecting");
-  const [share, setShare] = useState<{ name: string; bus: number } | null>(null);
+  const [share, setShare] = useState<{ name: string; bus: number; stereo?:boolean } | null>(null);
   const [patch,setPatch]=useState<PersonalPatchInput[]>([]);
   const [sources, setSources] = useState<Source[]>([]);
   const [values, setValues] = useState<Values>({});
   const [cap, setCap] = useState(.75);
   const [control, setControl] = useState(true);
-  const [meters, setMeters] = useState<{ levels: number[]; bus: number; at: number }>({ levels: [], bus: -128, at: 0 });
+  const [manager,setManager]=useState(false);
+  const [meters, setMeters] = useState<{ levels: number[]; bus: number; busRight?:number; at: number }>({ levels: [], bus: -128, at: 0 });
   const [toast, setToast] = useState("");
   const ws = useRef<WebSocket | null>(null);
   const touched = useRef(new Map<string, number>());
@@ -41,13 +46,14 @@ function useEars() {
       };
       socket.onmessage = ev => {
         const m = JSON.parse(ev.data);
-        if (m.type === "snapshot") { setShare(m.share); setSources(m.sources); setValues(m.values); setCap(m.cap); setControl(m.control); setPatch(m.patch??[]); }
+        if (m.type === "snapshot") { setShare(m.share); setSources(m.sources); setValues(m.values); setCap(m.cap); setControl(m.control); setPatch(m.patch??[]); setManager(m.rehearsal===true); }
+        else if (m.type==="rehearsal-role") setManager(m.enabled===true);
         else if (m.type === "technical-card") setPatch(m.patch??[]);
         else if (m.type === "parameter") {
           if (Date.now() - (touched.current.get(m.address) ?? 0) < 400) return;
           setValues(v => ({ ...v, [m.address]: m.value }));
         } else if (m.type === "adjusted") setValues(v => ({ ...v, [m.address]: m.value }));
-        else if (m.type === "meters") setMeters({ levels: m.levels, bus: m.bus, at: Date.now() });
+        else if (m.type === "meters") setMeters({ levels: m.levels, bus: m.bus, busRight:m.busRight, at: Date.now() });
         else if (m.type === "error") { setToast(m.error); touched.current.delete(m.address); }
       };
     };
@@ -73,7 +79,7 @@ function useEars() {
     };
     flush();
   }, []);
-  return { conn, share, patch, sources, values, cap, control, meters, toast, setToast, set };
+  return { conn, share, manager, patch, sources, values, cap, control, meters, toast, setToast, set };
 }
 
 /** Big horizontal slider: full width = safety ceiling (0 dB). */
@@ -105,8 +111,14 @@ function MeterBar({ db }: { db: number }) {
 
 export function EarsApp() {
   useLanguage();
-  const { conn, share, patch, sources, values, cap, control, meters, toast, setToast, set } = useEars();
+  const { conn, share, manager, patch, sources, values, cap, control, meters, toast, setToast, set } = useEars();
   const [checkedSource,setCheckedSource]=useState("");
+  const [view,setView]=useState<'monitor'|'rehearse'|'sheet'>('monitor');
+  useEffect(()=>{if(!manager)setView(v=>v==='rehearse'?'monitor':v);},[manager]);
+  const screen=useScoreScreen();
+  useEffect(()=>{if(view!=='sheet'||conn==='revoked')screen.leave();},[view,conn,screen.leave]);
+  const rehearsing=manager&&view==='rehearse';
+
   const [meterClock,setMeterClock]=useState(Date.now);
   useEffect(()=>{const timer=setInterval(()=>setMeterClock(Date.now()),1000);return ()=>clearInterval(timer);},[]);
   const [showAll, setShowAll] = useState(false);
@@ -136,12 +148,19 @@ export function EarsApp() {
   const busName = str(`/bus/${bus}/config/name`) || `Bus ${bus}`;
   const masterAddr = `/bus/${bus}/mix/fader`, onAddr = `/bus/${bus}/mix/on`, on = num(onAddr, 1) === 1;
   const master = num(masterAddr);
-  return <main className="ea">
-    <LanguageSelect/>
+  return <main className={rehearsing?"ea ea-rehearsing":"ea"}>
+    {!rehearsing&&<LanguageSelect/>}
     <header className="ea-head">
-      <div><p className="ea-eyebrow">{tx("Mon retour · ")}{busName}</p><h1>{share.name}</h1></div>
+      <div><p className="ea-eyebrow">{rehearsing?tx("Gestionnaire de la répétition"):<>{tx("Mon retour · ")}{busName}{share.stereo?` · ${tx('Stéréo')} ${bus}–${bus+1}`:''}</>}</p><h1>{share.name}</h1></div>
       <span className={`ea-conn ${conn}`}>{tx(conn === "online" ? "En direct" : "Reconnexion…")}</span>
     </header>
+    <nav className="sh-seg ea-page-switch" aria-label={tx('Navigation du musicien')}>
+      <button type="button" className={view==='monitor'?'on':''} aria-pressed={view==='monitor'} onClick={()=>setView('monitor')}>{tx('Mon retour')}</button>
+      <button type="button" className={view==='sheet'?'on':''} aria-pressed={view==='sheet'} onClick={()=>{void screen.acquire();setView('sheet');}}>{tx('Mon morceau')}</button>
+      {manager&&<button type="button" className={rehearsing?'on':''} aria-pressed={rehearsing} onClick={()=>setView('rehearse')}>{tx('Répéter')}</button>}
+    </nav>
+    <SongSheet token={token} manager={manager} visible={view==='sheet'} awake={screen.awake} keepAwake={screen.acquire}/>
+    <div className="ea-monitor-page" hidden={view!=='monitor'}>
     {!control && <p className="ea-banner">{tx("Lecture seule : le contrôle n’est pas activé sur l’ordinateur de la console.")}</p>}
 
     {!!patch.length&&<details className="ea-profiles">
@@ -156,7 +175,7 @@ export function EarsApp() {
         <button type="button" className={on ? "ea-mute" : "ea-mute on"} disabled={!canMove} onClick={() => set(onAddr, on ? 0 : 1)} aria-pressed={!on}>{tx(on ? "Couper" : "Rétablir")}</button>
       </div>
       <Slider label={tx("Volume de mon retour")} value={master} cap={cap} color="#3ee0e0" disabled={!canMove} onChange={v => set(masterAddr, v)} />
-      <MeterBar db={freshMeters ? meters.bus : -128} />
+      <MeterBar db={freshMeters ? meters.bus : -128} />{share.stereo&&<MeterBar db={freshMeters ? meters.busRight??-128 : -128} />}
     </section>
 
     <details className="ea-profiles">
@@ -190,6 +209,7 @@ export function EarsApp() {
         return <article key={s.prefix} className="ea-row" style={{ "--c": color } as React.CSSProperties}>
           <div className="ea-row-top"><span className="ea-dot" /><b>{s.name || s.label}</b>{muted && <em>{tx("coupé en façade")}</em>}<span className="ea-db">{tx(formatDb(faderToDb(level)))}<small>{tx(" dB")}</small></span></div>
           <Slider label={tx(`Niveau de ${s.name || s.label} dans mon retour`)} value={level} cap={cap} color={color} disabled={!canMove} onChange={v => set(s.level, v)} />
+          {share.stereo&&<label>{tx('Panorama')}<input aria-label={tx('Panorama')+' '+(s.name||s.label)} type="range" min="0" max="1" step=".01" value={num(`${s.prefix}/mix/${pad(bus)}/pan`,.5)} disabled={!canMove} onChange={e=>set(`${s.prefix}/mix/${pad(bus)}/pan`,Number(e.target.value))}/><span>{Math.round((num(`${s.prefix}/mix/${pad(bus)}/pan`,.5)-.5)*200)}</span></label>}
           <MeterBar db={db} />
         </article>;
       })}
@@ -211,6 +231,9 @@ export function EarsApp() {
     </section>
 
     <footer className="ea-foot">{tx("Sécurité auditive : le niveau est plafonné à 0 dB et monte progressivement. Commence bas, puis monte ce qui te manque.")}</footer>
+    </div>
+    {manager&&<div hidden={!rehearsing}><RehearsalDesk token={token} visible={rehearsing}/></div>}
+    {rehearsing&&<LanguageSelect/>}
     {toast && <div className="ea-toast" role="status">{tx(toast)}</div>}
   </main>;
 }

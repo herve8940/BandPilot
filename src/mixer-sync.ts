@@ -17,6 +17,7 @@ export class MixerSync {
  async savePc(){if(this.xr.mode!=='simulation')throw Error('En mode réel, utiliser Table → PC pour conserver un état reçu de la console');if(this.xr.model().family==='x32'){const e=this.library.save('mixer-draft','Brouillon X32 (paramètres partiels)',{version:1,scope:'partial',model:this.xr.model().id,parameters:this.xr.parameterState()});return {id:e.id,partial:true,...this.status()};}const scene=await this.control.capture();const e=this.library.save('mixer-workspace','Préparation PC (simulation)',scene);diagnostic('sync.pc_saved',{id:e.id});return {id:e.id,...this.status()};}
  async pull(){this.live();const scene=await this.control.capture();const e=this.library.save('mixer-workspace','État reçu de la table',scene);diagnostic('sync.table_to_pc',{id:e.id,count:Object.keys(scene.values).length});return {id:e.id,count:Object.keys(scene.values).length,missing:scene.missing??[],...this.status()};}
  async preview(sourceId:unknown,includePhantom=false){
+  this.control.assertFullRecall();
   if(typeof sourceId!=='string')throw Error('Choisir un état PC sauvegardé');const e=this.library.get(sourceId);if(!['scene','mixer-workspace','native-scene'].includes(e.kind))throw Error('Source non synchronisable');
   const native=e.kind==='native-scene';if(!native||this.xr.mode==='real')this.live(true);
   const desired=native?nativeSceneForRecall(e.data,this.xr.model().id):this.control.validateScene(e.data);
@@ -33,6 +34,7 @@ export class MixerSync {
   return {token,sourceName:e.name,changes:Object.entries(values).map(([address,after])=>({address,before:fromWire(address,before.values[address]!),after:fromWire(address,after)})),fxSlots:fx.map(f=>f.slot),omitted:'omitted' in desired?desired.omitted:[],phantom,expiresSeconds:PREVIEW_TTL_MS/1000};
  }
  async apply(token:unknown,confirm:unknown,allowPhantom:unknown=false,sourceId?:string){
+  this.control.assertFullRecall();
   const plan=typeof token==='string'?this.plans.get(token):undefined;
   if(!plan||confirm!==true||plan.expires<Date.now()||plan.identity!==this.control.identity()||(sourceId!==undefined&&sourceId!==plan.sourceId))throw Error('Aperçu expiré ou connexion modifiée : recommencer');
   if(!plan.native||this.xr.mode==='real')this.live(true);
@@ -40,6 +42,7 @@ export class MixerSync {
   const operation=this.xr.operationId(),identity=this.control.identity(),before=await this.control.capture();
   if(operation!==this.xr.operationId()||identity!==this.control.identity())throw Error('Connexion modifiée ou opération interrompue');
   if(digest(before)!==plan.before)throw Error('La table a changé depuis l’aperçu (autre application possible). Prévisualiser à nouveau.');
+  this.control.assertFullRecall();
   const backup=this.library.save('scene','Avant synchronisation PC → Table',before);
   const check=()=>{if(operation!==this.xr.operationId()||identity!==this.control.identity())throw Error('Synchronisation interrompue');};
   const settings=Object.fromEntries(Object.entries(plan.values).filter(([a])=>!/(fader|level|on)$/.test(a))),levels=Object.fromEntries(Object.entries(plan.values).filter(([a])=>/(fader|level|on)$/.test(a)));
