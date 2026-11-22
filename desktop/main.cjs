@@ -170,6 +170,9 @@ app.whenReady().then(async () => {
     if(smoke){
       const execute=win.webContents.executeJavaScript.bind(win.webContents);
       win.webContents.executeJavaScript=async(code,...args)=>{
+        // Give native events a turn between successive synthetic interactions.
+        await new Promise(resolve=>setImmediate(resolve));
+        console.log('Native smoke script:',code.slice(0,160));
         let timer;
         try{return await Promise.race([execute(code,...args),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Smoke renderer script timed out')),30000);})]);}
         catch(error){console.error('Smoke script failed:',code);throw error;}
