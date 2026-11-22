@@ -36,7 +36,7 @@ function createFixture(dataPath){
   const cmd=fields.cmd,read=field=>fields[field];
   const id=read('project'),action=read('action');
   if(cmd==='transport')return {playing:!!active,recording:transport==='recording',pos:from};
-  if(cmd==='state')return {version:'1.5.0',project:'',tracks:[],songs:[],regions:[],playing:false,recording:false,pos:0,length:0,loop:{on:false,start:0,stop:0}};
+  if(cmd==='state')return {version:'1.5.1',project:'',tracks:[],songs:[],regions:[],playing:false,recording:false,pos:0,length:0,loop:{on:false,start:0,stop:0}};
   if(cmd==='rehearsal_state')return snapshot(id,src.includes('["detail"]=true'));
   if(cmd==='rehearsal_peaks')return {peaks:Array.from({length:480},(_,i)=>Math.abs(Math.sin(i*.12)))};
   if(cmd!=='rehearsal_command')throw Error('Commande hors du test');
@@ -72,7 +72,7 @@ function createFixture(dataPath){
  const tick=()=>{
   update();
   const heartbeat=path.join(mailbox,'heartbeat.txt');
-  atomic(heartbeat,'BandPilotBridge/2\n1.5.0\n1700000000\nrehearsal-tabs/3\nrehearsal-tabs/4\nrehearsal-tabs/5\nrehearsal-tabs/6\nrehearsal-tabs/7\nrehearsal-tabs/9');
+  atomic(heartbeat,'BandPilotBridge/2\n1.5.1\n1700000000\nrehearsal-tabs/3\nrehearsal-tabs/4\nrehearsal-tabs/5\nrehearsal-tabs/6\nrehearsal-tabs/7\nrehearsal-tabs/9\nrehearsal-tabs/10');
   for(const file of fs.readdirSync(mailbox)){
    const id=/^request-([a-f0-9-]+)\.lua$/.exec(file)?.[1];
    if(!id)continue;

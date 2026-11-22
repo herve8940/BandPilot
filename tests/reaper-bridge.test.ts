@@ -4,7 +4,9 @@ import {existsSync,mkdirSync,writeFileSync,readFileSync,rmSync,watch} from 'node
 import {mkdtemp,mkdir,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {ReaperBridge,reaperResources,saveLiveRoles,toLua} from '../src/reaper-bridge.js';
+import {BRIDGE_VERSION,ReaperBridge,reaperResources,saveLiveRoles,toLua} from '../src/reaper-bridge.js';
+import {REHEARSAL_BRIDGE} from '../shared/rehearsal-desk.js';
+import {RehearsalDesk} from '../src/rehearsal-desk.js';
 import {wavPeaks} from '../src/peaks.js';
 import {ACTION,ReaperLink,planSession,presenceCommands,roleOf} from '../src/reaper.js';
 
@@ -34,6 +36,26 @@ test('installing the bridge keeps the existing startup script and is idempotent'
  const text=readFileSync(join(dir,'Scripts','__startup.lua'),'utf8');
  assert.ok(text.startsWith('-- ReaCue\ndofile("x")\n'));assert.equal(text.split('XR18_Studio_Bridge.lua').length-1,1);
  assert.ok(existsSync(join(dir,'Scripts','XR18 Studio','XR18_Studio_Bridge.lua')));
+});
+test('the previous rehearsal bridge requests an update until the corrected script restarts',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'bandpilot-bridge-upgrade-')),box=join(dir,'XR18Studio');
+ try{
+  await mkdir(box);
+  const heartbeat=join(box,'heartbeat.txt');
+  await writeFile(heartbeat,'BandPilotBridge/2\r\n1.5.0\r\n1\r\nrehearsal-tabs/9');
+  const bridge=new ReaperBridge(dir),desk=new RehearsalDesk(bridge,()=>false);
+  assert.equal(bridge.alive(),true);
+  assert.deepEqual(await desk.state(),{bridge:'update',tabs:[],transport:'idle'});
+  assert.deepEqual(await bridge.install(),{installed:true,restartNeeded:true});
+  assert.equal(bridge.supportsRehearsal(),false,'Copying files does not restart the running script');
+  const scripts=join(dir,'Scripts','XR18 Studio');
+  assert.match(readFileSync(join(scripts,'BandPilot_Rehearsal.lua'),'utf8'),/GetProjectName\(p, ""\)/);
+  const installed=readFileSync(join(scripts,'XR18_Studio_Bridge.lua'),'utf8');
+  assert.ok(installed.includes('local VERSION = "'+BRIDGE_VERSION+'"'));
+  assert.ok(installed.includes(REHEARSAL_BRIDGE));
+  await writeFile(heartbeat,'BandPilotBridge/2\r\n'+BRIDGE_VERSION+'\r\n1\r\nrehearsal-tabs/9\r\n'+REHEARSAL_BRIDGE);
+  assert.equal(bridge.supportsRehearsal(),true);
+ }finally{rmSync(dir,{recursive:true,force:true});}
 });
 function wav(samples:number[]){
  const data=Buffer.alloc(samples.length*3);samples.forEach((s,i)=>data.writeIntLE(Math.round(s*8388607),i*3,3));

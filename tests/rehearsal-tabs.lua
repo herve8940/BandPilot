@@ -18,7 +18,10 @@ r.time_precise=function() return now end
 r.CountTracks=function(p) return #p.tracks end
 r.GetTrack=function(p,i) return p.tracks[i+1] end
 r.EnumProjects=function(i) local p=i==-1 and focused or projects[i+1];return p,p and p.path end
-r.GetProjectName=function(p) return p.title..".rpp" end
+r.GetProjectName=function(p,buf)
+ assert(type(buf)=="string", "bad argument #2 to 'GetProjectName' (string expected, got "..type(buf)..")")
+ return p.title..".rpp"
+end
 r.Master_GetPlayRate=function() return 1 end
 r.GetProjectStateChangeCount=function(p) return #p.tracks+#p.marks end
 -- 3/4 at 120 BPM, then 4/4 at 60 BPM from QN 6.
@@ -93,6 +96,7 @@ local function command(id,action,options)
 end
 local list=H.rehearsal_state({}).tabs
 assert(#list==3 and list[1].id~=list[2].id)
+assert(list[1].title=="Identical" and list[2].title=="Identical" and list[3].title=="Other")
 local a,b,c=list[1].id,list[2].id,list[3].id
 command(b,"select")
 assert(focused==two)

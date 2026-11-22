@@ -39,7 +39,7 @@ return function(H, r, helpers)
       end
       alive[p] = projects[p]
       local file = path and path:match("([^/\\]+)$")
-      local title = (r.GetProjectName(p) or ""):gsub("%.[rR][pP][pP]$", "")
+      local title = (r.GetProjectName(p, "") or ""):gsub("%.[rR][pP][pP]$", "")
       if title == "" and file then title = file:gsub("%.[rR][pP][pP]$", "") end
       list[#list + 1] = { p=p, path=path, id=alive[p], title=title, number=i+1, saved=path ~= nil and path ~= "", current=p == current }
       i = i + 1

@@ -1,3 +1,27 @@
+# BandPilot 2.3.16 · Correctif REAPER Windows · 22 novembre 2026
+
+La lecture des onglets de projets REAPER ne s'arrête plus sur l'erreur `GetProjectName: string expected, got no value` rencontrée sous Windows. Le pont 1.5.1 fournit explicitement l'argument texte attendu par les versions de REAPER concernées. Un test reproduit cette exigence de l'API.
+
+Après la mise à jour de BandPilot, ouvre **Répéter → Avec mes morceaux → Installer le pont REAPER**, puis sauvegarde tes projets et redémarre REAPER. BandPilot détecte l'ancien pont et propose son remplacement. L'installation du nouveau pont ne redémarre pas REAPER automatiquement.
+
+## English
+
+REAPER project tabs no longer fail with `GetProjectName: string expected, got no value` on affected Windows installations. Bridge 1.5.1 explicitly supplies the required string argument, covered by a regression test. After updating BandPilot, open **Rehearse → With my songs → Install the REAPER bridge**, save your projects and restart REAPER. BandPilot detects the previous bridge and offers the update.
+
+## Italiano
+
+Corretto l'errore `GetProjectName` durante la lettura delle schede dei progetti REAPER su Windows. Dopo l'aggiornamento di BandPilot, apri la pagina delle prove con i tuoi brani, installa il bridge REAPER aggiornato alla versione 1.5.1, salva i progetti e riavvia REAPER.
+
+## Español
+
+Corregido el error `GetProjectName` al leer las pestañas de proyectos REAPER en Windows. Después de actualizar BandPilot, abre la página de ensayo con tus canciones, instala el puente REAPER actualizado a la versión 1.5.1, guarda los proyectos y reinicia REAPER.
+
+## Deutsch
+
+Der Fehler `GetProjectName` beim Lesen der REAPER-Projekt-Tabs unter Windows wurde behoben. Nach dem BandPilot-Update die Probenseite mit den eigenen Songs öffnen, die aktualisierte REAPER-Verbindung in Version 1.5.1 installieren, Projekte speichern und REAPER neu starten.
+
+---
+
 # BandPilot 2.3.15 · Console, MIDI et répétition sur téléphone · 22 novembre 2026
 
 BandPilot 2.3.15 réunit les nouvelles commandes de console, les rappels sélectifs, les groupes logiciels, le MIDI et la répétition REAPER sur les téléphones des musiciens.

@@ -1,4 +1,4 @@
-export const REHEARSAL_BRIDGE='rehearsal-tabs/9';
+export const REHEARSAL_BRIDGE='rehearsal-tabs/10';
 export const PROJECT_ID=/^[0-9a-fA-F]{32}-[1-9]\d{0,8}$/;
 export const MARK_ID=/^[mre]\d{1,9}$/;
 export const TRACK_ID=/^\{[\da-fA-F-]{36}\}$/;

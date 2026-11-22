@@ -5,7 +5,7 @@ local SEP = package.config:sub(1, 1)
 local DIR = r.GetResourcePath() .. SEP .. "XR18Studio"
 r.RecursiveCreateDirectory(DIR, 0)
 local REQ, RES, BEAT = DIR .. SEP .. "request.lua", DIR .. SEP .. "response.json", DIR .. SEP .. "heartbeat.txt"
-local VERSION = "1.5.0"
+local VERSION = "1.5.1"
 
 local function jstr(s)
   return '"' .. tostring(s):gsub('[%z\1-\31\\"]', function(c)
@@ -282,7 +282,7 @@ local WAKE = DIR .. SEP .. "requests.ready"
 local function loop()
   local now = r.time_precise()
   if rehearsal then pcall(rehearsal.tick) end
-  if now - beat > 2 then beat = now; pcall(write_atomic, BEAT, "BandPilotBridge/2\n" .. VERSION .. "\n" .. tostring(os.time()) .. "\nrehearsal-tabs/2\nrehearsal-tabs/3\nrehearsal-tabs/4\nrehearsal-tabs/5\nrehearsal-tabs/6\nrehearsal-tabs/7\nrehearsal-tabs/8\nrehearsal-tabs/9") end
+  if now - beat > 2 then beat = now; pcall(write_atomic, BEAT, "BandPilotBridge/2\n" .. VERSION .. "\n" .. tostring(os.time()) .. "\nrehearsal-tabs/2\nrehearsal-tabs/3\nrehearsal-tabs/4\nrehearsal-tabs/5\nrehearsal-tabs/6\nrehearsal-tabs/7\nrehearsal-tabs/8\nrehearsal-tabs/9\nrehearsal-tabs/10") end
   pcall(process_request, REQ, RES) -- compatibility with previously installed BandPilot versions
   -- REAPER caches directory listings. A request signals after its atomic rename;
   -- older clients and missed signals are picked up by the periodic scan.
