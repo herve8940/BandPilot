@@ -1,6 +1,14 @@
 /** Runs inside the disposable --smoke-test profile, with no physical mixer. */
 module.exports=async(win,wait,screenshot)=>{
- const js=code=>win.webContents.executeJavaScript(code);
+ const bounded=async(promise,label)=>{
+  let timer;
+  try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Live console smoke timed out: '+label)),30000);})]);}
+  finally{clearTimeout(timer);}
+ };
+ const js=code=>{
+  console.log('Live console step: '+code.slice(0,180));
+  return bounded(win.webContents.executeJavaScript(code),code.slice(0,300));
+ };
  const api=(path,data)=>js(`(async()=>{const r=await fetch(${JSON.stringify(path)},{method:${data===undefined?"'GET'":"'POST'"},headers:{'Content-Type':'application/json'},body:${data===undefined?'undefined':JSON.stringify(JSON.stringify(data))}});const value=await r.json();if(!r.ok)throw Error(value.error);return value;})()`);
  if((await api('/api/status')).mode!=='simulation')throw Error('DEV smoke requires simulation');
  const {defaultFxParameters}=await import('../dist/shared/fx-parameters.js');
@@ -9,7 +17,7 @@ module.exports=async(win,wait,screenshot)=>{
  const applied=await api('/api/library/fx-edit/apply',{token:plan.token,confirm:true});
  if((await api('/api/console/fx?slot=1')).algorithm!==10)throw Error('Delay recall failed');
  await js(`localStorage.setItem('xr18-console-mode','expert');localStorage.setItem('xr18-expert-view','fx')`);
- await win.loadURL(win.webContents.getURL());
+ await bounded(win.loadURL(win.webContents.getURL()),'reload console');
  await wait(`!!document.querySelector('button[title="Régler le son"]')`);
  await js(`document.querySelector('button[title="Régler le son"]').click()`);
  await wait(`!!document.querySelector('.rail-pages')`);
@@ -37,7 +45,7 @@ module.exports=async(win,wait,screenshot)=>{
  await screenshot('dev-custom-bank.png');await button('Enregistrer la vue');await wait(`!document.querySelector('.desk-customize-dialog')`);
  // A new desktop launch has a new origin. Remove the browser copy to check native storage.
  await js(`localStorage.removeItem('bandpilot-workspaces-v1')`);
- await win.loadURL(win.webContents.getURL());await wait(`!!document.querySelector('.studio')`);
+ await bounded(win.loadURL(win.webContents.getURL()),'reload console');await wait(`!!document.querySelector('.studio')`);
  if(!await js(`JSON.stringify(window.bandpilotWorkspaces.get()).includes('DEV bank')`))throw Error('Custom bank not persisted natively');
  const copy=await api('/api/monitor/copy/preview',{source:1,target:3});const result=await api('/api/monitor/copy/apply',{token:copy.token,confirm:true});
  const restore=await api(`/api/library/${result.backupId}/preview`,{});await api(`/api/library/${result.backupId}/apply`,{token:restore.token,confirm:true});

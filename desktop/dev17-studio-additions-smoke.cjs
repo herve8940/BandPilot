@@ -10,12 +10,15 @@ module.exports=async(win,wait,screenshot)=>{
   await wait(`!!(${found})&&!(${found}).matches(':disabled')`);
   await js(`(${found}).click()`);
  };
- const input=(selector,value)=>js(`(()=>{
+ const input=async(selector,value)=>{
+  await wait(`!!document.querySelector(${JSON.stringify(selector)})&&!document.querySelector(${JSON.stringify(selector)}).matches(':disabled')`);
+  return js(`(()=>{
   const field=document.querySelector(${JSON.stringify(selector)});
   const prop=Object.getOwnPropertyDescriptor(field.constructor.prototype,'value');
   prop.set.call(field,${JSON.stringify(value)});
   field.dispatchEvent(new Event(field.tagName==='SELECT'?'change':'input',{bubbles:true}));
  })()`);
+ };
  const read=async address=>(await api('/api/console/parameters?prefix='+encodeURIComponent(address))).parameters.find(p=>p.address===address).state.value;
  const set=async values=>{
   const p=await api('/api/console/preview',{values});
