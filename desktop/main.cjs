@@ -72,7 +72,8 @@ app.whenReady().then(async () => {
       width:1440,height:900,minWidth:800,minHeight:600,
       icon:path.join(__dirname,"icon.png"),
       backgroundColor:"#0d1621",
-      webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,preload:path.join(__dirname,"preload.cjs")}
+      // Hidden smoke windows must keep rendering just like a visible application.
+      webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,backgroundThrottling:!smoke,preload:path.join(__dirname,"preload.cjs")}
     });
     const origin=`http://127.0.0.1:${port}`;
     const trusted=(contents,requestUrl,isMainFrame)=>{
@@ -165,7 +166,12 @@ app.whenReady().then(async () => {
     await win.loadURL(`http://127.0.0.1:${port}/`);
     if(smoke){
       const execute=win.webContents.executeJavaScript.bind(win.webContents);
-      win.webContents.executeJavaScript=async(code,...args)=>{try{return await execute(code,...args);}catch(error){console.error('Smoke script failed:',code);throw error;}};
+      win.webContents.executeJavaScript=async(code,...args)=>{
+        let timer;
+        try{return await Promise.race([execute(code,...args),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Smoke renderer script timed out')),30000);})]);}
+        catch(error){console.error('Smoke script failed:',code);throw error;}
+        finally{clearTimeout(timer);}
+      };
 
       await new Promise(resolve=>setTimeout(resolve,1000));
       const rendered=await win.webContents.executeJavaScript('document.body.textContent.includes("BandPilot")');
@@ -192,7 +198,7 @@ app.whenReady().then(async () => {
       };
       const screenshot=async(name)=>{if(process.env.XR18_SMOKE_SCREENSHOTS){mkdirSync(process.env.XR18_SMOKE_SCREENSHOTS,{recursive:true});writeFileSync(path.join(process.env.XR18_SMOKE_SCREENSHOTS,name),(await win.webContents.capturePage()).toPNG());}};
       const checkRehearsal=()=>require('./dev19-rehearsal-smoke.cjs').verify({
-        main:win,createWindow:()=>new BrowserWindow({show:false,width:390,height:730,webPreferences:{sandbox:true,contextIsolation:true}}),
+        main:win,createWindow:()=>new BrowserWindow({show:false,width:390,height:730,webPreferences:{sandbox:true,contextIsolation:true,backgroundThrottling:false}}),
         screenshot,fixture:rehearsalSmoke,port
       });
       if(process.argv.includes('--smoke-rehearsal-only')){
