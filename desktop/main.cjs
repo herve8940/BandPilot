@@ -68,7 +68,8 @@ app.whenReady().then(async () => {
     }
     if(!ready)throw Error(label("Le serveur local BandPilot n'a pas démarré.","The local BandPilot server did not start."));
     win=new BrowserWindow({
-      show:!smoke,
+      // Windows smoke runs exercise the same visible window as an installed launch.
+      show:!smoke||process.platform==='win32',
       width:1440,height:900,minWidth:800,minHeight:600,
       icon:path.join(__dirname,"icon.png"),
       backgroundColor:"#0d1621",
@@ -138,9 +139,11 @@ app.whenReady().then(async () => {
     });
     ipcMain.on('xr18-confirm',(event,message)=>{
       if(!fromWindow(event)){event.returnValue=false;return;}
+      if(smoke){event.returnValue=false;console.error('Unexpected native confirmation in smoke:',message);app.exit(1);return;}
       event.returnValue=dialog.showMessageBoxSync(win,{type:"question",icon:appIcon,title:"BandPilot",message:String(message).slice(0,2000),buttons:[label("Annuler","Cancel"),label("Confirmer","Confirm")],defaultId:1,cancelId:0,noLink:true})===1;
     });
     ipcMain.on('xr18-alert',(event,message)=>{
+      if(smoke&&fromWindow(event)){event.returnValue=null;console.error('Unexpected native alert in smoke:',message);app.exit(1);return;}
       if(fromWindow(event))dialog.showMessageBoxSync(win,{type:"info",icon:appIcon,title:"BandPilot",message:String(message).slice(0,2000),buttons:["OK"],noLink:true});
       event.returnValue=null;
     });

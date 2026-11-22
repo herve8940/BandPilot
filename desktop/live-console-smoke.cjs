@@ -23,7 +23,7 @@ module.exports=async(win,wait,screenshot)=>{
  await wait(`!!document.querySelector('.rail-pages')`);
  await js(`[...document.querySelectorAll('.rail-pages button')].find(b=>b.textContent.trim()==='Console').click()`);
  const button=label=>js(`[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===${JSON.stringify(label)}).click()`);
- await wait(`document.body.textContent.includes('Lire le slot')`);await js(`document.querySelector('.studio-control').closest('details').open=true`);await button('Lire le slot');await wait(`!!document.querySelector('.fx-tempo')`);
+ await wait(`document.body.textContent.includes('Lire le slot')`);await js(`document.querySelector('.studio-control').closest('details').open=true`);await button('Lire le slot');console.log('Live console: waiting for delay controls');await wait(`!!document.querySelector('.fx-tempo')`);
  for(const [lang,expected] of [['en','Delay time'],['it','Tempo di delay'],['es','Tiempo de retardo'],['de','Verzögerungszeit'],['fr','Durée du délai']]){
   await js(`window.dispatchEvent(new Event('xr18-open-connection'))`);await wait(`!!document.querySelector('.bandpilot-language select')`);
   await js(`(()=>{const s=document.querySelector('.bandpilot-language select');s.value=${JSON.stringify(lang)};s.dispatchEvent(new Event('change',{bubbles:true}));})()`);
