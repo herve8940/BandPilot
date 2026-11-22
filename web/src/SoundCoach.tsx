@@ -1,9 +1,12 @@
+import {SceneProtectionSummary,type ProtectedSelection} from './SceneProtectionsPanel';
 import {reportUIError} from './diagnostics';
 import {TechRider} from './TechRider';
 import {tx, getLocale, getLanguage} from "./i18n";
 import {useEffect,useRef,useState} from 'react';
 import {Check,ChevronRight,Headphones,MessageCircle,Music2,SlidersHorizontal,Sparkles,Undo2,X,BookOpen,FileText} from 'lucide-react';
 import './sound-coach.css';
+import {STEREO_LINK_LABELS,STEREO_LINK_NOTICE,type StereoLinkSummary} from '../../shared/stereo-link';
+import './stereo-link.css';
 import {VocalAmbience} from './VocalAmbience';
 import {CoachOverview,type CoachMeterSnapshot} from './CoachBalanceOverview';
 import {EarsStep,GainStep,InputsStep,type CoachData} from './CoachSetup';
@@ -11,17 +14,17 @@ declare global {interface Window {xr18DesktopAI?:{configure(input:{apiKey:string
 import type {Profile} from './CoachSetup';
 type Status={host?:string;model?:string;port?:number;mode:'real'|'simulation';connected:boolean;writesEnabled:boolean};
 type Catalog=CoachData&{steps:{id:string;title:string;text:string}[];symptoms:{id:string;label:string}[];profile:Profile;role:string;aiConfigured:boolean};
-export type Plan={token:string;title:string;explanation:string;inputs:string[];changes:{address:string;before:string|number;after:string|number}[];detailsUnavailable?:boolean;fxChanged?:boolean};
+export type Plan={token:string;title:string;explanation:string;inputs:string[];changes:{address:string;before:string|number;after:string|number}[];detailsUnavailable?:boolean;fxChanged?:boolean;stereoLink?:StereoLinkSummary;excluded?:ProtectedSelection};
 type ApplyResult={backupId:string;written?:number;failed?:string[]};
 type Reply={source?:string;answer:string;check?:string;checks?:string[];question?:string;symptom?:string;measuredAudio?:boolean};
 type Report={available:boolean;state:string;title:string;message:string;samples:number;maximumDb?:number};
 async function api(path:string,data?:unknown){const r=await fetch(path,{method:data?'POST':'GET',headers:{'Content-Type':'application/json'},body:data?JSON.stringify(data):undefined});const result=await r.json();if(!r.ok)throw Error(result.error??'Action indisponible');return result;}
-const friendly=(a:string)=>{
+export const friendly=(a:string)=>{
  const ch=/\/ch\/(\d+)/.exec(a)?.[1],bus=/^\/bus\/(\d)/.exec(a)?.[1],send=/\/mix\/(\d{2})\//.exec(a)?.[1],band=/\/eq\/(\d)/.exec(a)?.[1];
  const leaf=a.split('/').at(-1)!;const dyn=a.includes('/dyn/'),gate=a.includes('/gate/');
  const labels:Record<string,string>={name:'Nom',color:'Couleur',hpon:'Coupe-bas actif',hpf:'Coupe-bas (Hz)',g:'Gain (dB)',f:'Fréquence (Hz)',q:'Largeur',type:'Type de filtre',thr:'Seuil (dB)',ratio:'Taux',attack:'Attaque (ms)',release:'Relâchement (ms)',hold:'Maintien (ms)',range:'Atténuation (dB)',mgain:'Gain de compensation',knee:'Genou',det:'Détection',auto:'Automatique',mode:'Mode',mix:'Dosage',pan:'Position stéréo',fader:'Volume (dB)',gain:'Gain (dB)',invert:'Polarité inversée',grpon:'Groupe',dca:'Affectation DCA',mute:'Groupes de mute',group:'Automix',lr:'Envoyé en façade',level:'Niveau envoyé (dB)',tap:'Point de départ',on:gate?'Gate':dyn?'Compresseur':a.includes('/eq/')?'Égaliseur':'Allumé'};
  const head=/^\/headamp\/(\d+)/.exec(a)?.[1],rtn=/^\/rtn\/(\w+)/.exec(a)?.[1],dca=/^\/dca\/(\d)/.exec(a)?.[1],fxs=/^\/fxsend\/(\d)/.exec(a)?.[1],mg=/^\/config\/mute\/(\d)/.exec(a)?.[1];const where=ch?'Canal '+Number(ch)+' · ':bus?'Bus '+bus+' · ':head?'Préampli entrée '+Number(head)+' · ':a.startsWith('/lr/')?'Master · ':rtn?(rtn==='aux'?'Entrée Aux · ':'Retour effet '+rtn+' · '):dca?'DCA '+dca+' · ':fxs?'Envoi effet '+fxs+' · ':mg?'Groupe de mute '+mg+' · ':'';
- return `${tx(where)}${send&&ch?tx('Retour bus '+Number(send)+' · '):''}${band?tx('EQ bande '+band+' · '):''}${!band&&dyn?tx('Compresseur · '):''}${!band&&gate&&leaf!=='on'?'Gate · ':''}${tx(mg?'Actif':labels[leaf]??leaf)}`;
+ return `${tx(where)}${send&&ch?tx('Retour bus '+Number(send)+' · '):''}${band?tx('EQ bande '+band+' · '):''}${!band&&dyn?tx('Compresseur · '):''}${!band&&gate&&leaf!=='on'?'Gate · ':''}${a.includes('/geq/')?`${Number(leaf.includes('k')?Number(leaf.replace('k','.'))*1000:leaf)} Hz · ${tx('Gain (dB)')}`:tx(mg?'Actif':labels[leaf]??leaf)}`;
 };
 const format=(v:string|number)=>typeof v==='number'?String(Math.round(v*100)/100):v;
 const WORDS:[string,string][]=[
@@ -98,8 +101,8 @@ export function PlanDialog({plan,busy,canApply,mode,onClose,onApply,error=''}:{p
  // Close with the X, the Cancel button, Escape, or a click outside the window.
  return <dialog ref={dialog} className="coach-dialog" onCancel={e=>{e.preventDefault();close();}} onClick={e=>{if(e.target===dialog.current)close();}} aria-labelledby="coach-plan-title">
   <button className="coach-dialog-close" aria-label={tx("Fermer sans rien changer")} title={tx("Fermer sans rien changer")} disabled={busy} onClick={close}><X size={18}/></button>
-  <div className="coach-dialog-body"><span className="coach-eyebrow">{tx("ON VÉRIFIE AVANT DE TOUCHER AU SON")}</span><h2 id="coach-plan-title">{tx(plan.title)}</h2><p>{tx(plan.explanation)}</p>{plan.inputs.length>0&&<p><b>{tx("Concernés : ")}</b>{plan.inputs.join(', ')}</p>}{plan.detailsUnavailable?null:changed.length===0&&!plan.fxChanged?<p className="coach-message">{tx("Rien ne change : la console est déjà réglée ainsi.")}</p>:<details><summary>{tx(`Voir le détail : ${changed.length} réglage(s) modifié(s)`)}</summary><div className="coach-diff"><table><thead><tr><th>{tx("Réglage")}</th><th>{tx("Avant")}</th><th>{tx("Après")}</th></tr></thead><tbody>{changed.map(c=><tr key={c.address}><td>{tx(friendly(c.address))}</td><td>{format(c.before)}</td><td>{format(c.after)}</td></tr>)}</tbody></table></div></details>}<p className="coach-note">{tx("Une sauvegarde est faite juste avant : tu pourras revenir en arrière en un clic. Cette proposition reste valable 10 minutes ; si la console a bougé entre-temps, je te le dirai avant de toucher à quoi que ce soit.")}</p>{!canApply&&<p role="status" className="coach-message warn">{tx("Pour appliquer, connecte la console et active son contrôle dans Réglages.")}</p>}</div>
-  {error&&<div className="coach-dialog-body"><p role="alert" className="coach-error">{tx(error)}</p><p>{tx('Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, « Annuler le dernier réglage guidé » permet de revoir la sauvegarde.')}</p></div>}
+  <div className="coach-dialog-body"><span className="coach-eyebrow">{tx("ON VÉRIFIE AVANT DE TOUCHER AU SON")}</span><h2 id="coach-plan-title">{tx(plan.title)}</h2><p>{tx(plan.explanation)}</p>{plan.inputs.length>0&&<p><b>{tx("Concernés : ")}</b>{plan.inputs.join(', ')}</p>}{plan.stereoLink&&<section className="coach-stereo-summary" aria-label={tx('Liaison stéréo vérifiée')}><h3>{tx('Liaison stéréo vérifiée')} · {plan.stereoLink.pairs.map(n=>`${n}–${n+1}`).join(', ')}</h3>{plan.stereoLink.independent.length>0&&<p><b>{tx('Indépendants gauche/droite :')}</b> {plan.stereoLink.independent.map(g=>tx(STEREO_LINK_LABELS[g])).join(', ')}</p>}{plan.stereoLink.shared.length>0&&<p><b>{tx('Partagés sur la paire :')}</b> {plan.stereoLink.shared.map(g=>tx(STEREO_LINK_LABELS[g])).join(', ')}</p>}<p>{tx(STEREO_LINK_NOTICE)}</p></section>}<SceneProtectionSummary excluded={plan.excluded}/>{plan.detailsUnavailable?null:changed.length===0&&!plan.fxChanged?<p className="coach-message">{tx("Rien ne change : la console est déjà réglée ainsi.")}</p>:<details><summary>{tx(`Voir le détail : ${changed.length} réglage(s) modifié(s)`)}</summary><div className="coach-diff"><table><thead><tr><th>{tx("Réglage")}</th><th>{tx("Avant")}</th><th>{tx("Après")}</th></tr></thead><tbody>{changed.map(c=><tr key={c.address}><td>{tx(friendly(c.address))}</td><td>{format(c.before)}</td><td>{format(c.after)}</td></tr>)}</tbody></table></div></details>}<p className="coach-note">{tx("Une sauvegarde est faite juste avant : tu pourras revenir en arrière en un clic. Cette proposition reste valable 10 minutes ; si la console a bougé entre-temps, je te le dirai avant de toucher à quoi que ce soit.")}</p>{!canApply&&<p role="status" className="coach-message warn">{tx("Pour appliquer, connecte la console et active son contrôle dans Réglages.")}</p>}</div>
+  {error&&<div className="coach-dialog-body"><p role="alert" className="coach-error">{tx(error)}</p><p>{tx('Ferme cette fenêtre puis prépare à nouveau les réglages. Si l’application a été partielle, retrouve la sauvegarde dans l’historique.')}</p></div>}
   <div className="coach-actions coach-dialog-foot"><button autoFocus disabled={busy} onClick={close}>{tx(error?'Fermer':'Annuler, ne rien changer')}</button><button className="primary" disabled={busy||!canApply||!!error} onClick={onApply}>{tx(busy?'Application…':mode==='simulation'?'Essayer en simulation':'Appliquer sur ma console')}</button></div>
  </dialog>;
 }

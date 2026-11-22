@@ -1,0 +1,37 @@
+.xm-fx-view { min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.xm-fx-params, .studio-control.fx-editor { min-width: 0; }
+.studio-control .fx-geq { margin: 18px 0; padding: 18px; min-width: 0; border: 1px solid #416268; border-radius: 14px; background: #102a30; }
+.fx-geq header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.fx-geq header h3 { margin: 0; color: #e5f8f4; }
+.fx-geq header p { margin: 4px 0; color: #9bc6c3; }
+.fx-geq-badge { border: 1px solid #548f8a; border-radius: 20px; padding: 5px 12px; color: #b1ede0; font-size: 12px; }
+.fx-geq-sides { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+html .studio .fx-geq-sides button[aria-pressed=true] { background: #255a58; border-color: #74d6bc; color: #e8fff9; }
+.fx-geq .fx-geq-hint { color: #d0e0e3; font-size: 13px; margin-bottom: 12px; }
+.fx-geq-overview { display: block; width: 100%; max-height: 230px; background: #0c1d27; border-radius: 8px; }
+.fx-geq-overview line { stroke: #29434c; stroke-dasharray: 3 4; }
+.fx-geq-overview line.zero { stroke: #67828c; stroke-dasharray: none; }
+.fx-geq-overview text { fill: #abc0c8; font-size: 11px; }
+.fx-geq-overview polyline { stroke: #79dfbc; stroke-width: 2; fill: none; }
+.fx-geq-overview circle { fill: #79dfbc; }
+.fx-geq-overview circle.selected { fill: #fff; stroke: #79dfbc; stroke-width: 2; }
+.fx-geq small { color: #b4c9cd; display: block; margin-top: 8px; line-height: 1.5; }
+.fx-geq-scroll { overflow-x: auto; margin: 16px 0; padding-bottom: 8px; }
+.fx-geq-faders { display: grid; grid-template-columns: repeat(31,minmax(36px,1fr)); min-width: 1116px; }
+html .studio.app2 .fx-geq-faders label { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; margin: 0; padding: 5px 0; border-radius: 6px; color: #bdd3d8; font-size: 10px; }
+.fx-geq-faders label.selected { background: #244b4f; color: #fff; }
+html .studio.app2 .fx-geq-faders input[type=range] { writing-mode: vertical-lr; direction: rtl; appearance: auto; -webkit-appearance: auto; width: 24px; min-width: 0; height: 132px; padding: 0; margin: 0; accent-color: #79dfbc; background: transparent; cursor: ns-resize; }
+.fx-geq-faders output { font-size: 10px; font-variant-numeric: tabular-nums; }
+html .studio.app2 .fx-geq .fx-geq-detail { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; padding: 12px; border: 1px solid #416268; border-radius: 10px; }
+.fx-geq-detail legend { padding: 0 8px; }
+html .studio.app2 .fx-geq-detail label { flex: 1 1 140px; min-width: 0; }
+html .studio.app2 .fx-geq-detail input, html .studio.app2 .fx-geq-detail select { width: 100%; }
+.fx-geq-reset { margin-top: 12px; }
+.fx-geq :focus-visible { outline: 2px solid #90e5cf; outline-offset: 3px; }
+@media(max-width:700px) { .studio-control .fx-geq { padding: 12px; } .fx-geq-detail button { width: 100%; } }
+
+.output-geq { min-width:0; padding:12px; border:1px solid #416268; border-radius:10px; }
+.output-eq-mode { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:12px; }
+.output-eq-mode label { display:flex; gap:12px; align-items:center; }
+.output-eq-mode small { color:#a7b8ca; }
+.output-rta{display:block;width:100%;min-height:120px;background:#0b1422;border:1px solid #34435b;border-radius:8px}

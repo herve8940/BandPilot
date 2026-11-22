@@ -1,8 +1,10 @@
 # BandPilot – bebilderte Anleitung
 
-Desktop: **2.3.3 stabil** (Windows, macOS, Linux). Android: **2.4.0-android.1 Vorabversion**, separates APK. BandStudio: **2.3.4-dev.1 Windows-Vorabversion**, zum Testen mit der passenden BandStudio-Version; nicht Teil der stabilen Ausgabe.
+Diese Aktualisierung betrifft die Desktop-Apps für Windows, macOS Intel/Apple Silicon und Linux. Android bleibt eine separate Version 2.4.0-android.5 und enthält nicht alle hier beschriebenen Desktop-Funktionen. BandStudio ist eine eigenständige ergänzende App.
 
-Die Screenshots aus 2.2.4 zeigen eine frühere Version in der Simulation. Spätere Änderungen stehen in den Versionshinweisen. [2.3.3](RELEASE_NOTES.md) · [Android (FR)](ANDROID.md)
+**2.3.15 — [Anleitung zu den Neuerungen in 2.3.15](NEW_2_3_15_DE.md)**
+
+Ältere Bilder der allgemeinen Anleitung und das Video 2.2 sind historische Darstellungen. Diese Anleitung beschreibt den Ablauf in 2.3.15.
 
 [Français](USER_GUIDE_FR.md) · [Soundcheck-Coach](TUTO_MON_INGE_SON_DE.md) · [Videotour](VIDEO_TOUR.md) · [Detaillierte Kompatibilität](multi-model.md)
 
@@ -76,29 +78,23 @@ Bereits geöffnete Telefone folgen schreibgeschützten/kontrollierten Änderunge
 
 <h2 id="reaper">8. REAPER-Proben und Aufnahme</h2>
 
-REAPER ist eine separate Software mit eigener Installation und Lizenz. Installieren Sie Bridge **1.5.0** von Rehearse, speichern Sie Projekte und starten Sie dann REAPER neu, um die aktualisierte Bridge zu laden. Aus Kompatibilitätsgründen bleiben die alten technischen Pfade erhalten.
+1. **REAPER vorbereiten** — Installiere die mit 2.3.15 gelieferte Bridge erneut, auch wenn bereits 1.5.0 angezeigt wird, und starte REAPER neu. Öffne ein Projekt pro Tab mit seinen Medien. Wähle unter Proben → Mit meinen Songs das Projekt und prüfe Eingänge, aufnahmebereite Spuren, Originalspur und Ende. REC erzeugt einen getrennten Take in diesem Projekt; prüfe vorher die echten Audioeingänge.
 
-1. Aktualisieren Sie unter „Aufzeichnung“ die Konsole, wählen Sie Titel und Ziel aus, erstellen und öffnen Sie dann eine Sitzung. Bestehende Sitzungen werden nicht überschrieben. Überprüfen Sie das Audiogerät, die Eingangskanäle und die Abtastrate in REAPER.
-2. Die automatische Multitrack-Vorbereitung gilt für XR18/MR18/X18. Beim XR12/MR12 fehlt diese PC-Schnittstelle. Die X32-Karten-/Routing-Vorbereitung ist nicht verfügbar.
-3. Öffnen Sie ein vorbereitetes ReaCue-Projekt für **Mit meinen Songs** oder verwenden Sie **Nur Band**. Songs, Abschnitte, Tracks und Takes stammen aus dem geöffneten Projekt. Konzertmetadaten verwenden das zugehörige `.concert.lua`; Wenn Sie nur `.rpp` kopieren, wird es nicht neu erstellt.
-4. Präsenz spiegelt aktivierte REC-Spuren wider. Wenn Sie einen Musiker auswählen, wird dessen Aufnahmespur vorbereitet und der entsprechende Stem stummgeschaltet. Überprüfen Sie den tatsächlichen Aktivierungs- und Stummschaltungsstatus, insbesondere nach dem Wechseln der Projektregisterkarten.
-5. Die Aufnahme beginnt beim ausgewählten Song. Stop speichert den Take; Markierungen bleiben während der Aufnahme verfügbar. Take-, Loop-, Präsenz- und Navigationsänderungen werden während der Aufnahme blockiert.
-6. Wählen Sie eine verfügbare Aufnahme im Zeitbereich; Leere Slots werden ignoriert. **Original ReaCue** schaltet REC-Spuren stumm und öffnet Stems; Wenn Sie es verlassen, werden die vorherigen Stummschaltungszustände wiederhergestellt.
-7. Platzieren Sie den Cursor innerhalb eines Abschnitts, um ihn in einer Schleife zu durchlaufen. Grenzen und Wiederholungen werden zurückgelesen. Außerhalb der Abschnitte bleibt eine Stop-Loop-Taste verfügbar.
+2. **Probenleitung zuweisen** — Erstelle unter Monitore → Smartphones einen Monitorlink pro Musiker und weise auf dessen Karte die Probenleitung zu. Im selben lokalen Netzwerk öffnet der QR Mein Monitor, Mein Song und Proben. Die Rolle ist widerrufbar. Die Leitung wählt Song, Original, Begleitung oder Take, ganzen Song oder Abschnitt sowie verfügbare Schleifen- und Einzähloptionen.
 
-**Die Mischpult-Simulation simuliert nicht REAPER: Record erfasst echte Audioeingänge.** Bridge-Tests ersetzen keine echten Wiedergabe- und Hörprüfungen. Halten Sie Medien bereit und verwenden Sie ein kopiertes Projekt mit seinen Medien für Experimente.
+3. **Akkorde und Texte lesen** — Öffne auf dem Smartphone Mein Song und wähle Akkorde, Text oder Beides. Das Blatt folgt REAPER-Projekt und Wiedergabeposition. Vollbild und Bildschirm wach halten sind optional. Wird ein BandStudio-Quellblatt angeboten, prüft die Leitung dessen Timing vor der Freigabe; Zum exportierten Blatt zurückkehren nimmt diese Wahl zurück. Fehlende Blätter werden nicht automatisch erzeugt.
+
+[Anleitung zu den Neuerungen in 2.3.15](NEW_2_3_15_DE.md)
 
 ## 9. Szenen, Notizen und Setlists
 
-**Szenen und Presets pro Instrument · 2.3.14 / Android 2.4.0-android.5**
-
-Unter Konsole → Expert → Kanal stehen Speichern und Wiederherstellen bereit. Wähle in der Preset-Bibliothek den Zieleingang sowie EQ, Kompressor oder Gate. Bearbeitungen lassen sich auch aus einer gespeicherten vollständigen Szene entnehmen. Nutze die vorherigen Einstellungen oder automatische Sicherungen, um einen Versuch rückgängig zu machen.
+**2.3.15 — [Anleitung zu den Neuerungen in 2.3.15](NEW_2_3_15_DE.md)**
 
 Die Bibliothek trennt vollständige Szenen, Presets, Soundcheck-Blätter und automatische Sicherungen. JSON-Import/Export, unterstützte X-Air-.scn-Dateien und die Wahl des Zielslots für FX-Presets sind enthalten.
 
 Speichern und Importieren ändern den Klang nicht. Ein Abruf erfordert Vorschau und Bestätigung sowie eine vorherige Sicherung. Kanal-Presets lassen Gain, Phantomspeisung, Pegel, Monitor-Sends und Routing unverändert.
 
-Grenzen: keine Umwandlung zwischen Modellen; Mono-Presets können nicht auf gekoppelte Stereopaare geladen werden. .scn-Abruf nur für XR18/X18/MR18 mit HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY und MODD; andere Dateien bleiben exportierbar. X32 wird weiterhin nur teilweise unterstützt.
+Selektiver Abruf von Eingängen, Ausgängen und FX, Schutz nach Parameterfamilie, Vorschau und Sicherung. Ausdrückliche Konvertierung von Presets und portablen Szenen innerhalb des unterstützten X-Air/M-Air-Umfangs. [Anleitung zu den Neuerungen in 2.3.15](NEW_2_3_15_DE.md)
 
 Ein Lied braucht einen Titel. Fügen Sie Songs zur aktiven Setlist hinzu und speichern Sie eine benannte Setlist. Notizen und die aktive Setlist werden in der Anwendungsdatenbank gespeichert, auch wenn sich der lokale Port ändert. Warten Sie vor dem Schließen auf den Status „Gespeicherter Entwurf“. Benannte Proben bleiben separate Aufzeichnungen.
 

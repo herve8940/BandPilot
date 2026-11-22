@@ -1,8 +1,10 @@
 # BandPilot — guide illustré
 
-Bureau : **2.3.3 stable** (Windows, macOS, Linux). Android : **2.4.0-android.1 en préversion**, APK séparé. BandStudio : **2.3.4-dev.1 en préversion Windows**, à tester avec la version compatible de BandStudio ; ne fait pas partie de la version stable.
+Cette évolution concerne les applications de bureau Windows, macOS Intel/Apple Silicon et Linux. Android reste distribué séparément en 2.4.0-android.5 ; ses fonctions ne sont pas toutes celles de cette version de bureau. BandStudio est une application complémentaire indépendante.
 
-Les captures 2.2.4 illustrent une version antérieure en simulation. Consulte les notes de version pour les évolutions. [2.3.3](RELEASE_NOTES.md) · [Android (FR)](ANDROID.md)
+**2.3.15 — [Tutoriel des nouveautés 2.3.15](NEW_2_3_15_FR.md)**
+
+Les anciennes captures du guide général et la visite vidéo 2.2 restent des illustrations historiques. Ce tutoriel décrit le parcours 2.3.15.
 
 [English](USER_GUIDE_EN.md) · [Mon ingé son](TUTO_MON_INGE_SON.md) · [Visite vidéo](VIDEO_TOUR.md) · [Compatibilité détaillée](multi-model.md)
 
@@ -82,29 +84,23 @@ Le téléphone suit les changements lecture seule/contrôle sans rechargement. L
 
 <h2 id="reaper">8. Répéter et enregistrer avec REAPER</h2>
 
-REAPER est un logiciel séparé, avec sa propre installation et licence. Dans **Répéter**, installe le pont proposé **1.5.0**, sauvegarde tes projets puis redémarre REAPER pour charger sa nouvelle version. Les anciens chemins techniques XR18 Studio sont conservés pour rester compatibles.
+1. **Préparer REAPER** — Installe à nouveau le pont livré avec 2.3.15, même si son numéro affiche déjà 1.5.0, puis redémarre REAPER. Ouvre un projet par onglet avec ses médias. Dans Répéter → Avec mes morceaux, sélectionne le projet, vérifie ses entrées et pistes armées, sa piste Original et sa fin. REC crée une prise séparée dans ce projet ; vérifie les véritables entrées audio avant l’essai.
 
-1. Dans **Enregistrement**, relis la console, choisis les pistes et le dossier, puis **Créer et ouvrir dans Reaper**. Une session existante n’est pas écrasée. Vérifie le périphérique audio, les entrées et la fréquence dans REAPER.
-2. L’USB multipiste automatique concerne XR18/MR18/X18. XR12/MR12 n’ont pas cette interface ; la carte et le routage X32 ne sont pas pris en charge par cette préparation.
-3. **Avec mes morceaux** : ouvre ton projet ReaCue préparé. Les sections, pistes et prises proviennent du projet ouvert. Les métadonnées de concert sont dans le fichier `.concert.lua` associé ; copier uniquement le `.rpp` ne les recrée pas.
-4. **Qui est là ?** reflète les pistes REC armées. Cocher prépare la piste d’enregistrement et coupe le stem correspondant. Vérifie toujours armement et mutes dans le projet, notamment après un changement d’onglet.
-5. REC démarre au morceau choisi ; Stop conserve la prise. Un marqueur peut être ajouté pendant REC. La navigation et les modifications de prises/boucle/présence sont bloquées pendant l’enregistrement.
-6. Choisis une prise valide dans la plage. Les emplacements vides sont ignorés. **Original ReaCue** coupe les pistes REC et ouvre les stems ; le retour restaure leurs mutes précédents.
-7. Place le curseur dans une section puis **Boucler cette section**. Les bornes et le repeat sont relus. Le bouton d’arrêt de boucle reste proposé même hors d’une section.
+2. **Donner la main au gestionnaire** — Dans Retours → Téléphones, crée un lien de retour par musicien et désigne le gestionnaire sur sa fiche. Sur le même réseau local, son QR donne accès à Mon retour, Mon morceau et Répéter. Le rôle est révocable. Le gestionnaire choisit le morceau, l’original, l’accompagnement ou une prise, le morceau entier ou une section, la boucle et le décompte proposés.
 
-**La simulation de console ne simule pas REAPER : REC enregistre les entrées audio réelles.** Les tests automatiques du pont ne remplacent pas une relecture et une vérification acoustique sur ton installation. Les fichiers audio doivent rester accessibles ; utilise une copie de projet avec ses médias pour les essais.
+3. **Lire les accords et paroles** — Sur le téléphone, ouvre Mon morceau et choisis Accords, Paroles ou Les deux. La fiche suit le projet et la position REAPER. Plein écran et maintien de l’écran allumé sont facultatifs. Si une fiche source BandStudio est proposée, le gestionnaire vérifie son calage avant de la partager ; Revenir à la fiche exportée annule ce choix. Une fiche absente n’est pas reconstruite automatiquement.
+
+[Tutoriel des nouveautés 2.3.15](NEW_2_3_15_FR.md)
 
 ## 9. Scènes, notes et setlists
 
-**Scènes et presets par instrument · 2.3.14 / Android 2.4.0-android.5**
-
-Dans Console → Expert → Canal, utilise Sauvegarder ou Restaurer. Dans Scènes et presets → Presets par piste, choisis l’entrée et coche EQ, compresseur ou gate. Tu peux aussi extraire ces traitements d’une scène complète enregistrée. Pour annuler un essai, utilise Revenir au réglage précédent ou les sauvegardes automatiques.
+**2.3.15 — [Tutoriel des nouveautés 2.3.15](NEW_2_3_15_FR.md)**
 
 La bibliothèque sépare scènes complètes, presets, fiches de balance et sauvegardes automatiques. Import/export JSON, rappel des fichiers X-Air .scn compatibles et choix du slot pour les presets FX.
 
 Enregistrer ou importer ne modifie pas le son. Chaque rappel demande un aperçu et une confirmation, avec sauvegarde préalable. Le rappel d’un preset de canal conserve gain, 48 V, volumes, retours et routage.
 
-Limites : pas de conversion entre modèles ; rappel de preset mono refusé sur une paire stéréo liée. Rappel .scn réservé à XR18/X18/MR18 et aux effets HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY et MODD ; les autres fichiers restent exportables. X32 demeure partielle.
+Rappels sélectifs des entrées, sorties et FX, protections par famille de réglages, aperçu et sauvegarde. Conversion explicite de presets et de scènes portables au sein de X-Air/M-Air, dans le périmètre pris en charge. [Tutoriel des nouveautés 2.3.15](NEW_2_3_15_FR.md)
 
 Dans Préparer, un titre est requis pour ajouter un morceau. Ajoute les titres à la setlist active puis sauvegarde une setlist nommée. Le brouillon de notes et la setlist active restent dans la base de l’application même si son port change. Attends l’indication **Brouillon sauvegardé sur cet ordinateur** avant de fermer ; les répétitions nommées restent des enregistrements distincts.
 

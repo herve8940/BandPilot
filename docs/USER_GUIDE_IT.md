@@ -1,8 +1,10 @@
 # BandPilot — guida illustrata
 
-Desktop: **2.3.3 stabile** (Windows, macOS, Linux). Android: **2.4.0-android.1 in anteprima**, APK separato. BandStudio: **2.3.4-dev.1 in anteprima Windows**, da provare con la versione compatibile di BandStudio; non fa parte della versione stabile.
+Questa novità riguarda le app desktop Windows, macOS Intel/Apple Silicon e Linux. Android resta una distribuzione separata 2.4.0-android.5 e non comprende tutte le funzioni desktop descritte. BandStudio è un’app complementare indipendente.
 
-Le schermate 2.2.4 mostrano una versione precedente in simulazione. Le note di rilascio descrivono le novità successive. [2.3.3](RELEASE_NOTES.md) · [Android (FR)](ANDROID.md)
+**2.3.15 — [Tutorial delle novità 2.3.15](NEW_2_3_15_IT.md)**
+
+Le vecchie immagini della guida generale e il video 2.2 sono illustrazioni storiche. Questo tutorial descrive il percorso 2.3.15.
 
 [Francese](USER_GUIDE_FR.md) · [Coach controllo audio](TUTO_MON_INGE_SON_IT.md) · [Tour video](VIDEO_TOUR.md) · [Compatibilità dettagliata](multi-model.md)
 
@@ -76,29 +78,23 @@ I telefoni già aperti seguono le modifiche di sola lettura/controllo senza rica
 
 <h2 id="reaper">8. Prove e registrazione REAPER</h2>
 
-REAPER è un software separato con la propria installazione e licenza. Installa il bridge **1.5.0** da Rehearse, salva i progetti, quindi riavvia REAPER per caricare il bridge aggiornato. I percorsi tecnici legacy rimangono per compatibilità.
+1. **Preparare REAPER** — Reinstalla il bridge fornito con 2.3.15 anche se indica già 1.5.0, poi riavvia REAPER. Apri un progetto per scheda con i suoi media. In Prove → Con i miei brani scegli il progetto, verifica ingressi, tracce armate, traccia Originale e fine. REC crea una take separata nel progetto: verifica prima gli ingressi audio reali.
 
-1. In Registrazione, aggiorna la console, scegli le tracce e la destinazione, quindi crea e apri una sessione. Le sessioni esistenti non vengono sovrascritte. Verifica il dispositivo audio, i canali di ingresso e la frequenza di campionamento in REAPER.
-2. La preparazione multitraccia automatica è per XR18/MR18/X18. XR12/MR12 non hanno quell'interfaccia PC. La preparazione della scheda/routing X32 non è disponibile.
-3. Aprire un progetto ReaCue preparato per **Con i miei brani** o utilizzare **Solo gruppo**. Canzoni, sezioni, tracce e riprese provengono dal progetto aperto. I metadati del concerto utilizzano il `.concert.lua` associato; copiare solo `.rpp` non lo ricrea.
-4. La presenza riflette le tracce REC armate. Selezionando un musicista si prepara la traccia di registrazione e si disattiva l'audio del stem corrispondente. Controlla gli stati effettivi di attivazione e disattivazione dell'audio, soprattutto dopo aver cambiato scheda di progetto.
-5. La registrazione inizia dal brano selezionato. Stop salva la ripresa; i marcatori rimangono disponibili durante la registrazione. Le modifiche a ripresa, loop, presenza e navigazione vengono bloccate durante la registrazione.
-6. Scegli una ripresa disponibile nell'intervallo di tempo; gli slot vuoti vengono ignorati. **ReaCue originale** disattiva l'audio delle tracce REC e apre i stem; lasciandolo ripristina gli stati muti precedenti.
-7. Posiziona il cursore all'interno di una sezione per eseguirne il loop. I limiti e le ripetizioni vengono riletti. Un pulsante di arresto del ciclo rimane disponibile al di fuori delle sezioni.
+2. **Assegnare il responsabile** — In Monitor → Telefoni crea un link per musicista e assegna il responsabile dalla sua scheda. Sulla stessa rete locale il QR apre Il mio monitor, Il mio brano e Prove. Il ruolo è revocabile. Il responsabile sceglie brano, originale, accompagnamento o take, brano intero o sezione, loop e conteggio disponibili.
 
-**La simulazione del mixer non simula REAPER: la registrazione cattura gli ingressi audio reali.** I test bridge non sostituiscono i controlli di riproduzione e ascolto reali. Mantieni i media disponibili e utilizza un progetto copiato con i relativi media per gli esperimenti.
+3. **Leggere accordi e testi** — Apri Il mio brano sul telefono e scegli Accordi, Testi o Entrambi. La scheda segue progetto e posizione REAPER. Schermo intero e schermo sempre acceso sono facoltativi. Se disponibile, il responsabile verifica la sincronizzazione della scheda sorgente BandStudio prima di condividerla; Tornare alla scheda esportata annulla la scelta. Le schede mancanti non vengono generate automaticamente.
+
+[Tutorial delle novità 2.3.15](NEW_2_3_15_IT.md)
 
 ## 9. Scene, note e scalette
 
-**Scene e preset per strumento · 2.3.14 / Android 2.4.0-android.5**
-
-In Console → Expert → Canale, usa Salva o Ripristina. Nella libreria dei preset scegli l’ingresso di destinazione e seleziona EQ, compressore o gate. Puoi anche estrarre i trattamenti da una scena completa salvata. Per annullare una prova, ripristina le impostazioni precedenti o un backup automatico.
+**2.3.15 — [Tutorial delle novità 2.3.15](NEW_2_3_15_IT.md)**
 
 La libreria separa scene complete, preset, schede di soundcheck e backup automatici. Include importazione/esportazione JSON, richiamo dei file X-Air .scn supportati e scelta dello slot per i preset FX.
 
 Salvare o importare non modifica il suono. Il richiamo richiede anteprima e conferma, con backup preventivo. I preset di canale conservano gain, alimentazione phantom, livelli, mandate monitor e routing.
 
-Limiti: nessuna conversione tra modelli; richiamo mono bloccato sulle coppie stereo collegate. Richiamo .scn limitato a XR18/X18/MR18 e agli effetti HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY e MODD; gli altri file restano esportabili. Il supporto X32 rimane parziale.
+Richiamo selettivo di ingressi, uscite ed effetti, protezioni per famiglia di parametri, anteprima e backup. Conversione esplicita di preset e scene portabili entro il perimetro X-Air/M-Air supportato. [Tutorial delle novità 2.3.15](NEW_2_3_15_IT.md)
 
 Una canzone ha bisogno di un titolo. Aggiungi brani alla setlist attiva e salva una setlist con nome. Le note e la setlist attiva vengono archiviate nel database dell'applicazione anche quando cambia la porta locale. Attendi lo stato di bozza salvata prima di chiudere. Le prove con nome rimangono registrazioni separate.
 

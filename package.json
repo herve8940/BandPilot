@@ -1,6 +1,6 @@
 {
   "name": "xr18-studio",
-  "version": "2.3.14",
+  "version": "2.3.15",
   "description": "BandPilot: free multilingual mixer control, guided soundchecks, PDF technical rider, stage plot and source ambience. Windows, macOS, Linux and standalone Android. REAPER on desktop; model-aware X-Air/M-Air support, partial X32.",
   "keywords": [
     "behringer",
@@ -57,7 +57,8 @@
     "desktop:dev": "npm run build:all && electron .",
     "desktop:package": "npm run build:all && node scripts/patch-nsis.cjs && electron-builder --publish never",
     "mcp": "tsx src/mcp.ts",
-    "test:web": "node --import ./web/tests/register-css.mjs --test --test-concurrency=1 web/tests/*.test.tsx"
+    "test:web": "node --import ./web/tests/register-css.mjs --test --test-concurrency=1 web/tests/*.test.tsx",
+    "desktop:package:dev:mac": "node scripts/package-dev-mac.cjs"
   },
   "engines": {
     "node": ">=20"
@@ -123,7 +124,8 @@
       "category": "public.app-category.music",
       "artifactName": "BandPilot-macOS-${version}-${arch}.${ext}",
       "extendInfo": {
-        "NSLocalNetworkUsageDescription": "BandPilot communique avec ta console compatible sur le réseau local (OSC/UDP) et partage les retours avec les téléphones des musiciens.",
+        "NSMicrophoneUsageDescription": "BandPilot uses the microphone for acoustic measurements you start.",
+        "NSLocalNetworkUsageDescription": "BandPilot communique avec ta console compatible sur le réseau local (OSC/UDP) et partage les retours et les commandes de répétition avec les téléphones autorisés.",
         "NSBonjourServices": [
           "_osc._udp",
           "_http._tcp"

@@ -41,18 +41,19 @@ Desktop: [ultima versione stabile](https://github.com/herve8940/BandPilot/releas
 
 Per separare gli strumenti, lavorare sui testi e preparare brani per REAPER, scopri [BandStudio (in inglese)](https://herve8940.github.io/BandStudio/en.html), un’app indipendente e complementare.
 
-## Scene e preset per strumento · 2.3.14 / Android 2.4.0-android.5
+## Console, MIDI e prove dal telefono · 2.3.15
 
-Salva EQ, compressore e gate di un ingresso, poi richiama solo i trattamenti selezionati su un altro ingresso dello stesso modello di mixer. I preset sono punti di partenza da adattare al segnale.
+BandPilot 2.3.15 riunisce nuovi controlli della console, richiami selettivi, gruppi software, MIDI e prove con REAPER sui telefoni dei musicisti.
 
-La libreria separa scene complete, preset, schede di soundcheck e backup automatici. Include importazione/esportazione JSON, richiamo dei file X-Air .scn supportati e scelta dello slot per i preset FX.
+- **Console e monitor** — Banchi e superfici personalizzabili, gruppi software, coppie stereo, meter e RTA. Controlli e destinazioni dipendono dal modello connesso e dal mix scelto.
+- **Scene e preset** — Richiamo selettivo di ingressi, uscite ed effetti, protezioni per famiglia di parametri, anteprima e backup. Conversione esplicita di preset e scene portabili entro il perimetro X-Air/M-Air supportato.
+- **Effetti e analisi** — Editor con nomi per i 61 algoritmi X-Air, tap tempo e GEQ/True EQ a 31 bande sulle uscite compatibili. Misure al microfono e correzioni da verificare e applicare esplicitamente.
+- **MIDI e comandi** — Apprendimento di fader e mute, CC assoluti o relativi, note, Program Change, comandi preferiti e condizioni. Attivazione esplicita della sessione e backup per i comandi supportati.
+- **Prove e schede** — Progetti REAPER aperti in schede, sezioni, loop, conteggio iniziale, take separate e responsabile dal telefono. Accordi e testi dalle schede BandStudio compatibili, anche a schermo intero.
 
-Salvare o importare non modifica il suono. Il richiamo richiede anteprima e conferma, con backup preventivo. I preset di canale conservano gain, alimentazione phantom, livelli, mandate monitor e routing.
+Questa novità riguarda le app desktop Windows, macOS Intel/Apple Silicon e Linux. Android resta una distribuzione separata 2.4.0-android.5 e non comprende tutte le funzioni desktop descritte. BandStudio è un’app complementare indipendente.
 
-Limiti: nessuna conversione tra modelli; richiamo mono bloccato sulle coppie stereo collegate. Richiamo .scn limitato a XR18/X18/MR18 e agli effetti HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY e MODD; gli altri file restano esportabili. Il supporto X32 rimane parziale.
-
-[Leggi la guida](docs/USER_GUIDE_IT.md)
-
+[Tutorial delle novità 2.3.15](docs/NEW_2_3_15_IT.md)
 ## Novità: scheda tecnica, effetti e Android
 
 La prima versione Android autonoma è disponibile come APK firmato. Non serve rinnovare la firma ogni settimana. REAPER resta sul computer.

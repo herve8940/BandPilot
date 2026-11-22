@@ -1,0 +1,12 @@
+.scene-protections{margin:16px 0;border:1px solid #58716d;border-radius:14px;background:#152b30;padding:16px;color:#ddebe9}
+.studio-control .scene-protections{scroll-margin-top:90px}.studio-control .scene-protections fieldset{display:block;width:100%;margin:0;padding:0}
+.studio-control .scene-protection-grid{width:100%}.studio-control .scene-protection-grid label{display:flex;flex-direction:row;min-width:0;width:100%;min-height:32px;margin:0;padding:0;flex:none}
+.studio-control .scene-protection-grid input[type=checkbox]{width:16px;height:16px;min-height:0;padding:0;margin:0;flex:none;accent-color:#65d6b2}
+.scene-protections>summary{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;flex-wrap:wrap}.scene-protections>summary span{font-weight:400;font-size:12px;color:#b8dace;margin-left:auto}
+.scene-protections p{font-size:13px;line-height:1.55}.scene-protection-hint{color:#b9cecf}.scene-protections fieldset{border:0;min-width:0;padding:0;margin:0}
+.scene-protection-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-height:420px;overflow:auto;padding:2px}
+.scene-protection-grid section{min-width:0;border:1px solid #3e5b61;border-radius:10px;padding:12px;background:#13212e}.scene-protection-grid h4{margin:0 0 10px;overflow-wrap:anywhere;font-size:13px}.scene-protection-grid section>div{display:grid;gap:8px}
+.scene-protection-grid label{display:flex;flex-direction:row;align-items:center;gap:8px;justify-content:flex-start;text-align:left;font-size:12px;overflow-wrap:anywhere;cursor:pointer}.scene-protection-grid input[type=checkbox]{margin:0;width:16px;height:16px;flex-shrink:0;accent-color:#65d6b2}
+.scene-protections footer{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.scene-protections button{white-space:normal}.scene-protected-summary{border:1px solid #58796d;background:#18382e;padding:12px;border-radius:10px;margin:12px 0;font-size:13px;color:#d6f0e3}.scene-protected-summary ul{margin:8px 0 0;padding-left:20px}
+@media(max-width:1000px){.scene-protection-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.scene-protection-grid{grid-template-columns:minmax(0,1fr)}.scene-protections{padding:12px}.scene-protections footer{flex-direction:column;align-items:stretch}.scene-protections>summary span{margin-left:0}}

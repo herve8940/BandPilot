@@ -1,3 +1,4 @@
+import {nextPeak,useMeterPreferences} from './meter-preferences';
 import {tx, getLocale} from "../i18n";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
 import { bandResponse, clamp01, dbToFader, faderToDb, formatDb, lin, logMap, RATIOS } from "../xairMath";
@@ -11,9 +12,9 @@ export const num = (values: Values, address: string, fallback = 0) => { const v 
 
 // ---------- meters: external store so only meter widgets re-render ----------
 export const meterStore = (() => {
-  let levels: number[] = []; let at = 0; const listeners = new Set<() => void>();
+  let levels: number[] = []; let at = 0; let expiry:ReturnType<typeof setTimeout>|undefined; const listeners = new Set<() => void>();
   return {
-    set(next: number[]) { levels = next; at = Date.now(); listeners.forEach(l => l()); },
+    set(next: number[]) { levels = next; at = Date.now(); if(expiry)clearTimeout(expiry); expiry=setTimeout(()=>{levels=[];listeners.forEach(l=>l());},2000); listeners.forEach(l => l()); },
     get: () => levels, fresh: () => Date.now() - at < 2000,
     subscribe(l: () => void) { listeners.add(l); return () => { listeners.delete(l); }; },
   };
@@ -22,18 +23,21 @@ export function useMeters() { return useSyncExternalStore(meterStore.subscribe, 
 export const meterPos = (db: number) => Math.max(0, Math.min(1, (db + 60) / 60));
 
 export function Meter({ indexes, wide = false }: { indexes: number[]; wide?: boolean }) {
-  const levels = useMeters();
+  const levels = useMeters(), settings=useMeterPreferences();
+  const identity=indexes.join(',')+':'+settings.reset;
+  const last=useRef(identity);
   const peaks = useRef<{ value: number; at: number }[]>([]);
+  if(last.current!==identity||!meterStore.fresh()||!levels.length){peaks.current=[];last.current=identity;}
   if (!indexes.length) return <div className="xm-meter none" />;
   const fresh = meterStore.fresh();
   return <div className={wide ? "xm-meter wide" : "xm-meter"}>{indexes.map((index, i) => {
     const db = fresh ? levels[index] ?? -128 : -128;
     const peak = peaks.current[i];
-    if (!peak || db > peak.value || Date.now() - peak.at > 1500) peaks.current[i] = { value: db, at: Date.now() };
+    peaks.current[i]=nextPeak(peak,db,Date.now(),settings.holdMs);
     const peakPos = meterPos(peaks.current[i]!.value);
     return <div key={index} className="xm-meter-bar" title={tx(`${db.toFixed(1)} dBFS`)}>
       <div className="xm-meter-fill" style={{ clipPath: `inset(${(1 - meterPos(db)) * 100}% 0 0 0)` }} />
-      {peakPos > 0 && <div className="xm-meter-peak" style={{ bottom: `${peakPos * 100}%` }} />}
+      {settings.holdMs!==0 && peakPos > 0 && <div className="xm-meter-peak" style={{ bottom: `${peakPos * 100}%` }} />}
       {db > -0.5 && <div className="xm-meter-clip" />}
     </div>;
   })}</div>;
@@ -209,6 +213,7 @@ export function useLiveMixer() {
   const [values, setValues] = useState<Values>({});
   const [online, setOnline] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageKind, setMessageKind] = useState<'success'|'error'>('error');
   const ws = useRef<WebSocket | null>(null);
   const touched = useRef(new Map<string, number>());
   const queue = useRef(new Map<string, Value>());
@@ -224,6 +229,7 @@ export function useLiveMixer() {
       socket.onmessage = event => {
         const m = JSON.parse(event.data);
         if (m.type === "snapshot") {
+          window.dispatchEvent(new window.Event('bandpilot-console-reset'));
           const next: Values = {};
           for (const [address, state] of Object.entries(m.parameters ?? {})) next[address] = (state as { value: Value }).value;
           setValues(next);
@@ -236,7 +242,7 @@ export function useLiveMixer() {
         } else if (m.type === "meters") {
           if (m.state?.all) meterStore.set(m.state.all);
         } else if (m.type === "live-error") {
-          setMessage(m.error); if (m.address) touched.current.delete(m.address);
+          setMessage(m.error); setMessageKind('error'); if (m.address) touched.current.delete(m.address);
         }
       };
     };
@@ -272,10 +278,11 @@ export function useLiveMixer() {
       if (preview.phantom && !allowPhantom) return false;
       const result = await api("/api/console/apply", { token: preview.token, confirm: true, allowPhantom });
       setMessage(`Appliqué. Sauvegarde : ${result.backupId}`);
+      setMessageKind('success');
       return true;
-    } catch (e) { setMessage((e as Error).message); return false; }
+    } catch (e) { setMessage((e as Error).message); setMessageKind('error'); return false; }
   }, []);
-  return { values, set, confirmed, online, message, clearMessage: () => setMessage("") };
+  return { values, set, confirmed, online, message, messageKind, clearMessage: () => setMessage("") };
 }
 
 export function usePersistentFlag(key: string, initial: boolean) {

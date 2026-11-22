@@ -1,0 +1,46 @@
+/** Synthetic fixture in the disposable simulation profile only. */
+module.exports=async(win,wait,screenshot)=>{
+ const js=code=>win.webContents.executeJavaScript(code);
+ const api=(path,data)=>js(`(async()=>{const r=await fetch(${JSON.stringify(path)},{method:${data===undefined?"'GET'":"'POST'"},headers:{'Content-Type':'application/json'},body:${data===undefined?'undefined':JSON.stringify(JSON.stringify(data))}});const v=await r.json();if(!r.ok)throw Error(v.error);return v;})()`);
+ if((await api('/api/status')).mode!=='simulation')throw Error('Scene protections smoke requires simulation');
+ const button=(scope,label)=>js(`[...document.querySelectorAll(${JSON.stringify(scope+' button')})].find(b=>b.textContent.trim()===${JSON.stringify(label)}).click()`);
+ const read=async address=>(await api('/api/console/parameters?prefix='+encodeURIComponent(address))).parameters.find(p=>p.address===address).state.value;
+ const set=async values=>{const p=await api('/api/console/preview',{values});await api('/api/console/apply',{token:p.token,confirm:true});};
+ await set({'/config/chlink/1-2':0,'/config/chlink/7-8':0,'/ch/01/eq/1/g':4,'/ch/01/dyn/thr':-30,'/ch/07/eq/1/g':-3,'/ch/07/dyn/thr':-10});
+ const scene=await api('/api/library',{kind:'scene',name:'DEV scene protections',complete:true});
+ const addresses=['/ch/01/eq/1/g','/ch/07/eq/1/g','/ch/07/dyn/thr','/ch/07/mix/01/level','/ch/07/mix/02/level'],before=await Promise.all(addresses.map(read));
+ // Refresh the library and the protection card without changing preferences.
+ win.webContents.reload();await wait(`!!document.querySelector('button[title="Sauvegarder ou rappeler une scène"]')`);
+ await js(`document.querySelector('button[title="Sauvegarder ou rappeler une scène"]').click()`);
+ await wait(`!!document.querySelector('.scene-protections summary')&&[...document.querySelectorAll('.scene-row')].some(e=>e.textContent.includes('DEV scene protections'))`);
+ await js(`document.querySelector('.scene-protections summary').click()`);await wait(`document.querySelectorAll('.scene-protection-grid input').length===80`);
+ await js(`document.querySelector('.scene-protection-grid input[aria-label="Canal 7 · EQ et coupe-bas"]').click()`);
+ if((await api('/api/library/scene-protections')).rules.length)throw Error('Draft persisted before save');
+ await button('.scene-protections','Enregistrer les protections');await wait(`document.querySelector('.scene-protections [role=status]')?.textContent.includes('Protections enregistrées')`);
+ if(JSON.stringify(await Promise.all(addresses.map(read)))!==JSON.stringify(before))throw Error('Saving protection changed audio');
+ await js(`document.querySelector('.scene-protections').scrollIntoView({block:'start',behavior:'instant'})`);await screenshot('scene-protections.png');
+ const size=win.getSize(),minimum=win.getMinimumSize();win.setMinimumSize(360,600);win.setSize(480,850);
+ await js(`document.querySelector('.scene-protections').scrollIntoView({block:'start',behavior:'instant'})`);await new Promise(r=>setTimeout(r,250));await screenshot('scene-protections-small.png');
+ if(await js(`document.documentElement.scrollWidth>innerWidth||document.querySelector('.scene-protections').scrollWidth>document.querySelector('.scene-protections').clientWidth+2`))throw Error('Protection panel overflows');
+ win.setMinimumSize(...minimum);win.setSize(...size);
+ const protectedConfig=await api('/api/library/scene-protections');if(protectedConfig.rules[0]?.channel!==7)throw Error('Destination protection not saved');
+ await button('.scene-protections','Recharger les protections');await wait(`document.querySelector('.scene-protection-grid input[aria-label="Canal 7 · EQ et coupe-bas"]')?.checked`);
+ await js(`document.querySelector('.scene-protections summary').click();[...document.querySelectorAll('.scene-row')].find(e=>e.textContent.includes('DEV scene protections')).querySelector('button:nth-child(2)').click()`);
+ await wait(`document.querySelectorAll('.scene-recall-channels input').length===16`);
+ await js(`document.querySelector('.scene-recall-channels input').click();document.querySelectorAll('.scene-recall-sections input')[2].click()`);
+ await js(`const target=document.querySelector('.scene-mapping-rows select');target.value='7';target.dispatchEvent(new Event('change',{bubbles:true}));`);
+ await button('.scene-recall-panel','Prévisualiser la sélection');await wait(`!!document.querySelector('.coach-dialog[open] .scene-protected-summary')`);
+ if(!await js(`document.querySelector('.coach-dialog .scene-protected-summary').textContent.includes('Canal 7 · EQ et coupe-bas')`))throw Error('Protection omitted from preview');
+ await screenshot('scene-protections-preview.png');await button('.coach-dialog','Annuler, ne rien changer');
+ if(JSON.stringify(await Promise.all(addresses.map(read)))!==JSON.stringify(before))throw Error('Preview changed audio');
+ await button('.scene-recall-panel','Prévisualiser la sélection');await wait(`!!document.querySelector('.coach-dialog[open]')`);await button('.coach-dialog','Essayer en simulation');await wait(`!document.querySelector('.coach-dialog')`);
+ const after=await Promise.all(addresses.map(read));if(after[2]!==scene.data.values['/ch/01/dyn/thr']||after.some((v,i)=>i!==2&&v!==before[i]))throw Error('Protected family or monitor altered');
+ await button('.scene-recall-panel','Annuler le rappel sélectif');await wait(`!!document.querySelector('.coach-dialog[open]')`);await button('.coach-dialog','Essayer en simulation');await wait(`!document.querySelector('.coach-dialog')`);
+ if(JSON.stringify(await Promise.all(addresses.map(read)))!==JSON.stringify(before))throw Error('Protected recall undo differs');
+ const full=await js(`(async()=>{const r=await fetch('/api/library/${scene.id}/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});return {status:r.status,...await r.json()};})()`);
+ if(full.status!==400||!full.error.includes('protections de scène'))throw Error('Complete recall bypassed protections');
+ await js(`document.querySelector('.scene-protections summary').click()`);await wait(`!!document.querySelector('.scene-protection-grid input')`);
+ await button('.scene-protections','Retirer toutes les protections');if(!(await api('/api/library/scene-protections')).rules.length)throw Error('Removal was not explicit');
+ await button('.scene-protections','Enregistrer les protections');await wait(`document.querySelector('.scene-protections summary').textContent.includes('Aucune protection active')`);
+ console.log('Scene protections: explicit metadata save/reload/removal, no draft audio, remapped exclusions, guarded recall/undo, full recall blocking and small layout passed.');
+};

@@ -24,7 +24,7 @@ test('native FX units, enums, aliases and padding decode to correct OSC types',(
  const m=decodeNativeFx(3,26,mod.replace('CLUB','SML').split(' '));assert.equal(m.parameters.map(p=>p.type).join(''),'fifffffiiffff');assert.equal(m.parameters[8]!.value,1);
  for(const text of [room.replace('100 ','201 '),room.replace('10k','NaN'),room+' 1',room.split(' ').slice(0,12).join(' ')])assert.throws(()=>decodeNativeFx(1,3,text.split(' ')));
  assert.throws(()=>decodeNativeFx(2,10,delay.replace('ST','bad').split(' ')),/option inconnue/);
- assert.throws(()=>decodeNativeFx(1,60,room.split(' ')),/pas encore pris en charge/);
+ assert.throws(()=>decodeNativeFx(1,61,room.split(' ')),/pas encore pris en charge/);
 });
 test('native conversion is model-specific, preserves FX insertion, tolerates line order, and requires coherent FX pairs',()=>{
  for(const model of ['XR18','MR18','X18']){
@@ -57,7 +57,7 @@ test('native invalid FX, stale state, cancellation and read failures stop before
  const f=fixture();try{
   const entry=f.library.save('native-scene','Fixture',native),bad=f.library.save('native-scene','Unsupported',native.replace('MODD OFF','PIT OFF'));
   let writes=0;const write=f.xr.writeParameter.bind(f.xr);f.xr.writeParameter=async(...args)=>{writes++;return write(...args);};
-  await assert.rejects(()=>f.sync.preview(bad.id),/pas encore pris en charge/);assert.equal(writes,0);
+  await assert.rejects(()=>f.sync.preview(bad.id),/paramètres|remplissage|hors plage/);assert.equal(writes,0);
   const p=await f.sync.preview(entry.id);f.xr.setFader(2,.6);await assert.rejects(()=>f.sync.apply(p.token,true),/table a changé/);assert.equal(writes,0);
   const cancelled=await f.sync.preview(entry.id),capture=f.control.capture.bind(f.control);
   f.control.capture=async()=>{const s=await capture();f.xr.cancelOperations();return s;};

@@ -15,6 +15,16 @@ contextBridge.exposeInMainWorld('bandpilotLanguage',{
  set:language=>ipcRenderer.sendSync('bandpilot-language-set',language)
 });
 
+// Display layouts only, shared across launches without exposing arbitrary files.
+contextBridge.exposeInMainWorld('bandpilotWorkspaces',{
+ get:()=>ipcRenderer.sendSync('bandpilot-workspaces-get'),
+ set:value=>ipcRenderer.sendSync('bandpilot-workspaces-set',value)
+});
+
+contextBridge.exposeInMainWorld('bandpilotAcousticMic',{
+ request:()=>ipcRenderer.invoke('bandpilot-acoustic-mic')
+});
+
 contextBridge.exposeInMainWorld('bandpilotDocuments',{
  saveTechRiderPDF:input=>ipcRenderer.invoke('bandpilot-tech-rider-pdf',input)
 });
@@ -34,3 +44,7 @@ contextBridge.exposeInMainWorld('bandpilotSupport',{
  setAutomaticUpdates:value=>ipcRenderer.invoke('bandpilot-update-automatic',value),
  onUpdate:callback=>{const listener=(_event,state)=>callback(state);ipcRenderer.on('bandpilot-update-state',listener);return()=>ipcRenderer.removeListener('bandpilot-update-state',listener);}
 });
+
+contextBridge.exposeInMainWorld('bandpilotMetering',{get:()=>ipcRenderer.sendSync('bandpilot-metering-get'),set:value=>ipcRenderer.sendSync('bandpilot-metering-set',value)});
+
+contextBridge.exposeInMainWorld('bandpilotControllerMappings',{get:()=>ipcRenderer.sendSync('bandpilot-midi-get'),set:value=>ipcRenderer.sendSync('bandpilot-midi-set',value)});

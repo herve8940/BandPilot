@@ -1,13 +1,18 @@
 import {diagnostic} from './diagnostics.js';
 export const PREVIEW_TTL_MS=10*60_000;
+type BackupKind='parameter-backup'|'scene-recall-backup'|'channel-operation-backup'|'mix-preparation-backup'|'portable-scene-backup';
 import {randomUUID,createHash} from 'node:crypto';
-import {PARAMETERS,descriptor,validateWire,toWire,fromWire,defaultWire,type Value} from './parameters.js';
+import {PARAMETERS,descriptor,validateWire,toWire,fromWire,defaultWire,readbackTolerance,type Value} from './parameters.js';
 import type {XR18} from './xr18.js';
 import type {LibraryStore} from './library-store.js';
+import {PROTECTION_CONFLICT,PROTECTION_FULL} from '../shared/scene-protections.js';
 export type CompleteScene={model?:string;version:2;scope:'console';values:Record<string,Value>;fx:Awaited<ReturnType<XR18['readFx']>>[];missing?:string[]};
 export class ConsoleControl {
- private previews=new Map<string,{values:Record<string,Value>;before:Record<string,Value>;guards:Record<string,Value>;identity:string;expires:number}>();
+ private previews=new Map<string,{values:Record<string,Value>;before:Record<string,Value>;guards:Record<string,Value>;identity:string;expires:number;backupKind:BackupKind;recallRevision?:number}>();
  constructor(private xr:XR18,private library:LibraryStore){}
+ recallRevision(){return this.xr.model().family==='xair'?this.library.protections(this.xr.model().id).revision:0;}
+ checkRecallRevision(revision?:number){if(revision!==undefined&&revision!==this.recallRevision())throw Error(PROTECTION_CONFLICT);}
+ assertFullRecall(){if(this.xr.model().family==='xair'&&(this.library.protections(this.xr.model().id).rules.length||this.library.outputProtections(this.xr.model().id).rules.length))throw Error(PROTECTION_FULL);}
  identity(){const s=this.xr.status();return JSON.stringify([s.model,s.mode,s.host,s.port,s.writesEnabled,this.xr.connectionId()]);}
  private async readStable(address:string,identity:string,operation:number){
   if(identity!==this.identity()||operation!==this.xr.operationId())throw Error('Connexion modifiée ou opération interrompue');
@@ -45,7 +50,9 @@ export class ConsoleControl {
   const fx=[];for(let slot=1;slot<=4;slot++)fx.push(await this.xr.readFx(slot));
   return missing.length?{model:this.xr.model().id,version:2,scope:'console',values,fx,missing}:{model:this.xr.model().id,version:2,scope:'console',values,fx};
  }
- async preview(input:unknown,wire=false,guards:Record<string,Value>={}){
+ async preview(input:unknown,wire=false,guards:Record<string,Value>={},backupKind:BackupKind='parameter-backup',expectedBefore?:Record<string,Value>,recallRevision?:number,expectedIdentity?:string){
+  this.checkRecallRevision(recallRevision);
+  if(expectedIdentity!==undefined&&expectedIdentity!==this.identity())throw Error('Connexion modifiée');
   if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length<1||Object.keys(input).length>1000)throw Error('1 à 1000 paramètres requis');
   const values:Record<string,Value>={},before:Record<string,Value>={};
   for(const [a,v] of Object.entries(input))values[a]=wire?validateWire(a,v):toWire(a,v);
@@ -53,32 +60,53 @@ export class ConsoleControl {
   for(const [address,expected] of Object.entries(guards))if(await this.readStable(address,identity,operation)!==expected)throw Error('État modifié : prévisualiser à nouveau');
   // A lost UDP reply can be retried once, only on the same uninterrupted transport.
   for(const a of Object.keys(values))before[a]=await this.readStable(a,identity,operation);
+  if(expectedBefore)for(const [a,v] of Object.entries(expectedBefore))if((before[a]??await this.readStable(a,identity,operation))!==v)throw Error('État modifié : prévisualiser à nouveau');
   if(this.previews.size>100)this.previews.clear();const token=randomUUID();
   // A preview stays valid 10 minutes: apply() re-reads every value first and refuses if anything moved
   // ("État modifié"), so the delay only has to cover a person reading the window.
-  this.previews.set(token,{values,before,guards:{...guards},identity,expires:Date.now()+PREVIEW_TTL_MS});
+  this.checkRecallRevision(recallRevision);
+  this.previews.set(token,{values,before,guards:{...guards},identity,expires:Date.now()+PREVIEW_TTL_MS,backupKind,recallRevision});
   return {token,changes:Object.entries(values).map(([address,v])=>({address,before:fromWire(address,before[address]!),after:fromWire(address,v),sensitive:descriptor(address).sensitive})),phantom:Object.keys(values).some(a=>a.endsWith('/phantom'))};
  }
- async apply(token:unknown,allowPhantom=false,tolerant=false){
+ async apply(token:unknown,allowPhantom=false,tolerant=false,assertActive:()=>void=()=>{}){
   const p=typeof token==='string'?this.previews.get(token):undefined;
   if(!p||p.expires<Date.now()||p.identity!==this.identity())throw Error('Prévisualisation expirée ou connexion modifiée');
   const operation=this.xr.operationId();
   this.previews.delete(token as string);
+  this.checkRecallRevision(p.recallRevision);
   if(Object.keys(p.values).some(a=>a.endsWith('/phantom'))&&!allowPhantom)throw Error('Confirmation 48 V requise');
   for(const [address,expected] of Object.entries(p.guards))if(await this.readStable(address,p.identity,operation)!==expected)throw Error('État modifié : prévisualiser à nouveau');
   for(const [a,v] of Object.entries(p.before)){const current=await this.readStable(a,p.identity,operation);if(typeof v==='number'&&typeof current==='number'?Math.abs(v-current)>.003:current!==v)throw Error('État modifié : prévisualiser à nouveau');}
   if(p.identity!==this.identity()||operation!==this.xr.operationId())throw Error('Connexion modifiée ou opération interrompue');
-  const backup=this.library.save('parameter-backup','Avant modification console',p.before);
-  try{const {failed}=await this.xr.applyParameters(p.values,allowPhantom,tolerant);return {ok:failed.length===0,backupId:backup.id,readbackCompared:this.xr.mode==='real',written:Object.keys(p.values).length-failed.length,failed};}
+  this.checkRecallRevision(p.recallRevision);
+  assertActive();
+  const backup=p.backupKind!=='parameter-backup'
+   ?this.library.save(p.backupKind,p.backupKind==='scene-recall-backup'?'Avant rappel sélectif':p.backupKind==='portable-scene-backup'?'Avant rappel portable':'Avant réglage des entrées',{version:1,model:this.xr.model().id,values:p.before,guards:p.guards})
+   :this.library.save('parameter-backup','Avant modification console',p.before);
+  try{
+   const {failed}=await this.xr.applyParameters(p.values,allowPhantom,tolerant,assertActive);
+   if(p.backupKind!=='parameter-backup'){
+    // A later write to the right side could overwrite an earlier left-side write.
+    // Verify the final pair, not just each write's immediate acknowledgement.
+    for(const [address,value] of Object.entries(p.values)){
+     const observed=await this.readStable(address,p.identity,operation);
+     if(typeof observed==='number'&&typeof value==='number'?Math.abs(observed-value)>readbackTolerance(address):observed!==value)throw Error('La console n’a pas conservé les valeurs gauche/droite demandées. Vérifie les options de liaison avant de restaurer la sauvegarde.');
+    }
+    for(const [address,expected] of Object.entries(p.guards))if(await this.readStable(address,p.identity,operation)!==expected)throw Error('Les options de liaison ou les sources ont changé pendant l’application. Vérifie la console avant de restaurer la sauvegarde.');
+   }
+   return {ok:failed.length===0,backupId:backup.id,readbackCompared:this.xr.mode==='real',written:Object.keys(p.values).length-failed.length,failed};
+  }
   catch(e){throw Object.assign(Error(`Modification potentiellement partielle ; sauvegarde ${backup.id} : ${(e as Error).message}`),{backupId:backup.id});}
  }
  async recall(input:unknown,allowPhantom=false,excludePhantom=false){
+  this.assertFullRecall();
   const desired=this.validateScene(input);
   // By default a full recall leaves phantom power untouched, including in simulation.
   if(excludePhantom)for(const a of Object.keys(desired.values))if(a.endsWith("/phantom"))delete desired.values[a];
   if(Object.keys(desired.values).some(a=>a.endsWith('/phantom'))&&!allowPhantom)throw Error('Confirmation 48 V requise');
   const operation=this.xr.operationId();
-  const backup=this.library.save('scene','Sauvegarde complète avant rappel',await this.capture());
+  const before=await this.capture();this.assertFullRecall();
+  const backup=this.library.save('scene','Sauvegarde complète avant rappel',before);
   try{
    const values={...desired.values};for(let slot=1;slot<=4;slot++)delete values[`/fx/${slot}/type`];
    // Restore processors before levels, without restoring a transport or credentials.

@@ -1,3 +1,7 @@
+import {MeterDisplaySettings} from './meter-preferences';
+import {OutputEqMode,OutputGraphicEq} from './OutputGraphicEq';
+import {useEqSpectrum} from '../expert/EqSpectrum';
+import {GainReduction} from '../expert/GainReduction';
 import {tx, getLocale} from "../i18n";
 import {useMixerModel} from '../MixerModel';
 import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
@@ -236,6 +240,7 @@ export function GateView({ strip, values, set, canWrite }: ViewProps) {
     set(`${p}/thr`, linInv(t, -80, 0)); set(`${p}/range`, linInv(r, 3, 60)); set(`${p}/attack`, a / 120); set(`${p}/hold`, logInv(h, .02, 2000)); set(`${p}/release`, logInv(rel, 5, 4000)); set(`${p}/on`, 1);
   };
   return <div className="xm-row-blocks">
+    <GainReduction strip={strip} kind="gate"/>
     <Block title={tx("Noise Gate")}>
       <Toggle tone="cyan" disabled={!canWrite} on={on} onClick={() => set(`${p}/on`, on ? 0 : 1)}>{tx("Noise Gate")}</Toggle>
       <h5>{tx("Presets")}</h5>{Object.keys(GATE_PRESETS).map(n => <button key={n} type="button" className="xm-preset" disabled={!canWrite} onClick={() => applyPreset(n)}>{tx(n)}</button>)}
@@ -264,7 +269,7 @@ export function GateView({ strip, values, set, canWrite }: ViewProps) {
 const COMP_PRESETS: Record<string, [thr: number, ratio: number, attack: number, release: number, knee: number, gain: number]> = {
   Kick: [-20, 6, 10, 100, 2, 3], Snare: [-18, 5, 5, 120, 2, 3], Bass: [-20, 6, 20, 150, 3, 4], Vocal: [-24, 5, 10, 150, 3, 4],
 };
-export function CompView({ strip, values, set, canWrite }: ViewProps) {
+export function CompView({ strip, values, set, canWrite, showMeter=true }: ViewProps & {showMeter?:boolean}) {
   if (!(strip.kind === "ch" || strip.kind === "bus" || strip.kind === "lr")) return <NotAvailable>{tx("Le compresseur existe sur les canaux, les bus et la façade.")}</NotAvailable>;
   const p = `${strip.prefix}/dyn`, on = num(values, `${p}/on`) === 1;
   const thr = lin(num(values, `${p}/thr`, 1), -60, 0), ratio = num(values, `${p}/ratio`, 6), knee = Math.round(lin(num(values, `${p}/knee`), 0, 5)), gain = lin(num(values, `${p}/mgain`), 0, 24), exp = num(values, `${p}/mode`) === 1;
@@ -274,6 +279,7 @@ export function CompView({ strip, values, set, canWrite }: ViewProps) {
     set(`${p}/thr`, linInv(t, -60, 0)); set(`${p}/ratio`, r); set(`${p}/attack`, a / 120); set(`${p}/release`, logInv(rel, 5, 4000)); set(`${p}/knee`, k / 5); set(`${p}/mgain`, g / 24); set(`${p}/mix`, 1); set(`${p}/mode`, 0); set(`${p}/on`, 1);
   };
   return <div className="xm-row-blocks">
+    {showMeter&&<GainReduction strip={strip}/>}
     <Block title={tx("Compressor")}>
       <Toggle tone="cyan" disabled={!canWrite} on={on} onClick={() => set(`${p}/on`, on ? 0 : 1)}>{tx("Compressor")}</Toggle>
       <h5>{tx("Presets")}</h5>{Object.keys(COMP_PRESETS).map(n => <button key={n} type="button" className="xm-preset" disabled={!canWrite} onClick={() => applyPreset(n)}>{tx(n)}</button>)}
@@ -311,8 +317,11 @@ export function CompView({ strip, values, set, canWrite }: ViewProps) {
 // ---------- EQ ----------
 const EQ_W = 1000, EQ_H = 300, BAND_COLORS = ["#2dd4bf", "#14b8a6", "#ec4899", "#f59e0b", "#3b82f6", "#a855f7"], BAND_NAMES4 = ["Low", "LoMid", "HiMid", "High"], BAND_NAMES6 = ["Low", "Low 2", "LoMid", "HiMid", "High 2", "High"];
 const xOf = (f: number) => logInv(f, 20, 20000) * EQ_W, yOf = (db: number) => EQ_H / 2 - db / 18 * (EQ_H / 2);
-export function EqView({ strip, values, set, canWrite }: ViewProps) {
+export function EqView(props: ViewProps) {
+  const {strip,values,set,canWrite}=props;
   const model=useMixerModel();
+  const output=model.family==='xair'&&(strip.kind==='bus'||strip.kind==='lr');
+  const spectrum=useEqSpectrum(strip,values,!output||values[`${strip.prefix}/eq/mode`]===0,canWrite);
   const svg = useRef<SVGSVGElement>(null), drag = useRef<number | null>(null);
   const [active, setActive] = useState(0);
   const p = strip.prefix, count = strip.kind === "bus" || strip.kind === "lr" ? 6 : 4;
@@ -328,11 +337,17 @@ export function EqView({ strip, values, set, canWrite }: ViewProps) {
     const t = bands[band]!.type;
     if (t !== 0 && t !== 5) set(`${b}/g`, clamp01(linInv(Math.round(Math.max(-15, Math.min(15, (EQ_H / 2 - (e.clientY - r.top) / r.height * EQ_H) / (EQ_H / 2) * 18)) * 4) / 4, -15, 15)));
   };
+  const mode=output?<OutputEqMode {...props}/>:null;
+  if(output&&![0,1,2].includes(Number(values[`${p}/eq/mode`])))return <div className="xm-eq">{mode}<p>{tx('Non reçu')}</p></div>;
+  if(output&&[1,2].includes(num(values,`${p}/eq/mode`)))return <div className="xm-eq">{mode}<Toggle tone="cyan" disabled={!canWrite} on={eqOn} onClick={()=>set(`${p}/eq/on`,eqOn?0:1)}>EQ</Toggle><OutputGraphicEq {...props}/>{spectrum.controls}<svg className="output-rta" viewBox={`0 0 ${EQ_W} ${EQ_H}`} aria-label={tx('Spectre mesuré, échelle indépendante en dBFS')}>{spectrum.overlay(EQ_W,EQ_H)}</svg></div>;
   const names = count === 6 ? BAND_NAMES6 : BAND_NAMES4;
   return <div className="xm-eq">
+    {mode}
+    {spectrum.controls}
     <svg ref={svg} className={eqOn ? "xm-eq-graph" : "xm-eq-graph off"} viewBox={`0 0 ${EQ_W} ${EQ_H}`} onPointerMove={move} onPointerUp={() => { drag.current = null; }}>
       {[30, 50, 100, 200, 300, 500, 1000, 2000, 3000, 5000, 10000].map(f => <g key={f}><line x1={xOf(f)} x2={xOf(f)} y1={0} y2={EQ_H} className="xm-grid" /><text x={xOf(f) + 3} y={EQ_H - 5} className="xm-grid-label">{tx(formatHz(f))}</text></g>)}
       {[-12, -6, 0, 6, 12].map(d => <g key={d}><line x1={0} x2={EQ_W} y1={yOf(d)} y2={yOf(d)} className={d === 0 ? "xm-grid zero" : "xm-grid"} /><text x={4} y={yOf(d) - 3} className="xm-grid-label">{tx(d > 0 ? `+${d}` : d)}</text></g>)}
+      {spectrum.overlay(EQ_W,EQ_H)}
       <polygon points={`0,${EQ_H / 2} ${curve} ${EQ_W},${EQ_H / 2}`} className="xm-eq-fill" />
       <polyline points={curve} className="xm-eq-curve" />
       {hpfOn && <g><line x1={xOf(hpf)} x2={xOf(hpf)} y1={0} y2={EQ_H} stroke="#67e8f9" strokeWidth="1.5" /><text x={xOf(hpf) + 4} y={16} className="xm-grid-label">{tx("Low Cut")}</text></g>}
@@ -485,7 +500,7 @@ function MeterGroup({ title, items }: { title: string; items: [string, number[]]
   return <section className="xm-meter-group"><h5>{tx(title)}</h5><div>{items.map(([label, idx]) => <div key={label} className="xm-meter-cell"><Meter indexes={idx} wide /><small>{tx(label)}</small></div>)}</div></section>;
 }
 export function MeterView() {
-  return <div className="xm-meter-view">
+  return <div className="xm-meter-view"><MeterDisplaySettings/>
     <section className="xm-meter-group"><h5>{tx("&nbsp;")}</h5><div><div className="xm-meter-cell"><div className="xm-scale">{[0, -5, -10, -20, -30, -40, -50].map(d => <span key={d} style={{ bottom: `${(d + 60) / 60 * 100}%` }}>{tx(d)}</span>)}</div><small>{tx("dB")}</small></div></div></section>
     <MeterGroup title={tx("Entrées")} items={[...Array.from({ length: 16 }, (_, i): [string, number[]] => [String(i + 1), [i]]), ["Aux", [16, 17]]]} />
     <MeterGroup title={tx("Envois FX")} items={[1, 2, 3, 4].map(n => [String(n), [31 + n]])} />

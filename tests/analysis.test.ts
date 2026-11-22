@@ -55,13 +55,13 @@ test('analysis: narrow resonance → narrow cut; compressor squashing → higher
  const recos=recommend({...base,instruments,spectra:{2:ring},compGr:{2:-10},params:params({'/ch/02/preamp/hpon':1,'/ch/02/preamp/hpf':120,'/ch/02/dyn/on':1,'/ch/02/dyn/thr':-24})});
  const res=recos.find(r=>r.id==='res-2');assert.ok(res,'resonance found');
  const f=Number(Object.entries(res!.changes).find(([a])=>a.endsWith('/f'))![1]);assert.ok(f>270&&f<370,'at the ring: '+f);
- const comp=recos.find(r=>r.id==='comp-2');assert.deepEqual(comp?.changes,{'/ch/02/dyn/thr':-18});
+ const comp=recos.find(r=>r.id==='comp-2');assert.deepEqual(comp?.changes,{'/ch/02/dyn/thr':-21});
 });
 
-test('analysis: a monitor mix near clipping → limiter first, then −3 dB',()=>{
+test('analysis: peaks suggest a reversible level trial without claiming hearing protection',()=>{
  const p=params({'/bus/3/dyn/on':0,'/bus/3/mix/fader':0});
  const first=recommend({...base,instruments:[],spectra:{},params:p,busPeak:{3:-1.5},busNames:{3:'Batterie'},usedBuses:[3]});
- assert.equal(first[0]?.id,'limit-3');assert.equal(first[0]?.severity,'securite');assert.equal(first[0]?.changes['/bus/3/dyn/thr'],-6);
+ assert.equal(first[0]?.id,'ear-3');assert.equal(first[0]?.severity,'securite');assert.deepEqual(first[0]?.changes,{'/bus/3/mix/fader':-3});assert.match(first[0]!.why,/inconnu/);assert.doesNotMatch(first[0]!.why,/garantit|limiteur travaille/);
  const then=recommend({...base,instruments:[],spectra:{},params:params({'/bus/3/dyn/on':1,'/bus/3/mix/fader':-2}),busPeak:{3:-1.5},busNames:{3:'Batterie'},usedBuses:[3]});
  assert.deepEqual(then[0]?.changes,{'/bus/3/mix/fader':-5});
  assert.equal(recommend({...base,instruments:[],spectra:{},params:p,busPeak:{3:-8},busNames:{},usedBuses:[3]}).length,0,'quiet mix: nothing');
@@ -101,4 +101,11 @@ test('analysis meters: spectrum (/meters/4) and gain reduction (/meters/6) are d
   assert.equal(s.bands.length,100);assert.equal(s.bands[0],-40);assert.equal(g.comp[0],-6);
   assert.ok(sent.includes('/-stat/rta/source 23'),'bus 3 = analyser source 23 (checked on a physical XR18)');
  }finally{xr.close();peer.close();}
+});
+
+test('analysis keeps mixed listening contexts independent without inventing one for old profiles',()=>{
+ const common={...base,instruments:[],spectra:{},params:params({'/bus/1/mix/fader':0,'/bus/2/mix/fader':0,'/bus/3/mix/fader':0}),busPeak:{1:-1,2:-1,3:-1},busNames:{},usedBuses:[1,2,3]};
+ const recommendations=recommend({...common,monitorContexts:{1:'wedge',2:'headphones'}});
+ assert.match(recommendations.find(r=>r.bus===1)!.why,/niveau de scène/);assert.match(recommendations.find(r=>r.bus===2)!.why,/casque/);assert.match(recommendations.find(r=>r.bus===3)!.why,/inconnu/);
+ assert.ok(recommendations.every(r=>!r.where.includes('Ears')));
 });

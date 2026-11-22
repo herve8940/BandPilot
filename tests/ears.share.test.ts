@@ -1,3 +1,4 @@
+import Database from 'better-sqlite3';
 import test from "node:test";
 import assert from "node:assert/strict";
 import {mkdtempSync} from "node:fs";
@@ -97,4 +98,41 @@ test('an already open phone updates control permissions on connection changes wi
   enabled=false;xr.emit('connection');await waitFor(()=>snapshots.at(-1)?.control===false);
   assert.equal(snapshots.at(-1)?.control,false);
  }finally{ws?.terminate();await ears.stop();ears.close();xr.close();}
+});
+
+test('stereo phone explicitly owns one linked pair: pan, paired levels, recall and unlink protection',async()=>{
+ const xr=new XR18({mode:'simulation',host:'127.0.0.1',port:10024,enableWrites:false});await xr.syncLiveView();
+ const ears=new EarsShare(':memory:',xr,()=>undefined,()=>null,()=>{});let ws:WebSocket|undefined;
+ try{
+  await assert.rejects(ears.createStereo('Stereo',1),/Lie d’abord/);
+  await xr.writeParameter('/config/buslink/1-2',1);const share=await ears.createStereo('Stereo',1);assert.equal(share.stereo,true);
+  const {port}=await ears.start(0);ws=new WebSocket(`ws://127.0.0.1:${port}/ears-ws?token=${share.token}`);
+  const messages:any[]=[];ws.on('message',d=>messages.push(JSON.parse(String(d))));await new Promise(r=>ws!.once('open',r));await waitFor(()=>messages.length>0);
+  assert.equal(messages[0].share.stereo,true);const set=(address:string,value:number)=>ws!.send(JSON.stringify({type:'set',address,value}));
+  set('/ch/01/mix/01/pan',.9);await waitFor(()=>xr.parameterState()['/ch/01/mix/01/pan']?.value===.9);assert.equal(await xr.readParameter('/ch/01/mix/01/pan'),.9);
+  await xr.writeParameter('/ch/01/mix/01/level',.2);await xr.writeParameter('/ch/01/mix/02/level',.1);
+  set('/ch/01/mix/01/level',.7);await waitFor(()=>xr.parameterState()['/ch/01/mix/02/level']?.value===.25);assert.equal(await xr.readParameter('/ch/01/mix/01/level'),.25);assert.equal(await xr.readParameter('/ch/01/mix/02/level'),.25);
+  const base=`http://127.0.0.1:${port}/ears-api/${share.token}/profiles`,saved=await (await fetch(base,{method:'POST',body:JSON.stringify({name:'Stereo fixture'})})).json() as {id:string;values:Record<string,number>};assert.equal(saved.values['/ch/01/mix/01/pan'],.9);
+  await xr.writeParameter('/ch/01/mix/01/pan',.1);const recalled=await fetch(`${base}/${saved.id}/recall`,{method:'POST'});assert.equal(recalled.status,200);assert.equal(await xr.readParameter('/ch/01/mix/01/pan'),.9);
+  set('/ch/01/mix/03/level',.6);await waitFor(()=>messages.some(m=>m.type==='error'));assert.ok(messages.some(m=>m.type==='error'));
+  await xr.writeParameter('/config/buslink/1-2',0);const before=await xr.readParameter('/ch/01/mix/01/pan');set('/ch/01/mix/01/pan',.1);await waitFor(()=>messages.some(m=>String(m.error).includes('liaison stéréo')));assert.equal(await xr.readParameter('/ch/01/mix/01/pan'),before);
+  assert.equal((await fetch(`${base}/${saved.id}/recall`,{method:'POST'})).status,400);
+ }finally{ws?.terminate();await ears.stop();ears.close();xr.close();}
+});
+test('stereo access never extends a mono link and rejects missing output pairs',async()=>{
+ assert.equal(earAddressKind(1,'/ch/01/mix/01/pan'),null);assert.equal(earAddressKind(1,'/ch/01/mix/01/pan',true),'pan');assert.equal(earAddressKind(1,'/ch/01/mix/02/pan',true),null);
+ assert.equal(earSafeValue('pan',1,.5),1);assert.throws(()=>earSafeValue('pan',1.1,.5));
+ const xr=new XR18({mode:'simulation',model:'XR12',host:'127.0.0.1',port:10024,enableWrites:false}),ears=new EarsShare(':memory:',xr,()=>undefined,()=>null,()=>{});
+ try{await assert.rejects(ears.createStereo('Bad',3),/indisponible/);await assert.rejects(ears.createStereo('Bad',2),/indisponible/);assert.equal(ears.create('Old mono',1).stereo,false);}finally{ears.close();xr.close();}
+});
+
+test('upgrading an old mono-share database preserves its token, bus and saved mix without audio writes',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'ears-legacy-')),file=join(dir,'old.sqlite'),old=new Database(file);
+ old.exec(`CREATE TABLE ear_shares(id TEXT PRIMARY KEY,name TEXT NOT NULL,bus INTEGER NOT NULL,token TEXT NOT NULL UNIQUE,created_at TEXT NOT NULL);
+ CREATE TABLE ear_mix_profiles(id TEXT PRIMARY KEY,share_id TEXT NOT NULL,name TEXT NOT NULL,values_json TEXT NOT NULL,updated_at TEXT NOT NULL)`);
+ old.prepare('INSERT INTO ear_shares VALUES(?,?,?,?,?)').run('old-id','Legacy',2,'legacy-token','2025-01-01');
+ old.prepare('INSERT INTO ear_mix_profiles VALUES(?,?,?,?,?)').run('mix-id','old-id','Legacy mix',JSON.stringify({'/ch/01/mix/02/level':.3}),'2025-01-01');old.close();
+ const xr=new XR18({mode:'simulation',host:'127.0.0.1',port:10024,enableWrites:false});let writes=0;xr.liveSet=(_address,value)=>{writes++;return value;};
+ const ears=new EarsShare(file,xr,()=>undefined,()=>null,()=>{});
+ try{assert.equal(ears.list()[0]?.token,'legacy-token');assert.equal(ears.list()[0]?.bus,2);assert.equal(ears.list()[0]?.stereo,false);assert.equal(ears.profiles('old-id')[0]?.values['/ch/01/mix/02/level'],.3);assert.equal(writes,0);}finally{ears.close();xr.close();}
 });

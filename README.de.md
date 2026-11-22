@@ -41,18 +41,19 @@ Desktop: [neueste stabile Version](https://github.com/herve8940/BandPilot/releas
 
 Um Instrumente zu trennen, an Liedtexten zu arbeiten und Songs für REAPER vorzubereiten, entdecke [BandStudio (auf Englisch)](https://herve8940.github.io/BandStudio/en.html), eine eigenständige, ergänzende App.
 
-## Szenen und Presets pro Instrument · 2.3.14 / Android 2.4.0-android.5
+## Mischpult, MIDI und Proben per Smartphone · 2.3.15
 
-Speichere EQ, Kompressor und Gate eines Eingangs und rufe nur die ausgewählten Bearbeitungen auf einem anderen Eingang desselben Mischpultmodells ab. Presets sind Ausgangspunkte, die an das Signal angepasst werden müssen.
+BandPilot 2.3.15 verbindet neue Mischpultsteuerung, selektiven Szenenabruf, Softwaregruppen, MIDI und REAPER-Proben auf den Smartphones der Musiker.
 
-Die Bibliothek trennt vollständige Szenen, Presets, Soundcheck-Blätter und automatische Sicherungen. JSON-Import/Export, unterstützte X-Air-.scn-Dateien und die Wahl des Zielslots für FX-Presets sind enthalten.
+- **Mischpult und Monitore** — Anpassbare Bänke und Oberflächen, Softwaregruppen, Stereopaare, Pegelanzeigen und RTA. Verfügbare Regler und Ziele hängen vom verbundenen Modell und gewählten Mix ab.
+- **Szenen und Presets** — Selektiver Abruf von Eingängen, Ausgängen und FX, Schutz nach Parameterfamilie, Vorschau und Sicherung. Ausdrückliche Konvertierung von Presets und portablen Szenen innerhalb des unterstützten X-Air/M-Air-Umfangs.
+- **Effekte und Analyse** — Benannte Editoren für die 61 X-Air-Algorithmen, Tap Tempo und 31-Band-GEQ/True-EQ für passende Ausgänge. Mikrofonmessungen und Korrekturvorschläge müssen geprüft und bewusst angewendet werden.
+- **MIDI und Befehle** — Anlernen von Fadern und Mutes, absolute oder relative CC, Noten, Program Change, Favoriten und Bedingungen. Ausdrückliche Aktivierung pro Sitzung und Sicherung bei unterstützten Befehlen.
+- **Proben und Songblätter** — Geöffnete REAPER-Projekttabs, Abschnitte, Schleifen, Einzählen, getrennte Takes und Probenleitung per Smartphone. Akkorde und Texte aus kompatiblen BandStudio-Songblättern, optional im Vollbild.
 
-Speichern und Importieren ändern den Klang nicht. Ein Abruf erfordert Vorschau und Bestätigung sowie eine vorherige Sicherung. Kanal-Presets lassen Gain, Phantomspeisung, Pegel, Monitor-Sends und Routing unverändert.
+Diese Aktualisierung betrifft die Desktop-Apps für Windows, macOS Intel/Apple Silicon und Linux. Android bleibt eine separate Version 2.4.0-android.5 und enthält nicht alle hier beschriebenen Desktop-Funktionen. BandStudio ist eine eigenständige ergänzende App.
 
-Grenzen: keine Umwandlung zwischen Modellen; Mono-Presets können nicht auf gekoppelte Stereopaare geladen werden. .scn-Abruf nur für XR18/X18/MR18 mit HALL, AMBI, RPLT, ROOM, CHAM, PLAT, DLY und MODD; andere Dateien bleiben exportierbar. X32 wird weiterhin nur teilweise unterstützt.
-
-[Anleitung lesen](docs/USER_GUIDE_DE.md)
-
+[Anleitung zu den Neuerungen in 2.3.15](docs/NEW_2_3_15_DE.md)
 ## Neu: Technical Rider, Effekte und Android
 
 Die erste eigenständige Android-Version ist als signierte APK verfügbar. Keine wöchentliche Neusignierung nötig. REAPER bleibt auf dem Computer.

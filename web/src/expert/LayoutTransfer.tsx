@@ -1,0 +1,12 @@
+import {useEffect,useState,useRef} from 'react';
+import {tx} from '../i18n';
+import type {DeskLayout} from './desk-layout';
+import {INVALID_LAYOUT,LAYOUT_FILE_LIMIT,layoutFile,parseLayoutFile} from './layout-transfer';
+export function LayoutTransfer({desk,allowed,onDone}:{desk:DeskLayout;allowed:string[];onDone:()=>void}){
+ const generation=useRef(0);
+ const [pending,setPending]=useState<ReturnType<typeof parseLayoutFile>|null>(null),[error,setError]=useState('');
+ useEffect(()=>{generation.current++;setPending(null);setError('');return()=>{generation.current++;};},[desk.model,desk.screen]);
+ const exportFile=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(layoutFile(desk.model,desk.screen,desk.layout),null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`BandPilot-layout-${desk.model}-${desk.screen}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+ return <section className="layout-transfer"><h3>{tx('Échanger une disposition')}</h3><p>{tx('Le fichier contient les noms de tes vues et leur organisation. Il ne contient aucun réglage audio.')}</p><button type="button" onClick={exportFile}>{tx('Exporter la disposition enregistrée')}</button><label>{tx('Importer une disposition')}<input type="file" accept=".json,application/json" onChange={async e=>{const request=++generation.current,file=e.target.files?.[0];e.target.value='';setPending(null);setError('');if(!file)return;try{if(file.size>LAYOUT_FILE_LIMIT)throw Error(INVALID_LAYOUT);const text=await file.text();if(request!==generation.current)return;setPending(parseLayoutFile(text,desk.model,allowed));}catch(err){if(request===generation.current)setError((err as Error).message);}}}/></label>
+ {pending&&<div><p>{tx('Remplacer l’affichage actuel par ces vues ?')} ({desk.model} · {pending.layout.banks.length})</p><ul>{pending.layout.banks.map(b=><li key={b.id}>{b.name} · {b.strips.length}</li>)}</ul><button type="button" onClick={()=>{try{const checked=parseLayoutFile(JSON.stringify(layoutFile(desk.model,pending.screen,pending.layout)),desk.model,allowed);if(desk.update(checked.layout))onDone();else setError('Affichage conservé pour cette session uniquement. Réessaie l’enregistrement.');}catch(err){setError((err as Error).message);}}}>{tx('Confirmer l’import de la disposition')}</button><button type="button" onClick={()=>setPending(null)}>{tx('Annuler')}</button></div>}{error&&<p role="alert">{tx(error)}</p>}</section>;
+}

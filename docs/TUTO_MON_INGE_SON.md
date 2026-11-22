@@ -1,4 +1,8 @@
-# BandPilot 2.2 — Mon ingé son, pas à pas
+# BandPilot — Mon ingé son, pas à pas
+
+**2.3.15 — [Tutoriel des nouveautés 2.3.15](NEW_2_3_15_FR.md)**
+
+Cette évolution concerne les applications de bureau Windows, macOS Intel/Apple Silicon et Linux. Android reste distribué séparément en 2.4.0-android.5 ; ses fonctions ne sont pas toutes celles de cette version de bureau. BandStudio est une application complémentaire indépendante.
 
 [Français](TUTO_MON_INGE_SON.md) · [English](TUTO_MON_INGE_SON_EN.md) · [Italiano](TUTO_MON_INGE_SON_IT.md) · [Español](TUTO_MON_INGE_SON_ES.md) · [Deutsch](TUTO_MON_INGE_SON_DE.md)
 

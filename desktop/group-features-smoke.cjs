@@ -1,0 +1,31 @@
+/** Exercise group controls against the isolated --smoke-test simulator only. */
+module.exports=async(win,wait,screenshot)=>{
+ const js=code=>win.webContents.executeJavaScript(code);
+ const api=(path,data)=>js(`(async()=>{const r=await fetch(${JSON.stringify(path)},{method:${data===undefined?"'GET'":"'POST'"},headers:{'Content-Type':'application/json'},body:${data===undefined?'undefined':JSON.stringify(JSON.stringify(data))}});const v=await r.json();if(!r.ok)throw Error(v.error);return v;})()`);
+ if((await api('/api/status')).mode!=='simulation')throw Error('Group smoke requires simulation');
+ const button=async(scope,label)=>{const find=`[...document.querySelectorAll(${JSON.stringify(scope+' button')})].find(b=>b.textContent.trim()===${JSON.stringify(label)})`;await wait(`!!(${find})&&!(${find}).matches(':disabled')`);await js(`(${find}).click()`);};
+ const set=async values=>{const p=await api('/api/console/preview',{values});await api('/api/console/apply',{token:p.token,confirm:true});};
+ const read=async address=>(await api('/api/console/parameters?prefix='+encodeURIComponent(address))).parameters.find(p=>p.address===address).state.value;
+ const expect=async(a,v)=>{const found=await read(a);if(Math.abs(found-v)>.0001)throw Error(`${a}: expected ${v}, got ${found}`);};
+ const shot=async name=>{await new Promise(r=>setTimeout(r,300));await screenshot(name);};
+ await set({'/config/chlink/1-2':0,'/config/buslink/1-2':0,'/ch/01/mix/fader':-20,'/ch/02/mix/fader':-10,'/ch/01/mix/on':0,'/ch/02/mix/on':1,'/ch/01/mix/01/tap':3,'/ch/02/mix/01/tap':3,'/ch/01/mix/01/level':-20,'/ch/02/mix/01/level':-10});
+ const s=await api('/api/library/live-group/start',{model:'XR18',selection:{channels:[1,2],target:'fader'},followMembers:true,confirm:true});
+ await api('/api/library/live-group/move',{token:s.token,sequence:1,offset:3});await set({'/ch/01/mix/fader':-25});
+ const previous=[await read('/ch/01/mix/fader'),await read('/ch/02/mix/fader')],movement=await api('/api/library/live-group/move',{token:s.token,sequence:2,offset:5});
+ await expect('/ch/01/mix/fader',.3375);await expect('/ch/02/mix/fader',.625);await api('/api/library/live-group/stop',{token:s.token});
+ const undo=await api(`/api/library/${movement.backupId}/preview`,{});await api(`/api/library/${movement.backupId}/apply`,{token:undo.token,confirm:true});await expect('/ch/01/mix/fader',previous[0]);await expect('/ch/02/mix/fader',previous[1]);
+ await button('.xs2-tabs','Mélangeur');await button('.group-adjustments','Réglages groupés');await wait(`document.querySelectorAll('.group-adjust-channels input').length===16`);
+ await js(`document.querySelectorAll('.group-adjust-channels input')[0].click();document.querySelectorAll('.group-adjust-channels input')[1].click()`);
+ const strips=await js(`document.querySelectorAll('.expert-console .main>.xs2-strips>.xs2-strip').length`),layout=await js(`localStorage.getItem('bandpilot-workspaces-v1')`);
+ await button('.group-adjustments','Afficher uniquement les pistes du groupe');await wait(`document.querySelectorAll('.expert-console .main>.xs2-strips>.xs2-strip').length===2`);
+ if(await js(`localStorage.getItem('bandpilot-workspaces-v1')`)!==layout)throw Error('Spill changed saved layouts');await expect('/ch/01/mix/fader',previous[0]);await expect('/ch/01/mix/on',0);
+ await js(`document.querySelector('.group-spill-notice').scrollIntoView({block:'start'})`);await shot('group-spill.png');await button('.group-spill-notice','Quitter la vue du groupe');await wait(`document.querySelectorAll('.expert-console .main>.xs2-strips>.xs2-strip').length===${strips}`);
+ await button('.group-adjustments','Couper le groupe…');await wait(`!!document.querySelector('.coach-dialog[open]')`);await expect('/ch/02/mix/on',1);await shot('group-mute-review.png');await button('.coach-dialog','Essayer en simulation');await wait(`!document.querySelector('.coach-dialog')`);await expect('/ch/01/mix/on',0);await expect('/ch/02/mix/on',0);
+ await button('.group-adjustments','Rétablir les mutes précédents');await wait(`!!document.querySelector('.coach-dialog[open]')`);await button('.coach-dialog','Essayer en simulation');await wait(`!document.querySelector('.coach-dialog')`);await expect('/ch/01/mix/on',0);await expect('/ch/02/mix/on',1);
+ const sendBefore=[await read('/ch/01/mix/01/level'),await read('/ch/02/mix/01/level')],mute=await api('/api/library/group-mute/preview',{model:'XR18',selection:{channels:[1,2],target:'send',bus:1}}),muted=await api('/api/library/group-adjust/apply',{token:mute.token,confirm:true});
+ await expect('/ch/01/mix/01/level',0);await expect('/ch/02/mix/01/level',0);await expect('/ch/02/mix/on',1);
+ const restore=await api(`/api/library/${muted.backupId}/preview`,{});await api(`/api/library/${muted.backupId}/apply`,{token:restore.token,confirm:true});await expect('/ch/01/mix/01/level',sendBefore[0]);await expect('/ch/02/mix/01/level',sendBefore[1]);
+ await js(`document.querySelector('.group-follow input').click();document.querySelector('.live-group-fader').scrollIntoView({block:'center'})`);await shot('group-follow.png');
+ const size=win.getSize(),minimum=win.getMinimumSize();win.setMinimumSize(360,600);win.setSize(480,850);await js(`document.querySelector('.group-actions').scrollIntoView({block:'center'})`);await shot('group-small.png');if(await js(`(()=>{const e=document.querySelector('.group-adjustments');return e.scrollWidth>e.clientWidth+2;})()`))throw Error('Group controls overflow');win.setMinimumSize(...minimum);win.setSize(...size);
+ console.log('DEV group controls: follow individual edits and last-step undo, mute/restore prior states, monitor send silence/restore, reversible spill without saved-layout or audio changes, small-screen layout passed in simulation.');
+};

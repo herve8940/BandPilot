@@ -1,43 +1,25 @@
 # BandPilot — état du projet
 
-État vérifié le **11 novembre 2026** dans les releases GitHub. Les captures conservées
-dans les guides montrent la 2.2.4 en simulation ; la vidéo illustre la 2.2.
+Publication du **22 novembre 2026**. Les installateurs ne sont rendus disponibles qu’après la réussite des constructions et tests de chaque plateforme.
 
-| Distribution | Version publiée | Statut |
+| Distribution | Version | Portée |
 |---|---|---|
-| Windows, macOS Intel/Apple Silicon, Linux | [2.3.3](https://github.com/herve8940/BandPilot/releases/tag/v2.3.3) | Stable ; paquets de bureau et sommes SHA-256 |
-| Android autonome | [2.4.0-android.1](https://github.com/herve8940/BandPilot/releases/tag/android-v2.4.0-android.1) | Préversion ; APK signé séparé, [limites Android](ANDROID.md) |
-| Intégration BandStudio | [2.3.4-dev.1](https://github.com/herve8940/BandPilot/releases/tag/bandstudio-integration-dev) | Préversion Windows ; nécessite la version compatible de BandStudio, capture matérielle/latence à valider |
+| Windows, macOS Intel/Apple Silicon, Linux | [2.3.15](https://github.com/herve8940/BandPilot/releases/tag/v2.3.15) | Installateurs et sommes SHA-256 ; mises à jour automatiques sur les installations compatibles |
+| Android autonome | [2.4.0-android.5](https://github.com/herve8940/BandPilot/releases/tag/android-v2.4.0-android.5) | APK séparé ; les nouveautés 2.3.15 ne sont pas toutes livrées dans cet APK |
+| BandStudio | [Projet indépendant](https://herve8940.github.io/BandStudio/) | Préparation des morceaux et export REAPER ; ne fait pas partie de l’installateur BandPilot |
 
-Le numéro Android n'annonce pas une version stable 2.4 pour ordinateur. Une fonction
-présente dans une branche DEV n'est pas nécessairement livrée dans la version stable.
+## Nouveautés de bureau
 
-## Fonctions de la version stable
+Commandes et surfaces de console, groupes logiciels, stéréo, MIDI, rappels sélectifs avec protections, effets X-Air détaillés, GEQ et mesure acoustique. Répétition par onglets REAPER, gestionnaire sur téléphone, prises séparées, accords et paroles de fiches compatibles. [Tutoriel 2.3.15](NEW_2_3_15_FR.md) · [English](NEW_2_3_15_EN.md).
 
-Console Simple/Expert, balance guidée, profils de groupe, retours personnels, ambiances
-de sources, fiche technique et plan de scène imprimable, scènes JSON avec aperçu et
-sauvegarde, répétitions et Atelier du son avec REAPER sur ordinateur. Interface et guides
-principaux en français, anglais, italien, espagnol et allemand. Pont REAPER livré : **1.5.0**.
+Les profils existants et leurs valeurs par défaut sont conservés. Les nouvelles options sont explicites. Une préférence enregistrée ne déclenche pas un réglage audio. Les musiciens peuvent avoir des écoutes différentes, y compris inconnues.
 
-La 2.3.3 renforce la validation des instruments, le traitement des interruptions, la
-validité des mesures et les vérifications de l'installateur Windows. Voir les
-[notes de version](RELEASE_NOTES.md) pour le détail.
+Réinstaller le pont livré avec cette version et redémarrer REAPER, même si le numéro affiché est déjà 1.5.0. La simulation de console ne simule pas REAPER : REC utilise ses entrées audio réelles.
 
 ## Validation et limites
 
-Les essais matériels documentés concernent principalement la XR18. X18, MR18, XR12 et
-MR12 demandent leurs propres essais. La X32 reste **partielle et expérimentale** :
-[matrice de capacités](multi-model.md). Une détection ou un test de simulation ne certifie
-pas un concert ni un résultat acoustique. Les presets sont des points de départ.
+Les tests et paquets sont suivis dans [GitHub Actions](https://github.com/herve8940/BandPilot/actions). Les tests logiciels et la simulation ne certifient pas chaque console physique. Les essais matériels documentés concernent principalement la XR18 ; X18, MR18, XR12 et MR12 nécessitent leurs propres essais. X32 reste partielle et expérimentale. Voir la [matrice de capacités](multi-model.md).
 
-Façade, retours de scène, in-ears, casque et groupes mixtes ont des besoins différents.
-Enregistrer une préférence ne doit pas envoyer de réglage audio à la console. Les profils
-existants et les valeurs par défaut doivent être préservés.
+Les presets sont des points de départ. Mesures, estimations et préférences restent distinctes ; aucun résultat sonore universel ni récupération d’un enregistrement écrêté n’est promis. Les installateurs peuvent être non notariés.
 
-Les tests automatiques et les constructions sont visibles dans
-[GitHub Actions](https://github.com/herve8940/BandPilot/actions). Les paquets de bureau
-peuvent être non signés/non notariés. Le [rapport de revue](REPOSITORY_AUDIT.md) précise les
-alertes de dépendances restantes ; cette page n'est pas une certification de sécurité.
-
-[Guide actuel](USER_GUIDE_FR.md) · [Téléchargements](https://herve8940.github.io/BandPilot/#download)
-· [Données et confidentialité](PRIVACY.md) · [Soutenir le projet](SUPPORT_FR.md)
+Les anciennes captures 2.2.4 et la vidéo 2.2 sont conservées comme illustrations historiques. [Guide](USER_GUIDE_FR.md) · [Notes de version](RELEASE_NOTES.md) · [Données et confidentialité](PRIVACY.md).

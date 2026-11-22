@@ -1,3 +1,4 @@
+import {RehearsalDesk} from './RehearsalDesk';
 import {tx, getLocale} from "../i18n";
 import {Workshop} from './Workshop';
 import {useMixerModel} from '../MixerModel';
@@ -21,15 +22,27 @@ export function BridgeInstall({ act, show }: { act: (p: string, d?: unknown) => 
     <button type="button" className="xs2-btn primary" onClick={() => { if (confirm(tx("Ajouter le pont BandPilot au démarrage de Reaper ?"))) void act("/api/show/install", { confirm: true }).then(r => { if (r) setDone(true); }); }}>{tx("Installer le pont")}</button>
     {done && <p role="status">{tx("Installé. Redémarre Reaper.")}</p>}</div>;
 }
-export function Rehearse({onExpert}:{onExpert?:(channel:number)=>void}) {
-  const [atelier,setAtelier]=useState(()=>{try{return sessionStorage.getItem('bandpilot-workshop-view')==='true';}catch{return false;}});
+export function Rehearse({onExpert}:{onExpert?:(channel:number)=>void}){
+ const [mode,setMode]=useState<'tabs'|'band'>(()=>{try{return localStorage.getItem('xr18-rehearse')==='band'?'band':'tabs';}catch{return 'tabs';}});
+ const [atelier,setAtelier]=useState(()=>{try{return sessionStorage.getItem('bandpilot-workshop-view')==='true';}catch{return false;}});
+ const go=(next:typeof mode)=>{setMode(next);setAtelier(false);try{localStorage.setItem('xr18-rehearse',next);sessionStorage.removeItem('bandpilot-workshop-view');}catch{/* preferences only */}};
+ const workshop=()=>{setAtelier(!atelier);try{sessionStorage.setItem('bandpilot-workshop-view',String(!atelier));}catch{/* preferences only */}};
+ return <section className="xs2 sh sh-rehearse" aria-label={tx('Répéter')}>
+  <div className="sh-head">
+   <div className="sh-seg" role="group" aria-label={tx('Type de répétition')}>
+    {([['tabs','Avec mes morceaux'],['band','Groupe seul']] as const).map(([key,label])=><button key={key} type="button" className={!atelier&&mode===key?'on':''} aria-pressed={!atelier&&mode===key} onClick={()=>go(key)}>{tx(label)}</button>)}
+   </div>
+   <button type="button" className={`xs2-btn ${atelier?'primary':''}`} onClick={workshop}>{tx(atelier?'Revenir à la répétition':'Atelier du son')}</button>
+  </div>
+  {mode==='tabs'&&!atelier?<RehearsalDesk/>:<LegacyRehearse key={mode} onExpert={onExpert} mode={mode==='band'?'band':'songs'} atelier={atelier}/>}
+ </section>;
+}
+function LegacyRehearse({onExpert,mode,atelier}:{onExpert?:(channel:number)=>void;mode:'songs'|'band';atelier:boolean}){
   const mixerModel=useMixerModel();
   const { show, link, error, setError, act } = useShow();
-  const [mode, setMode] = useState<"songs" | "band">(() => { try { return localStorage.getItem("xr18-rehearse") === "band" ? "band" : "songs"; } catch { return "songs"; } });
   const [picked, setPicked] = useState(0), [plan, setPlan] = useState<Plan | null>(null);
   const present=show.presence, original=show.original===true;
   useEffect(()=>{setPicked(0);},[show.project]);
-  const go = (m: "songs" | "band") => { setMode(m); try { localStorage.setItem("xr18-rehearse", m); } catch { /* convenience */ } };
   useEffect(() => { void call<Plan>("/api/reaper/plan").then(setPlan).catch(e => setError(e.message)); }, []);
   const songs = useMemo(() => show.songs?.length ? show.songs : show.length ? [{ title: "Projet ouvert", start: 0, countin: 0, stop: show.length }] : [], [show.songs, show.length]);
   const cursor = position(show, link), recording = !!link?.recording, busy = recording || link?.state === "starting";
@@ -53,11 +66,8 @@ export function Rehearse({onExpert}:{onExpert?:(channel:number)=>void}) {
   const issues = [...setupIssues(show, plan?.sampleRate,mixerModel.usbChannels,mixerModel.label), ...(plan?.warnings ?? [])];
   const loop = show.loop?.on, section = (show.regions ?? []).find(r => cursor >= r.start && cursor < r.stop);
 
-  return <section className="xs2 sh sh-rehearse" aria-label={tx("Répéter")}>
-    <div className="sh-head">
-      <div className="sh-seg" role="group" aria-label={tx("Type de répétition")}><button type="button" className={mode === "songs" ? "on" : ""} aria-pressed={mode === "songs"} onClick={() => go("songs")}>{tx("Avec mes morceaux")}</button><button type="button" className={mode === "band" ? "on" : ""} aria-pressed={mode === "band"} onClick={() => go("band")}>{tx("Groupe seul")}</button></div>
-      <button type="button" className={`xs2-btn ${atelier?'primary':''}`} onClick={()=>{setAtelier(!atelier);sessionStorage.setItem('bandpilot-workshop-view',String(!atelier));}}>{tx(atelier?'Revenir à la répétition':'Atelier du son')}</button><Status show={show} link={link} />
-    </div>
+  return <>
+    <Status show={show} link={link} />
     {atelier?<>{needsBridge(show)&&<BridgeInstall act={act} show={show}/>}<Workshop onExpert={onExpert}/></>:<>
     {(error || link?.alert) && <div className="xs2-msg error" role="alert">{tx(error || link?.alert)}<button type="button" aria-label={tx("Fermer")} onClick={() => { setError(""); if (link?.alert) void act("/api/reaper/dismiss"); }}>{tx("×")}</button></div>}
     {!busy && issues.slice(0, 2).map(i => <div className="xs2-msg" role="status" key={i}>{tx(i)}</div>)}
@@ -85,5 +95,5 @@ export function Rehearse({onExpert}:{onExpert?:(channel:number)=>void}) {
       </aside>
     </div>}
   </>}
-  </section>;
+  </>;
 }

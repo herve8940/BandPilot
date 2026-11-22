@@ -1,13 +1,20 @@
-const { app, BrowserWindow, dialog, shell, Menu, ipcMain, safeStorage } = require("electron");
+const { app, BrowserWindow, dialog, shell, Menu, ipcMain, safeStorage, systemPreferences } = require("electron");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 const { mkdirSync, readFileSync, writeFileSync, renameSync } = require("node:fs");
 const net = require("node:net");
 const {loadAI,saveAI}=require("./ai-config.cjs");
+// Electron otherwise opens a blocking native error box for uncaught callbacks.
+// CI must report that error and fail, without waiting for someone to close it.
+if(process.argv.includes('--smoke-test')){
+  const fail=error=>{console.error('Uncaught native smoke error:',error);app.exit(1);};
+  process.on('uncaughtException',fail);
+  process.on('unhandledRejection',fail);
+}
 if(process.argv.includes('--smoke-test')&&process.env.XR18_SMOKE_DATA)app.setPath('userData',process.env.XR18_SMOKE_DATA);
 // Keep the existing data/profile directory across the display-name change.
 if(!process.argv.includes('--smoke-test')){
-  const legacyData=path.join(app.getPath('appData'),'xr18-studio');
+  const legacyData=path.join(app.getPath('appData'),app.getVersion().includes('-dev.')?'bandpilot-dev':'xr18-studio');
   mkdirSync(legacyData,{recursive:true});app.setPath('userData',legacyData);
 }
 let win;
@@ -20,7 +27,7 @@ const label=(fr,en)=>languageLabel(language,fr,en);
 function updateMenu(){Menu.setApplicationMenu(Menu.buildFromTemplate([{label:label("Connexion","Connection"),submenu:[
  {label:label("Détecter et connecter ma console","Detect and connect my mixer"),click:()=>{if(win)void win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");}},
  {type:"separator"},{role:"about",label:label("À propos de BandPilot","About BandPilot")},{type:"separator"},{role:"quit",label:label("Quitter","Quit")}
-]},{label:label("Affichage","View"),submenu:[{role:"reload",label:label("Actualiser","Reload")},{role:"togglefullscreen",label:label("Plein écran","Toggle full screen")}]}]));}
+]},{label:"MIDI",submenu:[{label:label("Contrôleurs et pédaliers","Controllers and pedals"),click:()=>{if(win)void win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-midi'))");}}]},{label:label("Affichage","View"),submenu:[{role:"reload",label:label("Actualiser","Reload")},{role:"togglefullscreen",label:label("Plein écran","Toggle full screen")}]}]));}
 
 app.whenReady().then(async () => {
   try {
@@ -28,6 +35,8 @@ app.whenReady().then(async () => {
     if(smoke&&process.env.XR18_SMOKE_DATA)app.setPath("userData",process.env.XR18_SMOKE_DATA);
     const dataPath=app.getPath("userData");
     mkdirSync(dataPath,{recursive:true});
+    const rehearsalSmoke=smoke?require('./dev19-rehearsal-smoke.cjs').createFixture(dataPath):null;
+    if(rehearsalSmoke)process.env.REAPER_RESOURCE_PATH=rehearsalSmoke.root;
     const aiPath=path.join(dataPath,"ai-credentials.json");
     if(!smoke&&!process.env.XR18_OPENAI_API_KEY){const saved=loadAI(aiPath,safeStorage);if(saved){process.env.XR18_OPENAI_API_KEY=saved.apiKey;process.env.XR18_OPENAI_MODEL=saved.model;}}
     const configPath=path.join(dataPath,smoke?"smoke-connection.json":"connection.json");
@@ -56,7 +65,9 @@ app.whenReady().then(async () => {
       ?path.join(process.resourcesPath,"web-dist")
       :path.join(app.getAppPath(),"web","dist");
     const backend=path.join(app.getAppPath(),"dist","src","server.js");
-    await import(pathToFileURL(backend).href);
+    const runtime=await import(pathToFileURL(backend).href);
+    let measurementsClosed=false;
+    app.on('before-quit',event=>{if(measurementsClosed)return;event.preventDefault();measurementsClosed=true;void runtime.stopMeasurements().finally(()=>app.quit());});
     let ready=false;
     for(let i=0;i<80;i++){
       try{const response=await fetch(`http://127.0.0.1:${port}/api/auth`);if(response.ok){ready=true;break;}}catch{}
@@ -70,11 +81,38 @@ app.whenReady().then(async () => {
       backgroundColor:"#0d1621",
       webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,preload:path.join(__dirname,"preload.cjs")}
     });
+    const origin=`http://127.0.0.1:${port}`;
+    const trusted=(contents,requestUrl,isMainFrame)=>{
+      if(!win||contents!==win.webContents||!isMainFrame)return false;
+      try{return new URL(requestUrl).origin===origin;}catch{return false;}
+    };
+    win.webContents.session.setPermissionCheckHandler((contents,permission,url,details)=>
+      trusted(contents,details.requestingUrl||url,details.isMainFrame)&&
+      (permission==='media'?details.mediaType==='audio':permission!=='display-capture'));
+    win.webContents.session.setPermissionRequestHandler((contents,permission,respond,details)=>{
+      if(!trusted(contents,details.requestingUrl||contents?.getURL(),details.isMainFrame)||permission==='display-capture')return respond(false);
+      if(permission!=='media')return respond(true);
+      if(details.mediaTypes?.length!==1||details.mediaTypes[0]!=='audio')return respond(false);
+      respond(smoke||process.platform!=='darwin'||systemPreferences.getMediaAccessStatus('microphone')==='granted');
+    });
+    ipcMain.handle('bandpilot-acoustic-mic',async event=>{
+      if(event.senderFrame!==win.webContents.mainFrame||!trusted(event.sender,event.senderFrame?.url,true))return false;
+      return smoke||process.platform!=='darwin'||await systemPreferences.askForMediaAccess('microphone').catch(()=>false);
+    });
     const {sanitizeDiagnostic}=await import(pathToFileURL(path.join(app.getAppPath(),'dist/shared/diagnostic-report.js')).href);
     const {diagnostic}=await import(pathToFileURL(path.join(app.getAppPath(),'dist/src/diagnostics.js')).href);
     require('./support.cjs').registerSupport({app,win,ipcMain,dialog,shell,safeStorage,port,dataPath,sanitize:sanitizeDiagnostic,diagnostic,smoke});
     const appIcon=path.join(__dirname,"icon.png");
     const fromWindow=(event)=>event.sender===win.webContents&&event.senderFrame===win.webContents.mainFrame;
+    const controllerMappings=require('./controller-mappings.cjs').controllerMappingsStore(dataPath);
+    ipcMain.on('bandpilot-midi-get',event=>{event.returnValue=fromWindow(event)?controllerMappings.get():null;});
+    ipcMain.on('bandpilot-midi-set',(event,value)=>{event.returnValue=fromWindow(event)&&controllerMappings.set(value);});
+    const metering=require('./metering.cjs').meteringStore(dataPath);
+    ipcMain.on('bandpilot-metering-get',event=>{event.returnValue=fromWindow(event)?metering.get():null;});
+    ipcMain.on('bandpilot-metering-set',(event,value)=>{event.returnValue=fromWindow(event)&&metering.set(value);});
+    const workspaces=require('./workspaces.cjs').workspaceStore(dataPath);
+    ipcMain.on('bandpilot-workspaces-get',event=>{event.returnValue=fromWindow(event)?workspaces.get():null;});
+    ipcMain.on('bandpilot-workspaces-set',(event,value)=>{event.returnValue=fromWindow(event)&&workspaces.set(value);});
     let exportingLibrary=false;
     ipcMain.handle('bandpilot-library-export',async(event,input)=>{
       if(!fromWindow(event)||exportingLibrary)return {error:label('Export indisponible.','Export unavailable.')};
@@ -106,9 +144,11 @@ app.whenReady().then(async () => {
     });
     ipcMain.on('xr18-confirm',(event,message)=>{
       if(!fromWindow(event)){event.returnValue=false;return;}
+      if(smoke){event.returnValue=false;console.error('Unexpected native confirmation in smoke:',message);app.exit(1);return;}
       event.returnValue=dialog.showMessageBoxSync(win,{type:"question",icon:appIcon,title:"BandPilot",message:String(message).slice(0,2000),buttons:[label("Annuler","Cancel"),label("Confirmer","Confirm")],defaultId:1,cancelId:0,noLink:true})===1;
     });
     ipcMain.on('xr18-alert',(event,message)=>{
+      if(smoke&&fromWindow(event)){event.returnValue=null;console.error('Unexpected native alert in smoke:',message);app.exit(1);return;}
       if(fromWindow(event))dialog.showMessageBoxSync(win,{type:"info",icon:appIcon,title:"BandPilot",message:String(message).slice(0,2000),buttons:["OK"],noLink:true});
       event.returnValue=null;
     });
@@ -133,6 +173,14 @@ app.whenReady().then(async () => {
     });
     await win.loadURL(`http://127.0.0.1:${port}/`);
     if(smoke){
+      const execute=win.webContents.executeJavaScript.bind(win.webContents);
+      win.webContents.executeJavaScript=async(code,...args)=>{
+        let timer;
+        try{return await Promise.race([execute(code,...args),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Smoke renderer script timed out')),30000);})]);}
+        catch(error){console.error('Smoke script failed:',code);throw error;}
+        finally{clearTimeout(timer);}
+      };
+
       await new Promise(resolve=>setTimeout(resolve,1000));
       const rendered=await win.webContents.executeJavaScript('document.body.textContent.includes("BandPilot")');
       if(!rendered)throw Error("Interface BandPilot non rendue");
@@ -153,9 +201,17 @@ app.whenReady().then(async () => {
           if(await win.webContents.executeJavaScript(predicate))return;
           await new Promise(resolve=>setTimeout(resolve,150));
         }
-        const state=await win.webContents.executeJavaScript('document.body.textContent.slice(-4000)');
+        const state=await win.webContents.executeJavaScript(`JSON.stringify({midiSelects:[...document.querySelectorAll('.midi-controls select')].map(e=>({value:e.value,options:e.options.length})),alerts:[...document.querySelectorAll('[role=alert]')].map(e=>e.textContent),commands:document.querySelector('.console-commands')?.textContent,commandButtons:[...document.querySelectorAll('.console-commands button')].map(b=>[b.textContent,b.matches(':disabled')]),group:document.querySelector('.group-adjustments')?.textContent,disabled:[...document.querySelectorAll('.group-adjustments button')].map(b=>[b.textContent,b.disabled]),tail:document.body.textContent.slice(-4000)})`);
         throw Error('Native smoke test: renderer did not become ready: '+predicate+'\n'+state);
       };
+      const screenshot=async(name)=>{if(process.env.XR18_SMOKE_SCREENSHOTS){mkdirSync(process.env.XR18_SMOKE_SCREENSHOTS,{recursive:true});writeFileSync(path.join(process.env.XR18_SMOKE_SCREENSHOTS,name),(await win.webContents.capturePage()).toPNG());}};
+      const checkRehearsal=()=>require('./dev19-rehearsal-smoke.cjs').verify({
+        main:win,createWindow:()=>new BrowserWindow({show:false,width:390,height:730,webPreferences:{sandbox:true,contextIsolation:true}}),
+        screenshot,fixture:rehearsalSmoke,port
+      });
+      if(process.argv.includes('--smoke-rehearsal-only')){
+        await checkRehearsal();rehearsalSmoke.stop();app.exit(0);return;
+      }
       // Exercise the same language selector shipped to users, including native persistence.
       for(const next of ['en','it','es','de','fr']){
         await win.webContents.executeJavaScript(`(()=>{const select=document.querySelector('.bandpilot-language select');if(!select)throw Error('Missing language selector');select.value=${JSON.stringify(next)};select.dispatchEvent(new Event('change',{bubbles:true}));})()`);
@@ -174,7 +230,6 @@ app.whenReady().then(async () => {
       await require('./coach-smoke.cjs')(win,waitForRenderer);
       await win.webContents.executeJavaScript(`document.querySelector('.coach-shortcuts button').click()`);
       await waitForRenderer(`!!document.querySelector('.tech-rider[open]')`);
-      const screenshot=async(name)=>{if(process.env.XR18_SMOKE_SCREENSHOTS){mkdirSync(process.env.XR18_SMOKE_SCREENSHOTS,{recursive:true});writeFileSync(path.join(process.env.XR18_SMOKE_SCREENSHOTS,name),(await win.webContents.capturePage()).toPNG());}};
       await screenshot('technical-rider.png');
       await win.webContents.executeJavaScript(`document.querySelector('.support-open').click()`);
       await waitForRenderer(`!!document.querySelector('.support-dialog[open]')`);
@@ -186,6 +241,23 @@ app.whenReady().then(async () => {
       if(report.app.version!==app.getVersion()||report.console.mode!=='simulation'||!report.id||!report.app.build)throw Error('Diagnostic bridge returned an invalid report');
       await screenshot('debug-report.png');
       await require('./library-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./live-console-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./scene-recall-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./stereo-groups-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./stereo-link-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./measurement-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./saved-groups-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./geq-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./scene-mapping-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./scene-protections-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./dev-completion-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./midi-automation-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./group-features-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./midi-scenes-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./dev16-mix-tools-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./dev17-studio-additions-smoke.cjs')(win,waitForRenderer,screenshot);
+      await checkRehearsal();
+      rehearsalSmoke.stop();
       const mixerStatus=await (await fetch(`http://127.0.0.1:${port}/api/status`)).json();
       if(mixerStatus.mode!=='simulation'||mixerStatus.writesEnabled)throw Error('Language test changed mixer connection');
       const auth=await fetch(`http://127.0.0.1:${port}/api/auth`);
