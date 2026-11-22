@@ -670,7 +670,13 @@ function handleLive(ws:WebSocket,req:http.IncomingMessage,raw:Buffer){
     xr18.liveSet(address,value);
   }catch(e){reply({type:'live-error',address,error:(e as Error).message});}
 }
-wss.on("connection", (ws,req) => {wsRequests.set(ws,req);ws.on('message',raw=>handleLive(ws,req,raw as Buffer));ws.send(JSON.stringify({ type: "snapshot", channels: xr18.listChannels(), status: xr18.status(), main: xr18.mainState(), meters:xr18.meterState(),parameters:xr18.parameterState() }));});
+wss.on("connection", (ws,req) => {
+ // A disconnected or malformed client must not raise an unhandled error in the
+ // desktop main process and interrupt every other musician's connection.
+ ws.on('error',()=>ws.terminate());
+ wsRequests.set(ws,req);ws.on('message',raw=>handleLive(ws,req,raw as Buffer));
+ ws.send(JSON.stringify({ type: "snapshot", channels: xr18.listChannels(), status: xr18.status(), main: xr18.mainState(), meters:xr18.meterState(),parameters:xr18.parameterState() }));
+});
 xr18.on('reset',()=>{const message=JSON.stringify({type:'snapshot',channels:xr18.listChannels(),status:xr18.status(),main:xr18.mainState(),meters:xr18.meterState(),parameters:xr18.parameterState()});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);});
 xr18.on('parameter',state=>{const message=JSON.stringify({type:'parameter',state});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);});
 xr18.on("state", state => { const message = JSON.stringify({ type: "channel", state, status:xr18.status() }); for (const ws of wss.clients) if (ws.readyState === WebSocket.OPEN) ws.send(message); });

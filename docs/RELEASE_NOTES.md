@@ -7,6 +7,7 @@ BandPilot 2.3.15 réunit les nouvelles commandes de console, les rappels sélect
 - **Effets et analyse** — Éditeurs nommés pour les 61 algorithmes X-Air, tap tempo, GEQ/True EQ 31 bandes sur les sorties compatibles. Mesure acoustique au micro et propositions de correction à vérifier, avec application volontaire.
 - **MIDI et commandes** — Apprentissage des faders et mutes, CC absolus ou relatifs, notes, Program Change, commandes favorites et conditions. Activation explicite pour la session et sauvegarde avant les commandes prises en charge.
 - **Répétition et fiches** — Projets REAPER ouverts par onglet, sections, boucles, décompte, prises séparées et gestionnaire sur téléphone. Accords et paroles disponibles dans les fiches compatibles BandStudio, avec affichage plein écran.
+- **Fiabilité des connexions** — Une erreur WebSocket du mélangeur ferme la connexion concernée sans arrêter le serveur ni empêcher les autres connexions.
 
 Cette évolution concerne les applications de bureau Windows, macOS Intel/Apple Silicon et Linux. Android reste distribué séparément en 2.4.0-android.5 ; ses fonctions ne sont pas toutes celles de cette version de bureau. BandStudio est une application complémentaire indépendante.
 
@@ -27,6 +28,7 @@ BandPilot 2.3.15 brings together new mixer controls, selective recall, software 
 - **Effects and analysis** — Named editors for the 61 X-Air algorithms, tap tempo and 31-band GEQ/True EQ on supported outputs. Microphone measurements and correction proposals require user review and explicit application.
 - **MIDI and commands** — Fader and mute learning, absolute or relative CC, notes, Program Change, favorite commands and conditions. Explicit session activation and backups for supported commands.
 - **Rehearsal and song sheets** — Open REAPER project tabs, sections, loops, count-in, separate takes and a phone rehearsal manager. Compatible BandStudio song sheets provide chords and lyrics with an optional full-screen view.
+- **Connection reliability** — A mixer WebSocket error closes the affected connection without stopping the server or preventing other connections.
 
 This update concerns the Windows, Intel/Apple Silicon macOS and Linux desktop apps. Android remains a separate 2.4.0-android.5 release and does not include every desktop feature described here. BandStudio is an independent companion app.
 
