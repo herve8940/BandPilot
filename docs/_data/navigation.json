@@ -7,7 +7,11 @@
     "support": "Soutenir BandPilot",
     "privacy": "Confidentialité",
     "help": "Assistance",
-    "home": "/"
+    "home": "/",
+    "skip": "Aller au contenu",
+    "languages": "Langues",
+    "source": "Code source",
+    "license": "Licence MIT"
   },
   "en": {
     "documentation": "Documentation",
@@ -17,7 +21,11 @@
     "support": "Support BandPilot",
     "privacy": "Privacy",
     "help": "Help",
-    "home": "/en.html"
+    "home": "/en.html",
+    "skip": "Skip to content",
+    "languages": "Languages",
+    "source": "Source code",
+    "license": "MIT license"
   },
   "it": {
     "documentation": "Documentazione",
@@ -27,7 +35,11 @@
     "support": "Sostieni BandPilot",
     "privacy": "Privacy",
     "help": "Assistenza",
-    "home": "/it.html"
+    "home": "/it.html",
+    "skip": "Vai al contenuto",
+    "languages": "Lingue",
+    "source": "Codice sorgente",
+    "license": "Licenza MIT"
   },
   "es": {
     "documentation": "Documentación",
@@ -37,7 +49,11 @@
     "support": "Apoya BandPilot",
     "privacy": "Privacidad",
     "help": "Ayuda",
-    "home": "/es.html"
+    "home": "/es.html",
+    "skip": "Saltar al contenido",
+    "languages": "Idiomas",
+    "source": "Código fuente",
+    "license": "Licencia MIT"
   },
   "de": {
     "documentation": "Dokumentation",
@@ -47,6 +63,10 @@
     "support": "BandPilot unterstützen",
     "privacy": "Datenschutz",
     "help": "Hilfe",
-    "home": "/de.html"
+    "home": "/de.html",
+    "skip": "Zum Inhalt",
+    "languages": "Sprachen",
+    "source": "Quellcode",
+    "license": "MIT-Lizenz"
   }
 }

@@ -1,16 +1,16 @@
 # BandPilot — Mon ingé son, pas à pas
 
-**2.3.15 — [Tutoriel des nouveautés 2.3.15](NEW_2_3_15_FR.md)**
-
-Cette évolution concerne les applications de bureau Windows, macOS Intel/Apple Silicon et Linux. Android reste distribué séparément en 2.4.0-android.5 ; ses fonctions ne sont pas toutes celles de cette version de bureau. BandStudio est une application complémentaire indépendante.
-
 [Français](TUTO_MON_INGE_SON.md) · [English](TUTO_MON_INGE_SON_EN.md) · [Italiano](TUTO_MON_INGE_SON_IT.md) · [Español](TUTO_MON_INGE_SON_ES.md) · [Deutsch](TUTO_MON_INGE_SON_DE.md)
 
-[English](TUTO_MON_INGE_SON_EN.md) · [Guide complet](USER_GUIDE_FR.md) · [Visite vidéo](VIDEO_TOUR.md)
+Le coach guide la balance des modèles X-Air et M-Air compatibles à partir des réglages et mesures disponibles. Écoute le résultat sur ta console. Les étapes ci-dessous portent sur ces modèles.
 
-Le coach accompagne la balance ; il ne reçoit pas le son, ne remplace pas ton écoute et ne décide pas seul d’une bonne qualité acoustique. Ce parcours concerne les modèles X-Air/M-Air pris en charge, **pas la X32** dans cette version. Les captures 2.2.4 sont réalisées en simulation. Lis les [limites matérielles](multi-model.md).
+**BandPilot 3.0.0** · Pars d’une scène vierge ou de ta scène habituelle. Quand tu confirmes une nouvelle balance avec le groupe, les entrées inutilisées et leurs envois passent au silence. Les gains de préampli et le 48 V sont conservés.
 
-![Le tableau de bord Mon ingé son](images/bandpilot-2.2.4/coach.jpg)
+Associe chaque musicien à sa sortie. Dans Retours → Téléphones, partage le QR de son mix sur le réseau local. Enregistrer les musiciens actualise leurs liens sans toucher au son.
+
+[Guide de démarrage](USER_GUIDE_FR.md) · [Notes de version](RELEASE_NOTES.md#release-fr) · [Voir la matrice de compatibilité (FR)](multi-model.md)
+
+![Balance · Captures en français, en simulation](images/bandpilot-3.0/balance.jpg)
 
 ## 1. Brancher et connecter
 
@@ -40,7 +40,7 @@ Les faders directs modifient immédiatement le mix lorsque le contrôle est acti
 
 Ajoute chaque musicien, son rôle, ses sources et son bus. Vérifie la vraie sortie physique : XR18/MR18/X18 ont six Aux ; XR12/MR12 en ont deux malgré leurs bus internes. Commence pré-fader pour que les réglages de façade ne suivent pas automatiquement dans les oreilles.
 
-![Envois et retours dans le mode Expert](images/bandpilot-2.2.4/regie-retours.jpg)
+![Envois et retours dans le mode Expert](images/bandpilot-3.0/monitors.jpg)
 
 Applique une proposition de départ à faible volume. Crée les liens personnels, démarre le partage local et fais scanner chaque QR sur le même réseau. Le musicien ne règle que son bus. Contrôle les niveaux, sauvegarde un profil si utile et arrête le partage après usage. Le plafond et les limiteurs ne garantissent pas à eux seuls un niveau d’écoute sûr.
 

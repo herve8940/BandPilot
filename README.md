@@ -1,158 +1,73 @@
-<div align="center">
-
 # BandPilot
+
+**Français** · [English](README.en.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Italiano](README.it.md)
+
+**De la balance au concert.** Prépare les entrées de ton groupe, règle les retours de chaque musicien et garde ta setlist sous la main. BandPilot pilote ta console sur le réseau local.
+
+[Télécharger BandPilot](https://herve8940.github.io/BandPilot/#download) · [Guide de démarrage](docs/USER_GUIDE_FR.md) · [Notes de version](docs/RELEASE_NOTES.md#release-fr)
+
+[![Console · Captures en français, en simulation](docs/images/bandpilot-3.0/hero.jpg)](https://herve8940.github.io/BandPilot/#view-mixer)
+
+## Installe BandPilot
+
+| Version ordinateur 3.0.0 | Téléchargements |
+| --- | --- |
+| Windows | [Windows (.exe)](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-Windows-3.0.0.exe) |
+| macOS | [Apple Silicon](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-macOS-3.0.0-arm64.dmg) · [Intel](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-macOS-3.0.0-x64.dmg) |
+| Linux | [AppImage](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-Linux-3.0.0-x86_64.AppImage) · [Debian / Ubuntu](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-Linux-3.0.0-amd64.deb) |
+
+[Tous les fichiers et sommes SHA-256](https://github.com/herve8940/BandPilot/releases/tag/v3.0.0)
+
+**Application Android autonome.** Sur tablette Android, l’APK pilote la console sans ordinateur. Pour un retour personnel sur téléphone, scanne simplement le QR fourni par le groupe. [Télécharger l’APK · 2.4.0-android.5](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.5/BandPilot-Android-2.4.0-android.5-universal.apk)
+
+## Ta première balance
+
+1. Installe BandPilot et ouvre la simulation pour découvrir les commandes.
+2. Connecte l’ordinateur et la console au même réseau local, puis sélectionne la console détectée.
+3. Choisis les instruments, vérifie les entrées et les sorties des musiciens, puis confirme la balance.
+
+Pars d’une scène vierge ou de ta scène habituelle. Quand tu confirmes une nouvelle balance avec le groupe, les entrées inutilisées et leurs envois passent au silence. Les gains de préampli et le 48 V sont conservés. Associe chaque musicien à sa sortie. Dans Retours → Téléphones, partage le QR de son mix sur le réseau local. Enregistrer les musiciens actualise leurs liens sans toucher au son.
+
+Prépare l’ordre des morceaux en répétition. En concert, retrouve la setlist et ouvre la fiche PDF du morceau en cours. Sur ordinateur, le pont REAPER relie les projets de répétition au répertoire. REAPER se télécharge séparément.
+
+[Tutoriel de balance guidée](docs/TUTO_MON_INGE_SON.md) · [Site officiel](https://herve8940.github.io/BandPilot/)
+
+## Consoles
+
+- **Behringer XR18 / X18 · Midas MR18** — Six sorties Aux pour les retours. La XR18 a été détectée sur matériel réel. Le profil MR18 a été vérifié en simulation.
+- **Behringer XR12 · Midas MR12** — Deux sorties Aux physiques pour les retours. L’enregistreur USB est stéréo. L’enregistrement multipiste sur ordinateur demande un autre modèle.
+- **Behringer X32 · Rack · Compact · Producer · Core** — Prise en charge partielle et expérimentale. Le mixage de base et les envois aux bus sont disponibles. Les scènes complètes et les retours téléphone restent à adapter.
+
+[Voir la matrice de compatibilité (FR)](docs/multi-model.md)
+
+## Lancer le projet en local
+
+Avec Node.js 22.13 ou ultérieur, exécute ces commandes à la racine du dépôt, puis ouvre l’adresse affichée par Vite.
+
+```sh
+npm run ci:deps
+npm --prefix web ci
+npm run studio
+```
+
+[Contribuer](CONTRIBUTING.md) · [Signaler un problème](https://github.com/herve8940/BandPilot/issues/new/choose) · [Licence MIT](LICENSE)
+
+<!-- community:start -->
+## La communauté BandPilot sur Discord
+
+Pose tes questions, partage ton expérience et propose des améliorations pour BandPilot. Échanges en français ou en anglais.
+
+[Rejoindre le Discord](https://discord.gg/FtWwEPmwE7) · [Découvrir les salons](docs/COMMUNITY_FR.md)
+<!-- community:end -->
 
 <!-- community-badge:start -->
 [![Discord](https://img.shields.io/badge/Discord-BandPilot-5865F2?logo=discord&logoColor=white)](https://discord.gg/FtWwEPmwE7)
 <!-- community-badge:end -->
 
-**Ton groupe. Ta console. Ton son.**
-
-[![Version](https://img.shields.io/github/v/release/herve8940/BandPilot)](https://github.com/herve8940/BandPilot/releases/latest) [![CI](https://github.com/herve8940/BandPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/herve8940/BandPilot/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
-
-BandPilot est une application gratuite pour piloter les consoles Behringer X-Air et Midas M-Air, préparer la balance, régler les retours des musiciens et répéter avec REAPER sur ordinateur. **BandPilot est le nouveau nom de XR18 Studio.**
-
-[⬇ Télécharger](https://herve8940.github.io/BandPilot/#download) · [🌐 Site](https://herve8940.github.io/BandPilot/) · [📘 Guide FR](docs/USER_GUIDE_FR.md) · [English](README.en.md) · [🎬 Visite vidéo](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
-
-**Application multilingue : français, anglais, italien, espagnol et allemand.** Choisis la langue dans **Réglages → Options · Langue** ; le choix est mémorisé sur cet appareil. Les musiciens peuvent choisir leur langue sur leur téléphone. D’autres langues peuvent être ajoutées suivant la demande.
-
-[Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
-
-![Console BandPilot 2.2.4 en simulation](docs/images/bandpilot-2.2.4/expert-canal.jpg)
-
-Windows · Mac Intel et Apple Silicon · Linux · **Android autonome**
-
-</div>
-
-<!-- community:start -->
-
-## La communauté BandPilot sur Discord
-
-Un espace d’entraide entre musiciens pour préparer la balance, les retours, les répétitions et l’enregistrement. Tous les instruments, tous les groupes et tous les niveaux sont les bienvenus.
-
-Pose tes questions, partage ton expérience et propose des améliorations pour BandPilot. Échanges en français ou en anglais.
-
-**[Rejoindre le Discord](https://discord.gg/FtWwEPmwE7)** · [Découvrir les salons](docs/COMMUNITY_FR.md)
-
-### Discord directement dans BandPilot
-
-Dans les nouvelles versions, ouvre « Aide et incidents » depuis le menu ou Réglages : aide dans #entraide-help, guide de démarrage, idées et signalement dans #bugs-tests. Le message d’incident est préparé avec la version de l’application ; relis-le, copie-le puis envoie-le toi-même dans Discord. Aucun journal ni audio n’est joint automatiquement.
-
-[Demander de l’aide](https://discord.com/channels/1570533717917573260/1570534770297806888) · [Signaler un incident](https://discord.com/channels/1570533717917573260/1570534866049699882)
-<!-- community:end -->
-
-## Versions et disponibilité
-
-Bureau : [dernière version stable](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android : **2.4.0-android.5 en préversion**, APK séparé.
-
-[Téléchargements et limites](https://herve8940.github.io/BandPilot/#download)
-
-Pour séparer les instruments, travailler les paroles et préparer tes morceaux pour REAPER, découvre [BandStudio](https://herve8940.github.io/BandStudio/), une application indépendante et complémentaire.
-
-## BandPilot 3.0.0 · Une balance pour le groupe du jour
-
-Pars d’une scène vierge, ferme les entrées inutilisées et prépare les retours de tes musiciens. Leurs QR suivent la configuration du groupe. En répétition et en concert, retrouve les morceaux et leurs fiches PDF dans ta setlist.
-
-[Nouveautés et mise à jour du pont REAPER](docs/RELEASE_NOTES.md#français)
-
-## Console, MIDI et répétition sur téléphone · 2.3.15
-
-BandPilot 2.3.15 réunit les nouvelles commandes de console, les rappels sélectifs, les groupes logiciels, le MIDI et la répétition REAPER sur les téléphones des musiciens.
-
-- **Console et retours** — Banques et surfaces personnalisables, groupes logiciels, paires stéréo, vumètres et RTA. Les réglages et destinations proposés dépendent du modèle connecté et du mix sélectionné.
-- **Scènes et presets** — Rappels sélectifs des entrées, sorties et FX, protections par famille de réglages, aperçu et sauvegarde. Conversion explicite de presets et de scènes portables au sein de X-Air/M-Air, dans le périmètre pris en charge.
-- **Effets et analyse** — Éditeurs nommés pour les 61 algorithmes X-Air, tap tempo, GEQ/True EQ 31 bandes sur les sorties compatibles. Mesure acoustique au micro et propositions de correction à vérifier, avec application volontaire.
-- **MIDI et commandes** — Apprentissage des faders et mutes, CC absolus ou relatifs, notes, Program Change, commandes favorites et conditions. Activation explicite pour la session et sauvegarde avant les commandes prises en charge.
-- **Répétition et fiches** — Projets REAPER ouverts par onglet, sections, boucles, décompte, prises séparées et gestionnaire sur téléphone. Accords et paroles disponibles dans les fiches compatibles BandStudio, avec affichage plein écran.
-
-Cette évolution concerne les applications de bureau Windows, macOS Intel/Apple Silicon et Linux. Android reste distribué séparément en 2.4.0-android.5 ; ses fonctions ne sont pas toutes celles de cette version de bureau. BandStudio est une application complémentaire indépendante.
-
-[Tutoriel des nouveautés 2.3.15](docs/NEW_2_3_15_FR.md)
-## Nouveautés : fiche technique, ambiances et Android
-
-Première version Android disponible en APK signé. Installation durable, sans signature à renouveler tous les sept jours. REAPER reste sur ordinateur.
-
-- **Fiche technique et plan de scène** — Prépare les entrées, les musiciens, les retours et les branchements. Place chacun sur le plan de scène, puis imprime la fiche ou exporte un PDF. Le raccourci est visible dès l’accueil de Mon ingé son.
-- **Ambiances des sources** — Choisis une ambiance adaptée au chant ou à l’instrument, prévisualise l’essai et règle la quantité pour chaque musicien. Garde le résultat ou reviens aux réglages précédents.
-- **Android autonome** — Installe l’APK sur une tablette compatible et connecte-la directement à la console par Wi-Fi. L’interface, le moteur et les données sont sur la tablette : aucun PC ni Docker nécessaire.
-
-[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.5/BandPilot-Android-2.4.0-android.5-universal.apk) · [Guide Android](docs/ANDROID.md)
-
-Version Android : 2.4.0-android.5. Android 8 minimum, Android System WebView 111 minimum. APK ARM 32/64 bits et x86_64 ; affichage portrait et paysage. Installation et démarrage vérifiés sur une Xiaomi Redmi Pad sous Android 14 ; fonctionnement confirmé par son utilisateur. La compatibilité de chaque tablette et de chaque console reste à valider. Appareils à pages mémoire de 16 Ko non certifiés. REAPER et l’Atelier lié aux prises restent disponibles sur ordinateur.
-
-## Les fonctions
-
-| Espace | Ce que tu peux préparer ou contrôler |
-|---|---|
-| Mon ingé son | Six étapes de balance, configuration du groupe, mesure des gains, conseils à vérifier, retours et sauvegarde. Le coach ne reçoit pas le flux audio. |
-| Console | Simple ou Expert, banques de canaux, EQ, gate, compresseur, envois, bus, DCA, FX et routage selon le modèle. Menu compact et interface adaptable. |
-| Retours | Lien QR par musicien, uniquement son bus, faders/mute, profils, plafonds et montée progressive. |
-| Répéter | Avec morceaux ou groupe seul : sections, prises, formes d’onde, présence, Original, boucle, REC/Stop et marqueurs via REAPER. |
-| Concert | Setlist issue des onglets ouverts dans Répéter, ordre de passage, fiches PDF et lecture des pistes au pupitre. |
-| Préparer | Répertoire, setlists, répétitions, brouillon persistant, capture/export/import JSON de scènes et sauvegardes avant rappel. |
-| Réglages | Détection par modèle, lecture seule initiale, synchronisation, comptes facultatifs, diagnostic, IA connectée facultative et intégrations. |
-
-Le contrôle local ne demande ni compte ni Internet. Ordinateur ou tablette Android, console et téléphones partagent le même réseau local. REAPER est un logiciel séparé avec sa propre licence ; l’IA connectée facultative nécessite Internet et une clé personnelle.
-
-## Consoles et limites
-
-| Modèle | État actuel |
-|---|---|
-| Behringer XR18 | Famille principale ; essais physiques réalisés sur XR18. |
-| Behringer X18 / Midas MR18 | Profils et protocole commun ; validation physique de ces appareils restante. |
-| Behringer XR12 / Midas MR12 | Interface adaptée à 12 entrées, 4 préamplis micro et 2 Aux physiques. USB stéréo sur clé, **pas d’USB multipiste PC**. Validation physique restante. |
-| Behringer X32 et variantes | **Partiel et expérimental** : mixage, EQ, dynamique principale et envois. Préamplis, routage, FX, vumètres, scènes, coach, retours téléphone et USB complets restent à adapter. |
-
-La détection ne constitue pas une certification de toutes les fonctions. [Matrice détaillée](docs/multi-model.md). Aucun fichier X-Air n’est présenté comme une scène X32 compatible.
-
-## Bien démarrer
-
-1. Télécharge l’installateur de ton système et sauvegarde tes scènes avant une mise à jour.
-2. Explore la simulation, puis détecte ta console en lecture seule.
-3. Récupère **Table → PC** et conserve une sauvegarde avant d’activer le contrôle.
-4. Suis [Mon ingé son](docs/TUTO_MON_INGE_SON.md), puis vérifie le résultat à l’oreille.
-5. Pour répéter, installe le pont REAPER fourni avec BandPilot, sauvegarde tes projets et redémarre REAPER.
-
-La simulation de console ne simule pas REAPER : REC capture ses véritables entrées audio. Les installateurs peuvent ne pas être signés/notariés.
-
-## Documentation et médias
-
-- [Guide complet FR](docs/USER_GUIDE_FR.md) · [Full English guide](docs/USER_GUIDE_EN.md)
-- [Mon ingé son FR](docs/TUTO_MON_INGE_SON.md) · [English coach tutorial](docs/TUTO_MON_INGE_SON_EN.md)
-- [Visite vidéo et transcription](docs/VIDEO_TOUR.md) — montage de six captures en simulation, 42 secondes, sous-titres FR/EN/IT/ES/DE.
-- [Nouveautés et historique](docs/RELEASE_NOTES.md) · [Essais manuels et corrections](docs/corrections-tests-manuels.md)
-- [Contrôles X-Air détaillés](docs/GUIDE_CONSOLE.md) · [Architecture et API](docs/SQLITE_API.md)
-
-## Développement
-
-La version Android autonome est disponible : [installation, compatibilité et compilation de l’APK](android/README.md). Elle embarque le moteur de console et les données sur la tablette, sans PC ni Docker. Les installateurs de bureau ci-dessus restent distincts de cet APK.
-
-**BandPilot 2.3.3** corrige la validation des instruments, conserve une possibilité d’annulation après interruption et renforce les vérifications de l’application Windows installée. Les rapports debug et les mises à jour au lancement restent disponibles. [Détails](docs/RELEASE_NOTES.md).
-
-**BandPilot 2.3.1** ajoute les [fiches de balance par groupe](docs/WORKSPACES.md#reprendre-une-balance-de-groupe), la [fiche technique et le plan de scène](docs/WORKSPACES.md#fiche-technique-du-groupe), la vérification du retour sur téléphone, la [comparaison kick et basse](docs/ATELIER_DU_SON.md#comparer-le-kick-et-la-basse) et le [diagnostic de connexion](docs/CONNEXION_XR18.md#diagnostiquer-la-connexion).
-
-Dans **BandPilot 2.3.0**, l’[Atelier du son et les conseils mesurés](docs/ATELIER_DU_SON.md) ajoutent le travail sur un extrait REAPER, la comparaison A/B et la restauration des sources. Spectre par instrument, compatibilité mono, conseils EQ et essais de polarité sont intégrés. Le gate guidé utilise deux repères écoutés (repos et note faible), et la compression tient compte de l’enveloppe du jeu. Dans **Mon ingé son**, les [ambiances guidées](docs/INGE_SON.md#ambiances-guidées) proposent des effets pour le chant, les chœurs, la guitare acoustique ou solo, la caisse claire, les toms et le clavier, avec un dosage individuel par retour. Pont REAPER **1.5.0** requis pour les nouvelles mesures.
-
-Candidate de bureau sous macOS 13 ou ultérieur. Node.js 22.13+ (CI et installateurs : Node 22). `npm run ci:deps`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test`, `npm run test:web` et `npm run build:all`. Installateurs : `npm run desktop:package`.
-
-Les tests backend et les tests de régression React couvrent notamment OSC, scènes, FX, comptes, retours, REAPER, Lua et profils de console. Ils ne remplacent pas une validation acoustique et un concert complet sur chaque matériel. La publication attend les contrôles des quatre plateformes de construction et conserve les sommes SHA-256.
-
-Les anciens identifiants `xr18-studio`, le dépôt, les clés de données et les chemins REAPER restent pour préserver la compatibilité. Projet indépendant, non affilié à Behringer, Midas ou Music Tribe ; marques de leurs propriétaires. Licence [MIT](LICENSE).
-
-Correctif de démarrage : [panneau de connexion 2.2.1](docs/hotfix-2.2.1.md).
-
-## BandPilot 2.2.2
-
-[Console personnelle et régie des retours](docs/WORKSPACES.md) : disposition par modèle et taille d’écran, mix/EQ/compression par musicien, parcours du signal. Inclut le [correctif REAPER 1.2.3](docs/hotfix-2.2.2.md).
-
 <!-- support:start -->
 ## Soutenir BandPilot
-
-Plus de temps pour jouer, moins de temps à chercher un réglage. BandPilot aide les groupes à préparer leur balance et à retrouver leurs repères, avec un outil gratuit et ouvert.
 
 Un soutien volontaire aide à consacrer du temps aux corrections, aux essais sur les consoles et aux guides en cinq langues. Un retour de terrain, une traduction ou un partage du projet sont aussi utiles.
 
 [Soutenir sur Ko-fi](https://ko-fi.com/bandpilot) · [Comment aider le projet](docs/SUPPORT_FR.md) · [Contribuer](CONTRIBUTING.md)
 <!-- support:end -->
-
-[Sécurité](SECURITY.md) · [Données et confidentialité](docs/PRIVACY.md) · [Assistance](SUPPORT.md) · [MIT](LICENSE)

@@ -1,17 +1,26 @@
 # BandPilot — illustrated guide
 
-This update concerns the Windows, Intel/Apple Silicon macOS and Linux desktop apps. Android remains a separate 2.4.0-android.5 release and does not include every desktop feature described here. BandStudio is an independent companion app.
+[Français](USER_GUIDE_FR.md) · [English](USER_GUIDE_EN.md) · [Deutsch](USER_GUIDE_DE.md) · [Español](USER_GUIDE_ES.md) · [Italiano](USER_GUIDE_IT.md)
 
-**2.3.15 — [2.3.15 tutorial](NEW_2_3_15_EN.md)**
+## Your first soundcheck · BandPilot 3.0.0
 
-Older general-guide screenshots and the 2.2 video tour are historical illustrations. This tutorial describes the 2.3.15 workflow.
+On desktop you can build a soundcheck in simulation, connect your mixer and share the band’s monitor mixes over the local network.
 
-[Français](USER_GUIDE_FR.md) · [Sound-check coach](TUTO_MON_INGE_SON_EN.md) · [Video tour](VIDEO_TOUR.md) · [Detailed compatibility](multi-model.md)
+1. Install BandPilot and open simulation mode to explore the controls.
+2. Connect your computer and mixer to the same local network, then select the detected mixer.
+3. Choose the instruments and check the inputs and monitor outputs before confirming the soundcheck.
 
-BandPilot is the new name of XR18 Studio. It brings together mixer control, guided sound checks, personal monitors, show preparation and REAPER rehearsals. These new screenshots show **simulation**, not real audio measurements.
+Start with a blank scene or one you saved. When you confirm a fresh soundcheck with your band, unused inputs and their sends go silent. Preamp gain and phantom power stay as they are.
 
+Assign each musician an output. Under Monitors → Phones, share the QR code for their mix on the local network. Saving the lineup updates the links without changing the audio.
 
-[Français](USER_GUIDE_FR.md) · [English](USER_GUIDE_EN.md) · [Italiano](USER_GUIDE_IT.md) · [Español](USER_GUIDE_ES.md) · [Deutsch](USER_GUIDE_DE.md)
+Arrange songs in rehearsal. At the gig, follow the setlist and open the PDF for the current song. On desktop, the REAPER bridge connects rehearsal projects to your repertoire. REAPER is a separate download.
+
+![Set up today’s inputs · French interface shown in simulation](images/bandpilot-3.0/balance.jpg)
+
+[Guided soundcheck tutorial](TUTO_MON_INGE_SON_EN.md) · [Release notes](RELEASE_NOTES.md#release-en) · [Detailed compatibility matrix (FR)](multi-model.md)
+
+The illustrations in the following sections show earlier versions. Some controls have moved or have new names.
 
 ## Choose your language
 
@@ -60,7 +69,7 @@ The coach reads settings and available measurements, not your audio stream. Meas
 
 Simple offers main/monitor selection, volume, mute and solo. Click a source name for detailed settings. Names belong to the mixer or simulator; preparing the coach profile does not silently rename hardware.
 
-![Compact mixer](images/bandpilot-2.2.4/console.jpg)
+![Compact mixer](images/bandpilot-3.0/hero.jpg)
 
 Expert provides mixer and channel views with preamp, gate, compressor, EQ, sends and output. Banks expose buses, Aux, FX and DCAs as supported by the model. Simulation settings are training data, not acoustic results.
 
@@ -72,7 +81,7 @@ Expert provides mixer and channel views with preamp, gate, compressor, EQ, sends
 
 Prepare pre-fader buses and choose physical outputs available on your mixer. Create each musician with their bus, start local sharing and have them scan their personal QR code on the same network. The link grants control of their bus: do not publish it. Levels are capped and raises progressive; still keep listening levels sensible.
 
-![Monitor matrix](images/bandpilot-2.2.4/regie-retours.jpg)
+![Monitor matrix](images/bandpilot-3.0/monitors.jpg)
 
 Already open phones follow read-only/control changes without a reload. Profiles store monitor mixes. Regenerating a link revokes the old one. Stop sharing when unused. X32 phone monitors are not supported in this release.
 
@@ -115,6 +124,8 @@ Optional accounts separate administrator, assigned-bus musician and read-only gu
 **Pick up from your last good soundcheck.** Link a complete scene and notes to each band, then review changes before recall. Musicians can check their assigned bus and source signal from their phone and recall their latest mix. Sound Workshop adds kick and bass A/B comparison. Connection diagnostics separate network, control and REAPER bridge issues.
 
 [Release notes](RELEASE_NOTES.md)
+
+<a id="rider"></a>
 
 ### Technical rider and stage plot
 

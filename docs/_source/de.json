@@ -1,0 +1,82 @@
+{
+  "language": "Deutsch",
+  "skip": "Zum Inhalt",
+  "langLabel": "Sprachen",
+  "guide": "Erste Schritte",
+  "navMix": "Die App",
+  "models": "Mischpulte",
+  "downloads": "Downloads",
+  "get": "BandPilot herunterladen",
+  "release": "Versionshinweise",
+  "heading": [
+    "Vom Soundcheck",
+    "zum Auftritt."
+  ],
+  "intro": "Bereite die Eingänge deiner Band vor, stelle für jeden Musiker einen Monitormix ein und behalte die Setlist im Blick. BandPilot steuert dein Mischpult über das lokale Netzwerk.",
+  "platform": "Kostenlos und quelloffen",
+  "views": "Einblick in die App",
+  "explore": "Vier Ansichten für deinen Auftritt",
+  "sim": "Französische Oberfläche im Simulationsmodus",
+  "tabs": [
+    "Soundcheck",
+    "Monitore",
+    "Konzert",
+    "Mischpult"
+  ],
+  "viewTitles": [
+    "Die Eingänge für heute einrichten",
+    "Ein eigener Monitormix für jeden",
+    "Die Setlist auf der Bühne",
+    "Zugriff auf dein Mischpult"
+  ],
+  "viewTexts": [
+    "Beginne mit einer leeren oder gespeicherten Szene. Wenn du einen neuen Soundcheck für die Band bestätigst, werden unbenutzte Eingänge und ihre Sends stumm. Vorverstärkung und Phantomspeisung bleiben erhalten.",
+    "Weise jedem Musiker einen Ausgang zu. Unter Monitore → Telefone kannst du den QR-Code für seinen Mix im lokalen Netz teilen. Beim Speichern der Besetzung werden die Links aktualisiert, ohne den Klang zu ändern.",
+    "Lege bei der Probe die Reihenfolge der Stücke fest. Beim Auftritt kannst du der Setlist folgen und das PDF zum aktuellen Stück öffnen.",
+    "Wechsle von den wichtigsten Bedienelementen zum Expertenmixer. Dort findest du die Fader, Sends und Signalbearbeitung deines Modells."
+  ],
+  "modelTitle": "Welches Mischpult verwendest du?",
+  "modelTexts": [
+    "Sechs physische Aux-Ausgänge für Monitore. Die XR18 wurde an echter Hardware erkannt. Das MR18-Profil wurde in der Simulation geprüft.",
+    "Zwei physische Aux-Ausgänge für Monitore. Der USB-Recorder nimmt in Stereo auf. Mehrspuraufnahmen am Computer erfordern ein anderes Modell.",
+    "Teilweise und experimentell unterstützt. Grundlegende Mischfunktionen und Bus-Sends sind verfügbar. Vollständige Szenen und Monitormixe am Telefon sind noch in Entwicklung."
+  ],
+  "matrix": "Detaillierte Kompatibilitätstabelle (FR)",
+  "installTitle": "BandPilot installieren",
+  "desktop": "Desktop-Version",
+  "android": "Eigenständige Android-App",
+  "androidText": "Auf einem Android-Tablet steuert die APK das Pult ohne Computer. Für den persönlichen Monitormix auf dem Smartphone genügt der QR-Code deiner Band.",
+  "allFiles": "Alle Dateien und SHA-256-Prüfsummen",
+  "apk": "APK herunterladen",
+  "androidNotes": "Android-Version",
+  "startTitle": "Dein erster Soundcheck",
+  "steps": [
+    "Installiere BandPilot und erkunde die Bedienelemente in der Simulation.",
+    "Verbinde Computer und Mischpult mit demselben lokalen Netzwerk und wähle das erkannte Pult aus.",
+    "Wähle die Instrumente und prüfe die Eingänge und Monitorausgänge, bevor du den Soundcheck bestätigst."
+  ],
+  "coach": "Anleitung zum geführten Soundcheck",
+  "video": "Videorundgang durch Version 2.2",
+  "privacy": "Datenschutz",
+  "issue": "Problem melden",
+  "contrib": "Mitwirken",
+  "source": "Quellcode",
+  "close": "Schließen",
+  "zoom": "Bild vergrößern",
+  "readLocal": "Das Projekt lokal starten",
+  "dev": "Führe mit Node.js ab Version 22.13 im Hauptverzeichnis des Repositorys die folgenden Befehle aus und öffne die von Vite angezeigte Adresse.",
+  "website": "Offizielle Website",
+  "license": "MIT-Lizenz",
+  "photo": "Foto",
+  "hardware": "Modellübersicht",
+  "reaper": "Am Computer verbindet die REAPER-Erweiterung Probenprojekte mit deinem Repertoire. REAPER ist separat erhältlich.",
+  "rider": "Technical Rider und Bühnenplan",
+  "rehearse": "Mit REAPER proben",
+  "androidGuide": "Android-Installation (FR)",
+  "alt": [
+    "Geführter Soundcheck mit Mikrofon und den Vorbereitungsschritten",
+    "Musikerauswahl und Einstellungen für den Gesangsmonitor",
+    "Bühnenansicht mit dem aktuellen Stück und den folgenden Titeln",
+    "Eingangsfader im Expertenmixer"
+  ]
+}

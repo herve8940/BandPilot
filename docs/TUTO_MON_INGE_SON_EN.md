@@ -1,16 +1,16 @@
 # BandPilot — sound-check coach, step by step
 
-**2.3.15 — [2.3.15 tutorial](NEW_2_3_15_EN.md)**
-
-This update concerns the Windows, Intel/Apple Silicon macOS and Linux desktop apps. Android remains a separate 2.4.0-android.5 release and does not include every desktop feature described here. BandStudio is an independent companion app.
-
 [Français](TUTO_MON_INGE_SON.md) · [English](TUTO_MON_INGE_SON_EN.md) · [Italiano](TUTO_MON_INGE_SON_IT.md) · [Español](TUTO_MON_INGE_SON_ES.md) · [Deutsch](TUTO_MON_INGE_SON_DE.md)
 
-[Français](TUTO_MON_INGE_SON.md) · [Full guide](USER_GUIDE_EN.md) · [Video tour](VIDEO_TOUR.md)
+The coach guides soundchecks on supported X-Air and M-Air mixers using the settings and measurements available. Listen to the result on your mixer. The steps below cover these models.
 
-The coach supports your sound check. It does not receive audio or replace listening. This workflow is for supported X-Air/M-Air models, **not X32** in this release. New screenshots show simulation. Check the [hardware limits](multi-model.md). UI labels in the captures are French.
+**BandPilot 3.0.0** · Start with a blank scene or one you saved. When you confirm a fresh soundcheck with your band, unused inputs and their sends go silent. Preamp gain and phantom power stay as they are.
 
-![Sound-check dashboard](images/bandpilot-2.2.4/coach.jpg)
+Assign each musician an output. Under Monitors → Phones, share the QR code for their mix on the local network. Saving the lineup updates the links without changing the audio.
+
+[Getting started](USER_GUIDE_EN.md) · [Release notes](RELEASE_NOTES.md#release-en) · [Detailed compatibility matrix (FR)](multi-model.md)
+
+![Soundcheck · French interface shown in simulation](images/bandpilot-3.0/balance.jpg)
 
 ## 1. Connect
 
@@ -40,7 +40,7 @@ Direct faders act immediately when control is enabled. Guided changes use previe
 
 Add each musician, role, sources and bus. Verify physical sockets: XR18/MR18/X18 have six Aux outputs; XR12/MR12 have two despite their internal buses. Start pre-fader so main fader changes do not follow automatically into their ears.
 
-![Monitor matrix](images/bandpilot-2.2.4/regie-retours.jpg)
+![Monitor matrix](images/bandpilot-3.0/monitors.jpg)
 
 Apply a starting mix at low levels, create personal links, start local sharing and scan each QR on the same network. Each musician controls only their bus. Save a profile if useful and stop sharing afterwards. Level caps and limiters do not by themselves guarantee safe listening levels.
 

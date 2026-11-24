@@ -1,17 +1,26 @@
 # BandPilot – bebilderte Anleitung
 
-Diese Aktualisierung betrifft die Desktop-Apps für Windows, macOS Intel/Apple Silicon und Linux. Android bleibt eine separate Version 2.4.0-android.5 und enthält nicht alle hier beschriebenen Desktop-Funktionen. BandStudio ist eine eigenständige ergänzende App.
+[Français](USER_GUIDE_FR.md) · [English](USER_GUIDE_EN.md) · [Deutsch](USER_GUIDE_DE.md) · [Español](USER_GUIDE_ES.md) · [Italiano](USER_GUIDE_IT.md)
 
-**2.3.15 — [Anleitung zu den Neuerungen in 2.3.15](NEW_2_3_15_DE.md)**
+## Dein erster Soundcheck · BandPilot 3.0.0
 
-Ältere Bilder der allgemeinen Anleitung und das Video 2.2 sind historische Darstellungen. Diese Anleitung beschreibt den Ablauf in 2.3.15.
+Am Computer kannst du zuerst einen Soundcheck simulieren, dann dein Pult anschließen und die Monitormixe deiner Band im lokalen Netz teilen.
 
-[Français](USER_GUIDE_FR.md) · [Soundcheck-Coach](TUTO_MON_INGE_SON_DE.md) · [Videotour](VIDEO_TOUR.md) · [Detaillierte Kompatibilität](multi-model.md)
+1. Installiere BandPilot und erkunde die Bedienelemente in der Simulation.
+2. Verbinde Computer und Mischpult mit demselben lokalen Netzwerk und wähle das erkannte Pult aus.
+3. Wähle die Instrumente und prüfe die Eingänge und Monitorausgänge, bevor du den Soundcheck bestätigst.
 
-BandPilot ist der neue Name von XR18 Studio. Es vereint Mischpultsteuerung, geführte Soundchecks, persönliche Monitore, Showvorbereitung und REAPER-Proben. Diese neuen Screenshots zeigen **Simulationen**, keine echten Audiomessungen.
+Beginne mit einer leeren oder gespeicherten Szene. Wenn du einen neuen Soundcheck für die Band bestätigst, werden unbenutzte Eingänge und ihre Sends stumm. Vorverstärkung und Phantomspeisung bleiben erhalten.
 
+Weise jedem Musiker einen Ausgang zu. Unter Monitore → Telefone kannst du den QR-Code für seinen Mix im lokalen Netz teilen. Beim Speichern der Besetzung werden die Links aktualisiert, ohne den Klang zu ändern.
 
-[Français](USER_GUIDE_FR.md) · [English](USER_GUIDE_EN.md) · [Italiano](USER_GUIDE_IT.md) · [Español](USER_GUIDE_ES.md) · [Deutsch](USER_GUIDE_DE.md)
+Lege bei der Probe die Reihenfolge der Stücke fest. Beim Auftritt kannst du der Setlist folgen und das PDF zum aktuellen Stück öffnen. Am Computer verbindet die REAPER-Erweiterung Probenprojekte mit deinem Repertoire. REAPER ist separat erhältlich.
+
+![Die Eingänge für heute einrichten · Französische Oberfläche im Simulationsmodus](images/bandpilot-3.0/balance.jpg)
+
+[Anleitung zum geführten Soundcheck](TUTO_MON_INGE_SON_DE.md) · [Versionshinweise](RELEASE_NOTES.md#release-de) · [Detaillierte Kompatibilitätstabelle (FR)](multi-model.md)
+
+Die folgenden Abbildungen zeigen frühere Versionen. Einige Bedienelemente haben inzwischen einen anderen Namen oder Platz.
 
 ## Wählen Sie Ihre Sprache
 
@@ -60,7 +69,7 @@ Der Coach liest Einstellungen und verfügbare Messungen, nicht Ihren Audiostream
 
 Simple bietet Haupt-/Monitorauswahl, Lautstärke, Stummschaltung und Solo. Klicken Sie auf einen Quellennamen, um detaillierte Einstellungen anzuzeigen. Namen gehören zum Mischpult oder Simulator; Beim Vorbereiten des Coach-Profils wird die Hardware nicht stillschweigend umbenannt.
 
-![Kompaktmischer](images/bandpilot-2.2.4/console.jpg)
+![Kompaktmischer](images/bandpilot-3.0/hero.jpg)
 
 Expert bietet Mischpult- und Kanalansichten mit Vorverstärker, Gate, Kompressor, EQ, Sends und Ausgang. Banken stellen Busse, Aux, FX und DCAs zur Verfügung, wie sie vom Modell unterstützt werden. Simulationseinstellungen sind Trainingsdaten, keine akustischen Ergebnisse.
 
@@ -72,7 +81,7 @@ Expert bietet Mischpult- und Kanalansichten mit Vorverstärker, Gate, Kompressor
 
 Bereiten Sie Pre-Fader-Busse vor und wählen Sie die auf Ihrem Mischpult verfügbaren physischen Ausgänge aus. Erstellen Sie jeden Musiker mit seinem Bus, starten Sie die lokale Freigabe und lassen Sie ihn seinen persönlichen QR-Code im selben Netzwerk scannen. Der Link gewährt die Kontrolle über ihren Bus: Veröffentlichen Sie ihn nicht. Die Level sind begrenzt und steigen progressiv an; Halten Sie den Hörpegel immer noch auf einem vernünftigen Niveau.
 
-![Monitormatrix](images/bandpilot-2.2.4/regie-retours.jpg)
+![Monitormatrix](images/bandpilot-3.0/monitors.jpg)
 
 Bereits geöffnete Telefone folgen schreibgeschützten/kontrollierten Änderungen ohne Neuladen. Profile speichern Monitormischungen. Durch die Neugenerierung eines Links wird der alte Link widerrufen. Hören Sie auf zu teilen, wenn es nicht verwendet wird. X32-Monitorsteuerung am Telefon werden in dieser Version nicht unterstützt.
 
@@ -115,6 +124,8 @@ Optionale Konten trennen Administrator, zugewiesenen Busmusiker und schreibgesch
 **Beim letzten guten Soundcheck anknüpfen.** Verknüpfe eine vollständige Szene und Notizen mit jeder Band und prüfe die Änderungen vor dem Abruf. Musiker können Bus und Signal am Handy prüfen und ihren letzten Mix abrufen. Die Klangwerkstatt ergänzt einen A/B-Vergleich für Kick und Bass. Die Diagnose unterscheidet Netzwerk, Steuerung und REAPER-Bridge.
 
 [Versionshinweise](RELEASE_NOTES.md)
+
+<a id="rider"></a>
 
 ### Technischer Bühnenplan
 

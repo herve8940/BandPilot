@@ -1,3 +1,5 @@
+<a id="release-fr"></a>
+
 ## Français
 
 **BandPilot 3.0.0 pour Windows, macOS et Linux** permet de préparer une balance pour le groupe du jour, puis de retrouver les mêmes musiciens sur leurs téléphones.
@@ -8,6 +10,8 @@
 - **Répétition et concert.** Importe les projets REAPER ouverts dans ta setlist, choisis l’ordre des morceaux et retrouve leurs fiches PDF en vue pupitre. Pour utiliser le pont REAPER 1.5.2, enregistre tes projets, installe le pont depuis Répéter, puis redémarre REAPER.
 
 Choisis ta langue dans les réglages. Les fonctions de mixage dépendent de la console. La prise en charge X32 reste partielle. L’APK Android suit un cycle de publication distinct.
+
+<a id="release-en"></a>
 
 ## English
 
@@ -20,6 +24,8 @@ Choisis ta langue dans les réglages. Les fonctions de mixage dépendent de la c
 
 Choose your language in Settings. Mixing features depend on the console. X32 support remains partial. The Android APK has its own release cycle.
 
+<a id="release-de"></a>
+
 ## Deutsch
 
 Mit **BandPilot 3.0.0 für Windows, macOS und Linux** kannst du den Soundcheck für die heutige Besetzung vorbereiten. Die Musiker erhalten die passenden Monitor-Links auf ihren Smartphones.
@@ -31,6 +37,8 @@ Mit **BandPilot 3.0.0 für Windows, macOS und Linux** kannst du den Soundcheck f
 
 Die Sprache lässt sich in den Einstellungen wählen. Die Mischfunktionen hängen vom Pult ab. X32 wird teilweise unterstützt. Die Android-APK erscheint separat.
 
+<a id="release-es"></a>
+
 ## Español
 
 Con **BandPilot 3.0.0 para Windows, macOS y Linux** puedes preparar la prueba de sonido con los músicos que tocan hoy. Cada uno tendrá en su teléfono el enlace a su mezcla de monitores.
@@ -41,6 +49,8 @@ Con **BandPilot 3.0.0 para Windows, macOS y Linux** puedes preparar la prueba de
 - **Ensayo y concierto.** Importa los proyectos abiertos de REAPER a la lista de temas, ordénalos y abre sus fichas PDF en la vista de atril. Para usar el puente REAPER 1.5.2, guarda los proyectos, instala el puente desde la página de ensayo y reinicia REAPER.
 
 El idioma se elige en los ajustes. Las funciones de mezcla dependen de la consola. La compatibilidad con X32 sigue siendo parcial. El APK de Android se publica por separado.
+
+<a id="release-it"></a>
 
 ## Italiano
 

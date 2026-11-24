@@ -1,16 +1,16 @@
 # BandPilot — coach per il soundcheck, passo dopo passo
 
-**2.3.15 — [Tutorial delle novità 2.3.15](NEW_2_3_15_IT.md)**
-
-Questa novità riguarda le app desktop Windows, macOS Intel/Apple Silicon e Linux. Android resta una distribuzione separata 2.4.0-android.5 e non comprende tutte le funzioni desktop descritte. BandStudio è un’app complementare indipendente.
-
 [Français](TUTO_MON_INGE_SON.md) · [English](TUTO_MON_INGE_SON_EN.md) · [Italiano](TUTO_MON_INGE_SON_IT.md) · [Español](TUTO_MON_INGE_SON_ES.md) · [Deutsch](TUTO_MON_INGE_SON_DE.md)
 
-[Francese](TUTO_MON_INGE_SON.md) · [Guida completa](USER_GUIDE_IT.md) · [Video tour](VIDEO_TOUR.md)
+Il coach guida il soundcheck sui mixer X-Air e M-Air compatibili in base alle impostazioni e alle misurazioni disponibili. Verifica il risultato all’ascolto. I passaggi seguenti riguardano questi modelli.
 
-Il coach supporta il tuo sound check. Non riceve audio né sostituisce l'ascolto. Questo flusso di lavoro è per i modelli X-Air/M-Air supportati, **non X32** in questa versione. Nuovi screenshot mostrano la simulazione. Controllare i [limiti hardware](multi-model.md). Le etichette dell'interfaccia utente nelle acquisizioni sono francesi.
+**BandPilot 3.0.0** · Parti da una scena vuota o da una salvata. Quando confermi un nuovo soundcheck con il gruppo, gli ingressi inutilizzati e le rispettive mandate vengono silenziati. Il guadagno dei preamplificatori e l’alimentazione phantom restano invariati.
 
-![Dashboard controllo audio](images/bandpilot-2.2.4/coach.jpg)
+Assegna un’uscita a ciascun musicista. In Monitor → Telefoni puoi condividere il codice QR per il suo mix sulla rete locale. Salvando la formazione aggiorni i link senza modificare l’audio.
+
+[Guida introduttiva](USER_GUIDE_IT.md) · [Note di rilascio](RELEASE_NOTES.md#release-it) · [Matrice di compatibilità dettagliata (FR)](multi-model.md)
+
+![Soundcheck · Interfaccia in francese, in simulazione](images/bandpilot-3.0/balance.jpg)
 
 ## 1. Connetti
 
@@ -40,7 +40,7 @@ I fader diretti agiscono immediatamente quando il controllo è abilitato. Le mod
 
 Aggiungi ogni musicista, ruolo, fonti e bus. Verificare le prese fisiche: XR18/MR18/X18 hanno sei uscite Aux; XR12/MR12 ne hanno due nonostante i bus interni. Avvia il pre-fader in modo che i cambiamenti del fader principale non seguano automaticamente le loro orecchie.
 
-![Matrice monitor](images/bandpilot-2.2.4/regie-retours.jpg)
+![Matrice monitor](images/bandpilot-3.0/monitors.jpg)
 
 Applica un mix iniziale a livelli bassi, crea collegamenti personali, avvia la condivisione locale e scansiona ogni QR sulla stessa rete. Ogni musicista controlla solo il proprio bus. Salva un profilo se utile e interrompi la condivisione in seguito. I limiti e i limitatori di livello non garantiscono da soli livelli di ascolto sicuri.
 

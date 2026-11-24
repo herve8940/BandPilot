@@ -1,17 +1,26 @@
 # BandPilot — guide illustré
 
-Cette évolution concerne les applications de bureau Windows, macOS Intel/Apple Silicon et Linux. Android reste distribué séparément en 2.4.0-android.5 ; ses fonctions ne sont pas toutes celles de cette version de bureau. BandStudio est une application complémentaire indépendante.
+[Français](USER_GUIDE_FR.md) · [English](USER_GUIDE_EN.md) · [Deutsch](USER_GUIDE_DE.md) · [Español](USER_GUIDE_ES.md) · [Italiano](USER_GUIDE_IT.md)
 
-**2.3.15 — [Tutoriel des nouveautés 2.3.15](NEW_2_3_15_FR.md)**
+## Ta première balance · BandPilot 3.0.0
 
-Les anciennes captures du guide général et la visite vidéo 2.2 restent des illustrations historiques. Ce tutoriel décrit le parcours 2.3.15.
+Sur ordinateur, tu peux préparer une balance en simulation, passer sur ta console puis partager les retours du groupe sur le réseau local.
 
-[English](USER_GUIDE_EN.md) · [Mon ingé son](TUTO_MON_INGE_SON.md) · [Visite vidéo](VIDEO_TOUR.md) · [Compatibilité détaillée](multi-model.md)
+1. Installe BandPilot et ouvre la simulation pour découvrir les commandes.
+2. Connecte l’ordinateur et la console au même réseau local, puis sélectionne la console détectée.
+3. Choisis les instruments, vérifie les entrées et les sorties des musiciens, puis confirme la balance.
 
-BandPilot est le nouveau nom de XR18 Studio. Il réunit console, balance guidée, retours personnels, préparation de concert et répétitions avec REAPER. Les captures ci-dessous proviennent de la version 2.2.4 en **simulation** ; ce ne sont pas des mesures audio réelles.
+Pars d’une scène vierge ou de ta scène habituelle. Quand tu confirmes une nouvelle balance avec le groupe, les entrées inutilisées et leurs envois passent au silence. Les gains de préampli et le 48 V sont conservés.
 
+Associe chaque musicien à sa sortie. Dans Retours → Téléphones, partage le QR de son mix sur le réseau local. Enregistrer les musiciens actualise leurs liens sans toucher au son.
 
-[Français](USER_GUIDE_FR.md) · [English](USER_GUIDE_EN.md) · [Italiano](USER_GUIDE_IT.md) · [Español](USER_GUIDE_ES.md) · [Deutsch](USER_GUIDE_DE.md)
+Prépare l’ordre des morceaux en répétition. En concert, retrouve la setlist et ouvre la fiche PDF du morceau en cours. Sur ordinateur, le pont REAPER relie les projets de répétition au répertoire. REAPER se télécharge séparément.
+
+![Prépare les entrées du jour · Captures en français, en simulation](images/bandpilot-3.0/balance.jpg)
+
+[Tutoriel de balance guidée](TUTO_MON_INGE_SON.md) · [Notes de version](RELEASE_NOTES.md#release-fr) · [Voir la matrice de compatibilité (FR)](multi-model.md)
+
+Les illustrations des sections suivantes montrent des versions antérieures. Les intitulés et l’emplacement de certaines commandes ont évolué.
 
 ## Choisir la langue
 
@@ -66,7 +75,7 @@ Le coach lit les réglages et les mesures disponibles, pas le flux audio. Fais j
 
 **Simple** : sélectionne la façade ou le retour, règle volume, mute et solo. Le nom d’une source ouvre ses réglages détaillés. Les noms proviennent de la console ou du simulateur ; préparer le groupe dans le coach ne renomme pas silencieusement une console réelle.
 
-![Mélangeur compact](images/bandpilot-2.2.4/console.jpg)
+![Mélangeur compact](images/bandpilot-3.0/hero.jpg)
 
 **Expert** : Mélangeur donne les tranches et les sorties ; Canal affiche le préampli, gate, compresseur, EQ, envois et sortie. Les banques donnent accès aux bus, Aux, FX et DCA. Les fonctions proposées dépendent du modèle. Les valeurs de simulation sont des réglages d’entraînement, pas des résultats acoustiques.
 
@@ -78,7 +87,7 @@ Le coach lit les réglages et les mesures disponibles, pas le flux audio. Fais j
 
 Prépare les bus en pré-fader et choisis les sorties réellement disponibles. Dans Retours, crée le musicien et son bus. Démarre le partage local, puis fais scanner **son** QR code sur le même réseau. Le lien permet de régler son bus : ne le publie pas. Les niveaux sont plafonnés et leur montée progressive ; cela ne remplace pas un niveau d’écoute prudent.
 
-![Tableau des retours dans la console](images/bandpilot-2.2.4/regie-retours.jpg)
+![Tableau des retours dans la console](images/bandpilot-3.0/monitors.jpg)
 
 Le téléphone suit les changements lecture seule/contrôle sans rechargement. Les profils conservent un mix de retour. Régénérer le lien révoque l’ancien. Arrête le partage lorsqu’il n’est plus nécessaire. Les retours téléphone X32 ne sont pas disponibles dans cette version.
 
@@ -122,6 +131,8 @@ Les scènes complètes peuvent être capturées et exportées/importées en JSON
 **Reprendre la dernière bonne balance.** Associe une scène complète et des notes à chaque groupe, puis vérifie les différences avant le rappel sur la console. Depuis son téléphone, chaque musicien peut vérifier son bus et le signal d’une source, puis rappeler son dernier mix. L’Atelier du son propose une comparaison A/B du kick et de la basse. Le diagnostic de connexion distingue réseau, contrôle et pont REAPER.
 
 [Nouveautés](RELEASE_NOTES.md)
+
+<a id="rider"></a>
 
 ### Fiche technique et plan de scène
 

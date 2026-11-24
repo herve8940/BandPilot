@@ -1,17 +1,26 @@
 # BandPilot — guida illustrata
 
-Questa novità riguarda le app desktop Windows, macOS Intel/Apple Silicon e Linux. Android resta una distribuzione separata 2.4.0-android.5 e non comprende tutte le funzioni desktop descritte. BandStudio è un’app complementare indipendente.
+[Français](USER_GUIDE_FR.md) · [English](USER_GUIDE_EN.md) · [Deutsch](USER_GUIDE_DE.md) · [Español](USER_GUIDE_ES.md) · [Italiano](USER_GUIDE_IT.md)
 
-**2.3.15 — [Tutorial delle novità 2.3.15](NEW_2_3_15_IT.md)**
+## Il tuo primo soundcheck · BandPilot 3.0.0
 
-Le vecchie immagini della guida generale e il video 2.2 sono illustrazioni storiche. Questo tutorial descrive il percorso 2.3.15.
+Sul computer puoi preparare il soundcheck in simulazione, collegare il mixer e condividere i mix monitor del gruppo sulla rete locale.
 
-[Francese](USER_GUIDE_FR.md) · [Coach controllo audio](TUTO_MON_INGE_SON_IT.md) · [Tour video](VIDEO_TOUR.md) · [Compatibilità dettagliata](multi-model.md)
+1. Installa BandPilot e apri la simulazione per esplorare i comandi.
+2. Collega il computer e il mixer alla stessa rete locale, poi seleziona il mixer rilevato.
+3. Scegli gli strumenti e controlla gli ingressi e le uscite monitor prima di confermare il soundcheck.
 
-BandPilot è il nuovo nome di XR18 Studio. Riunisce il controllo del mixer, i soundcheck guidati, i monitor personali, la preparazione dello spettacolo e le prove REAPER. Questi nuovi screenshot mostrano una **simulazione**, non misurazioni audio reali.
+Parti da una scena vuota o da una salvata. Quando confermi un nuovo soundcheck con il gruppo, gli ingressi inutilizzati e le rispettive mandate vengono silenziati. Il guadagno dei preamplificatori e l’alimentazione phantom restano invariati.
 
+Assegna un’uscita a ciascun musicista. In Monitor → Telefoni puoi condividere il codice QR per il suo mix sulla rete locale. Salvando la formazione aggiorni i link senza modificare l’audio.
 
-[Français](USER_GUIDE_FR.md) · [English](USER_GUIDE_EN.md) · [Italiano](USER_GUIDE_IT.md) · [Español](USER_GUIDE_ES.md) · [Deutsch](USER_GUIDE_DE.md)
+Decidi l’ordine dei brani durante le prove. Sul palco puoi seguire la scaletta e aprire il PDF del brano in corso. Sul computer il bridge REAPER collega i progetti delle prove al repertorio. REAPER va scaricato separatamente.
+
+![Prepara gli ingressi per oggi · Interfaccia in francese, in simulazione](images/bandpilot-3.0/balance.jpg)
+
+[Tutorial sul soundcheck guidato](TUTO_MON_INGE_SON_IT.md) · [Note di rilascio](RELEASE_NOTES.md#release-it) · [Matrice di compatibilità dettagliata (FR)](multi-model.md)
+
+Le immagini delle sezioni successive mostrano versioni precedenti. Alcuni comandi hanno cambiato nome o posizione.
 
 ## Scegli la tua lingua
 
@@ -60,7 +69,7 @@ Il coach legge le impostazioni e le misurazioni disponibili, non il tuo flusso a
 
 Simple offre selezione principale/monitor, volume, mute e solo. Fare clic sul nome di una fonte per le impostazioni dettagliate. I nomi appartengono al mixer o al simulatore; la preparazione del profilo delil coach non rinomina silenziosamente l'hardware.
 
-![Mixer compatto](images/bandpilot-2.2.4/console.jpg)
+![Mixer compatto](images/bandpilot-3.0/hero.jpg)
 
 Expert fornisce visualizzazioni di mixer e canali con preamplificatore, gate, compressore, EQ, mandate e uscita. Le banche espongono bus, Aux, FX e DCA come supportati dal modello. Le impostazioni della simulazione sono dati di allenamento, non risultati acustici.
 
@@ -72,7 +81,7 @@ Expert fornisce visualizzazioni di mixer e canali con preamplificatore, gate, co
 
 Prepara i bus pre-fader e scegli le uscite fisiche disponibili sul tuo mixer. Crea ogni musicista con il suo bus, avvia la condivisione locale e fagli scansionare il suo codice QR personale sulla stessa rete. Il collegamento garantisce il controllo del proprio bus: non pubblicarlo. I livelli sono limitati e gli aumenti sono progressivi; mantenere comunque i livelli di ascolto ragionevoli.
 
-![Matrice monitor](images/bandpilot-2.2.4/regie-retours.jpg)
+![Matrice monitor](images/bandpilot-3.0/monitors.jpg)
 
 I telefoni già aperti seguono le modifiche di sola lettura/controllo senza ricaricare. I profili memorizzano i mix di monitor. La rigenerazione di un collegamento revoca quello vecchio. Interrompi la condivisione quando non viene utilizzato. I monitor dei telefoni X32 non sono supportati in questa versione.
 
@@ -115,6 +124,8 @@ Gli account opzionali separano l'accesso amministratore, musicista bus assegnato
 **Riparti dall’ultimo soundcheck riuscito.** Associa una scena completa e le note a ogni gruppo e verifica le modifiche prima del richiamo. Dal telefono, i musicisti possono controllare bus e segnale e richiamare l’ultimo mix. Il Laboratorio del suono aggiunge il confronto A/B tra cassa e basso. La diagnostica distingue rete, controllo e ponte REAPER.
 
 [Note di rilascio](RELEASE_NOTES.md)
+
+<a id="rider"></a>
 
 ### Scheda tecnica e planimetria
 

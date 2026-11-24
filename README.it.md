@@ -1,123 +1,73 @@
 # BandPilot
 
+[Français](README.md) · [English](README.en.md) · [Deutsch](README.de.md) · [Español](README.es.md) · **Italiano**
+
+**Dal soundcheck al concerto.** Prepara gli ingressi del gruppo, regola il mix di monitoraggio di ogni musicista e tieni la scaletta a portata di mano. BandPilot controlla il mixer sulla rete locale.
+
+[Scarica BandPilot](https://herve8940.github.io/BandPilot/it.html#download) · [Guida introduttiva](docs/USER_GUIDE_IT.md) · [Note di rilascio](docs/RELEASE_NOTES.md#release-it)
+
+[![Mixer · Interfaccia in francese, in simulazione](docs/images/bandpilot-3.0/hero.jpg)](https://herve8940.github.io/BandPilot/it.html#view-mixer)
+
+## Installa BandPilot
+
+| Versione desktop 3.0.0 | Download |
+| --- | --- |
+| Windows | [Windows (.exe)](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-Windows-3.0.0.exe) |
+| macOS | [Apple Silicon](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-macOS-3.0.0-arm64.dmg) · [Intel](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-macOS-3.0.0-x64.dmg) |
+| Linux | [AppImage](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-Linux-3.0.0-x86_64.AppImage) · [Debian / Ubuntu](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-Linux-3.0.0-amd64.deb) |
+
+[Tutti i file e le somme SHA-256](https://github.com/herve8940/BandPilot/releases/tag/v3.0.0)
+
+**App Android autonoma.** Su tablet Android l’APK controlla il mixer senza computer. Per il proprio mix monitor sul telefono basta scansionare il codice QR condiviso dal gruppo. [Scarica l’APK · 2.4.0-android.5](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.5/BandPilot-Android-2.4.0-android.5-universal.apk)
+
+## Il tuo primo soundcheck
+
+1. Installa BandPilot e apri la simulazione per esplorare i comandi.
+2. Collega il computer e il mixer alla stessa rete locale, poi seleziona il mixer rilevato.
+3. Scegli gli strumenti e controlla gli ingressi e le uscite monitor prima di confermare il soundcheck.
+
+Parti da una scena vuota o da una salvata. Quando confermi un nuovo soundcheck con il gruppo, gli ingressi inutilizzati e le rispettive mandate vengono silenziati. Il guadagno dei preamplificatori e l’alimentazione phantom restano invariati. Assegna un’uscita a ciascun musicista. In Monitor → Telefoni puoi condividere il codice QR per il suo mix sulla rete locale. Salvando la formazione aggiorni i link senza modificare l’audio.
+
+Decidi l’ordine dei brani durante le prove. Sul palco puoi seguire la scaletta e aprire il PDF del brano in corso. Sul computer il bridge REAPER collega i progetti delle prove al repertorio. REAPER va scaricato separatamente.
+
+[Tutorial sul soundcheck guidato](docs/TUTO_MON_INGE_SON_IT.md) · [Sito ufficiale](https://herve8940.github.io/BandPilot/it.html)
+
+## Mixer
+
+- **Behringer XR18 / X18 · Midas MR18** — Sei uscite Aux fisiche per i monitor. Il modello XR18 è stato rilevato su hardware reale. Il profilo MR18 è stato verificato in simulazione.
+- **Behringer XR12 · Midas MR12** — Due uscite Aux fisiche per i monitor. Il registratore USB è stereo. Per registrare più tracce su computer serve un altro modello.
+- **Behringer X32 · Rack · Compact · Producer · Core** — Supporto parziale e sperimentale. Sono disponibili il mixaggio di base e le mandate ai bus. Le scene complete e i monitor da telefono sono ancora in sviluppo.
+
+[Matrice di compatibilità dettagliata (FR)](docs/multi-model.md)
+
+## Avvia il progetto in locale
+
+Con Node.js 22.13 o successivo, esegui questi comandi dalla radice del repository e poi apri l’indirizzo indicato da Vite.
+
+```sh
+npm run ci:deps
+npm --prefix web ci
+npm run studio
+```
+
+[Contribuisci](CONTRIBUTING.md) · [Segnala un problema](https://github.com/herve8940/BandPilot/issues/new/choose) · [Licenza MIT](LICENSE)
+
+<!-- community:start -->
+## La comunità BandPilot su Discord
+
+Fai domande, condividi la tua esperienza e proponi miglioramenti a BandPilot. Conversazioni in francese o inglese.
+
+[Entra nel Discord](https://discord.gg/FtWwEPmwE7) · [Scopri i canali](docs/COMMUNITY_IT.md)
+<!-- community:end -->
+
 <!-- community-badge:start -->
 [![Discord](https://img.shields.io/badge/Discord-BandPilot-5865F2?logo=discord&logoColor=white)](https://discord.gg/FtWwEPmwE7)
 <!-- community-badge:end -->
 
-**La tua band. Il tuo mixer. Il tuo suono.**
-
-[Download](https://herve8940.github.io/BandPilot/it.html#download) · [Sito web](https://herve8940.github.io/BandPilot/it.html) · [Guida completa](docs/USER_GUIDE_IT.md) · [Français](README.md) · [Video tour](https://herve8940.github.io/BandPilot/VIDEO_TOUR.html)
-
-BandPilot è un’app locale gratuita per controllare i mixer Behringer X-Air e Midas M-Air, preparare soundcheck guidati, regolare i mix monitor personali e provare con REAPER su computer. Windows, macOS, Linux e Android autonomo. BandPilot è il nuovo nome di XR18 Studio.
-
-**App multilingue: inglese, francese, italiano, spagnolo e tedesco.** Seleziona la tua lingua in **Impostazioni → Opzioni · Lingua**; la tua scelta viene salvata su questo dispositivo. I musicisti possono scegliere la propria lingua sui propri telefoni. Su richiesta è possibile aggiungere altre lingue.
-
-[Français](README.md) · [English](README.en.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Deutsch](README.de.md)
-
-![Mixer esperto BandPilot 2.2.4 in simulazione](docs/images/bandpilot-2.2.4/expert-canal-it.jpg)
-
-<!-- community:start -->
-
-## La comunità BandPilot su Discord
-
-Uno spazio di aiuto tra musicisti per soundcheck, monitor, prove e registrazione. Tutti gli strumenti, i gruppi e i livelli di esperienza sono benvenuti.
-
-Fai domande, condividi la tua esperienza e proponi miglioramenti a BandPilot. Conversazioni in francese o inglese.
-
-**[Entra nel Discord](https://discord.gg/FtWwEPmwE7)** · [Scopri i canali](docs/COMMUNITY_IT.md)
-
-### Discord direttamente in BandPilot
-
-Nelle nuove versioni, apri “Aiuto e problemi” dal menu o dalle Impostazioni: aiuto in #entraide-help, guida introduttiva, idee e segnalazioni in #bugs-tests. Il messaggio include la versione dell’app: rileggilo, copialo e invialo tu su Discord. Nessun registro o audio viene allegato automaticamente.
-
-[Chiedi aiuto](https://discord.com/channels/1570533717917573260/1570534770297806888) · [Segnala un problema](https://discord.com/channels/1570533717917573260/1570534866049699882)
-<!-- community:end -->
-
-## Versioni e disponibilità
-
-Desktop: [ultima versione stabile](https://github.com/herve8940/BandPilot/releases/latest) (Windows, macOS, Linux). Android: **2.4.0-android.5 in anteprima**, APK separato.
-
-[Download e limiti](https://herve8940.github.io/BandPilot/it.html#download)
-
-Per separare gli strumenti, lavorare sui testi e preparare brani per REAPER, scopri [BandStudio (in inglese)](https://herve8940.github.io/BandStudio/en.html), un’app indipendente e complementare.
-
-## BandPilot 3.0.0 · Il soundcheck per la formazione di oggi
-
-Parti da una scena vuota, silenzia gli ingressi inutilizzati e prepara il mix monitor di ogni musicista. I codici QR seguono la formazione. Durante le prove e il concerto puoi aprire i brani e le schede PDF dalla scaletta.
-
-[Novità e aggiornamento del bridge REAPER](docs/RELEASE_NOTES.md#italiano)
-
-## Console, MIDI e prove dal telefono · 2.3.15
-
-BandPilot 2.3.15 riunisce nuovi controlli della console, richiami selettivi, gruppi software, MIDI e prove con REAPER sui telefoni dei musicisti.
-
-- **Console e monitor** — Banchi e superfici personalizzabili, gruppi software, coppie stereo, meter e RTA. Controlli e destinazioni dipendono dal modello connesso e dal mix scelto.
-- **Scene e preset** — Richiamo selettivo di ingressi, uscite ed effetti, protezioni per famiglia di parametri, anteprima e backup. Conversione esplicita di preset e scene portabili entro il perimetro X-Air/M-Air supportato.
-- **Effetti e analisi** — Editor con nomi per i 61 algoritmi X-Air, tap tempo e GEQ/True EQ a 31 bande sulle uscite compatibili. Misure al microfono e correzioni da verificare e applicare esplicitamente.
-- **MIDI e comandi** — Apprendimento di fader e mute, CC assoluti o relativi, note, Program Change, comandi preferiti e condizioni. Attivazione esplicita della sessione e backup per i comandi supportati.
-- **Prove e schede** — Progetti REAPER aperti in schede, sezioni, loop, conteggio iniziale, take separate e responsabile dal telefono. Accordi e testi dalle schede BandStudio compatibili, anche a schermo intero.
-
-Questa novità riguarda le app desktop Windows, macOS Intel/Apple Silicon e Linux. Android resta una distribuzione separata 2.4.0-android.5 e non comprende tutte le funzioni desktop descritte. BandStudio è un’app complementare indipendente.
-
-[Tutorial delle novità 2.3.15](docs/NEW_2_3_15_IT.md)
-## Novità: scheda tecnica, effetti e Android
-
-La prima versione Android autonoma è disponibile come APK firmato. Non serve rinnovare la firma ogni settimana. REAPER resta sul computer.
-
-- **Scheda tecnica e pianta del palco** — Prepara ingressi, musicisti, monitor e collegamenti. Posiziona il gruppo sulla pianta del palco e stampa o esporta un PDF. Il collegamento è visibile nel consulente audio.
-- **Effetti per le sorgenti** — Scegli un effetto adatto alla voce o allo strumento, controlla l’anteprima e dosa l’effetto nel monitor di ogni musicista. Conferma il risultato oppure ripristina le impostazioni precedenti.
-- **Android autonomo** — Installa l’APK su un tablet compatibile e collegalo direttamente al mixer via Wi-Fi. Interfaccia, motore e dati risiedono sul tablet: senza PC o Docker.
-
-[Android APK](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.5/BandPilot-Android-2.4.0-android.5-universal.apk) · [Guida Android (FR)](docs/ANDROID.md)
-
-Versione Android: 2.4.0-android.5. Android 8+ e Android System WebView 111+. APK per ARM a 32/64 bit e x86_64; orientamento verticale e orizzontale. Installazione e avvio verificati su Xiaomi Redmi Pad con Android 14; funzionamento confermato dall’utente. Gli altri tablet e le combinazioni con i mixer richiedono verifiche. Dispositivi con pagine di memoria da 16 KB non certificati. REAPER e il Laboratorio basato sulle registrazioni restano sul computer.
-
-
-## Caratteristiche
-
-- Coach in sei fasi: connessione, configurazione degli ingressi, misurazione del guadagno, risoluzione dei problemi, preparazione dei monitor e salvataggio. Legge le misurazioni, non l'audio.
-- Mixer semplice ed esperto, barra laterale compatta, banchi di canali, EQ/gate/compressione/mandate/bus/DCA/FX/routing come supportato dal modello.
-- Collegamenti personali al monitor QR, controlli solo bus, profili salvati e livelli con limite progressivo.
-- Canzoni/prove della band REAPER: sezioni, riprese valide, forme d'onda, presenza consapevole del progetto, riproduzione originale, loop e marcatori di registrazione.
-- Preparazione dello spettacolo, libreria di brani, setlist, note di prova persistenti, importazione/esportazione JSON di scene, anteprime e backup.
-- Rilevamento model-aware, connessione iniziale di sola lettura, account opzionali, diagnostica e intelligenza artificiale connessa opzionale con la tua chiave.
-
-Il funzionamento locale non richiede account o Internet; mixer, computer e telefoni condividono una rete. REAPER è un software separato con la propria licenza. L'intelligenza artificiale connessa è facoltativa e richiede Internet.
-
-## La compatibilità dipende dal modello
-
-**XR18** è il modello principale testato fisicamente. **X18/MR18** condividono profili/protocollo ma necessitano comunque della propria convalida hardware. **XR12/MR12** hanno adattato profili a 12 ingressi, 4 preamplificatori microfonici e 2 uscite Aux fisiche: registrazione stereo su chiavetta USB, **nessuna USB multitraccia per PC**. La convalida dell'hardware rimane in sospeso.
-
-**Le varianti X32 sono parziali e sperimentali**: mixaggio, EQ, dinamica di base e mandate. L'integrazione completa di preamplificatore/routing/FX/misuratori/scene/coach/monitor del telefono/USB non è disponibile. Leggere la [matrice](docs/multi-model.md) prima dell'uso dal vivo.
-
-## Inizia
-
-Effettua il backup delle scene, installa il pacchetto corrispondente, esplora la simulazione, scopri l'hardware di sola lettura, quindi seleziona **Mixer → PC** prima di abilitare il controllo. Segui il [tutorial illustrato per allenatori](docs/TUTO_MON_INGE_SON_IT.md). Installa il bridge **1.5.0** da Rehearse, salva i progetti e riavvia REAPER. La simulazione del mixer non simula gli ingressi audio REAPER. I pacchetti potrebbero non essere firmati/non autenticati.
-
-[Video illustrato e trascrizione](docs/VIDEO_TOUR.md) · [Note sulla versione](docs/RELEASE_NOTES.md) · [Correzioni manuali](docs/corrections-tests-manuels.md)
-
-## Sviluppo e validazione
-
-Su Mac, la versione candidata richiede macOS 13 o successivo. Node.js 22.13+ (CI/pacchetti: Nodo 22). `npm run ci:deps`, `npm --prefix web ci`, `npm run studio`; controlli: `npm test`, `npm run test:web`, `npm run build:all`; pacchetti: `npm run desktop:package`.
-
-I test di backend e le regressioni di React coprono OSC, scene, FX, account, monitor, REAPER/Lua e profili di modello. Non certificano i risultati acustici o ogni modello di hardware. I pacchetti vengono pubblicati insieme dopo i controlli della piattaforma, con checksum SHA-256. Gli identificatori di dati legacy e i percorsi REAPER rimangono per compatibilità.
-
-Progetto indipendente del MIT, non affiliato con Behringer, Midas o Music Tribe. I marchi appartengono ai rispettivi proprietari.
-
-Correzione all'avvio: [pannello di connessione 2.2.1](docs/hotfix-2.2.1.md).
-
-##BandPilot 2.2.2
-
-[Layout personali e console monitor](docs/WORKSPACES.md#english): layout specifici per modello/schermo, mix/equalizzazione/compressione per musicista e percorsi del segnale. Include la [correzione REAPER bridge 1.2.3](docs/hotfix-2.2.2.md).
-
 <!-- support:start -->
 ## Sostieni BandPilot
-
-Più tempo per suonare, meno tempo a cercare una regolazione. BandPilot aiuta i gruppi a preparare il soundcheck e a ritrovare le proprie impostazioni con uno strumento gratuito e aperto.
 
 Il sostegno volontario aiuta a dedicare tempo alle correzioni, alle prove sui mixer e alle guide in cinque lingue. Anche segnalazioni, traduzioni e condivisioni sono utili.
 
 [Sostieni su Ko-fi](https://ko-fi.com/bandpilot) · [Come aiutare il progetto](docs/SUPPORT_IT.md) · [Contribuisci](CONTRIBUTING.md)
 <!-- support:end -->
-
-[Sicurezza](SECURITY.md) · [Dati e privacy](docs/PRIVACY.md) · [Assistenza](SUPPORT.md) · [MIT](LICENSE)

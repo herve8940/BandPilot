@@ -1,0 +1,82 @@
+{
+  "language": "Italiano",
+  "skip": "Vai al contenuto",
+  "langLabel": "Lingue",
+  "guide": "Guida introduttiva",
+  "navMix": "L’app",
+  "models": "Mixer",
+  "downloads": "Download",
+  "get": "Scarica BandPilot",
+  "release": "Note di rilascio",
+  "heading": [
+    "Dal soundcheck",
+    "al concerto."
+  ],
+  "intro": "Prepara gli ingressi del gruppo, regola il mix di monitoraggio di ogni musicista e tieni la scaletta a portata di mano. BandPilot controlla il mixer sulla rete locale.",
+  "platform": "Gratuito e open source",
+  "views": "Dentro l’app",
+  "explore": "Quattro viste per preparare il concerto",
+  "sim": "Interfaccia in francese, in simulazione",
+  "tabs": [
+    "Soundcheck",
+    "Monitor",
+    "Concerto",
+    "Mixer"
+  ],
+  "viewTitles": [
+    "Prepara gli ingressi per oggi",
+    "Un mix monitor per ogni musicista",
+    "La scaletta sul palco",
+    "I comandi del tuo mixer"
+  ],
+  "viewTexts": [
+    "Parti da una scena vuota o da una salvata. Quando confermi un nuovo soundcheck con il gruppo, gli ingressi inutilizzati e le rispettive mandate vengono silenziati. Il guadagno dei preamplificatori e l’alimentazione phantom restano invariati.",
+    "Assegna un’uscita a ciascun musicista. In Monitor → Telefoni puoi condividere il codice QR per il suo mix sulla rete locale. Salvando la formazione aggiorni i link senza modificare l’audio.",
+    "Decidi l’ordine dei brani durante le prove. Sul palco puoi seguire la scaletta e aprire il PDF del brano in corso.",
+    "Passa dai comandi essenziali al mixer Expert per accedere a fader, mandate ed elaborazione del segnale disponibili sul tuo modello."
+  ],
+  "modelTitle": "Quale mixer usi?",
+  "modelTexts": [
+    "Sei uscite Aux fisiche per i monitor. Il modello XR18 è stato rilevato su hardware reale. Il profilo MR18 è stato verificato in simulazione.",
+    "Due uscite Aux fisiche per i monitor. Il registratore USB è stereo. Per registrare più tracce su computer serve un altro modello.",
+    "Supporto parziale e sperimentale. Sono disponibili il mixaggio di base e le mandate ai bus. Le scene complete e i monitor da telefono sono ancora in sviluppo."
+  ],
+  "matrix": "Matrice di compatibilità dettagliata (FR)",
+  "installTitle": "Installa BandPilot",
+  "desktop": "Versione desktop",
+  "android": "App Android autonoma",
+  "androidText": "Su tablet Android l’APK controlla il mixer senza computer. Per il proprio mix monitor sul telefono basta scansionare il codice QR condiviso dal gruppo.",
+  "allFiles": "Tutti i file e le somme SHA-256",
+  "apk": "Scarica l’APK",
+  "androidNotes": "Versione Android",
+  "startTitle": "Il tuo primo soundcheck",
+  "steps": [
+    "Installa BandPilot e apri la simulazione per esplorare i comandi.",
+    "Collega il computer e il mixer alla stessa rete locale, poi seleziona il mixer rilevato.",
+    "Scegli gli strumenti e controlla gli ingressi e le uscite monitor prima di confermare il soundcheck."
+  ],
+  "coach": "Tutorial sul soundcheck guidato",
+  "video": "Tour video della versione 2.2",
+  "privacy": "Privacy",
+  "issue": "Segnala un problema",
+  "contrib": "Contribuisci",
+  "source": "Codice sorgente",
+  "close": "Chiudi",
+  "zoom": "Ingrandisci l’immagine",
+  "readLocal": "Avvia il progetto in locale",
+  "dev": "Con Node.js 22.13 o successivo, esegui questi comandi dalla radice del repository e poi apri l’indirizzo indicato da Vite.",
+  "website": "Sito ufficiale",
+  "license": "Licenza MIT",
+  "photo": "Foto",
+  "hardware": "Funzioni per modello",
+  "reaper": "Sul computer il bridge REAPER collega i progetti delle prove al repertorio. REAPER va scaricato separatamente.",
+  "rider": "Scheda tecnica e pianta del palco",
+  "rehearse": "Provare con REAPER",
+  "androidGuide": "Guida all’installazione su Android (FR)",
+  "alt": [
+    "Soundcheck guidato con un microfono e le fasi di preparazione",
+    "Selezione del musicista e regolazione del monitor della voce",
+    "Leggio con il brano in corso e i successivi",
+    "Fader degli ingressi nel mixer Expert"
+  ]
+}

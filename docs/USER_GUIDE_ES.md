@@ -1,17 +1,26 @@
 # BandPilot — guía ilustrada
 
-Esta actualización corresponde a las aplicaciones de escritorio Windows, macOS Intel/Apple Silicon y Linux. Android sigue como distribución separada 2.4.0-android.5 y no incluye todas las funciones de escritorio descritas. BandStudio es una aplicación complementaria independiente.
+[Français](USER_GUIDE_FR.md) · [English](USER_GUIDE_EN.md) · [Deutsch](USER_GUIDE_DE.md) · [Español](USER_GUIDE_ES.md) · [Italiano](USER_GUIDE_IT.md)
 
-**2.3.15 — [Tutorial de novedades 2.3.15](NEW_2_3_15_ES.md)**
+## Tu primera prueba de sonido · BandPilot 3.0.0
 
-Las capturas anteriores de la guía general y el vídeo 2.2 son ilustraciones históricas. Este tutorial describe el recorrido 2.3.15.
+Desde el ordenador puedes preparar la prueba en simulación, conectar la mesa y compartir las mezclas de monitores del grupo en la red local.
 
-[Français](USER_GUIDE_FR.md) · [Preparador de prueba de sonido](TUTO_MON_INGE_SON_ES.md) · [Recorrido en vídeo](VIDEO_TOUR.md) · [Compatibilidad detallada](multi-model.md)
+1. Instala BandPilot y abre la simulación para familiarizarte con los controles.
+2. Conecta el ordenador y la mesa a la misma red local y selecciona la mesa detectada.
+3. Elige los instrumentos y comprueba las entradas y las salidas de monitores antes de confirmar la prueba.
 
-BandPilot es el nuevo nombre de XR18 Studio. Reúne control de la mesa de mezclas, pruebas de sonido guiadas, monitores personales, preparación de espectáculos y ensayos de REAPER. Estas nuevas capturas de pantalla muestran **simulación**, no mediciones de audio reales.
+Empieza con una escena vacía o con una guardada. Cuando confirmas una nueva prueba con el grupo, las entradas que no usas y sus envíos quedan en silencio. Se mantienen la ganancia de los previos y la alimentación fantasma.
 
+Asigna una salida a cada músico. En Monitores → Teléfonos puedes compartir el QR de su mezcla en la red local. Guardar la formación actualiza los enlaces sin cambiar el audio.
 
-[Français](USER_GUIDE_FR.md) · [English](USER_GUIDE_EN.md) · [Italiano](USER_GUIDE_IT.md) · [Español](USER_GUIDE_ES.md) · [Deutsch](USER_GUIDE_DE.md)
+Ordena los temas durante el ensayo. En el escenario puedes seguir el repertorio y abrir el PDF de la canción que estás tocando. En el ordenador, el puente REAPER conecta los proyectos de ensayo con el repertorio. REAPER se descarga por separado.
+
+![Prepara las entradas de hoy · Interfaz en francés en modo de simulación](images/bandpilot-3.0/balance.jpg)
+
+[Tutorial de prueba de sonido guiada](TUTO_MON_INGE_SON_ES.md) · [Notas de la versión](RELEASE_NOTES.md#release-es) · [Matriz de compatibilidad detallada (FR)](multi-model.md)
+
+Las imágenes de las secciones siguientes corresponden a versiones anteriores. Algunos controles han cambiado de nombre o de ubicación.
 
 ## Elige tu idioma
 
@@ -60,7 +69,7 @@ El entrenador lee la configuración y las mediciones disponibles, no su transmis
 
 Simple ofrece selección principal/monitor, volumen, silencio y solo. Haga clic en el nombre de una fuente para obtener configuraciones detalladas. Los nombres pertenecen al mesa de mezclas o simulador; La preparación del perfil de entrenador no cambia silenciosamente el nombre del hardware.
 
-![Mesa de mezclas compacta](images/bandpilot-2.2.4/console.jpg)
+![Mesa de mezclas compacta](images/bandpilot-3.0/hero.jpg)
 
 Expert proporciona vistas de mesa de mezclas y canal con preamplificador, puerta, compresor, ecualizador, envíos y salida. Los bancos exponen buses, Aux, FX y DCA según lo respalda el modelo. Los ajustes de simulación son datos de entrenamiento, no resultados acústicos.
 
@@ -72,7 +81,7 @@ Expert proporciona vistas de mesa de mezclas y canal con preamplificador, puerta
 
 Prepare buses pre-fader y elija las salidas físicas disponibles en su mesa de mezclas. Crea a cada músico con su bus, comienza a compartir localmente y haz que escaneen su código QR personal en la misma red. El enlace otorga el control de su bus: no lo publique. Los niveles están limitados y los aumentos son progresivos; aún así mantenga niveles de escucha razonables.
 
-![Matriz de monitores](images/bandpilot-2.2.4/regie-retours.jpg)
+![Matriz de monitores](images/bandpilot-3.0/monitors.jpg)
 
 Los teléfonos ya abiertos siguen cambios de control/solo lectura sin recarga. Los perfiles almacenan mezclas de monitores. La regeneración de un enlace revoca el anterior. Deja de compartir cuando no lo uses. Los monitores de teléfono X32 no son compatibles con esta versión.
 
@@ -115,6 +124,8 @@ Las cuentas opcionales separan el administrador, el músico del bus asignado y e
 **Retoma la última prueba de sonido validada.** Asocia una escena completa y notas a cada grupo y revisa los cambios antes de recuperarla. Desde el teléfono, los músicos pueden comprobar su bus y la señal y recuperar su última mezcla. El Taller de sonido añade una comparación A/B de bombo y bajo. El diagnóstico distingue red, control y puente REAPER.
 
 [Notas de la versión](RELEASE_NOTES.md)
+
+<a id="rider"></a>
 
 ### Ficha técnica y plano del escenario
 

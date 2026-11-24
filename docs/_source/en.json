@@ -1,0 +1,82 @@
+{
+  "language": "English",
+  "skip": "Skip to content",
+  "langLabel": "Languages",
+  "guide": "Getting started",
+  "navMix": "The app",
+  "models": "Mixers",
+  "downloads": "Downloads",
+  "get": "Download BandPilot",
+  "release": "Release notes",
+  "heading": [
+    "From soundcheck",
+    "to showtime."
+  ],
+  "intro": "Set up your band’s inputs, give each musician a personal monitor mix and keep your setlist close. BandPilot controls your mixer over the local network.",
+  "platform": "Free and open source",
+  "views": "Inside the app",
+  "explore": "Four views to get your show ready",
+  "sim": "French interface shown in simulation",
+  "tabs": [
+    "Soundcheck",
+    "Monitors",
+    "Show",
+    "Mixer"
+  ],
+  "viewTitles": [
+    "Set up today’s inputs",
+    "A monitor mix for each musician",
+    "Your setlist on stage",
+    "Hands on the mixer"
+  ],
+  "viewTexts": [
+    "Start with a blank scene or one you saved. When you confirm a fresh soundcheck with your band, unused inputs and their sends go silent. Preamp gain and phantom power stay as they are.",
+    "Assign each musician an output. Under Monitors → Phones, share the QR code for their mix on the local network. Saving the lineup updates the links without changing the audio.",
+    "Arrange songs in rehearsal. At the gig, follow the setlist and open the PDF for the current song.",
+    "Switch from the essential controls to the Expert mixer to access the faders, sends and processing available on your model."
+  ],
+  "modelTitle": "Which mixer do you use?",
+  "modelTexts": [
+    "Six physical Aux outputs for monitor mixes. The XR18 has been detected on hardware. The MR18 profile has been checked in simulation.",
+    "Two physical Aux outputs for monitors. The USB recorder is stereo. Multitrack recording on a computer requires a different model.",
+    "Partial, experimental support. Basic mixing and bus sends are available. Full scenes and personal phone monitoring are still in development."
+  ],
+  "matrix": "Detailed compatibility matrix (FR)",
+  "installTitle": "Install BandPilot",
+  "desktop": "Desktop release",
+  "android": "Standalone Android app",
+  "androidText": "On an Android tablet, the APK controls the mixer without a computer. For a personal monitor on a phone, just scan the QR code shared by your band.",
+  "allFiles": "All files and SHA-256 checksums",
+  "apk": "Download the APK",
+  "androidNotes": "Android release",
+  "startTitle": "Your first soundcheck",
+  "steps": [
+    "Install BandPilot and open simulation mode to explore the controls.",
+    "Connect your computer and mixer to the same local network, then select the detected mixer.",
+    "Choose the instruments and check the inputs and monitor outputs before confirming the soundcheck."
+  ],
+  "coach": "Guided soundcheck tutorial",
+  "video": "Version 2.2 video tour",
+  "privacy": "Privacy",
+  "issue": "Report a problem",
+  "contrib": "Contribute",
+  "source": "Source code",
+  "close": "Close",
+  "zoom": "Enlarge screenshot",
+  "readLocal": "Run the project locally",
+  "dev": "With Node.js 22.13 or later, run these commands from the repository root, then open the address printed by Vite.",
+  "website": "Official website",
+  "license": "MIT license",
+  "photo": "Photo",
+  "hardware": "Mixer capabilities",
+  "reaper": "On desktop, the REAPER bridge connects rehearsal projects to your repertoire. REAPER is a separate download.",
+  "rider": "Technical rider and stage plot",
+  "rehearse": "Rehearse with REAPER",
+  "androidGuide": "Android installation guide (FR)",
+  "alt": [
+    "Guided soundcheck with a microphone and setup steps",
+    "Musician selection and vocal monitor mix controls",
+    "Stage view with the current song and the songs that follow",
+    "Input faders in the Expert mixer"
+  ]
+}

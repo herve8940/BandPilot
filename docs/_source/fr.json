@@ -1,0 +1,82 @@
+{
+  "language": "Français",
+  "skip": "Aller au contenu",
+  "langLabel": "Langues",
+  "guide": "Guide de démarrage",
+  "navMix": "L’application",
+  "models": "Consoles",
+  "downloads": "Téléchargements",
+  "get": "Télécharger BandPilot",
+  "release": "Notes de version",
+  "heading": [
+    "De la balance",
+    "au concert."
+  ],
+  "intro": "Prépare les entrées de ton groupe, règle les retours de chaque musicien et garde ta setlist sous la main. BandPilot pilote ta console sur le réseau local.",
+  "platform": "Gratuit et open source",
+  "views": "Dans l’application",
+  "explore": "Quatre vues pour préparer ton concert",
+  "sim": "Captures en français, en simulation",
+  "tabs": [
+    "Balance",
+    "Retours",
+    "Concert",
+    "Console"
+  ],
+  "viewTitles": [
+    "Prépare les entrées du jour",
+    "À chacun son retour",
+    "Ta setlist sur scène",
+    "Les commandes de ta console"
+  ],
+  "viewTexts": [
+    "Pars d’une scène vierge ou de ta scène habituelle. Quand tu confirmes une nouvelle balance avec le groupe, les entrées inutilisées et leurs envois passent au silence. Les gains de préampli et le 48 V sont conservés.",
+    "Associe chaque musicien à sa sortie. Dans Retours → Téléphones, partage le QR de son mix sur le réseau local. Enregistrer les musiciens actualise leurs liens sans toucher au son.",
+    "Prépare l’ordre des morceaux en répétition. En concert, retrouve la setlist et ouvre la fiche PDF du morceau en cours.",
+    "Passe des commandes essentielles à la console Expert pour retrouver les faders, les envois et le traitement disponibles sur ton modèle."
+  ],
+  "modelTitle": "Quelle console utilises-tu ?",
+  "modelTexts": [
+    "Six sorties Aux pour les retours. La XR18 a été détectée sur matériel réel. Le profil MR18 a été vérifié en simulation.",
+    "Deux sorties Aux physiques pour les retours. L’enregistreur USB est stéréo. L’enregistrement multipiste sur ordinateur demande un autre modèle.",
+    "Prise en charge partielle et expérimentale. Le mixage de base et les envois aux bus sont disponibles. Les scènes complètes et les retours téléphone restent à adapter."
+  ],
+  "matrix": "Voir la matrice de compatibilité (FR)",
+  "installTitle": "Installe BandPilot",
+  "desktop": "Version ordinateur",
+  "android": "Application Android autonome",
+  "androidText": "Sur tablette Android, l’APK pilote la console sans ordinateur. Pour un retour personnel sur téléphone, scanne simplement le QR fourni par le groupe.",
+  "allFiles": "Tous les fichiers et sommes SHA-256",
+  "apk": "Télécharger l’APK",
+  "androidNotes": "Version Android",
+  "startTitle": "Ta première balance",
+  "steps": [
+    "Installe BandPilot et ouvre la simulation pour découvrir les commandes.",
+    "Connecte l’ordinateur et la console au même réseau local, puis sélectionne la console détectée.",
+    "Choisis les instruments, vérifie les entrées et les sorties des musiciens, puis confirme la balance."
+  ],
+  "coach": "Tutoriel de balance guidée",
+  "video": "Visite vidéo de la version 2.2",
+  "privacy": "Confidentialité",
+  "issue": "Signaler un problème",
+  "contrib": "Contribuer",
+  "source": "Code source",
+  "close": "Fermer",
+  "zoom": "Agrandir la capture",
+  "readLocal": "Lancer le projet en local",
+  "dev": "Avec Node.js 22.13 ou ultérieur, exécute ces commandes à la racine du dépôt, puis ouvre l’adresse affichée par Vite.",
+  "website": "Site officiel",
+  "license": "Licence MIT",
+  "photo": "Photo",
+  "hardware": "Capacités par modèle",
+  "reaper": "Sur ordinateur, le pont REAPER relie les projets de répétition au répertoire. REAPER se télécharge séparément.",
+  "rider": "Fiche technique et plan de scène",
+  "rehearse": "Répéter avec REAPER",
+  "androidGuide": "Installer sur Android (FR)",
+  "alt": [
+    "Balance guidée avec un micro et les étapes de préparation",
+    "Sélection du musicien et réglage de son retour de chant",
+    "Pupitre avec le morceau en cours et les morceaux suivants",
+    "Faders des entrées dans le mélangeur Expert"
+  ]
+}

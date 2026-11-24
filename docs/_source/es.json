@@ -1,0 +1,82 @@
+{
+  "language": "Español",
+  "skip": "Saltar al contenido",
+  "langLabel": "Idiomas",
+  "guide": "Guía de inicio",
+  "navMix": "La aplicación",
+  "models": "Mesas",
+  "downloads": "Descargas",
+  "get": "Descargar BandPilot",
+  "release": "Notas de la versión",
+  "heading": [
+    "De la prueba de sonido",
+    "al concierto."
+  ],
+  "intro": "Prepara las entradas del grupo, ajusta la mezcla de monitores de cada músico y ten a mano el repertorio. BandPilot controla la mesa desde la red local.",
+  "platform": "Gratis y de código abierto",
+  "views": "Dentro de la aplicación",
+  "explore": "Cuatro vistas para preparar el concierto",
+  "sim": "Interfaz en francés en modo de simulación",
+  "tabs": [
+    "Prueba de sonido",
+    "Monitores",
+    "Concierto",
+    "Mesa"
+  ],
+  "viewTitles": [
+    "Prepara las entradas de hoy",
+    "Una mezcla de monitores para cada músico",
+    "El repertorio en el escenario",
+    "Los mandos de tu mesa"
+  ],
+  "viewTexts": [
+    "Empieza con una escena vacía o con una guardada. Cuando confirmas una nueva prueba con el grupo, las entradas que no usas y sus envíos quedan en silencio. Se mantienen la ganancia de los previos y la alimentación fantasma.",
+    "Asigna una salida a cada músico. En Monitores → Teléfonos puedes compartir el QR de su mezcla en la red local. Guardar la formación actualiza los enlaces sin cambiar el audio.",
+    "Ordena los temas durante el ensayo. En el escenario puedes seguir el repertorio y abrir el PDF de la canción que estás tocando.",
+    "Pasa de los controles básicos a la mesa Expert para acceder a los faders, los envíos y el procesamiento disponibles en tu modelo."
+  ],
+  "modelTitle": "¿Qué mesa utilizas?",
+  "modelTexts": [
+    "Seis salidas Aux físicas para monitores. La XR18 se ha detectado en un equipo real. El perfil de la MR18 se ha comprobado en simulación.",
+    "Dos salidas Aux físicas para monitores. La grabadora USB es estéreo. La grabación multipista en un ordenador requiere otro modelo.",
+    "Compatibilidad parcial y experimental. La mezcla básica y los envíos a buses están disponibles. Las escenas completas y los monitores por teléfono siguen en desarrollo."
+  ],
+  "matrix": "Matriz de compatibilidad detallada (FR)",
+  "installTitle": "Instala BandPilot",
+  "desktop": "Versión de escritorio",
+  "android": "Aplicación Android autónoma",
+  "androidText": "En una tableta Android, el APK controla la mesa sin ordenador. Para acceder a tu mezcla de monitores desde el teléfono, solo tienes que escanear el QR que comparta el grupo.",
+  "allFiles": "Todos los archivos y sumas SHA-256",
+  "apk": "Descargar el APK",
+  "androidNotes": "Versión Android",
+  "startTitle": "Tu primera prueba de sonido",
+  "steps": [
+    "Instala BandPilot y abre la simulación para familiarizarte con los controles.",
+    "Conecta el ordenador y la mesa a la misma red local y selecciona la mesa detectada.",
+    "Elige los instrumentos y comprueba las entradas y las salidas de monitores antes de confirmar la prueba."
+  ],
+  "coach": "Tutorial de prueba de sonido guiada",
+  "video": "Visita en vídeo de la versión 2.2",
+  "privacy": "Privacidad",
+  "issue": "Comunicar un problema",
+  "contrib": "Contribuir",
+  "source": "Código fuente",
+  "close": "Cerrar",
+  "zoom": "Ampliar la captura",
+  "readLocal": "Ejecutar el proyecto en local",
+  "dev": "Con Node.js 22.13 o posterior, ejecuta estos comandos desde la raíz del repositorio y abre la dirección que muestre Vite.",
+  "website": "Sitio oficial",
+  "license": "Licencia MIT",
+  "photo": "Foto",
+  "hardware": "Funciones por modelo",
+  "reaper": "En el ordenador, el puente REAPER conecta los proyectos de ensayo con el repertorio. REAPER se descarga por separado.",
+  "rider": "Ficha técnica y plano de escenario",
+  "rehearse": "Ensayar con REAPER",
+  "androidGuide": "Guía de instalación en Android (FR)",
+  "alt": [
+    "Prueba de sonido guiada con un micrófono y los pasos de preparación",
+    "Selección del músico y controles de su mezcla de voz",
+    "Atril con la canción en curso y los temas siguientes",
+    "Faders de entrada en la mesa Expert"
+  ]
+}

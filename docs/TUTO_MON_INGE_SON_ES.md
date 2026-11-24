@@ -1,16 +1,16 @@
 # BandPilot — entrenador de prueba de sonido, paso a paso
 
-**2.3.15 — [Tutorial de novedades 2.3.15](NEW_2_3_15_ES.md)**
-
-Esta actualización corresponde a las aplicaciones de escritorio Windows, macOS Intel/Apple Silicon y Linux. Android sigue como distribución separada 2.4.0-android.5 y no incluye todas las funciones de escritorio descritas. BandStudio es una aplicación complementaria independiente.
-
 [Français](TUTO_MON_INGE_SON.md) · [English](TUTO_MON_INGE_SON_EN.md) · [Italiano](TUTO_MON_INGE_SON_IT.md) · [Español](TUTO_MON_INGE_SON_ES.md) · [Deutsch](TUTO_MON_INGE_SON_DE.md)
 
-[Français](TUTO_MON_INGE_SON.md) · [Guía completa](USER_GUIDE_ES.md) · [Video tour](VIDEO_TOUR.md)
+El asistente guía la prueba de sonido de las mesas X-Air y M-Air compatibles con los ajustes y las mediciones disponibles. Escucha el resultado en tu mesa. Los pasos siguientes se aplican a estos modelos.
 
-El entrenador apoya tu prueba de sonido. No recibe audio ni reemplaza la escucha. Este flujo de trabajo es para los modelos X-Air/M-Air compatibles, **no X32** en esta versión. Nuevas capturas de pantalla muestran simulación. Verifique los [límites de hardware] (multi-model.md). Las etiquetas de la interfaz de usuario en las capturas son francesas.
+**BandPilot 3.0.0** · Empieza con una escena vacía o con una guardada. Cuando confirmas una nueva prueba con el grupo, las entradas que no usas y sus envíos quedan en silencio. Se mantienen la ganancia de los previos y la alimentación fantasma.
 
-![Panel de prueba de sonido](images/bandpilot-2.2.4/coach.jpg)
+Asigna una salida a cada músico. En Monitores → Teléfonos puedes compartir el QR de su mezcla en la red local. Guardar la formación actualiza los enlaces sin cambiar el audio.
+
+[Guía de inicio](USER_GUIDE_ES.md) · [Notas de la versión](RELEASE_NOTES.md#release-es) · [Matriz de compatibilidad detallada (FR)](multi-model.md)
+
+![Prueba de sonido · Interfaz en francés en modo de simulación](images/bandpilot-3.0/balance.jpg)
 
 ## 1. Conectar
 
@@ -40,7 +40,7 @@ Los atenuadores directos actúan inmediatamente cuando el control está habilita
 
 Agregue cada músico, rol, fuentes y bus. Verifique los enchufes físicos: XR18/MR18/X18 tienen seis salidas auxiliares; XR12/MR12 tienen dos a pesar de sus buses internos. Inicie el pre-fader para que los cambios del fader principal no lleguen automáticamente a sus oídos.
 
-![Matriz de monitores](images/bandpilot-2.2.4/regie-retours.jpg)
+![Matriz de monitores](images/bandpilot-3.0/monitors.jpg)
 
 Aplique una combinación inicial en niveles bajos, cree enlaces personales, comience a compartir localmente y escanee cada QR en la misma red. Cada músico controla sólo su bus. Guarde un perfil si es útil y deje de compartirlo después. Los límites y límites de nivel no garantizan por sí solos niveles de escucha seguros.
 

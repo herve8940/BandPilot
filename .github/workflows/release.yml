@@ -2,6 +2,14 @@ name: Release desktop installers
 on:
   push:
     branches: [main]
+    # Site-only changes are deployed by GitHub Pages. Desktop releases can also be dispatched manually.
+    paths-ignore:
+      - 'docs/**'
+      - 'README*.md'
+      - 'scripts/sync-community.mjs'
+      - 'scripts/sync-support.mjs'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/release.yml'
   workflow_dispatch:
 permissions:
   contents: read
