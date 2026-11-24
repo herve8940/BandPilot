@@ -2,11 +2,9 @@ const {randomUUID}=require('node:crypto');
 const {join}=require('node:path');
 const {mkdirSync,readFileSync,writeFileSync,renameSync,rmSync,readdirSync,statSync}=require('node:fs');
 const {WEB,github,createIssue,findIssue,issueContent}=require('./github-support.cjs');
-const {createUpdates}=require('./updates.cjs');
-function registerSupport({app,win,ipcMain,dialog,shell,safeStorage,port,dataPath,sanitize,diagnostic,smoke}){
+function registerSupport({app,win,ipcMain,dialog,shell,safeStorage,port,dataPath,sanitize,diagnostic,updates}){
  const reports=new Map(),inflight=new Map(),directory=join(dataPath,'reports'),credentialPath=join(dataPath,'github-credentials.json');
  let token=null;
- const updates=createUpdates({app,dataPath,smoke,diagnostic,notify:state=>{if(!win.webContents.isDestroyed?.())win.webContents.send?.('bandpilot-update-state',state);}});
  win.webContents.once?.('did-finish-load',()=>void updates.markSuccessfulStart());
  const encrypted=()=>safeStorage.isEncryptionAvailable()&&safeStorage.getSelectedStorageBackend?.()!=='basic_text';
  // Do not access the OS keychain on a fresh install with no saved GitHub login.

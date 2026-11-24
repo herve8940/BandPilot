@@ -5,13 +5,14 @@ import {mkdtemp,readFile,writeFile,rm,stat,mkdir,readdir} from 'node:fs/promises
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {createHash} from 'node:crypto';
-import {EventEmitter} from 'node:events';
+import {EventEmitter,once} from 'node:events';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 const require=createRequire(import.meta.url);
 const {newer,parseVersion}=require('../desktop/versions.cjs');
 const {planRelease}=require('../scripts/release-version.cjs');
 const {download,downloadHost,createUpdates,targetFor}=require('../desktop/updates.cjs');
+const {registerShutdown}=require('../desktop/shutdown.cjs');
 const {checkUpdate}=require('../desktop/github-support.cjs');
 const web='https://github.com/herve8940/BandPilot';
 const bytes=Buffer.from('verified installer fixture');
@@ -64,6 +65,7 @@ async function fixture(){
 }
 test('startup checks deduplicate, downloads automatically and installs only on normal quit',async()=>{
  const f=await fixture();try{
+  registerShutdown(f.app,{stopMeasurements:async()=>{},installUpdate:f.updates.installOnQuit,diagnostic:assert.fail});
   await Promise.all([f.updates.check(),f.updates.check()]);await f.ready();
   assert.deepEqual(f.counts(),{downloads:1,installs:0,quits:0,checks:1});
   await f.updates.check(true);assert.equal(f.counts().downloads,1);
@@ -73,10 +75,37 @@ test('startup checks deduplicate, downloads automatically and installs only on n
   f.app.emit('before-quit',{preventDefault:()=>prevented++});assert.equal(prevented,1);
  }finally{await f.close();}
 });
+test('repeated quits wait for measurements and for installer launch, including a failed launch',async()=>{
+ for(const failed of [false,true]){
+  const app=new EventEmitter();
+  const signals=new EventEmitter();
+  const started=once(signals,'started'),exited=once(signals,'exited');
+  const events:string[]=[];
+  function quit(){
+   let prevented=false;
+   app.emit('before-quit',{preventDefault(){prevented=true;}});
+   if(!prevented){events.push('exit');signals.emit('exited');}
+  }
+  registerShutdown(Object.assign(app,{quit}),{
+   stopMeasurements(){events.push('audio');return once(signals,'audioClosed');},
+   async installUpdate(){
+    events.push('install');signals.emit('started');await once(signals,'launch');
+    if(failed)throw Error('installer unavailable');
+   },
+   diagnostic(event:string){events.push(event);}
+  });
+  quit();quit();
+  assert.deepEqual(events,['audio']);
+  signals.emit('audioClosed');await started;quit();
+  assert.deepEqual(events,['audio','install']);
+  signals.emit('launch');await exited;
+  assert.deepEqual(events,failed?['audio','install','desktop.update_install_error','exit']:['audio','install','exit']);
+ }
+});
 test('turning automatic updates off cancels a prepared install and persists outside mixer profiles',async()=>{
  const f=await fixture();try{
   await f.updates.check();await f.ready();await f.updates.setAutomatic(false);
-  f.app.emit('before-quit',{preventDefault:()=>assert.fail('disabled update cannot stop quitting')});
+  await f.updates.installOnQuit();
   assert.equal(f.counts().installs,0);
   const restarted=createUpdates(f.options);try{await restarted.check();assert.equal(restarted.snapshot().automaticEnabled,false);assert.equal(f.counts().downloads,1);}finally{restarted.dispose();}
  }finally{await f.close();}
@@ -94,7 +123,7 @@ test('opting out during a download aborts it and cannot leave an install armed',
  try{
   await updates.check();await waiting;await updates.setAutomatic(false);
   assert.equal(updates.snapshot().phase,'available');assert.equal(updates.snapshot().automaticEnabled,false);
-  f.app.emit('before-quit',{preventDefault:()=>assert.fail('aborted download cannot install')});assert.equal(f.counts().installs,0);
+  await updates.installOnQuit();assert.equal(f.counts().installs,0);
  }finally{updates.dispose();await f.close();}
 });
 test('managed Debian packages and mounted macOS installers never become automatic targets',()=>{

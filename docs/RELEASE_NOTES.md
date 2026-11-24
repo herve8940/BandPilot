@@ -2,63 +2,48 @@
 
 ## Français
 
-**BandPilot 3.0.0 pour Windows, macOS et Linux** permet de préparer une balance pour le groupe du jour, puis de retrouver les mêmes musiciens sur leurs téléphones.
+BandPilot 3.0.1 corrige la boucle de mise à jour du bureau. Quand tu quittes BandPilot, l’application termine les mesures audio, puis attend que l’installateur soit lancé avant de se fermer.
 
-- **Balance.** Dans « Nouvelle balance avec ce groupe », vérifie les instruments et les entrées avant de confirmer. Les entrées inutilisées et leurs envois sont ramenés au silence. Les gains de préampli et le 48 V sont conservés.
-- **Retours et QR.** Tu peux refaire le mix d’un musicien ou de tout le groupe. Enregistrer les musiciens actualise leurs QR sans modifier l’audio. Un musicien qui garde le même nom, la même sortie et le même format mono ou stéréo conserve son lien. Les liens remplacés sont désactivés.
-- **Scènes et mixage.** Tu peux partir d’une scène vierge, prévisualiser le rappel et restaurer les réglages précédents. Les surfaces personnalisées donnent aussi accès au gain, aux paramètres liés et aux commandes favorites.
-- **Répétition et concert.** Importe les projets REAPER ouverts dans ta setlist, choisis l’ordre des morceaux et retrouve leurs fiches PDF en vue pupitre. Pour utiliser le pont REAPER 1.5.2, enregistre tes projets, installe le pont depuis Répéter, puis redémarre REAPER.
+**Si ton ancienne version propose la même mise à jour à chaque démarrage**, termine ta session et quitte BandPilot. Installe la 3.0.1 une fois depuis les fichiers de cette publication. Sous Windows, lance le fichier `.exe`. Sur Mac, ouvre le `.dmg` adapté à ton Mac et glisse BandPilot dans Applications en acceptant le remplacement. Sous Linux, remplace ton AppImage ou installe le paquet `.deb` selon ton installation. Tes profils restent dans leur dossier habituel.
 
-Choisis ta langue dans les réglages. Les fonctions de mixage dépendent de la console. La prise en charge X32 reste partielle. L’APK Android suit un cycle de publication distinct.
+Rouvre **Aide et incidents** et vérifie que la version affichée est **3.0.1**.
 
 <a id="release-en"></a>
 
 ## English
 
-**BandPilot 3.0.0 for Windows, macOS and Linux** lets you prepare a soundcheck for today’s lineup and give those musicians the right monitor links on their phones.
+BandPilot 3.0.1 fixes a desktop update loop. When you quit, BandPilot finishes audio measurements and waits for the installer to start before exiting.
 
-- **Soundcheck.** Choose “Start a new soundcheck with this band” and review the instruments and inputs before confirming. Unused inputs and their sends are silenced. Preamp gain and phantom power are preserved.
-- **Monitors and QR codes.** Rebuild one musician’s mix or all monitor mixes. Saving the lineup updates the QR codes without changing audio. A musician keeps the same link while their name, output and mono or stereo format match. Replaced links are deactivated.
-- **Scenes and mixing.** Start from a blank scene, preview the recall and restore the previous settings. Custom surfaces also give you access to gain, linked parameters and favorite commands.
-- **Rehearsal and concert.** Import open REAPER projects into your setlist, arrange the songs and open their PDF sheets in music stand view. To use REAPER bridge 1.5.2, save your projects, install the bridge from the rehearsal page and restart REAPER.
+**If your current version offers the same update at every startup**, finish your session and quit BandPilot. Install 3.0.1 once using the files attached to this release. On Windows, run the `.exe`. On Mac, open the `.dmg` for your Mac and drag BandPilot into Applications, confirming the replacement. On Linux, replace your AppImage or install the `.deb` for your installation. Your profiles stay in their usual folder.
 
-Choose your language in Settings. Mixing features depend on the console. X32 support remains partial. The Android APK has its own release cycle.
+Reopen BandPilot and check that the help and incident panel shows **3.0.1**.
 
 <a id="release-de"></a>
 
 ## Deutsch
 
-Mit **BandPilot 3.0.0 für Windows, macOS und Linux** kannst du den Soundcheck für die heutige Besetzung vorbereiten. Die Musiker erhalten die passenden Monitor-Links auf ihren Smartphones.
+BandPilot 3.0.1 behebt eine Update-Schleife in der Desktop-App. Beim Beenden schließt BandPilot die Audiomessungen ab und wartet, bis das Installationsprogramm gestartet ist.
 
-- **Soundcheck.** Starte einen neuen Soundcheck mit der Band und prüfe Instrumente und Eingänge, bevor du bestätigst. Ungenutzte Eingänge und ihre Sends werden stummgeschaltet. Vorverstärkung und Phantomspeisung bleiben erhalten.
-- **Monitore und QR-Codes.** Erstelle den Mix für einen Musiker oder die ganze Band neu. Beim Speichern der Besetzung werden die QR-Codes aktualisiert, ohne Audioeinstellungen zu ändern. Solange Name, Ausgang und Mono- oder Stereoformat gleich bleiben, bleibt auch der Link gültig. Ersetzte Links werden deaktiviert.
-- **Szenen und Mischpult.** Beginne mit einer leeren Szene, prüfe die Vorschau und stelle bei Bedarf die vorherigen Einstellungen wieder her. Eigene Bedienoberflächen bieten auch Zugriff auf Gain, gekoppelte Parameter und bevorzugte Befehle.
-- **Probe und Konzert.** Übernimm geöffnete REAPER-Projekte in die Setliste, lege die Reihenfolge fest und öffne die PDF-Blätter in der Notenpultansicht. Für die REAPER-Bridge 1.5.2 speichere deine Projekte, installiere die Bridge im Probenbereich und starte REAPER neu.
+**Wenn deine Version bei jedem Start dasselbe Update anbietet**, beende deine Sitzung und schließe BandPilot. Installiere 3.0.1 einmal mit den Dateien aus dieser Veröffentlichung. Unter Windows startest du die `.exe`. Auf dem Mac öffnest du die passende `.dmg`, ziehst BandPilot in den Programme-Ordner und bestätigst das Ersetzen. Unter Linux ersetzt du deine AppImage-Datei oder installierst das `.deb`-Paket. Deine Profile bleiben in ihrem bisherigen Ordner.
 
-Die Sprache lässt sich in den Einstellungen wählen. Die Mischfunktionen hängen vom Pult ab. X32 wird teilweise unterstützt. Die Android-APK erscheint separat.
+Öffne BandPilot erneut und prüfe im Hilfebereich, ob **3.0.1** angezeigt wird.
 
 <a id="release-es"></a>
 
 ## Español
 
-Con **BandPilot 3.0.0 para Windows, macOS y Linux** puedes preparar la prueba de sonido con los músicos que tocan hoy. Cada uno tendrá en su teléfono el enlace a su mezcla de monitores.
+BandPilot 3.0.1 corrige un bucle de actualización en la aplicación de escritorio. Al salir, BandPilot termina las mediciones de audio y espera a que se inicie el instalador antes de cerrarse.
 
-- **Prueba de sonido.** Inicia una nueva prueba con el grupo y revisa los instrumentos y las entradas antes de confirmar. Las entradas sin usar y sus envíos quedan en silencio. Se conservan la ganancia de los previos y la alimentación fantasma.
-- **Monitores y códigos QR.** Puedes rehacer la mezcla de un músico o las de todo el grupo. Guardar los músicos actualiza los QR sin cambiar el audio. Cada músico conserva su enlace si coinciden el nombre, la salida y el formato mono o estéreo. Los enlaces sustituidos se desactivan.
-- **Escenas y mezcla.** Parte de una escena en blanco, revisa la vista previa y recupera los ajustes anteriores si lo necesitas. Las superficies personalizadas también permiten acceder a la ganancia, los parámetros vinculados y los comandos favoritos.
-- **Ensayo y concierto.** Importa los proyectos abiertos de REAPER a la lista de temas, ordénalos y abre sus fichas PDF en la vista de atril. Para usar el puente REAPER 1.5.2, guarda los proyectos, instala el puente desde la página de ensayo y reinicia REAPER.
+**Si tu versión ofrece la misma actualización cada vez que la abres**, termina la sesión y cierra BandPilot. Instala la versión 3.0.1 una vez con los archivos de esta publicación. En Windows, ejecuta el archivo `.exe`. En Mac, abre el `.dmg` que corresponda a tu Mac, arrastra BandPilot a Aplicaciones y confirma el reemplazo. En Linux, sustituye tu AppImage o instala el paquete `.deb`, según tu instalación. Tus perfiles siguen en su carpeta habitual.
 
-El idioma se elige en los ajustes. Las funciones de mezcla dependen de la consola. La compatibilidad con X32 sigue siendo parcial. El APK de Android se publica por separado.
+Vuelve a abrir BandPilot y comprueba que el panel de ayuda muestra la versión **3.0.1**.
 
 <a id="release-it"></a>
 
 ## Italiano
 
-Con **BandPilot 3.0.0 per Windows, macOS e Linux** puoi preparare il soundcheck per i musicisti che suonano oggi. Ciascuno ritroverà sul telefono il link al proprio mix monitor.
+BandPilot 3.0.1 risolve un problema che faceva ripartire lo stesso aggiornamento a ogni avvio dell’app desktop. Quando esci, BandPilot termina le misure audio e attende l’avvio del programma di installazione prima di chiudersi.
 
-- **Soundcheck.** Avvia un nuovo soundcheck con il gruppo e verifica strumenti e ingressi prima di confermare. Gli ingressi inutilizzati e le relative mandate vengono portati al silenzio. Il guadagno dei preamplificatori e l’alimentazione phantom restano invariati.
-- **Monitor e codici QR.** Puoi rifare il mix di un musicista o quelli di tutto il gruppo. Salvando i musicisti, i QR si aggiornano senza modificare l’audio. Il link resta valido se nome, uscita e formato mono o stereo coincidono. I link sostituiti vengono disattivati.
-- **Scene e mixaggio.** Parti da una scena vuota, controlla l’anteprima e, se serve, ripristina le impostazioni precedenti. Le superfici personalizzate permettono anche di regolare il guadagno e accedere ai parametri collegati e ai comandi preferiti.
-- **Prove e concerto.** Importa nella scaletta i progetti aperti in REAPER, scegli l’ordine dei brani e apri le schede PDF nella vista leggio. Per usare il bridge REAPER 1.5.2, salva i progetti, installa il bridge dalla pagina delle prove e riavvia REAPER.
+**Se la tua versione propone lo stesso aggiornamento a ogni avvio**, termina la sessione e chiudi BandPilot. Installa una volta la versione 3.0.1 usando i file di questa pubblicazione. Su Windows esegui il file `.exe`. Su Mac apri il `.dmg` adatto al tuo Mac, trascina BandPilot in Applicazioni e conferma la sostituzione. Su Linux sostituisci la tua AppImage o installa il pacchetto `.deb`, in base alla tua installazione. I profili rimangono nella cartella abituale.
 
-Puoi scegliere la lingua nelle impostazioni. Le funzioni di mixaggio dipendono dalla console. Il supporto X32 resta parziale. L’APK Android viene pubblicato separatamente.
+Riapri BandPilot e verifica che il pannello di aiuto mostri la versione **3.0.1**.

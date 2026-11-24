@@ -4,7 +4,7 @@ const path=require('node:path');
 const os=require('node:os');
 const {execFile}=require('node:child_process');
 const {promisify}=require('node:util');
-const {prepareInstall,launchInstall}=require('../desktop/updates.cjs');
+const {prepareInstall}=require('../desktop/updates.cjs');
 const exec=promisify(execFile);
 async function main(){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'bandpilot update test '));
@@ -17,9 +17,9 @@ async function main(){
   if(platform==='linux')await fs.writeFile(target,'previous application');else await fs.mkdir(target);
   const app={isPackaged:true,getAppPath:()=>path.join(target,'Contents/Resources/app.asar'),getPath:()=>path.join(target,'BandPilot.exe')};
   const request=path.join(root,'request.json'),response=path.join(root,'plan.json');
+  await fs.writeFile(request,JSON.stringify({target,downloaded,version,directory:root,response}));
   let plan;
   if(platform==='darwin'){
-   await fs.writeFile(request,JSON.stringify({target,downloaded,version,directory:root,response}));
    await exec(require('electron'),[path.resolve('scripts/test-update-electron.cjs'),request],{timeout:120000});
    plan=JSON.parse(await fs.readFile(response,'utf8'));
    // Include a real archive in the previous version, so cleanup is tested too.
@@ -27,8 +27,11 @@ async function main(){
    await fs.copyFile(path.join(plan.staged,'Contents/Resources/app.asar'),path.join(target,'Contents/Resources/app.asar'));
    if((await fs.readdir(root)).some(name=>name.startsWith('unpack-')))throw Error('Temporary app was not removed');
   }else plan=await prepareInstall({app,platform,env:{APPIMAGE:target},downloaded,version,directory:root});
+  if(platform==='darwin'||platform==='win32'){
+   if(platform==='win32')await fs.writeFile(response,JSON.stringify(plan));
+   await exec(require('electron'),[path.resolve('scripts/test-update-electron.cjs'),request,'quit'],{timeout:120000});
+  }
   if(platform==='win32'){
-   await launchInstall(plan,root);
    const executable=path.join(target,'BandPilot.exe');let installed=false;
    for(let attempt=0;attempt<120;attempt++){
     try{await fs.access(executable);installed=true;break;}catch{}await new Promise(r=>setTimeout(r,1000));
@@ -37,7 +40,11 @@ async function main(){
    await new Promise(r=>setTimeout(r,3000));
    const result=await exec(process.execPath,['desktop/smoke.cjs',executable],{timeout:120000});console.log(result.stdout);
   }else{
-   await exec('/bin/sh',[path.resolve('desktop/install-update.sh'),'999999999',plan.staged,plan.target,plan.backup,plan.identity,plan.marker]);
+   if(platform==='darwin'){
+    for(let attempt=0;attempt<60;attempt++){
+     try{await fs.access(plan.marker);break;}catch{await new Promise(resolve=>setTimeout(resolve,500));}
+    }
+   }else await exec('/bin/sh',[path.resolve('desktop/install-update.sh'),'999999999',plan.staged,plan.target,plan.backup,plan.identity,plan.marker]);
    await fs.access(plan.backup);await fs.access(plan.marker);
    if(platform==='darwin'){
     await exec('/usr/bin/codesign',['--verify','--deep','--strict',target]);

@@ -21,9 +21,11 @@ test('native support isolates credentials, restricts IPC and deduplicates simult
  globalThis.fetch=fetcher;
  const oldMonitors=process.listeners('uncaughtExceptionMonitor');
  try{
-  registerSupport({app:{getPath:()=>path,getVersion:()=> '2.3.2'},win:{webContents},ipcMain:{handle:(name:string,fn:any)=>handlers.set(name,fn)},dialog:{showSaveDialog:async()=>({canceled:true})},shell:{openExternal:async()=>{}},safeStorage:storage,port:1234,dataPath:path,sanitize:sanitizeDiagnostic,diagnostic:()=>{},smoke:true});
+  const updates={check:async()=>({available:false,current:'2.3.2'})};
+  registerSupport({app:{getPath:()=>path},win:{webContents},ipcMain:{handle:(name:string,fn:any)=>handlers.set(name,fn)},dialog:{showSaveDialog:async()=>({canceled:true})},shell:{openExternal:async()=>{}},safeStorage:storage,port:1234,dataPath:path,sanitize:sanitizeDiagnostic,diagnostic:()=>{},updates});
   assert.equal(keychainChecks,0,'opening a fresh profile never prompts for the OS keychain');
   const call=(name:string,input?:any)=>handlers.get('bandpilot-'+name)(event,input);
+  assert.deepEqual(await call('update-check',true),{available:false,current:'2.3.2'});
   assert.ok((await handlers.get('bandpilot-support-status')({...event,sender:{}})).error);
   role='musician';assert.ok((await call('report-prepare',{})).error);role='admin';
   const token='github_pat_'+'a'.repeat(50);assert.equal((await call('github-connect',token)).configured,true);assert.ok(!readFileSync(join(path,'github-credentials.json'),'utf8').includes(token));

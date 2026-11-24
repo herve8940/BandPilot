@@ -66,8 +66,14 @@ app.whenReady().then(async () => {
       :path.join(app.getAppPath(),"web","dist");
     const backend=path.join(app.getAppPath(),"dist","src","server.js");
     const runtime=await import(pathToFileURL(backend).href);
-    let measurementsClosed=false;
-    app.on('before-quit',event=>{if(measurementsClosed)return;event.preventDefault();measurementsClosed=true;void runtime.stopMeasurements().finally(()=>app.quit());});
+    const {diagnostic}=await import(pathToFileURL(path.join(app.getAppPath(),'dist/src/diagnostics.js')).href);
+    const updates=require('./updates.cjs').createUpdates({
+      app,dataPath,smoke,diagnostic,
+      notify:state=>{if(win&&!win.webContents.isDestroyed())win.webContents.send('bandpilot-update-state',state);}
+    });
+    require('./shutdown.cjs').registerShutdown(app,{
+      stopMeasurements:runtime.stopMeasurements,installUpdate:updates.installOnQuit,diagnostic
+    });
     let ready=false;
     for(let i=0;i<80;i++){
       try{const response=await fetch(`http://127.0.0.1:${port}/api/auth`);if(response.ok){ready=true;break;}}catch{}
@@ -100,8 +106,7 @@ app.whenReady().then(async () => {
       return smoke||process.platform!=='darwin'||await systemPreferences.askForMediaAccess('microphone').catch(()=>false);
     });
     const {sanitizeDiagnostic}=await import(pathToFileURL(path.join(app.getAppPath(),'dist/shared/diagnostic-report.js')).href);
-    const {diagnostic}=await import(pathToFileURL(path.join(app.getAppPath(),'dist/src/diagnostics.js')).href);
-    require('./support.cjs').registerSupport({app,win,ipcMain,dialog,shell,safeStorage,port,dataPath,sanitize:sanitizeDiagnostic,diagnostic,smoke});
+    require('./support.cjs').registerSupport({app,win,ipcMain,dialog,shell,safeStorage,port,dataPath,sanitize:sanitizeDiagnostic,diagnostic,updates});
     const appIcon=path.join(__dirname,"icon.png");
     const fromWindow=(event)=>event.sender===win.webContents&&event.senderFrame===win.webContents.mainFrame;
     const controllerMappings=require('./controller-mappings.cjs').controllerMappingsStore(dataPath);

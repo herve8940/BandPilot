@@ -96,7 +96,7 @@ function detached(command,args){return new Promise((resolve,reject)=>{const chil
 function createUpdates({app,dataPath,smoke=false,platform=process.platform,arch=process.arch,env=process.env,notify=()=>{},diagnostic=()=>{},fetcher=fetch,prepare=prepareInstall,install=launchInstall,downloadFile=download}){
  const directory=path.join(dataPath,'updates'),preference=path.join(dataPath,'updates.json'),receipt=path.join(directory,'install.json');
  let automatic=true;try{const saved=JSON.parse(fs.readFileSync(preference,'utf8'));if(typeof saved.automatic==='boolean')automatic=saved.automatic;}catch{}
- let state={available:false,current:app.getVersion(),automaticEnabled:automatic,phase:'idle'},checking,downloading,controller,plan,quitting=false,lastCheck=0;
+ let state={available:false,current:app.getVersion(),automaticEnabled:automatic,phase:'idle'},checking,downloading,controller,plan,lastCheck=0;
  const enabled=!smoke&&!!app.isPackaged;
  const markSuccessfulStart=async()=>{
   if(!enabled)return;
@@ -163,16 +163,13 @@ function createUpdates({app,dataPath,smoke=false,platform=process.platform,arch=
   return snapshot();
  };
  // Installation runs only on an ordinary application quit, never on download.
- const onQuit=event=>{
-  if(quitting||!automatic||!plan)return;
-  event.preventDefault();quitting=true;
-  void (async()=>{
-   await fsp.writeFile(receipt,JSON.stringify({version:state.version,target:plan.target,backup:plan.backup}),{mode:0o600});
-   await install(plan,directory);
-  })().catch(error=>diagnostic('desktop.update_install_error',{message:String(error)})).finally(()=>app.quit());
+ const installOnQuit=async()=>{
+  if(!enabled||!automatic||!plan)return;
+  const prepared=plan;
+  await fsp.writeFile(receipt,JSON.stringify({version:state.version,target:prepared.target,backup:prepared.backup}),{mode:0o600});
+  if(automatic&&plan===prepared)await install(prepared,directory);
  };
- if(enabled)app.on('before-quit',onQuit);
  const timer=enabled?setInterval(()=>void check(),60*60*1000):null;timer?.unref();
- return {check,snapshot,setAutomatic,markSuccessfulStart,download:stage,dispose(){if(timer)clearInterval(timer);controller?.abort();if(enabled)app.off('before-quit',onQuit);}};
+ return {check,snapshot,setAutomatic,markSuccessfulStart,installOnQuit,download:stage,dispose(){if(timer)clearInterval(timer);controller?.abort();}};
 }
 module.exports={createUpdates,download,downloadHost,prepareInstall,targetFor,launchInstall};
