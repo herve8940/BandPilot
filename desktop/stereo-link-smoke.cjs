@@ -12,7 +12,11 @@ module.exports=async(win,wait,screenshot)=>{
  await win.loadURL(win.webContents.getURL());await wait(`!!document.querySelector('button[title="Sauvegarder ou rappeler une scène"]')`);
  await js(`document.querySelector('button[title="Sauvegarder ou rappeler une scène"]').click()`);await wait(`!!document.querySelector('.preset-save:not([disabled])')`);
  await js(`[...document.querySelectorAll('.library-nav button')].find(b=>b.textContent.includes('Presets par piste')).click()`);
- await js(`[...document.querySelectorAll('.preset-row')].find(e=>e.textContent.includes('DEV linked L/R')).id='smoke-linked';document.querySelector('#smoke-linked .preset-card-actions>button').click();(()=>{const e=document.querySelector('#smoke-linked select');e.value='3';e.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+ const row=`[...document.querySelectorAll('.preset-row')].find(e=>e.textContent.includes('DEV linked L/R'))`;
+ await wait(`!!${row}?.querySelector('.preset-card-actions>button')`);
+ await js(`${row}.id='smoke-linked';document.querySelector('#smoke-linked .preset-card-actions>button').click()`);
+ await wait(`!!document.querySelector('#smoke-linked select option[value="3"]')`);
+ await js(`(()=>{const e=document.querySelector('#smoke-linked select');e.value='3';e.dispatchEvent(new Event('change',{bubbles:true}));})()`);
  await js(`document.querySelector('#smoke-linked button.primary').click()`);await wait(`!!document.querySelector('.coach-dialog[open] .coach-stereo-summary')`);
  if(!await js(`(()=>{const e=document.querySelector('.coach-stereo-summary');return e.textContent.includes('Indépendants gauche/droite :')&&e.textContent.includes('Égaliseur');})()`))throw Error('Independent EQ missing from stereo summary');
  await js(`document.querySelector('.coach-dialog details').open=true`);await screenshot('linked-stereo-preview.png');
