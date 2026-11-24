@@ -7,7 +7,7 @@ const check = process.argv[2] === '--check';
 if (process.argv.length > (check ? 3 : 2)) throw Error('Usage: node docs/_source/render.mjs [--check]');
 const site = 'https://herve8940.github.io/BandPilot/';
 const repo = 'https://github.com/herve8940/BandPilot';
-const desktop = '3.0.0';
+const desktop = '3.0.1';
 const android = '2.4.0-android.5';
 const desktopRelease = `${repo}/releases/tag/v${desktop}`;
 const androidRelease = `${repo}/releases/tag/android-v${android}`;

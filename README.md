@@ -10,13 +10,13 @@
 
 ## Installe BandPilot
 
-| Version ordinateur 3.0.0 | Téléchargements |
+| Version ordinateur 3.0.1 | Téléchargements |
 | --- | --- |
-| Windows | [Windows (.exe)](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-Windows-3.0.0.exe) |
-| macOS | [Apple Silicon](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-macOS-3.0.0-arm64.dmg) · [Intel](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-macOS-3.0.0-x64.dmg) |
-| Linux | [AppImage](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-Linux-3.0.0-x86_64.AppImage) · [Debian / Ubuntu](https://github.com/herve8940/BandPilot/releases/download/v3.0.0/BandPilot-Linux-3.0.0-amd64.deb) |
+| Windows | [Windows (.exe)](https://github.com/herve8940/BandPilot/releases/download/v3.0.1/BandPilot-Windows-3.0.1.exe) |
+| macOS | [Apple Silicon](https://github.com/herve8940/BandPilot/releases/download/v3.0.1/BandPilot-macOS-3.0.1-arm64.dmg) · [Intel](https://github.com/herve8940/BandPilot/releases/download/v3.0.1/BandPilot-macOS-3.0.1-x64.dmg) |
+| Linux | [AppImage](https://github.com/herve8940/BandPilot/releases/download/v3.0.1/BandPilot-Linux-3.0.1-x86_64.AppImage) · [Debian / Ubuntu](https://github.com/herve8940/BandPilot/releases/download/v3.0.1/BandPilot-Linux-3.0.1-amd64.deb) |
 
-[Tous les fichiers et sommes SHA-256](https://github.com/herve8940/BandPilot/releases/tag/v3.0.0)
+[Tous les fichiers et sommes SHA-256](https://github.com/herve8940/BandPilot/releases/tag/v3.0.1)
 
 **Application Android autonome.** Sur tablette Android, l’APK pilote la console sans ordinateur. Pour un retour personnel sur téléphone, scanne simplement le QR fourni par le groupe. [Télécharger l’APK · 2.4.0-android.5](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.5/BandPilot-Android-2.4.0-android.5-universal.apk)
 
