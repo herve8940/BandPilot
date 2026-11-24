@@ -98,7 +98,7 @@ Haga una copia de seguridad de las escenas, instale el paquete correspondiente, 
 
 ## Desarrollo y validación
 
-En Mac, la versión candidata requiere macOS 13 o posterior. Node.js 22.13+ (CI/paquetes: Nodo 22). `npm ci`, `npm --prefix web ci`, `npm run studio`; comprobaciones: `npm test`, `npm run test:web`, `npm run build:all`; paquetes: `npm run desktop:package`.
+En Mac, la versión candidata requiere macOS 13 o posterior. Node.js 22.13+ (CI/paquetes: Nodo 22). `npm run ci:deps`, `npm --prefix web ci`, `npm run studio`; comprobaciones: `npm test`, `npm run test:web`, `npm run build:all`; paquetes: `npm run desktop:package`.
 
 Las pruebas de backend y las regresiones de React cubren OSC, escenas, FX, cuentas, monitores, REAPER/Lua y perfiles de modelos. No certifican los resultados acústicos ni todos los modelos de hardware. Los paquetes se publican juntos después de las comprobaciones de la plataforma, con sumas de comprobación SHA-256. Los identificadores de datos heredados y las rutas REAPER se mantienen por motivos de compatibilidad.
 

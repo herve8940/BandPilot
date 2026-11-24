@@ -133,7 +133,7 @@ La version Android autonome est disponible : [installation, compatibilité et co
 
 Dans **BandPilot 2.3.0**, l’[Atelier du son et les conseils mesurés](docs/ATELIER_DU_SON.md) ajoutent le travail sur un extrait REAPER, la comparaison A/B et la restauration des sources. Spectre par instrument, compatibilité mono, conseils EQ et essais de polarité sont intégrés. Le gate guidé utilise deux repères écoutés (repos et note faible), et la compression tient compte de l’enveloppe du jeu. Dans **Mon ingé son**, les [ambiances guidées](docs/INGE_SON.md#ambiances-guidées) proposent des effets pour le chant, les chœurs, la guitare acoustique ou solo, la caisse claire, les toms et le clavier, avec un dosage individuel par retour. Pont REAPER **1.5.0** requis pour les nouvelles mesures.
 
-Candidate de bureau sous macOS 13 ou ultérieur. Node.js 22.13+ (CI et installateurs : Node 22). `npm ci`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test`, `npm run test:web` et `npm run build:all`. Installateurs : `npm run desktop:package`.
+Candidate de bureau sous macOS 13 ou ultérieur. Node.js 22.13+ (CI et installateurs : Node 22). `npm run ci:deps`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test`, `npm run test:web` et `npm run build:all`. Installateurs : `npm run desktop:package`.
 
 Les tests backend et les tests de régression React couvrent notamment OSC, scènes, FX, comptes, retours, REAPER, Lua et profils de console. Ils ne remplacent pas une validation acoustique et un concert complet sur chaque matériel. La publication attend les contrôles des quatre plateformes de construction et conserve les sommes SHA-256.
 

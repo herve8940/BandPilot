@@ -58,7 +58,7 @@ Pré-requis : JDK 17, SDK Android 35, build-tools 35.0.0, NDK 27.2.12479018, CMa
 À la racine du dépôt :
 
 ```sh
-npm ci
+npm run ci:deps
 npm --prefix web ci
 npm --prefix android/runtime ci
 python3 android/scripts/fetch-runtime.py

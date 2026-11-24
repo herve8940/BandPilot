@@ -52,7 +52,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
         run: node scripts/release-version.cjs apply
-      - run: npm ci
+      - run: npm run ci:deps
       - run: npm --prefix web ci
       - name: Frontend connection regressions
         run: npm run test:web

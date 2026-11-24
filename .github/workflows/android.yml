@@ -26,7 +26,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - run: npm ci
+      - run: npm run ci:deps
       - run: npm --prefix web ci
       - run: npm --prefix android/runtime ci
       - run: node --test android/tests/sqlite.test.mjs

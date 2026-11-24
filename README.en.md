@@ -98,7 +98,7 @@ Back up scenes, install the matching package, explore simulation, discover hardw
 
 ## Development and validation
 
-The desktop candidate requires macOS 13 or later on Mac. Node.js 22.13+ (CI/packages: Node 22). `npm ci`, `npm --prefix web ci`, `npm run studio`; checks: `npm test`, `npm run test:web`, `npm run build:all`; packages: `npm run desktop:package`.
+The desktop candidate requires macOS 13 or later on Mac. Node.js 22.13+ (CI/packages: Node 22). `npm run ci:deps`, `npm --prefix web ci`, `npm run studio`; checks: `npm test`, `npm run test:web`, `npm run build:all`; packages: `npm run desktop:package`.
 
 Backend tests and React regressions cover OSC, scenes, FX, accounts, monitors, REAPER/Lua and model profiles. They do not certify acoustic results or every hardware model. Packages are published together after platform checks, with SHA-256 checksums. Legacy data identifiers and REAPER paths remain for compatibility.
 

@@ -21,9 +21,9 @@ Ouvrir **http://127.0.0.1:5173**. Le proxy Vite pointe sur le backend local (por
 
 ## Fichiers principaux
 
-- `XAirMixer.tsx` : console graphique (tranches, faders, vumètres, EQ, dynamique, envois).
+- Les modes Simple et Expert de la console utilisent `src/SimpleMixer.tsx` et `src/expert/ExpertStudio.tsx` pour les tranches, les faders et les traitements.
 - `xairMath.ts` : lois de conversion X-Air (fader en dB, fréquences log, Q, couleurs, réponse EQ).
-- `ConsolePanel.tsx`, `InputGainPanel.tsx`, `FxConsole.tsx` : réglages avec aperçu et confirmation.
+- Les réglages avec aperçu et confirmation se trouvent dans `src/ConsolePanel.tsx` et `src/FxConsole.tsx`.
 
 ## Sécurité
 

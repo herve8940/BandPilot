@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install backend and desktop dependencies
-        run: npm ci
+        run: npm run ci:deps
       - name: Install frontend dependencies
         run: npm --prefix web ci
       - name: Frontend connection regressions

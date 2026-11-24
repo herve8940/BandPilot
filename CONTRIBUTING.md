@@ -28,7 +28,7 @@ données ou des pistes audio personnelles. Pour une faille, suis [SECURITY.md](S
 Utilise Node.js 22 comme en CI, dans une copie du dépôt :
 
 ```sh
-npm ci
+npm run ci:deps
 npm --prefix web ci
 npm run studio
 ```

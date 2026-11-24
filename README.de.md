@@ -97,7 +97,7 @@ Sichern Sie Szenen, installieren Sie das passende Paket, erkunden Sie die Simula
 
 ## Entwicklung und Validierung
 
-Auf dem Mac benötigt die Desktop-Testversion macOS 13 oder neuer. Node.js 22.13+ (CI/Pakete: Node.js 22). `npm ci`, `npm --prefix web ci`, `npm run studio`; prüft: `npm test`, `npm run test:web`, `npm run build:all`; Pakete: `npm run desktop:package`.
+Auf dem Mac benötigt die Desktop-Testversion macOS 13 oder neuer. Node.js 22.13+ (CI/Pakete: Node.js 22). `npm run ci:deps`, `npm --prefix web ci`, `npm run studio`; prüft: `npm test`, `npm run test:web`, `npm run build:all`; Pakete: `npm run desktop:package`.
 
 Backend-Tests und React-Regressionen decken OSC, Szenen, FX, Konten, Monitore, REAPER/Lua und Modellprofile ab. Sie zertifizieren nicht die akustischen Ergebnisse oder jedes Hardwaremodell. Pakete werden nach Plattformprüfungen gemeinsam mit SHA-256-Prüfsummen veröffentlicht. Aus Kompatibilitätsgründen bleiben alte Datenbezeichner und REAPER-Pfade erhalten.
 
