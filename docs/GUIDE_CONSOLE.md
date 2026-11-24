@@ -6,7 +6,7 @@
 
 Ce guide décrit chaque vue de la console en mode **Expert** (Jouer › Console, bouton **Expert** en haut) et ce que fait chaque réglage, en langage de musicien. Les mêmes explications sont dans l’application : bouton **? Explications** à droite de chaque vue. Survoler un réglage affiche aussi une courte description.
 
-> **Depuis la version 2.1.0**, le mode Expert est organisé en 6 vues : Console, Canal, Ears, Effets, Routage, Analyse. Les réglages expliqués ici sont les mêmes, mais ils ont changé de place et les images montrent l’ancienne présentation : **Entrée, Gate, EQ, Comp et Envois** sont les étapes de la vue **Canal**. Pour la nouvelle organisation, voir le [guide utilisateur](USER_GUIDE_FR.md#8-régler-en-détail-en-mode-expert).
+> Les captures montrent une ancienne présentation du mode Expert. Pour retrouver les réglages d’entrée, de gate, d’égalisation, de compression et d’envoi dans l’interface actuelle, consulte la section [Console Simple et Expert](USER_GUIDE_FR.md#console-expert).
 
 ![Console en mode Expert](images/tuto-expert.png)
 

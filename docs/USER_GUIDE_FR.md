@@ -71,6 +71,9 @@ Le [tutoriel Mon ingé son](TUTO_MON_INGE_SON.md) suit six étapes : connecter, 
 
 Le coach lit les réglages et les mesures disponibles, pas le flux audio. Fais jouer le musicien à son niveau le plus fort pour mesurer le gain. Les courbes, seuils et propositions restent à vérifier à l’oreille. Une mesure réelle demande la vraie console. L’IA connectée est facultative et demande une clé personnelle et Internet ; le conseiller local reste disponible sans elle.
 
+<a id="8-régler-en-détail-en-mode-expert"></a>
+<a id="console-expert"></a>
+
 ## 6. Console Simple et Expert
 
 **Simple** : sélectionne la façade ou le retour, règle volume, mute et solo. Le nom d’une source ouvre ses réglages détaillés. Les noms proviennent de la console ou du simulateur ; préparer le groupe dans le coach ne renomme pas silencieusement une console réelle.
