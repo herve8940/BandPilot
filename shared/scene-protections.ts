@@ -5,8 +5,8 @@ export type SceneProtection={channel:number;sections:SceneRecallSection[]};
 export type SceneProtections={model:MixerModelId;revision:number;rules:SceneProtection[]};
 export const PROTECTION_CONFLICT='Les protections ont changé. Recharge-les puis recommence.';
 export const PROTECTION_INVALID='Protections invalides pour ce modèle de console.';
-export const PROTECTION_FULL='Des protections de scène sont actives. Utilise le rappel sélectif ou retire explicitement les protections avant un rappel complet, ReaCue ou PC → Table.';
-export const PROTECTION_NOTICE='Les cases cochées conservent les réglages actuels des entrées de destination lors des rappels sélectifs et de leur annulation. Sur une paire liée, la famille est protégée des deux côtés. Les rappels complets (y compris les scènes ReaCue) et PC → Table sont bloqués tant qu’une protection est active.';
+export const PROTECTION_FULL='Des protections de scène sont actives. Utilise le rappel sélectif ou retire explicitement les protections avant un rappel complet ou PC → Table.';
+export const PROTECTION_NOTICE='Les cases cochées conservent les réglages actuels des entrées de destination lors des rappels sélectifs et de leur annulation. Sur une paire liée, la famille est protégée des deux côtés. Les rappels complets et PC → Table sont bloqués tant qu’une protection est active.';
 export const PROTECTION_SCOPE='Ces choix sont mémorisés pour ce modèle dans cette installation de BandPilot, en réel comme en simulation. Ils ne verrouillent pas les réglages manuels, les presets, les réglages groupés ou les autres applications.';
 export function protectionModel(model:unknown){
  const m=typeof model==='string'&&Object.hasOwn(MIXER_MODELS,model)?MIXER_MODELS[model as MixerModelId]:undefined;

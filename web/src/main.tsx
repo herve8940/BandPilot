@@ -7,6 +7,7 @@ import { createRoot } from "react-dom/client";
 import {AuthGate} from "./StudioControl";
 import App from "./App";
 import "./style.css";
+import "./regie.css";
 
 // In the desktop app, confirmations use the selected language in a native window with the app icon.
 const desktopDialog = (window as unknown as { xr18DesktopDialog?: { confirm: (m: string) => boolean; alert: (m: string) => void } }).xr18DesktopDialog;

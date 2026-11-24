@@ -15,7 +15,7 @@ const mains:Strip[]=[{id:'lr',kind:'lr',prefix:'/lr',short:'LR',fallback:'Main s
 const banks=[{name:'Canaux 1–16',strips:channels.slice(0,16)},{name:'Canaux 17–32',strips:channels.slice(16)},{name:'Bus 1–16',strips:buses},{name:'DCA 1–8',strips:dcas},{name:'Matrices / Main',strips:[...matrices,...mains]}];
 const levelAddress=(s:Strip)=>`${s.prefix}/${s.kind==='dca'?'fader':'mix/fader'}`;
 const muteAddress=(s:Strip)=>`${s.prefix}/${s.kind==='dca'?'on':'mix/on'}`;
-export function X32Console({canWrite}:{canWrite:boolean}){
+export function X32Console({canWrite,simulation=false}:{canWrite:boolean;simulation?:boolean}){
  const model=useMixerModel(),live=useLiveMixer(),{values,set,confirmed,online}=live;
  const [bank,setBank]=useState(0),[selected,setSelected]=useState<Strip>(channels[0]!),[step,setStep]=useState<'eq'|'comp'|'gate'|'sends'>('comp');
  const writable=canWrite&&online;
@@ -23,7 +23,7 @@ export function X32Console({canWrite}:{canWrite:boolean}){
  useEffect(()=>{if(selected.kind!=='ch'&&(step==='gate'||step==='sends'))setStep('comp');},[selected.id]);
  const props:ViewProps={strip:selected,values,set,confirmed,canWrite:writable,open:s=>setSelected(s)};
  return <section className="xs2 xs3 xs-expert-desk x32-core" aria-label={tx(`Console ${model.label}`)}>
-  <header className="x32-heading"><strong>{tx(model.brand)} {tx(model.label)}</strong><span>{tx(writable?'Contrôle actif':'Lecture seule')}{tx(" · 32 canaux · 16 bus · 8 DCA · 6 matrices")}</span></header>
+  <header className="x32-heading"><strong>{tx(model.brand)} {tx(model.label)}</strong><span>{tx(!online?'Hors ligne':simulation?'Simulation':writable?'Contrôle actif':'Lecture seule')}{tx(" · 32 canaux · 16 bus · 8 DCA · 6 matrices")}</span></header>
   <p className="x32-note">{tx("Adaptateur X32 en validation : niveaux, mutes, panoramas, EQ, dynamique et envois de canaux aux bus. Routage matériel, préamplis, FX, scènes complètes, vumètres et carte USB nécessitent encore leur adaptation et une validation sur console.")}</p>
   {live.message&&<p role="alert">{tx(live.message)}</p>}
   <nav className="visual-bank-select" aria-label={tx("Banques X32")}>{banks.map((b,i)=><button key={tx(b.name)} type="button" aria-pressed={i===bank} onClick={()=>setBank(i)}>{tx(b.name)}</button>)}</nav>

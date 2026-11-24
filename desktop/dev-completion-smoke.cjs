@@ -10,7 +10,7 @@ module.exports=async(win,wait,screenshot)=>{
  const read=async address=>(await api('/api/console/parameters?prefix='+encodeURIComponent(address))).parameters.find(p=>p.address===address).state.value;
  await set({'/config/chlink/1-2':0,'/config/buslink/1-2':0,'/ch/01/mix/fader':-18,'/ch/02/mix/fader':-12,'/ch/02/mix/on':1,'/bus/1/eq/mode':2,'/bus/1/geq/1k':-4});
  const before=[await read('/ch/01/mix/fader'),await read('/ch/02/mix/on')];
- await js(`document.querySelector('button[title="Régler le son"]').click()`);await wait(`!!document.querySelector('.rail-pages')`);await button('.rail-pages','Console');await button('body','Expert');await wait(`!!document.querySelector('.xs2-tabs')`);await button('.xs2-tabs','Mélangeur');await wait(`!!document.querySelector('.console-commands summary')`);
+ await js(`document.querySelector('button[title="Console"]').click()`);await wait(`!!document.querySelector('.subnav')`);await button('.subnav','Mixage');await button('body','Expert');await wait(`!!document.querySelector('.xs2-tabs')`);await button('.xs2-tabs','Mélangeur');await wait(`!!document.querySelector('.console-commands summary')`);
  await js(`document.querySelector('.console-commands summary').click()`);await wait(`!!document.querySelector('.console-commands fieldset')`);
  await input('.console-commands label:nth-child(1) input','DEV manual command');await input('.console-commands input[type=number]','-9');await button('.console-commands','Ajouter à la commande');await button('.console-commands','Enregistrer la commande');await wait(`document.querySelector('.console-commands [role=status]')?.textContent.includes('Commande enregistrée')`);
  if(await read('/ch/01/mix/fader')!==before[0])throw Error('Saving macro wrote audio');

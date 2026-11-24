@@ -46,7 +46,7 @@ Inizia con **Mixer → PC** per leggere e salvare lo stato del mixer esistente. 
 
 ## 4. Spazi principali
 
-**Suona** raccoglie console, monitor e **Il mio fonico**. **Prove** funziona con REAPER. **Concert** segue il progetto dello spettacolo preparato. **Prepara** contiene brani, scalette, prove e scene. **Impostazioni** contiene connessione, account e integrazioni. Riduci il menu laterale per lasciare più spazio al mixer. Sugli schermi piccoli, usa i banchi e lo scorrimento per raggiungere tutti i controlli.
+**Suona** raccoglie console, monitor e **Il mio fonico**. **Prove** funziona con REAPER. **Concerto** segue la scaletta attiva. **Prepara** contiene brani, scalette, prove e scene. **Impostazioni** contiene connessione, account e integrazioni. Riduci il menu laterale per lasciare più spazio al mixer. Sugli schermi piccoli, usa i banchi e lo scorrimento per raggiungere tutti i controlli.
 
 ## 5. Controllo del suono guidato
 
@@ -78,7 +78,7 @@ I telefoni già aperti seguono le modifiche di sola lettura/controllo senza rica
 
 <h2 id="reaper">8. Prove e registrazione REAPER</h2>
 
-1. **Preparare REAPER** — Reinstalla il bridge fornito con 2.3.15 anche se indica già 1.5.0, poi riavvia REAPER. Apri un progetto per scheda con i suoi media. In Prove → Con i miei brani scegli il progetto, verifica ingressi, tracce armate, traccia Originale e fine. REC crea una take separata nel progetto: verifica prima gli ingressi audio reali.
+1. **Preparare REAPER** — Se richiesto in Prove, installa il bridge incluso in BandPilot e riavvia REAPER. Apri un progetto per scheda con i suoi media. In Prove → Con i miei brani scegli il progetto, verifica ingressi, tracce armate, traccia Originale e fine. REC crea una take separata nel progetto: verifica prima gli ingressi audio reali.
 
 2. **Assegnare il responsabile** — In Monitor → Telefoni crea un link per musicista e assegna il responsabile dalla sua scheda. Sulla stessa rete locale il QR apre Il mio monitor, Il mio brano e Prove. Il ruolo è revocabile. Il responsabile sceglie brano, originale, accompagnamento o take, brano intero o sezione, loop e conteggio disponibili.
 
@@ -104,7 +104,7 @@ Cattura scene e importa/esporta JSON. I richiami mantengono un backup e richiedo
 
 ## 10. Analisi, spettacoli, resoconti e risoluzione dei problemi
 
-L'analisi X-Air utilizza i livelli hardware disponibili, le misurazioni di spettro e dinamica; esaminare le proposte A/B prima di candidarsi. Lo spettro X32 non è disponibile. Preparare setlist, regioni, media e mappature ReaCue prima dell'uso dal vivo; non è stato convalidato un concerto completo nell'ultima sessione manuale.
+L'analisi X-Air utilizza i livelli hardware disponibili, le misurazioni di spettro e dinamica; esaminare le proposte A/B prima di candidarsi. Lo spettro X32 non è disponibile.
 
 Gli account opzionali separano l'accesso amministratore, musicista bus assegnato e ospite di sola lettura. Nessuna risposta del mixer: controlla i permessi di rete, IP e rete locale/firewall. Telefono non disponibile: controlla condivisione, Wi-Fi e collegamento QR. Bridge non disponibile: installa la versione corrente e riavvia REAPER dopo aver salvato. Eseguire il backup delle scene e dei supporti di progetto prima dell'aggiornamento. La diagnostica include gli IP locali: esaminali prima di pubblicarli pubblicamente.
 
@@ -131,3 +131,7 @@ Il collegamento alla scheda tecnica apre le schede dei musicisti e la pianta sta
 Il sostegno volontario aiuta a dedicare tempo alle correzioni, alle prove sui mixer e alle guide in cinque lingue. Anche segnalazioni, traduzioni e condivisioni sono utili.
 
 [Come aiutare il progetto](SUPPORT_IT.md) · [Dati e privacy (FR / EN)](PRIVACY.md)
+
+## Suonare dal vivo
+
+Apri i progetti in REAPER. In **Prove**, scegli **Prepara la scaletta**. Aggiungi i brani desiderati. In **Scaletta** ordina i brani e i bis, poi scegli **Apri il concerto**. Avanti passa al brano seguente. Puoi avviare separatamente accompagnamento, originale o take e aprire il PDF allegato al brano.

@@ -15,7 +15,8 @@ await cp(resolve(root,'web/dist'),resolve(out,'web'),{recursive:true});
 await mkdir(resolve(out,'node_modules/sql.js/dist'),{recursive:true});
 for(const name of ['package.json','LICENSE','dist/sql-wasm.js','dist/sql-wasm.wasm'])await cp(resolve(root,'android/runtime/node_modules/sql.js',name),resolve(out,'node_modules/sql.js',name));
 const version=JSON.parse(await readFile(resolve(root,'android/runtime/package.json'),'utf8')).version;
-let commit='source';try{commit=execFileSync('git',['rev-parse','--short=12','HEAD'],{cwd:root,encoding:'utf8'}).trim();}catch{}
+let commit=process.env.GITHUB_SHA?.slice(0,12);
+if(!commit){try{commit=execFileSync('git',['rev-parse','--short=12','HEAD'],{cwd:root,encoding:'utf8'}).trim();}catch{commit='source';}}
 const revision=createHash('sha256').update(commit).update(await readFile(resolve(out,'server.mjs'))).update(await readFile(resolve(out,'bootstrap.cjs'))).update(await readFile(resolve(out,'web/index.html'))).digest('hex').slice(0,16);
 await writeFile(resolve(out,'version.json'),JSON.stringify({version,build:commit+' · Android '+revision,revision}));
 await mkdir(resolve(out,'licenses'),{recursive:true});

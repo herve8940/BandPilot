@@ -1,3 +1,4 @@
+import {stereoLinkGroup,stereoConflict,stereoLinkSummary} from '../shared/stereo-link.js';
 import {PORTABLE_CHANGED,PORTABLE_FILTERS,PORTABLE_FORMAT,PORTABLE_INVALID,PORTABLE_LINKED,PORTABLE_SCOPE,PORTABLE_SECTIONS,portableModel,validatePortableScene,type PortableScene,type PortableSection,type PortableTrack} from '../shared/portable-scene.js';
 import {sceneRecallSection} from '../shared/scene-recall.js';
 import {nativeSceneSettings} from './native-scene-recall.js';
@@ -101,40 +102,52 @@ export async function capturePortable(xr:XR18,control:ConsoleControl,model:unkno
  return portableFromValues(source.id,values,channels);
 }
 
-async function preparePortable(xr:XR18,control:ConsoleControl,library:LibraryStore,input:Record<string,Value>,previousGuards?:Record<string,Value>){
+async function preparePortable(xr:XR18,control:ConsoleControl,library:LibraryStore,input:Record<string,Value>,expectedLinks:Record<string,Value>,previousGuards?:Record<string,Value>){
  const model=portableModel(xr.model().id),identity=control.identity(),operation=xr.operationId();
  const check=()=>{if(identity!==control.identity()||operation!==xr.operationId())throw Error('Connexion modifiée');};
  const protections=library.protections(model.id),protectedChannels=new Map(protections.rules.map(rule=>[rule.channel,new Set(rule.sections)]));
  const values:Record<string,Value>={},guards:Record<string,Value>={},before:Record<string,Value>={},excluded:Record<number,Set<PortableSection>>={};
  const prepared=new Set<number>();
+ // Read topology first, including protected members. Recall never creates a pair.
+ for(const [address,value] of Object.entries(expectedLinks)){
+  if(!/^\/config\/chlink\/\d+-\d+$/.test(address)||!xr.supports(address)||(value!==0&&value!==1))throw Error(PORTABLE_INVALID);
+  check();guards[address]=await xr.readParameter(address);if(guards[address]!==value)throw Error(PORTABLE_LINKED);
+ }
  for(const [address,value] of Object.entries(input)){
   const match=/^\/ch\/(\d{2})\/(.+)$/.exec(address);
-  const ch=Number(match?.[1]),group=match&&allowedSection(match[2]!);
-  if(!group||!Number.isInteger(ch)||ch<1||ch>model.channels||!xr.supports(address))throw Error(PORTABLE_INVALID);
-  if(protectedChannels.get(ch)?.has(group)){(excluded[ch]??=new Set()).add(group);continue;}
+  const ch=Number(match?.[1]),leaf=match?.[2]??'',group=allowedSection(leaf);
+  if(!group||!Number.isInteger(ch)||ch<1||ch>model.channels||!xr.supports(address)||guards[stereoLink(ch)]===undefined)throw Error(PORTABLE_INVALID);
+  const linked=guards[stereoLink(ch)]===1,partner=ch%2?ch+1:ch-1,family=stereoLinkGroup(leaf);
+  if(linked&&family){const option='/config/linkcfg/'+family;guards[option]??=await xr.readParameter(option);}
+  const shared=linked&&family!==null&&guards['/config/linkcfg/'+family]!==0;
+  if(protectedChannels.get(ch)?.has(group)||shared&&protectedChannels.get(partner)?.has(group)){
+   (excluded[ch]??=new Set()).add(group);continue;
+  }
+  if(shared&&(!Object.hasOwn(input,prefix(partner)+leaf)||input[prefix(partner)+leaf]!==value))throw Error(stereoConflict(leaf));
   if(!prepared.has(ch)){
    check();
-   const link=stereoLink(ch);
-   guards[link]??=await xr.readParameter(link);
-   if(guards[link]!==0)throw Error(PORTABLE_LINKED);
-   for(const leaf of sourceLeaves){
-    const guard=prefix(ch)+leaf;
-    if(xr.supports(guard))guards[guard]=await xr.readParameter(guard);
-   }
+   for(const source of sourceLeaves){const guard=prefix(ch)+source;if(xr.supports(guard))guards[guard]=await xr.readParameter(guard);}
    prepared.add(ch);
   }
-  check();
-  const current=await xr.readParameter(address);
-  if(typeof current==='number'&&typeof value==='number'?Math.abs(current-value)<=1e-10:current===value)continue;
-  values[address]=validateWire(address,value);before[address]=current;
+  check();before[address]=await xr.readParameter(address);values[address]=validateWire(address,value);
  }
- for(const [address,value] of Object.entries(guards))if(previousGuards&&previousGuards[address]!==value)throw Error(PORTABLE_CHANGED);
- check();
- control.checkRecallRevision(protections.revision);
+ // Keep both shared sides in the preview and backup, even if one was unchanged.
+ for(const [address,value] of Object.entries(values)){
+  const [,number,leaf]=/^\/ch\/(\d{2})\/(.+)$/.exec(address)!;
+  const ch=Number(number),family=stereoLinkGroup(leaf!);
+  if(guards[stereoLink(ch)]===1&&family&&guards['/config/linkcfg/'+family]!==0){
+   const other=prefix(ch%2?ch+1:ch-1)+leaf;
+   if(values[other]!==value||before[other]!==before[address])throw Error(stereoConflict(leaf!));
+  }
+ }
+ if(previousGuards)for(const [address,value] of Object.entries(previousGuards)){
+  check();if((guards[address]??await xr.readParameter(address))!==value)throw Error(PORTABLE_CHANGED);
+ }
+ check();control.checkRecallRevision(protections.revision);
  const skipped=Object.entries(excluded).map(([channel,sections])=>({channel:Number(channel),sections:[...sections]}));
- if(!Object.keys(values).length)return {token:null,changes:[],excluded:skipped};
+ if(!Object.entries(values).some(([a,v])=>typeof v==='number'&&typeof before[a]==='number'?Math.abs(v-Number(before[a]))>1e-10:v!==before[a]))return {token:null,changes:[],excluded:skipped};
  const result=await control.preview(values,true,guards,'portable-scene-backup',before,protections.revision,identity);
- return {...result,excluded:skipped};
+ return {...result,excluded:skipped,stereoLink:stereoLinkSummary(Object.keys(values),guards)};
 }
 
 export async function previewPortable(xr:XR18,control:ConsoleControl,library:LibraryStore,entry:Entry,body:Record<string,unknown>){
@@ -145,18 +158,24 @@ export async function previewPortable(xr:XR18,control:ConsoleControl,library:Lib
  if(!Array.isArray(sections)||!sections.length||sections.some(s=>!PORTABLE_SECTIONS.includes(s))||new Set(sections).size!==sections.length||
   !Array.isArray(mapping)||!mapping.length||mapping.length>model.channels||mapping.some(m=>!m||!Number.isInteger(m.source)||!Number.isInteger(m.target)||m.target<1||m.target>model.channels)||
   new Set(mapping.map(m=>m.source)).size!==mapping.length||new Set(mapping.map(m=>m.target)).size!==mapping.length)throw Error(PORTABLE_SCOPE);
- const values:Record<string,Value>={};
+ const values:Record<string,Value>={},topology:Record<string,Value>={};
  for(const {source,target} of mapping){
   const track=scene.tracks.find(t=>t.channel===source);
   if(!track)throw Error(PORTABLE_SCOPE);
-  if(track.linked)throw Error(PORTABLE_LINKED);
+  if(track.linked){
+   const partner=source%2?source+1:source-1,other=mapping.find(m=>m.source===partner);
+   if(!scene.tracks.find(t=>t.channel===partner)?.linked||!other||source%2!==target%2||other.target!==(target%2?target+1:target-1))throw Error(PORTABLE_LINKED);
+  }
+  const link=stereoLink(target),value=Number(track.linked);
+  if(topology[link]!==undefined&&topology[link]!==value)throw Error(PORTABLE_LINKED);
+  topology[link]=value;
   Object.assign(values,wireValues(track,target,sections));
  }
- return preparePortable(xr,control,library,values);
+ return preparePortable(xr,control,library,values,topology);
 }
 
 export async function previewPortableBackup(xr:XR18,control:ConsoleControl,library:LibraryStore,entry:Entry){
  const saved=entry.data as {version:number;model:string;values:Record<string,Value>;guards:Record<string,Value>};
  if(saved?.version!==1||saved.model!==xr.model().id||!saved.values||!saved.guards)throw Error(PORTABLE_INVALID);
- return preparePortable(xr,control,library,saved.values,saved.guards);
+ return preparePortable(xr,control,library,saved.values,Object.fromEntries(Object.entries(saved.guards).filter(([a])=>a.startsWith('/config/chlink/'))),saved.guards);
 }

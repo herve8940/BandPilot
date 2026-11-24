@@ -10,7 +10,7 @@ export type RehearsalCommand={
  a?:string;b?:string;name?:string;original?:string;endMarker?:string;autoSave?:boolean;
  track?:string;volume?:number;on?:boolean;index?:number;stereo?:boolean;position?:number;kind?:'mute'|'solo';
 };
-export type RehearsalTab={id:string;title:string;number:number;saved:boolean;current:boolean;duration?:number};
+export type RehearsalTab={id:string;title:string;number:number;saved:boolean;current:boolean;duration?:number;fileKey?:string};
 export type RehearsalTake={id:string;number:number;stamp:number;first:number;last:number;partial:boolean;channels:number};
 export type RehearsalMarker={id:string;pos:number;name:string;ending?:boolean};
 export type ConfiguredInput={usb:number;name:string;stereo:boolean;available:boolean};

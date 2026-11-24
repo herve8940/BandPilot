@@ -1,5 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {GUIDED_AMBIENCES,ambiencesForSource} from '../shared/vocal-ambiences.js';
+import {FX_NAMES,FX_SCHEMAS} from '../shared/fx-parameters.js';
 import {fromWire,toWire,readbackTolerance,type Value} from './parameters.js';
 import {type CoachProfile} from './sound-coach.js';
 import type {XR18} from './xr18.js';
@@ -9,7 +10,7 @@ type Values=Record<string,Value>;
 type Fx=Awaited<ReturnType<XR18['readFx']>>;
 type Snapshot={values:Values;fx:Fx};
 type Choice={channel:number;ambience:string;doses:Record<string,number>};
-type Session={identity:string;slot:number;choice:Choice;origin:Snapshot;current:Snapshot;trialBefore?:Snapshot;previousChoice?:Choice;phase:'trial'|'kept'|'recovery'|'finished';error?:string};
+type Session={identity:string;slot:number;choice:Choice;origin:Snapshot;current:Snapshot;trialBefore?:Snapshot;previousChoice?:Choice;phase:'trial'|'kept'|'recovery'|'finished';error?:string;conflict?:string};
 type Preview={id:string;identity:string;expires:number;connection:number;choice:Choice;before:Snapshot;after:Snapshot;guards:Values};
 const effectReturnName=(source:string|undefined)=>source==='lead-rock'||source==='backing-vocal'?'Voix FX':'Ambiance FX';
 const ch=(c:number)=>`/ch/${String(c).padStart(2,'0')}`;
@@ -24,6 +25,8 @@ export function vocalFxProgram(id:string,slot:number):Fx{
  const values=[a.preDelayMs/200,log(a.decaySeconds,plate?.5:.2,plate?10:5),(a.size-2)/98,log(6000,1000,20000),(20-1)/29,.5,log(180,10,500),log(a.highCutHz,200,20000),log(.7,.5,2),plate?log(200,10,500):.4,plate?.1:.2,.1];
  return {slot,algorithm:a.algorithm,parameters:values.map(value=>({type:'f',value}))};
 }
+export class AmbienceConflict extends Error {}
+
 export class VocalFx {
  private realSession:Session|null=null;
  private simulationSession:Session|null=null;
@@ -43,7 +46,7 @@ export class VocalFx {
  private identity(){const s=this.xr.status();return JSON.stringify([s.mode,s.model,s.host??'',s.port]);}
  private guard(write=false){if(this.xr.model().family!=='xair')throw Error('Ambiances vocales disponibles sur X-Air / M-Air');const s=this.xr.status();if(s.mode==='real'&&(!s.connected||write&&!s.writesEnabled))throw Error('Connecte la console et active le contrôle pour essayer');if(this.session&&this.session.identity!==this.identity())throw Error('Retrouve la console de cette ambiance avant de la modifier');}
  private persist(){if(this.xr.status().mode==='real'&&this.session){if(this.entry)this.library.update(this.entry,this.session);else this.entry=this.library.save('vocal-fx','Ambiance vocale',this.session).id;}}
- status(){const s=this.session,voices=this.profile().inputs.filter(i=>ambiencesForSource(i.source).length);return {supported:this.xr.model().family==='xair',voices,monitors:this.profile().musicians??[],session:s?{slot:s.slot,choice:s.choice,phase:s.phase,error:s.error,sameConsole:s.identity===this.identity(),sourceMissing:!voices.some(v=>v.channel===s.choice.channel),savedHost:this.savedIdentity(s)?.[2]??'',currentHost:this.xr.status().host??''}:null};}
+ status(){const s=this.session,voices=this.profile().inputs.filter(i=>ambiencesForSource(i.source).length);return {supported:this.xr.model().family==='xair',voices,monitors:this.profile().musicians??[],session:s?{slot:s.slot,choice:s.choice,phase:s.phase,error:s.error,conflict:s.conflict,sameConsole:s.identity===this.identity(),sourceMissing:!voices.some(v=>v.channel===s.choice.channel),savedHost:this.savedIdentity(s)?.[2]??'',currentHost:this.xr.status().host??''}:null};}
  private savedIdentity(s:Session){try{const identity=JSON.parse(s.identity);return Array.isArray(identity)&&identity.length===4?identity:null;}catch{return null;}}
  /** Forget only the application's ownership. Never restore a foreign console's snapshot. */
  async archive(confirmed=false){return this.serial(async()=>{
@@ -68,7 +71,7 @@ export class VocalFx {
    s.choice.doses[String(Number(key.split('/')[4]))]=Number(fromWire(key,value));
    if(s.previousChoice&&s.trialBefore)s.trialBefore.values[key]=value;
   }
-  s.identity=identity;s.current={values,fx};this.previewed=null;this.persist();diagnostic('ambience.reconnected',{slot:s.slot});return this.status();
+  delete s.conflict;s.identity=identity;s.current={values,fx};this.previewed=null;this.persist();diagnostic('ambience.reconnected',{slot:s.slot});return this.status();
  });}
  private async serial<T>(fn:()=>Promise<T>){if(this.busy)throw Error('Une opération d’ambiance est en cours');this.busy=true;try{return await fn();}finally{this.busy=false;}}
  private async read(keys:string[]){const values:Values={};for(let i=0;i<keys.length;i+=8)await Promise.all(keys.slice(i,i+8).map(async key=>{values[key]=await this.xr.readParameter(key);}));return values;}
@@ -86,19 +89,50 @@ export class VocalFx {
   // Existing return destinations are captured, shown in the preview and restored on undo.
   return true;
  }
- private async assertCurrent(s:Session){
+ private async inspectCurrent(s:Session){
+  const connection=this.xr.connectionId();
   const current=await this.read(Object.keys(s.current.values));
-  const dose=(key:string)=>new RegExp(`^/rtn/${s.slot}/mix/0[1-6]/level$`).test(key)&&Object.hasOwn(s.choice.doses,String(Number(key.split('/')[4])));
-  if(!this.equal(Object.fromEntries(Object.entries(s.current.values).filter(([key])=>!dose(key))),current)||!this.sameFx(s.current.fx,await this.xr.readFx(s.slot)))throw Error('Cette ambiance a été modifiée dans la console : aucun réglage remplacé. Vérifie le slot dans Effets.');
-  // Ear levels belong to the musicians. Accept their phone adjustments, and preserve
-  // them when undoing a style change; removing the whole ambience restores its origin.
-  for(const [key,value] of Object.entries(current))if(dose(key)&&value!==s.current.values[key]){
-   if(s.previousChoice&&s.trialBefore)s.trialBefore.values[key]=value;
-   s.current.values[key]=value;s.choice.doses[String(Number(key.split('/')[4]))]=Number(fromWire(key,value));
+  const fx=await this.xr.readFx(s.slot);
+  if(connection!==this.xr.connectionId()||s!==this.session||s.identity!==this.identity())throw Error('Console changée pendant la vérification');
+
+  const levels=new Map(Object.keys(s.choice.doses).map(bus=>[`/rtn/${s.slot}/mix/${bus.padStart(2,'0')}/level`,bus]));
+  const readings:Record<string,number>={};
+  for(const [key,bus] of levels)readings[bus]=Number(fromWire(key,current[key]!));
+
+  let conflict:string|undefined;
+  if(s.current.fx.algorithm!==fx.algorithm){
+   const name=(id:number)=>FX_SCHEMAS[id]?.name??FX_NAMES[id]??String(id);
+   conflict=`L’ambiance utilisait ${name(s.current.fx.algorithm)}. La console utilise actuellement ${name(fx.algorithm)}.`;
+  }else if(!this.sameFx(s.current.fx,fx)){
+   conflict='Les paramètres de l’effet diffèrent de ceux de l’ambiance enregistrée.';
+  }else{
+   const changed=Object.entries(s.current.values).find(([key,value])=>!levels.has(key)&&!this.equal({[key]:value},current));
+   if(changed)conflict=`Le réglage ${changed[0]} diffère de celui de l’ambiance enregistrée.`;
   }
-  this.persist();
+
+  let dirty=conflict!==s.conflict;
+  s.conflict=conflict;
+  // An unrelated effect can occupy the same slot. Its readings must never
+  // replace the saved trial or the snapshot used to undo a style change.
+  if(!conflict)for(const [key,bus] of levels){
+   const value=current[key]!;
+   if(value===s.current.values[key])continue;
+   if(s.previousChoice&&s.trialBefore)s.trialBefore.values[key]=value;
+   s.current.values[key]=value;s.choice.doses[bus]=readings[bus]!;dirty=true;
+  }
+  if(dirty)this.persist();
+  return readings;
  }
- async readDoses(){return this.serial(async()=>{this.guard();if(this.session&&this.session.phase!=='recovery')await this.assertCurrent(this.session);return this.status();});}
+ private async assertCurrent(s:Session){
+  await this.inspectCurrent(s);
+  if(s.conflict)throw new AmbienceConflict(s.conflict);
+ }
+ async readDoses(){return this.serial(async()=>{
+  this.guard();
+  const s=this.session;
+  const readings=s&&s.phase!=='recovery'?await this.inspectCurrent(s):undefined;
+  return {...this.status(),readings};
+ });}
  async preview(input:unknown){return this.serial(async()=>{
   this.guard();const identity=this.identity(),connection=this.xr.connectionId();if(this.session?.phase==='trial'||this.session?.phase==='recovery')throw Error('Garde ou annule d’abord l’essai en cours');
   const choice=input as Choice;if(!choice||!Number.isInteger(choice.channel)||!this.status().voices.some(i=>i.channel===choice.channel&&ambiencesForSource(i.source).some(a=>a.id===choice.ambience))||!choice.doses||typeof choice.doses!=='object'||Array.isArray(choice.doses))throw Error('Choisis une source, une ambiance adaptée et les retours');

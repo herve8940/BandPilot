@@ -1,10 +1,14 @@
 // Runs only from --smoke-test, against the disposable simulation profile.
 module.exports=async function coachSmoke(win,wait){
  const js=source=>win.webContents.executeJavaScript(source);
- const click=async(selector,label)=>js(`(()=>{const button=[...document.querySelectorAll(${JSON.stringify(selector)})].find(b=>b.textContent.trim().endsWith(${JSON.stringify(label)}));if(!button||button.disabled)throw Error('Commande indisponible : '+${JSON.stringify(label)});button.click();})()`);
+ const click=async(selector,label)=>{
+   const target=`[...document.querySelectorAll(${JSON.stringify(selector)})].find(b=>b.textContent.trim().endsWith(${JSON.stringify(label)})&&!b.disabled)`;
+   // The coach can refresh between frames when the simulator reconnects.
+   await wait(`(()=>{const button=${target};if(!button)return false;button.click();return true;})()`);
+ };
  const status=await js(`fetch('/api/status').then(r=>r.json())`);
  if(status.mode!=='simulation'||status.writesEnabled)throw Error('Coach smoke requires simulation');
- await click('.coach-journey button','Dire qui est branché où');
+ await click('.coach-journey button','Instruments');
  await wait(`!!document.querySelector('.coach-inputs')`);
  const before=await js(`fetch('/api/coach').then(r=>r.json()).then(d=>d.profile.inputs.length)`);
  await click('.coach-actions button','Ajouter un instrument');
@@ -24,11 +28,12 @@ module.exports=async function coachSmoke(win,wait){
  if(named!=='Basse Eric')throw Error('Instrument validation did not reach the simulated mixer');
  await win.loadURL(win.webContents.getURL());
  await wait(`!!document.querySelector('.studio')`);
- await js(`document.querySelector('button[title="Régler le son"]').click()`);
+ await js(`document.querySelector('button[title="Balance"]').click()`);
  await wait(`!!document.querySelector('.coach-shortcuts')`);
- await click('.coach-journey button','Dire qui est branché où');
+ await click('.coach-journey button','Instruments');
  await wait(`[...document.querySelectorAll('.coach-input2 input')].some(i=>i.value==='Basse Éric')`);
  // Read-only preview also exercises the source ambience screen in the native build.
+ await js(`document.querySelector('.balance-tools summary').click()`);
  await click('.coach-shortcuts button','Ambiances des sources');
  await wait(`!!document.querySelector('.vocal-kit fieldset')`);
  await click('.vocal-kit button','Préparer mon ambiance');

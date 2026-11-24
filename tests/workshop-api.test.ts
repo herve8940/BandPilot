@@ -18,7 +18,7 @@ test('interrupted workshop blocks competing recording, routing and scene routes 
   while(Date.now()<deadline&&child.exitCode===null){try{if((await fetch(url+'/api/auth',{signal:AbortSignal.timeout(1000)})).ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,50));}
   assert.ok(ready,'Server did not start before the test deadline.\n'+logs);
   const state=await (await fetch(url+'/api/workshop')).json() as any;assert.equal(state.active.phase,'recovery');assert.equal(state.active.a,undefined);
-  for(const path of ['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/mixer-sync/apply','/api/console/apply','/api/reacue/event','/api/library/abc/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo']){
+  for(const path of ['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/mixer-sync/apply','/api/console/apply','/api/library/abc/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo']){
    const res=await post(path);assert.equal(res.status,409);assert.match((await res.json() as any).error,/Atelier du son/);
   }
   for(const action of ['apply','undo']){const invalid=await post('/api/coach/vocal-fx/nested/'+action);assert.equal(invalid.status,400);assert.match((await invalid.json() as any).error,/Action d’ambiance inconnue/);}

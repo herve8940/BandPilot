@@ -69,7 +69,7 @@ test('musicians can dose the shared effect from their phones without breaking st
   const second=await f.fx.preview({...choice,ambience:'slap'});await f.fx.apply(second.token,true);
   const amount=toWire('/rtn/1/mix/02/level',-15);await f.xr.writeParameter('/rtn/1/mix/02/level',amount);
   await f.fx.undo(false,true);assert.equal(await f.xr.readParameter('/rtn/1/mix/02/level'),amount);assert.equal(f.fx.status().session!.choice.ambience,'pop');
-  await f.xr.writeParameter('/rtn/1/mix/03/level',.5);await assert.rejects(f.fx.readDoses(),/modifiée/,'a new recipient is not silently adopted');
+  await f.xr.writeParameter('/rtn/1/mix/03/level',.5);const result=await f.fx.readDoses();assert.match(result.session!.conflict!,/rtn\/1\/mix\/03\/level/);assert.equal(result.readings?.['3'],undefined);await assert.rejects(f.fx.undo(true,true),/diffère/);
  }finally{f.close();}
 });
 
@@ -80,7 +80,7 @@ test('small manual FX changes invalidate a preview and a kept session',async()=>
   await assert.rejects(f.fx.apply(p.token,true),/console a changé/);assert.equal(f.fx.status().session,null);
   const next=await f.fx.preview(choice);await f.fx.apply(next.token,true);await f.fx.keep();
   const changed=await f.xr.readFx(1);changed.parameters[0]!.value+=.01;await f.xr.applyFx(changed);
-  await assert.rejects(f.fx.undo(true,true),/modifiée/);assert.deepEqual(await f.xr.readFx(1),changed);
+  await assert.rejects(f.fx.undo(true,true),/paramètres de l’effet diffèrent/);assert.deepEqual(await f.xr.readFx(1),changed);
  }finally{f.close();}
 });
 
@@ -130,5 +130,47 @@ test('source presets are enforced and an instrument trial uses only its own FX s
   assert.equal(await f.xr.readParameter('/ch/03/mix/07/level'),toWire('/ch/03/mix/07/level',0));
   await fx.undo(false,true);
   assert.equal(await f.xr.readParameter('/ch/03/mix/07/level'),0);
+ }finally{f.close();}
+});
+
+test('a saved Rock trial can be inspected and released after the console switches to Room',async t=>{
+ const f=fixture();
+ try{
+  const status=f.xr.status.bind(f.xr);
+  f.xr.status=()=>({...status(),mode:'real',connected:true,writesEnabled:true,host:'192.0.2.8'});
+  const preview=await f.fx.preview({...choice,ambience:'rock'});
+  await f.fx.apply(preview.token,true);
+  const original=await f.xr.readFx(1);
+  const room={slot:1,algorithm:3,parameters:[]};
+  await f.xr.applyFx(room);
+  const level='/rtn/1/mix/01/level';
+  await f.xr.writeParameter(level,toWire(level,-12));
+  const writes=[t.mock.method(f.xr,'applyFx'),t.mock.method(f.xr,'applyParameters'),t.mock.method(f.xr,'writeParameter')];
+  const session=new VocalFx(f.xr,f.db,()=>profile);
+  await assert.rejects(session.keep(),/Plate Reverb.*Room Reverb/);
+  await assert.rejects(session.undo(false,true),/Room Reverb/);
+  const observed=await session.readDoses();
+  assert.match(observed.session!.conflict!,/Room Reverb/);
+  assert.ok(Math.abs(observed.readings!['1']!+12)<0.01);
+  assert.equal(observed.session!.choice.doses['1'],-18);
+  const reopened=new VocalFx(f.xr,f.db,()=>profile);
+  assert.equal(reopened.status().session?.conflict,observed.session!.conflict);
+  // If the mixer returns to the saved effect, normal tracking can resume.
+  await f.xr.applyFx(original);
+  assert.equal((await reopened.readDoses()).session?.conflict,undefined);
+  await f.xr.applyFx(room);
+  const expected=await f.xr.readFx(1);
+  const before=writes.map(w=>w.mock.callCount());
+  await reopened.readDoses();
+  await assert.rejects(reopened.archive(false),/Confirme/);
+  assert.ok(reopened.status().session);
+  await reopened.archive(true);
+  assert.equal(new VocalFx(f.xr,f.db,()=>profile).status().session,null);
+  assert.deepEqual(await f.xr.readFx(1),expected);
+  assert.equal(await f.xr.readParameter(level),toWire(level,-12));
+  assert.deepEqual(writes.map(w=>w.mock.callCount()),before);
+  assert.equal(before[0],2);
+  assert.equal(before[1],0);
+  assert.equal((await reopened.preview(choice)).slot,2);
  }finally{f.close();}
 });

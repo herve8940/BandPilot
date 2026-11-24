@@ -209,11 +209,25 @@ app.whenReady().then(async () => {
         main:win,createWindow:()=>new BrowserWindow({show:false,width:390,height:730,webPreferences:{sandbox:true,contextIsolation:true}}),
         screenshot,fixture:rehearsalSmoke,port
       });
+      if(process.argv.includes('--smoke-layout-only')){
+        await require('./layout-smoke.cjs')(win,waitForRenderer);
+        rehearsalSmoke.stop();app.exit(0);return;
+      }
+      if(process.argv.includes('--smoke-guided-only')){
+        await require('./guided-ui-smoke.cjs')(win,waitForRenderer,screenshot);
+        rehearsalSmoke.stop();app.exit(0);return;
+      }
       if(process.argv.includes('--smoke-rehearsal-only')){
         await checkRehearsal();rehearsalSmoke.stop();app.exit(0);return;
       }
+      if(process.argv.includes('--smoke-mixing-only')){
+        await require('./mixing-completion-smoke.cjs')(win,waitForRenderer,screenshot);rehearsalSmoke.stop();app.exit(0);return;
+      }
       // Exercise the same language selector shipped to users, including native persistence.
       for(const next of ['en','it','es','de','fr']){
+        await win.webContents.executeJavaScript("document.querySelector('button[aria-controls=bp-preferences]').click()");
+        await waitForRenderer("!!document.querySelector('#bp-preferences:not([hidden]) select')");
+
         await win.webContents.executeJavaScript(`(()=>{const select=document.querySelector('.bandpilot-language select');if(!select)throw Error('Missing language selector');select.value=${JSON.stringify(next)};select.dispatchEvent(new Event('change',{bubbles:true}));})()`);
         await waitForRenderer(`document.documentElement.lang===${JSON.stringify(next)} && document.querySelector('.bandpilot-language select')?.value===${JSON.stringify(next)}`);
         if(JSON.parse(readFileSync(languagePath,'utf8')).language!==next||!Menu.getApplicationMenu().items.some(item=>item.label===languageLabel(next,'Connexion','Connection')))throw Error('Native language preference/menu not updated');
@@ -223,9 +237,10 @@ app.whenReady().then(async () => {
         await win.webContents.executeJavaScript("window.dispatchEvent(new Event('xr18-open-connection'))");
         await waitForRenderer(`document.querySelector('.bandpilot-language select')?.value===${JSON.stringify(next)}`);
       }
+      await require('./guided-ui-smoke.cjs')(win,waitForRenderer,screenshot);
       // Exercise the shipped rider and diagnostic bridge with an isolated simulation
       // profile. No GitHub issue or hardware command is sent by this smoke test.
-      await win.webContents.executeJavaScript(`document.querySelector('button[title="Régler le son"]').click()`);
+      await win.webContents.executeJavaScript(`document.querySelector('button[title="Balance"]').click()`);
       await waitForRenderer(`!!document.querySelector('.coach-shortcuts')`);
       await require('./coach-smoke.cjs')(win,waitForRenderer);
       await win.webContents.executeJavaScript(`document.querySelector('.coach-shortcuts button').click()`);
@@ -256,6 +271,7 @@ app.whenReady().then(async () => {
       await require('./midi-scenes-smoke.cjs')(win,waitForRenderer,screenshot);
       await require('./dev16-mix-tools-smoke.cjs')(win,waitForRenderer,screenshot);
       await require('./dev17-studio-additions-smoke.cjs')(win,waitForRenderer,screenshot);
+      await require('./mixing-completion-smoke.cjs')(win,waitForRenderer,screenshot);
       await checkRehearsal();
       rehearsalSmoke.stop();
       const mixerStatus=await (await fetch(`http://127.0.0.1:${port}/api/status`)).json();

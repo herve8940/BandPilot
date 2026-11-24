@@ -34,3 +34,17 @@
 .feature-actions .portable-toggle { display:flex; align-items:center; gap:.35rem; }
 .surface-widget .xm-fader { min-height:70px; flex:1; height:auto; }
 .surface-widget .xm-meter { min-height:24px; flex:1; }
+
+.surface-widget-expanded { overflow:auto; justify-content:flex-start; }
+.surface-widget-expanded label { display:grid; width:100%; gap:.2rem; font-size:.8rem; }
+.surface-widget-expanded input[type=range] { width:100%; padding:0; min-width:0; }
+.surface-widget-expanded .bank-group-fader { width:100%; }
+.surface-inspector fieldset { display:flex; flex-wrap:wrap; gap:.5rem; }
+.surface-inspector fieldset label { display:flex; align-items:center; gap:.3rem; }
+.room-estimate { margin:.8rem 0; max-width:720px; }
+.room-estimate svg { display:block; width:100%; background:var(--bg-panel,#17151f); border-radius:.5rem; }
+.room-estimate figcaption { font-size:.85rem; }
+.parameter-links-switch { display:flex; flex-wrap:wrap; align-items:center; gap:.6rem; padding:.6rem 1rem; }
+
+.parameter-links-switch > button { min-height:38px; padding:.5rem .8rem; border:1px solid var(--line,#40506b); border-radius:.65rem; background:var(--panel,#20273d); color:inherit; }
+.parameter-links-switch > button[aria-pressed="true"] { border-color:#a981ff; background:#46316c; }

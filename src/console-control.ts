@@ -7,8 +7,9 @@ import type {XR18} from './xr18.js';
 import type {LibraryStore} from './library-store.js';
 import {PROTECTION_CONFLICT,PROTECTION_FULL} from '../shared/scene-protections.js';
 export type CompleteScene={model?:string;version:2;scope:'console';values:Record<string,Value>;fx:Awaited<ReturnType<XR18['readFx']>>[];missing?:string[]};
+type PreviewCompletion={check:()=>void;commit:()=>void};
 export class ConsoleControl {
- private previews=new Map<string,{values:Record<string,Value>;before:Record<string,Value>;guards:Record<string,Value>;identity:string;expires:number;backupKind:BackupKind;recallRevision?:number}>();
+ private previews=new Map<string,{values:Record<string,Value>;before:Record<string,Value>;guards:Record<string,Value>;identity:string;expires:number;completion?:PreviewCompletion;backupKind:BackupKind;recallRevision?:number}>();
  constructor(private xr:XR18,private library:LibraryStore){}
  recallRevision(){return this.xr.model().family==='xair'?this.library.protections(this.xr.model().id).revision:0;}
  checkRecallRevision(revision?:number){if(revision!==undefined&&revision!==this.recallRevision())throw Error(PROTECTION_CONFLICT);}
@@ -53,7 +54,7 @@ export class ConsoleControl {
  async preview(input:unknown,wire=false,guards:Record<string,Value>={},backupKind:BackupKind='parameter-backup',expectedBefore?:Record<string,Value>,recallRevision?:number,expectedIdentity?:string){
   this.checkRecallRevision(recallRevision);
   if(expectedIdentity!==undefined&&expectedIdentity!==this.identity())throw Error('Connexion modifiée');
-  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length<1||Object.keys(input).length>1000)throw Error('1 à 1000 paramètres requis');
+  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length<1||Object.keys(input).length>1024)throw Error('1 à 1024 paramètres requis');
   const values:Record<string,Value>={},before:Record<string,Value>={};
   for(const [a,v] of Object.entries(input))values[a]=wire?validateWire(a,v):toWire(a,v);
   const identity=this.identity(),operation=this.xr.operationId();
@@ -68,6 +69,12 @@ export class ConsoleControl {
   this.previews.set(token,{values,before,guards:{...guards},identity,expires:Date.now()+PREVIEW_TTL_MS,backupKind,recallRevision});
   return {token,changes:Object.entries(values).map(([address,v])=>({address,before:fromWire(address,before[address]!),after:fromWire(address,v),sensitive:descriptor(address).sensitive})),phantom:Object.keys(values).some(a=>a.endsWith('/phantom'))};
  }
+ /** Bind local changes to this exact confirmed plan. Cancellation and expiry discard both. */
+ onApplied(token:string,completion:PreviewCompletion){
+  const plan=this.previews.get(token);
+  if(!plan)throw Error('Prévisualisation expirée ou connexion modifiée');
+  plan.completion=completion;
+ }
  async apply(token:unknown,allowPhantom=false,tolerant=false,assertActive:()=>void=()=>{}){
   const p=typeof token==='string'?this.previews.get(token):undefined;
   if(!p||p.expires<Date.now()||p.identity!==this.identity())throw Error('Prévisualisation expirée ou connexion modifiée');
@@ -80,11 +87,13 @@ export class ConsoleControl {
   if(p.identity!==this.identity()||operation!==this.xr.operationId())throw Error('Connexion modifiée ou opération interrompue');
   this.checkRecallRevision(p.recallRevision);
   assertActive();
+  p.completion?.check();
   const backup=p.backupKind!=='parameter-backup'
    ?this.library.save(p.backupKind,p.backupKind==='scene-recall-backup'?'Avant rappel sélectif':p.backupKind==='portable-scene-backup'?'Avant rappel portable':'Avant réglage des entrées',{version:1,model:this.xr.model().id,values:p.before,guards:p.guards})
    :this.library.save('parameter-backup','Avant modification console',p.before);
+  let failed:string[];
   try{
-   const {failed}=await this.xr.applyParameters(p.values,allowPhantom,tolerant,assertActive);
+   failed=(await this.xr.applyParameters(p.values,allowPhantom,tolerant,assertActive)).failed;
    if(p.backupKind!=='parameter-backup'){
     // A later write to the right side could overwrite an earlier left-side write.
     // Verify the final pair, not just each write's immediate acknowledgement.
@@ -94,9 +103,13 @@ export class ConsoleControl {
     }
     for(const [address,expected] of Object.entries(p.guards))if(await this.readStable(address,p.identity,operation)!==expected)throw Error('Les options de liaison ou les sources ont changé pendant l’application. Vérifie la console avant de restaurer la sauvegarde.');
    }
-   return {ok:failed.length===0,backupId:backup.id,readbackCompared:this.xr.mode==='real',written:Object.keys(p.values).length-failed.length,failed};
   }
   catch(e){throw Object.assign(Error(`Modification potentiellement partielle ; sauvegarde ${backup.id} : ${(e as Error).message}`),{backupId:backup.id});}
+  if(!failed.length&&p.completion){
+   try{p.completion.commit();}
+   catch(error){throw Object.assign(Error('Retours appliqués. La mise à jour des QR a échoué. Utilise « Mettre à jour les QR du groupe ». '+(error as Error).message),{backupId:backup.id});}
+  }
+  return {ok:failed.length===0,backupId:backup.id,readbackCompared:this.xr.mode==='real',written:Object.keys(p.values).length-failed.length,failed};
  }
  async recall(input:unknown,allowPhantom=false,excludePhantom=false){
   this.assertFullRecall();

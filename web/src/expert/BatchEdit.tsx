@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {BATCH_SETTINGS,BATCH_TAPS,type BatchSetting} from '../../../shared/batch-edit';
+import {BATCH_SETTINGS,BATCH_TAPS,batchUsesBand,type BatchSetting} from '../../../shared/batch-edit';
 import {type MixerProfile} from '../../../shared/mixer-models';
 import {tx} from '../i18n';
 import {presetApi,type LibraryEntry} from '../preset-controls';
@@ -7,7 +7,7 @@ import {PlanDialog,type Plan} from '../SoundCoach';
 import {CommandUndo} from './CommandActivation';
 import {type Values} from '../xair/controls';
 
-type Link={channels:number[];setting:Exclude<BatchSetting,'tap'>;band:number};
+type Link=import('../../../shared/parameter-links').ParameterLink;
 export function BatchEdit({model,values,writable,mode,links,onLinks}:{model:MixerProfile;values:Values;writable:boolean;mode:'real'|'simulation';links:Link[];onLinks:(links:Link[])=>void}){
  const [channels,setChannels]=useState<number[]>([]);
  const [setting,setSetting]=useState<BatchSetting>('hpon'),[bus,setBus]=useState(1),[band,setBand]=useState(1),[value,setValue]=useState('1');
@@ -38,21 +38,21 @@ export function BatchEdit({model,values,writable,mode,links,onLinks}:{model:Mixe
     <label>{tx('Réglage commun')}<select value={setting} onChange={e=>{
      const next=e.target.value as BatchSetting;
      setSetting(next);
-     setValue(BATCH_SETTINGS[next].max===1?'1':next==='hpf'?'80':'0');
+     setValue(BATCH_SETTINGS[next].max===1?'1':next==='hpf'?'80':next==='eqFrequency'?'1000':next==='eqQ'?'1':String(Math.min(0,BATCH_SETTINGS[next].max)));
     }}>{Object.entries(BATCH_SETTINGS).map(([key,s])=><option key={key} value={key}>{tx(s.label)}</option>)}</select></label>
     {setting==='tap'&&<label>{tx('Bus')}<select value={bus} onChange={e=>setBus(Number(e.target.value))}>{Array.from({length:model.monitorOutputs},(_,i)=><option key={i} value={i+1}>{i+1}</option>)}</select></label>}
-    {setting==='eqGain'&&<label>{tx('Bande EQ')}<select value={band} onChange={e=>setBand(Number(e.target.value))}>{[1,2,3,4].map(n=><option key={n}>{n}</option>)}</select></label>}
+    {batchUsesBand(setting)&&<label>{tx('Bande EQ')}<select value={band} onChange={e=>setBand(Number(e.target.value))}>{[1,2,3,4].map(n=><option key={n}>{n}</option>)}</select></label>}
     <label>{tx('Valeur')}{setting==='tap'||isToggle?<select value={value} onChange={e=>setValue(e.target.value)}>
      {(setting==='tap'?BATCH_TAPS:['OFF','ON']).map((label,index)=><option value={index} key={label}>{tx(label)}</option>)}
     </select>:<input type="number" value={value} min={definition.min} max={definition.max} step={definition.step} onChange={e=>setValue(e.target.value)}/>}</label>
    </div>
    <div className="group-actions">
     <button type="button" disabled={!writable||channels.length<2||!value.trim()||Number(value)<definition.min||Number(value)>definition.max} onClick={()=>void prepare()}>{tx('Prévisualiser la sélection')}</button>
-    {setting!=='tap'&&<button type="button" disabled={channels.length<2||links.some(link=>link.setting===setting&&(setting!=='eqGain'||link.band===band)&&link.channels.some(channel=>channels.includes(channel)))} onClick={()=>onLinks([...links,{channels,setting,band}])}>{tx('Mémoriser un lien de pistes')}</button>}
+    {setting!=='tap'&&<button type="button" disabled={!writable||channels.length<2||links.some(link=>link.setting===setting&&(!batchUsesBand(setting)||link.band===band)&&link.channels.some(channel=>channels.includes(channel)))} onClick={()=>onLinks([...links,{channels,setting,band}])}>{tx('Mémoriser un lien de pistes')}</button>}
    </div>
   </fieldset>
-  {links.map((link,index)=><p key={index}>{tx(BATCH_SETTINGS[link.setting].label)} · {link.channels.join(', ')}{link.setting==='eqGain'?' · '+link.band:''} <button type="button" onClick={()=>onLinks(links.filter((_,i)=>i!==index))}>{tx('Retirer le lien')}</button></p>)}
-  {!!links.length&&<p>{tx('Les liens s’appliquent dans le mode Expert après activation. Seuls les paramètres liés changent ensemble.')}</p>}
+  {links.map((link,index)=><p key={index}>{tx(BATCH_SETTINGS[link.setting].label)} · {link.channels.join(', ')}{batchUsesBand(link.setting)?' · '+link.band:''} <button type="button" disabled={!writable} onClick={()=>onLinks(links.filter((_,i)=>i!==index))}>{tx('Retirer le lien')}</button></p>)}
+  {!!links.length&&<p>{tx('Après activation, les liens suivent les commandes directes dans tous les écrans. Les rappels de scènes et de presets gardent leur propre sélection.')}</p>}
   {message&&<p role="status">{tx(message)}</p>}{error&&!plan&&<p role="alert">{tx(error)}</p>}
   <CommandUndo backup={backup} canWrite={writable} mode={mode} beforeUndo={()=>{}}/>
   {plan&&<PlanDialog plan={plan} canApply={writable} busy={busy} mode={mode} error={error} onClose={()=>setPlan(null)} onApply={()=>void run(async()=>{

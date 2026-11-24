@@ -31,15 +31,13 @@ test('HTTP and websocket auth, guest denial and complete simulation recall',asyn
   assert.equal((await call('/api/connection',{mode:'simulation'},'POST')).status,200);
   const forbiddenOrigin=await fetch(base+'/api/connection',{method:'POST',headers:{Cookie:cookie,Origin:'https://evil.example','Content-Type':'application/json'},body:JSON.stringify({mode:'simulation'})});assert.equal(forbiddenOrigin.status,403);
   const coachCatalog=await (await call('/api/coach')).json() as {profile:unknown;aiConfigured:boolean};assert.ok(coachCatalog.profile);
-  await call('/api/reacue/arm',{armed:true,confirm:true});await call('/api/coach/profile',{profile:coachCatalog.profile});await call('/api/coach/ask',{channel:1,message:'ça siffle',external:false});assert.equal((await (await call('/api/reacue')).json() as {armed:boolean}).armed,true);
+  await call('/api/coach/profile',{profile:coachCatalog.profile});await call('/api/coach/ask',{channel:1,message:'ça siffle',external:false});
   const beforeGroups=await (await call('/api/channels')).json();
   const savedGroup=await (await call('/api/adjustment-groups',{model:'XR18',name:'Keys monitor',channels:[1,2],target:'send',bus:2})).json() as {id:string;revision:number};assert.ok(savedGroup.id);
-  assert.equal((await (await call('/api/reacue')).json() as {armed:boolean}).armed,true,'metadata must not disarm ReaCue');
   assert.deepEqual(await (await call('/api/channels')).json(),beforeGroups,'saving a group never writes audio');
   assert.equal((await (await call('/api/adjustment-groups?model=XR18')).json() as unknown[]).length,1);
   assert.equal((await call('/api/library/group-adjust/preview',{model:'MR18',channels:[1,2],target:'fader',delta:-1})).status,400);
   assert.equal((await call('/api/adjustment-groups/remove',{model:'XR18',...savedGroup})).status,200);
-  assert.equal((await (await call('/api/reacue')).json() as {armed:boolean}).armed,true);
   const preparation=await (await call('/api/coach/prepare',{channel:1})).json() as {token:string};assert.ok(preparation.token);assert.equal((await call('/api/coach/apply',{token:preparation.token,confirm:false})).status,400);assert.equal((await call('/api/coach/apply',{token:preparation.token,confirm:true})).status,200);
   const report=await (await call('/api/coach/measure',{channel:1})).json() as {available:boolean};assert.equal(report.available,false);
   const advice=await (await call('/api/coach/ask',{channel:1,message:'ça siffle',external:false})).json() as {source:string;measuredAudio:boolean};assert.equal(advice.source,'local');assert.equal(advice.measuredAudio,false);
@@ -48,7 +46,6 @@ test('HTTP and websocket auth, guest denial and complete simulation recall',asyn
   assert.equal((await call('/api/console/apply',{token:cp.token,confirm:true})).status,200);
   const params=await (await call('/api/console/parameters?prefix=/ch/01/config/')).json() as {parameters:{address:string;state?:{value:unknown}}[]};assert.equal(params.parameters.find(p=>p.address.endsWith('/name'))?.state?.value,'Chant');
   cp=await (await call('/api/console/preview',{values:{'/headamp/01/phantom':1}})).json() as {token:string};assert.equal((await call('/api/console/apply',{token:cp.token,confirm:true})).status,400);
-  assert.equal((await call('/api/reacue/stop',{})).status,200);
   await call('/api/users',{name:'Musician',password:'musician-long-password',role:'musician',buses:[2]});
   const created=await (await call('/api/library',{kind:'scene',name:'First'})).json() as {id:string};assert.ok(created.id);
   await call('/api/channels/1/fader',{value:.2});const preview=await (await call('/api/library/'+created.id+'/preview',{})).json() as {token:string};assert.equal((await call('/api/library/'+created.id+'/apply',{token:preview.token,confirm:true})).status,200);
@@ -90,10 +87,9 @@ test('HTTP and websocket auth, guest denial and complete simulation recall',asyn
   const protections=await (await call('/api/library/scene-protections')).json() as {model:string;revision:number;rules:unknown[]};
   assert.deepEqual(protections,{model:'XR18',revision:0,rules:[]});
   const pendingProtected=await (await call(`/api/library/${selectiveScene.id}/selective-preview`,{scope:{channels:[3],sections:['eq']}})).json() as {token:string};
-  const beforeProtection=await (await call('/api/channels')).json();await call('/api/reacue/arm',{armed:true,confirm:true});
+  const beforeProtection=await (await call('/api/channels')).json();
   const protectedConfig=await (await call('/api/library/scene-protections',{...protections,rules:[{channel:3,sections:['eq']}]})).json() as typeof protections;
   assert.equal(protectedConfig.revision,1);assert.deepEqual(await (await call('/api/channels')).json(),beforeProtection);
-  assert.equal((await (await call('/api/reacue')).json() as {armed:boolean}).armed,true,'protection metadata never disarms ReaCue');
   assert.equal((await call(`/api/library/${selectiveScene.id}/selective-apply`,{token:pendingProtected.token,confirm:true})).status,400);
   const excluded=await (await call(`/api/library/${selectiveScene.id}/selective-preview`,{scope:{channels:[3],sections:['eq']}})).json() as {token:null;excluded:unknown[]};assert.equal(excluded.token,null);assert.deepEqual(excluded.excluded,[{channel:3,section:'eq'}]);
   assert.equal((await call(`/api/library/${selectiveScene.id}/preview`,{excludePhantom:true})).status,400);

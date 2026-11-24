@@ -5,7 +5,7 @@ import {SceneProtectionsPanel} from './SceneProtectionsPanel';
 import {Layers, SlidersHorizontal, ClipboardList, History, Upload, Save, Download, Trash2, RotateCcw} from "lucide-react";
 import {tx, getLocale} from "./i18n";
 import "./studio-control.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { PlanDialog, type Plan } from "./SoundCoach";
 import {ChannelPresetsPanel} from './ChannelPresetsPanel';
 import {parseLibraryFile} from './library-files';
@@ -28,7 +28,7 @@ const when = (iso: string) => new Date(iso).toLocaleString(getLocale(), { dateSt
 const isAuto = (e: Entry) => ['parameter-backup','fx-backup','scene-recall-backup','output-recall-backup','channel-operation-backup','mix-preparation-backup','portable-scene-backup'].includes(e.kind) || (['scene','native-scene'].includes(e.kind) && /^(Avant |Sauvegarde (complète avant|avant))/.test(e.name));
 const KIND_LABEL: Record<string, string> = { scene: "Scène complète", "native-scene": "Fichier .scn", "parameter-backup": "Sauvegarde automatique", 'fx-backup':'Sauvegarde FX', 'output-recall-backup':'Sauvegarde des sorties et FX','scene-recall-backup':'Sauvegarde du rappel sélectif','channel-operation-backup':'Sauvegarde des entrées','mix-preparation-backup':'Sauvegarde de préparation du mix','portable-scene-backup':'Sauvegarde du rappel portable' };
 
-export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; canWrite: boolean }) {
+export function ScenesPage({ mode, canWrite, blankActions, blankBackup }: { mode: "real" | "simulation"; canWrite: boolean; blankActions?:ReactNode; blankBackup?:string|null }) {
   const [section,setSection]=useState("scenes");
   const [outputBackup,setOutputBackup]=useState<Entry|null>(null);
   const [selective,setSelective]=useState<Entry|null>(null);
@@ -39,7 +39,7 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
   const [pending, setPending] = useState<Pending | null>(null), [applying, setApplying] = useState(false);
   const [group,setGroup]=useState(""),[sheetScene,setSheetScene]=useState(""),[sheetNotes,setSheetNotes]=useState("");
   const refresh = async () => setEntries(await api<Entry[]>("/api/library"));
-  useEffect(() => { void refresh().catch(e => setError(e.message)); }, []);
+  useEffect(() => { void refresh().catch(e => setError(e.message)); }, [blankBackup]);
   const run = async (label: string, task: () => Promise<string | void>) => {
     setBusy(label); setMessage(""); setError("");
     try { const done = await task(); await refresh(); if (done) setMessage(done); }
@@ -139,7 +139,7 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
 
   return <section className="studio-panel pad studio-control scenes-page">
     <header className="library-header">
-      <div className="library-title"><span className="library-emblem"><Layers size={26}/></span><div><span className="library-eyebrow">{tx('TES RÉGLAGES, À PORTÉE DE MAIN')}</span><h2>{tx("Scènes et presets")}</h2><p>{tx('Une balance complète ou le son d’un instrument, à retrouver au bon moment.')}</p></div></div>
+      <div className="library-title"><span className="library-emblem"><Layers size={26}/></span><div><h2>{tx("Scènes et presets")}</h2><p>{tx('Une balance complète ou le son d’un instrument, à retrouver au bon moment.')}</p></div></div>
       {admin&&<div className="scene-import-toolbar"><button type="button" disabled={!!busy||applying} onClick={()=>fileInput.current?.click()}><Upload size={17}/>{tx('Importer une scène ou un preset')}</button><input ref={fileInput} type="file" hidden aria-label={tx('Importer une scène ou un preset')} disabled={!!busy} accept=".json,.scn" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void importFile(file);}}/><small>.json · .scn</small></div>}
     </header>
     <nav className="library-nav" aria-label={tx('Bibliothèque de réglages')}>
@@ -148,6 +148,7 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
     {(message || error) && <p className={error ? "scene-msg error" : "scene-msg"} role={error ? "alert" : "status"}>{tx(error || message)}</p>}
     {error&&/partiel/.test(error)&&autos.length>0&&<button type="button" onClick={()=>setSection('history')}><History size={16}/>{tx('Voir les sauvegardes automatiques')}</button>}
     <div hidden={section!=='scenes'} className="library-section">
+    {admin && blankActions && <fieldset className="scene-actions scene-blank-actions" aria-label={tx('Partir d’une scène vierge')} disabled={!!busy || applying || !!pending || !canWrite}>{blankActions}</fieldset>}
     {admin&&<SceneProtectionsPanel disabled={!!busy||applying} onSaved={()=>{setPending(null);}}/>}
     {admin&&<OutputProtectionsPanel/>}
     {outputBackup&&<><button type="button" onClick={()=>setOutputBackup(null)}>{tx('Fermer')}</button><OutputSceneRecallPanel key={outputBackup.id} entry={outputBackup} canWrite={canWrite} onUpdated={refresh}/></>}
@@ -158,7 +159,7 @@ export function ScenesPage({ mode, canWrite }: { mode: "real" | "simulation"; ca
       <label>{tx("Nom de la scène")}<input value={name} maxLength={120} onChange={e => setName(e.target.value)} placeholder={tx("Ex. : Concert salle des fêtes")} /></label>
       <button type="button" className="primary" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library", "POST", { kind: "scene", name: name.trim(), complete: true }); setName(""); return `Scène « ${name.trim()} » sauvegardée.`; })}><Save size={17}/>{tx(busy === "save" ? "Lecture de toute la console…" : "Sauvegarder l’état actuel")}</button>
       <details className="scene-more"><summary>{tx("Plus d’options")}</summary>
-        <button type="button" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library", "POST", { kind: "scene", name: name.trim(), complete: true, excludePhantom: true }); setName(""); return `Scène « ${name.trim()} » sauvegardée sans le 48 V.`; })}>{tx("Sauvegarder sans le 48 V (pour ReaCue)")}</button>
+        <button type="button" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library", "POST", { kind: "scene", name: name.trim(), complete: true, excludePhantom: true }); setName(""); return `Scène « ${name.trim()} » sauvegardée sans le 48 V.`; })}>{tx("Sauvegarder sans le 48 V")}</button>
         <button type="button" disabled={!name.trim()} onClick={() => void run("save", async () => { await api("/api/library/capture-native", "POST", { name: name.trim() }); setName(""); return `Fichier .scn « ${name.trim()} » créé : tu peux l’exporter et l’ouvrir dans X-AIR Edit.`; })}>{tx("Créer un fichier .scn (compatible X-AIR Edit)")}</button>
       </details>
     </fieldset>}

@@ -53,7 +53,7 @@ export function XAirMixer({ canWrite, selectedChannel, onSelectChannel, initialT
   const fullWidth = tab === "mixer" || tab === "meter" || tab === "routing" || tab === "fx";
   const view = tab === "mixer" ? <MixerView {...viewProps} strips={bankStrips} /> : tab === "channel" ? <ChannelView {...viewProps} /> : tab === "input" ? <InputView {...viewProps} />
     : tab === "gate" ? <GateView {...viewProps} /> : tab === "eq" ? <EqView key={strip.id} {...viewProps} /> : tab === "comp" ? <CompView {...viewProps} /> : tab === "sends" ? <SendsView {...viewProps} />
-    : tab === "main" ? <MainView {...viewProps} /> : tab === "fx" ? <FxView {...viewProps} /> : tab === "routing" ? <RoutingView {...viewProps} /> : <MeterView />;
+    : tab === "main" ? <MainView {...viewProps} /> : tab === "fx" ? <FxView {...viewProps} /> : tab === "routing" ? <RoutingView {...viewProps} /> : <MeterView values={values} onInspect={s=>viewProps.open(s,"channel")} />;
 
   // Keep the overview columns aligned with the fader bank while scrolling horizontally.
   const syncScroll = (from: HTMLDivElement | null, to: HTMLDivElement | null) => { if (from && to && to.scrollLeft !== from.scrollLeft) to.scrollLeft = from.scrollLeft; };

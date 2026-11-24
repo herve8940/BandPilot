@@ -1,0 +1,291 @@
+html .studio.app2 { background:var(--bp-bg); }
+html .studio.app2 .rail { background:#101528; box-shadow:none; }
+html .studio.app2 .rail-logo em { color:inherit; }
+html .studio.app2 .rail-logo b { font-size:22px; letter-spacing:-.045em; }
+html .studio.app2 .rail-logo .logo-mark { background:linear-gradient(145deg,#328be5,#7840eb); color:white; }
+html .studio.app2 .rail-space { border:1px solid transparent; }
+html .studio.app2 .rail-space.active { background:#31284d; border-color:#554478; box-shadow:none; }
+html .studio.app2 .rail-space-btn { min-height:48px; }
+html .studio.app2 .topbar { background:#101528; box-shadow:none; }
+html .studio.app2 .topbar .subnav { border:0; padding:0; background:none; gap:6px; }
+html .studio.app2 .subnav button { border-radius:0; border-bottom:3px solid transparent; padding:8px 12px; }
+html .studio.app2 .subnav button.active { background:transparent; color:#eee7ff; box-shadow:none; border-color:#b28af7; }
+html .studio.app2 .topbar-title h1 { font-weight:730; letter-spacing:-.035em; }
+html .studio.app2 .topbar-actions { margin-left:auto; }
+html .studio.app2 [data-page=coach] .topbar-title { display:none; }
+html .studio.app2 .model-badge { color:var(--bp-muted); }
+html .studio.app2 .studio-panel.pad { padding:clamp(16px,2vw,28px); }
+html .studio.app2 .studio-panel .panel-title b { font-size:19px; letter-spacing:-.025em; }
+html .studio.app2 .other-page { gap:16px; }
+html .studio.app2 :is(.studio-panel,.coach-panel,.xs2-card,.sm-strip,.monitor-desk,.es-hero,.sh-transport,.bp-guide-fader,.ea-card) { box-shadow:none; }
+html .studio.app2 :is(.xs2,.sh,.es,.sm,.returns-page,.model-blocked) { color:var(--bp-text); }
+html .studio.app2 .sm-head h2,html .studio.app2 .monitor-desk header h2 { font-size:clamp(23px,2.5vw,35px); letter-spacing:-.04em; }
+html .studio.app2 .monitor-share { justify-self:start; color:#dfd1ff; border-color:#705790; }
+html .studio.app2 :is(.sh-concert,.sh-rehearse) .sh-head { background:#141a30; border-color:var(--bp-line); }
+html .studio.app2 .sh-transport { border-color:#514469; }
+html .studio.app2 .xs2 .xs2-tabs button.on { background:#44335f; box-shadow:inset 0 -2px #af88f5; }
+html .studio.app2 .usage-notice { flex-shrink:0; }
+html .studio.app2 .coach { max-width:1200px; width:100%; margin-inline:auto; padding:clamp(20px,3vw,48px); }
+.balance-title { font-size:clamp(28px,3.6vw,48px); letter-spacing:-.045em; line-height:1.12; margin:0 0 24px; }
+html .studio.app2 .coach-overview { display:block; background:none; border:0; box-shadow:none; margin:0; }
+html .studio.app2 .coach-next {
+  display:flex; align-items:center; isolation:isolate; overflow:hidden; position:relative;
+  min-height:clamp(215px,25vw,330px); padding:clamp(24px,3vw,44px);
+  background:linear-gradient(110deg,#1b2039,#12172c); border:1px solid #41445f; border-radius:18px;
+}
+/* Original mockup artwork, extracted at its native aspect ratio. */
+.balance-mic {
+  position:absolute; z-index:-1; pointer-events:none; inset:3% 1% 0 56%;
+  background:url('./assets/balance-microphone.png') right bottom / contain no-repeat;
+}
+html .studio.app2 .coach-next.warn { border-color:#96754a; }
+.balance-lead { width:57%; }
+.coach .balance-lead>small { display:block; color:#c9b8e9; font-size:13px; font-weight:650; }
+html .studio.app2 .balance-lead h2 { font-weight:750; font-size:clamp(26px,3.1vw,48px); letter-spacing:-.045em; line-height:1.1; margin:12px 0; overflow-wrap:anywhere; }
+html .studio.app2 .balance-lead p { font-size:clamp(14px,1.4vw,18px); line-height:1.55; margin:0 0 22px; }
+html .studio.app2 .balance-lead button.primary { min-height:46px; padding:10px 18px; gap:9px; font-size:15px; }
+html .studio.app2 .balance-lead .balance-link { background:transparent; border:0; padding:10px 0; margin:0 10px; color:#d9c8f9; }
+.coach .balance-lead .measure-hint { margin-top:10px; color:var(--bp-muted); font-size:13px; font-weight:400; }
+html .studio.app2 .coach .coach-journey { position:static; background:transparent; border:0; box-shadow:none; padding:24px 0 16px; display:block; }
+html .studio.app2 .coach-journey h3 { font-weight:720; margin:0 0 14px; font-size:21px; }
+.balance-track { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); }
+html .studio.app2 .balance-track button {
+  position:relative; isolation:isolate; display:flex; flex-direction:column; justify-content:flex-start; align-items:center;
+  gap:8px; padding:7px 3px; border:0; background:none; box-shadow:none; color:var(--bp-muted); font-size:13px;
+}
+.balance-track button::before { content:""; position:absolute; z-index:-1; top:15px; height:2px; left:0; right:0; background:var(--bp-line); }
+.balance-track button:first-child::before { left:50%; }
+.balance-track button:last-child::before { right:50%; }
+html .studio.app2 .balance-track button>span { width:18px; height:18px; border:2px solid #66718c; border-radius:50%; display:grid; place-items:center; background:var(--bp-bg); }
+html .studio.app2 .coach .balance-track button.active { color:white; background:transparent; box-shadow:none; }
+html .studio.app2 .balance-track button.active>span { border-color:#b599ff; box-shadow:0 0 0 3px #9371cb55; }
+html .studio.app2 .balance-track button>span.checked { background:#91e5ba; border-color:#91e5ba; color:#102c26; }
+.balance-meter-details,.balance-tools { padding:12px 0; border-top:1px solid var(--bp-line); }
+.coach :is(.balance-meter-details,.balance-tools)>summary { cursor:pointer; padding:4px; color:#c6b4e8; font-weight:600; }
+.coach :is(.balance-meter-details,.balance-tools)[open]>summary { margin-bottom:12px; }
+html .studio.app2 .coach-layout { display:block; }
+.coach .coach-panel[hidden] { display:none; }
+html .studio.app2 .coach .coach-panel { margin:8px 0 20px; scroll-margin-top:100px; }
+html .studio.app2 .coach-panel-title { background:var(--bp-panel); }
+html .studio.app2 .bp-section-tabs { padding:3px; gap:4px; }
+@media(min-width:1101px) {
+  html .studio.app2:not(.rail-compact) .rail { width:202px; flex-basis:202px; }
+  html .studio.app2 .topbar .subnav { order:1; width:auto; }
+  html .studio.app2 .topbar .topbar-actions { order:2; }
+}
+@media(min-width:761px) and (max-width:1100px) {
+  html .studio.app2 .rail-space-btn { flex-direction:column; gap:4px; padding:9px 2px; }
+  html .studio.app2 .rail-space-btn>.rail-short-label { display:block; font-size:10px; font-weight:600; }
+}
+@media(max-width:760px) {
+  html .studio.app2 .coach { padding:20px 14px; }
+  html .studio.app2 .balance-title { margin-bottom:16px; }
+  html .studio.app2 .coach-next { padding:22px; }
+  .balance-lead { width:80%; }
+  .balance-mic { left:74%; opacity:.35; }
+  .balance-track { grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+  .balance-track button::before { display:none; }
+  html .studio.app2 .balance-track button { flex-direction:row; justify-content:flex-start; border-radius:8px; padding:8px 4px; }
+  html .studio.app2 .balance-track button>span { flex:none; width:13px; height:13px; }
+  html .studio.app2 .balance-track button.active { background:#2d2442; }
+  html .studio.app2 .topbar .subnav { flex-wrap:wrap; }
+}
+@media(max-width:430px) {
+  .balance-lead { width:100%; }
+  .balance-mic { display:none; }
+  html .studio.app2 .balance-lead .balance-link { margin:4px 0 0; display:block; }
+}
+.quick-tools { position:relative; }
+.quick-tools summary { cursor:pointer; padding:8px 12px; letter-spacing:2px; list-style:none; border-radius:8px; color:var(--bp-muted); }
+.quick-tools summary::-webkit-details-marker { display:none; }
+.quick-tools[open] summary { background:var(--bp-panel-raised); }
+.quick-tools>div { position:absolute; z-index:32; top:100%; right:0; min-width:148px; display:grid; gap:6px; padding:8px; background:var(--bp-panel); border:1px solid var(--bp-line); border-radius:10px; box-shadow:var(--shadow); }
+html .studio.app2 .quick-tools button span { display:inline; }
+html .studio.app2 .song-form { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(58px,.5fr); align-items:end; gap:10px; }
+.song-form label { display:grid; gap:5px; color:var(--bp-muted); font-size:12px; font-weight:650; }
+html .studio.app2 .song-form input { width:100%; min-width:0; }
+html .studio.app2 .song-form button { justify-self:start; grid-column:1/-1; }
+.repertoire-search { width:100%; margin:12px 0; padding-inline:12px; }
+.settings-jump { display:flex; flex-wrap:wrap; gap:6px 16px; padding:4px 0 12px; }
+.settings-jump a { padding:6px 0; color:#cbb8f7; text-underline-offset:4px; }
+.settings-block { min-width:0; scroll-margin-top:100px; }
+html .studio.app2 .sh-concert .sh-now { padding:clamp(20px,3vw,44px); border-radius:16px; }
+html .studio.app2 .sh-concert .sh-now h1 { font-size:clamp(30px,3.8vw,58px); letter-spacing:-.045em; overflow-wrap:anywhere; }
+html .studio.app2 .sh-concert .sh-cmd.next:not(:disabled),html .studio.app2 .bp-transport .bp-play:not(:disabled) { background:var(--bp-selected); color:white; border-color:#a582db; }
+html .studio.app2 .library-nav { gap:6px; }
+html .studio.app2 .library-title h2 { font-size:clamp(24px,2.6vw,36px); letter-spacing:-.035em; }
+@media(max-width:540px){
+  html .studio.app2 .song-form { grid-template-columns:minmax(0,1fr) minmax(72px,.45fr); }
+  .song-form label:first-child { grid-column:1/-1; }
+}
+/* Keep the master in reach while giving each input enough room for its name and buttons. */
+html .studio.app2 .sm-strips { grid-auto-columns:minmax(92px,1fr); gap:7px; }
+html .studio.app2 .sm-name b { line-height:1.2; }
+@media(max-width:760px){
+  html .studio.app2 .bottombar {
+    height:calc(72px + env(safe-area-inset-bottom));
+    padding:4px 6px calc(4px + env(safe-area-inset-bottom));
+  }
+  html .studio.app2 .bottombar button { min-width:0; padding:3px 2px; gap:2px; font-size:11px; line-height:1.1; }
+  html .studio.app2 .bottombar button span { max-width:100%; overflow-wrap:anywhere; }
+  html .studio.app2 { padding-bottom:calc(78px + env(safe-area-inset-bottom)); }
+}
+
+/* The main workspaces use the same chrome, leaving colour for selection and signal state. */
+html .studio.app2 .rail {background:linear-gradient(180deg,#151a30,#101527 70%);border-right:1px solid #30364e}
+html .studio.app2 .rail-space:not(.active), html .studio.app2 .rail-space .rail-space-btn {background:transparent;box-shadow:none;border-color:transparent}
+html .studio.app2 .rail-space.active {background:linear-gradient(100deg,#403365,#29233d);border-color:#685486}
+html .studio.app2 .rail-space-btn b {font-size:14px;font-weight:620}
+html .studio.app2 .rail-nav {gap:7px}
+html .studio.app2 .rail-foot {gap:6px}
+html .studio.app2 .rail-foot :is(.rail-toggle,.community-link,.support-button) {background:transparent;box-shadow:none}
+html .studio.app2 .topbar {background:#12172a;border-bottom:1px solid #303650}
+html .studio.app2 .subnav button {font-weight:620}
+html .studio.app2 .studio-panel.pad,html .studio.app2 .library-section {min-width:0}
+html .studio.app2 .other-page {width:100%;max-width:1480px;margin-inline:auto;padding:clamp(14px,2.2vw,34px)}
+html .studio.app2 :is(.topbar,.xs2-tabs,.bp-section-tabs,.sh-seg) button:not(:disabled):hover {color:white;border-color:var(--stage-edge)}
+html .studio.app2 :is(.bp-section-tabs,.sh-seg,.seg,.library-nav) {background:var(--stage-inset);border-color:var(--bp-line)}
+html .studio.app2 :is(.settings-jump,.bp-section-tabs) {display:flex;flex-wrap:wrap;align-items:center;gap:5px;width:fit-content;max-width:100%;padding:4px;border:1px solid var(--bp-line);border-radius:12px;background:var(--stage-inset)}
+html .studio.app2 :is(.settings-jump,.bp-section-tabs) button {flex:auto;border:1px solid transparent;border-radius:8px;background:none;color:var(--bp-muted);font-weight:620;min-height:38px;padding:7px 16px}
+html .studio.app2 :is(.settings-jump,.bp-section-tabs) button[aria-pressed=true] {background:var(--stage-active);border-color:var(--stage-edge);color:white;box-shadow:none}
+.settings-block:not([hidden]) {display:grid;gap:16px}
+html .studio.app2 .return-to-guide,.balance-back {display:inline-flex;align-items:center;gap:8px;justify-self:start;border:1px solid var(--bp-line);padding:9px 14px;color:#deceff;background:var(--stage-inset);border-radius:9px}
+html .studio.app2 .balance-session {margin:0 auto;max-width:1390px;padding:clamp(18px,3vw,48px);align-self:start}
+.balance-page-head,.journey-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.balance-page-head {margin-bottom:clamp(16px,2vw,28px)}
+.balance-page-head .balance-title {margin:0;color:var(--bp-text);font-size:clamp(29px,3.5vw,52px);font-weight:760}
+html .studio.app2 .balance-session .coach-overview {padding:0;background:transparent;border:0;border-radius:0;box-shadow:none}
+html .studio.app2 .balance-session .coach-next {background:radial-gradient(ellipse at 84% 100%,#28244888,transparent 56%),linear-gradient(120deg,#222840,#161d34);border-color:#565574;border-radius:18px;min-height:clamp(225px,25vw,360px)}
+html .studio.app2 .balance-session .balance-lead h2 {text-wrap:balance}
+html .studio.app2 .balance-session .balance-lead .primary {background:linear-gradient(108deg,#7544e0,#7047cd);border:1px solid #a282f3;box-shadow:0 4px 18px #120b2f55}
+html .studio.app2 .balance-session .coach-journey {padding:clamp(20px,2.5vw,35px) 0 16px}
+html .studio.app2 .journey-heading h3 {margin:0;font-size:clamp(19px,2vw,27px)}
+.journey-heading {margin-bottom:18px}
+.journey-heading>span {font-size:12px;color:var(--bp-muted)}
+.journey-heading b {font-variant-numeric:tabular-nums;margin-left:5px;color:var(--bp-text)}
+html .studio.app2 .balance-track button>span {width:31px;height:31px;border:1px solid #56617c;background:#171c30;color:#bcc4dc}
+html .studio.app2 .balance-track button::before {top:22px}
+html .studio.app2 .balance-track button.active>span {color:#ede2ff;border-color:#c1a6ff;background:#50366e}
+html .studio.app2 .balance-track button.complete::before {background:#739a96}
+html .studio.app2 .balance-track button>span.checked {background:#97e9ba;color:#143326}
+.balance-source-picker,.gain-picker {display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-weight:620}
+.balance-source-picker {margin:10px 0 20px;color:#d8c5ff}
+.balance-source-picker select,.gain-picker select {padding:6px 28px 6px 10px}
+html .studio.app2 .in-step .coach-journey {padding:0 0 8px}
+.in-step .journey-heading {margin-bottom:6px}
+html .studio.app2 .in-step .journey-heading h3 {font-size:15px}
+html .studio.app2 .coach-panel-title {border-bottom:1px solid var(--bp-line);background:linear-gradient(115deg,#272740,#1b2035)}
+html .studio.app2 .coach-panel-title h2 {font-size:clamp(20px,2.1vw,30px);letter-spacing:-.035em}
+html .studio.app2 .coach-section,.coach .gain-reference {background:transparent}
+.gain-reference {margin:12px 0;border-top:1px solid var(--bp-line);padding-top:10px}
+.gain-reference summary {cursor:pointer;font-weight:620;color:#cdc0ea;padding:6px 0}
+html .studio.app2 .gain-card {margin-top:14px}
+html .studio.app2 .gain-card>.gain-steps>li {border-color:var(--bp-line);background:var(--stage-inset)}
+html .studio.app2 .gain-picker small {font-variant-numeric:tabular-nums;color:var(--bp-muted)}
+html .studio.app2 .prepare-library {align-items:start;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,2vw,26px)}
+html .studio.app2 .prepare-library .panel-title {align-items:center;border-bottom:1px solid var(--bp-line);padding-bottom:16px;margin-bottom:18px}
+html .studio.app2 .prepare-library .song-list>div {background:var(--stage-inset);min-width:0}
+html .studio.app2 .prepare-library .song-list>div>div:first-of-type {min-width:0;overflow-wrap:anywhere}
+html .studio.app2 .prepare-library .song-order {display:grid;place-items:center;background:var(--stage-active);color:#e6d6ff;border-radius:8px;min-width:28px;height:28px;font-variant-numeric:tabular-nums}
+html .studio.app2 .prepare-library .setlist-order {flex:0 0 auto;display:flex;gap:2px}
+html .studio.app2 .setlist-order button {padding:4px;min-width:28px;height:32px}
+html .studio.app2 .desk-find-button {display:inline-flex;align-items:center;gap:7px;white-space:nowrap;background:var(--stage-active);border:1px solid var(--stage-edge);border-radius:8px;color:#ebdeff;min-height:34px;padding:4px 10px}
+.desk-find-button kbd {font:11px system-ui;color:var(--bp-muted)}
+.desk-finder {position:fixed;align-self:start;inset:clamp(18px,14vh,150px) 0 auto;margin:0 auto;width:min(540px,calc(100% - 24px));max-height:75dvh;padding:0;color:var(--bp-text);background:#191e33;border:1px solid #625679;border-radius:14px;box-shadow:0 24px 90px #0009}
+.desk-finder::backdrop {background:#060916ba}
+.finder-input {display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--bp-line);color:var(--bp-purple)}
+html .studio.app2 .desk-finder input {flex:1;min-width:0;background:transparent;border:0;padding:4px;font:inherit;color:white}
+.desk-finder :is(button,p) {color:inherit}
+.finder-input button {display:grid;place-items:center;border:0;background:none}
+.finder-results {overflow:auto;max-height:53dvh;padding:6px}
+.finder-results button {display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:8px;min-height:40px;padding:7px 12px}
+.finder-results button small {margin-left:auto;color:var(--bp-muted)}
+.finder-results button:is(:hover,[aria-selected=true]) {background:var(--stage-active);border-color:var(--stage-edge)}
+.desk-finder>p {padding:0 16px 14px}
+html .studio.app2 .xs-expert-desk .xs2-tabs {flex:1 1 auto;width:auto;min-width:0}
+html .studio.app2 .xs-expert-desk .xs2-head {padding:6px 10px;gap:6px;flex-wrap:wrap}
+html .studio.app2 .xs-expert-desk .xs2-tabs button {font-size:12px;height:33px;padding-inline:9px}
+html .studio.app2 .xs-expert-desk .strip-inspect {display:grid;place-items:center;width:100%;min-width:0;min-height:24px;padding:0 2px;border:1px solid var(--bp-line);border-radius:5px;color:#c9c1e2;background:var(--stage-inset);font:10px/1.1 system-ui}
+html .studio.app2 .strip-inspect .eq {height:22px;margin:0;width:100%}
+html .studio.app2 .xs-expert-desk .strip-inspect:hover {border-color:#ac90e0}
+html .studio.app2 .visual-selected {border-color:#605174;background:var(--bp-card)}
+html .studio.app2 .visual-process-tabs button[aria-pressed=true] {box-shadow:inset 0 -2px var(--process-color);border-color:var(--stage-edge)}
+html .studio.app2 .xs-expert-desk .visual-channel-rail button[aria-selected=true] {color:#edddff;background:var(--stage-active);border-color:#a686d0}
+html .studio.app2 .sm-mixes button.active {background:var(--stage-active);border-color:var(--stage-edge);color:white}
+html .studio.app2 .sh-transport:not(.rec) {background:linear-gradient(115deg,#27253e,#171d32);border-color:#59506d}
+html .studio.app2 .bp-transport .sh-transport-info b {font-size:clamp(19px,2.1vw,32px);line-height:1.15;letter-spacing:-.03em}
+html .studio.app2 .sh-head .stand-switch {margin-left:auto;display:flex;align-items:center;gap:7px}
+html .studio.app2 .rehearsal-song-grid .sh-song {display:flex;align-items:center;gap:8px;margin:0}
+.rehearsal-song-grid .song-position {font-size:12px;font-variant-numeric:tabular-nums;color:var(--bp-muted)}
+.rehearsal-song-grid small {margin-left:auto}
+html .studio.app2 .sh-concert .sh-now {background:linear-gradient(125deg,#282741,#171c30);border-color:#575071}
+.concert-cue,.concert-next {display:flex;align-items:baseline;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.concert-cue>div:first-child {min-width:0;flex:1 1 180px}
+.concert-time {display:grid;gap:6px;justify-items:end}
+html .studio.app2 .concert-time .sh-clock {font-size:clamp(31px,5vw,75px);letter-spacing:-.06em;line-height:1;color:#e6dbff}
+.concert-progress {appearance:none;height:4px;width:100%;border:0;margin:20px 0 12px;background:#393b56;border-radius:99px}
+.concert-progress::-webkit-progress-bar {background:#393b56;border-radius:99px}
+.concert-progress::-webkit-progress-value {background:#bd9af2;border-radius:99px}
+.concert-next {justify-content:start}
+html .studio.app2:has(.stand-view) :is(.rail,.topbar,.bottombar) {display:none}
+html .studio.app2:has(.stand-view) {padding-bottom:env(safe-area-inset-bottom)}
+html .studio.app2 .stand-view {border-radius:0;max-width:none;width:100%;min-height:100dvh;padding:clamp(12px,2vw,32px)}
+html .studio.app2 .stand-view .sh-clock {font-size:clamp(38px,6vw,92px);line-height:1}
+html .studio.app2 .stand-view .bp-current-section,html .studio.app2 .stand-view .sh-now h1 {font-size:clamp(28px,4.6vw,78px)}
+html .studio.app2 .stand-view .sh-big,.stand-view .sh-cmd {min-height:54px}
+@container rehearsal (min-width:561px) and (max-width:1240px) {
+  .sh-rehearse .bp-tab-grid .sh-songs {grid-template-columns:minmax(100px,1fr) minmax(160px,260px)}
+  .bp-tab-grid .rehearsal-song-grid {grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:5px;max-height:160px;overflow:auto}
+}
+@media(max-width:900px) {
+  html .studio.app2 .prepare-library {grid-template-columns:minmax(0,1fr)}
+  .concert-time {justify-items:start}
+}
+@media(max-width:760px) {
+  html .studio.app2 .balance-track button {min-height:40px;gap:6px}
+  html .studio.app2 .balance-track button>span {width:23px;height:23px}
+  html .studio.app2 .balance-track button>span svg {width:13px;height:13px}
+  .desk-find-button kbd {display:none}
+  html .studio.app2 .setlist-order button {min-width:34px;height:38px}
+}
+@media(max-width:520px) {
+  html .studio.app2 .balance-session .coach-next {padding:19px;min-height:240px}
+  .balance-session .balance-lead {width:100%}
+  html .studio.app2 .balance-session .balance-mic {display:block;inset:8px 7px auto auto;width:80px;height:70px;opacity:1}
+  .balance-session .balance-lead>small:first-child,.balance-session .balance-lead h2 {padding-right:66px}
+  html .studio.app2 .balance-session .balance-lead h2 {font-size:25px;min-height:44px}
+  html .studio.app2 .balance-session .balance-lead .balance-link {margin:4px 0;display:block}
+  .balance-source-picker select,.gain-picker select {max-width:100%}
+  html .studio.app2 .xs-expert-desk .xs2-tabs {flex-basis:100%}
+  html .studio.app2 .balance-page-head {margin-bottom:16px}
+}
+.strip-options {display:flex;flex-wrap:wrap;gap:7px 16px;border:1px solid var(--bp-line);border-radius:10px;padding:10px 12px}
+.strip-options legend {color:var(--bp-muted);padding-inline:4px}
+.strip-options label {display:flex;align-items:center;gap:6px;min-height:30px}
+html .studio.app2 .meter-overview {display:flex;flex-wrap:wrap;align-items:start;gap:12px;padding:12px}
+.meter-overview .meter-display-settings {flex:1 1 100%}
+html .studio.app2 .meter-overview .xm-meter-group {max-width:100%;background:var(--bp-card);border-color:var(--bp-line)}
+html .studio.app2 .meter-overview .xm-meter-group>div {flex-wrap:wrap;gap:6px}
+html .studio.app2 .meter-overview .xm-meter-cell {width:52px;min-width:0;align-items:center}
+html .studio.app2 .meter-overview .xm-meter-cell button {padding:3px;line-height:1.15;min-height:32px;width:100%;overflow-wrap:anywhere;font-size:11px}
+html .studio.app2 .coach .balance-source-picker,html .studio.app2 .coach .gain-picker {display:flex;flex-direction:row;justify-content:flex-start;text-align:left;align-items:center;gap:10px}
+html .studio.app2 .coach :is(.balance-source-picker,.gain-picker) select {width:auto;max-width:100%;min-width:125px}
+.quick-gang {padding:12px;border:1px solid var(--bp-line);border-radius:10px;background:var(--bp-panel)}
+.quick-gang summary {cursor:pointer;font-weight:650}
+.quick-gang fieldset {display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;border:1px solid var(--bp-line);margin:8px 0}
+.quick-gang :is(label,button) {display:inline-flex;align-items:center;gap:6px;min-height:36px}
+.quick-gang>button {margin-inline-start:10px}
+html .studio.app2 .library-feedback {display:flex;align-items:center;gap:8px;color:#afe2c9;margin:0}
+html .studio.app2 .stand-view.sh-concert .sh-show {align-items:start;flex:0 0 auto}
+html .studio.app2 .stand-view.sh-concert .sh-now {flex:0 0 auto;min-height:clamp(165px,31vh,330px);justify-content:center}
+html .studio.app2 .stand-view.sh-concert .sh-cmds {position:sticky;bottom:0;background:var(--bp-bg);padding-block:4px}
+html .studio.app2 .meter-overview .xm-meter-group>div {display:flex;height:auto}
+html .studio.app2 .meter-overview .xm-meter-cell {height:155px}
+.meter-axis {height:123px;display:flex;flex-direction:column;justify-content:space-between;align-items:end;font:10px ui-monospace,monospace;color:var(--bp-muted)}
+.rehearsal-next {display:none!important}
+.stand-view .rehearsal-next {display:block!important}
+html .studio.app2 .sh-rehearse.stand-view .bp-tab-grid {display:grid;grid-template-columns:minmax(0,1fr);align-content:start}
+.sh-rehearse.stand-view .bp-tab-grid>.sh-side,.sh-rehearse.stand-view .bp-track-card .sh-player {display:none}
+html .studio.app2 .sh-rehearse.stand-view .bp-tab-grid>.sh-songs {display:grid;grid-template-columns:minmax(90px,1fr) minmax(140px,250px);gap:8px}
+html .studio.app2 .sh-rehearse.stand-view .bp-tab-grid .rehearsal-song-grid {grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;max-height:22vh;overflow:auto}
+html .studio.app2 .sh-rehearse.stand-view .bp-section-strip button {min-height:52px}

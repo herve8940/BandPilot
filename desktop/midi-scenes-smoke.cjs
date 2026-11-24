@@ -43,7 +43,9 @@ module.exports=async(win,wait,screenshot)=>{
  await wait(`[...document.querySelectorAll('.scene-recall-panel [role=status]')].some(p=>p.textContent.includes('Sélection MIDI enregistrée'))`);
  const cue=(await api('/api/library/midi-scenes')).find(item=>item.data.sourceId===scene.id);
  if(!cue||await read(address)!==original)throw Error('Saving the MIDI selection changed the console or did not save');
- await button('.topbar','MIDI');
+ await js("document.querySelector('.quick-tools:not([open]) summary')?.click()");
+ await wait("!!document.querySelector('.quick-tools[open] .open-midi')?.getClientRects().length");
+ await button('.quick-tools','MIDI');
  await wait(`!!document.querySelector('.midi-controls[open]')`);
  await js(`(()=>{
   const port=new EventTarget();

@@ -2,7 +2,7 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {ChevronDown,ChevronLeft,ChevronRight,Circle,Flag,Pause,Play,Square} from 'lucide-react';
 import {rehearsalInputs} from '../../../shared/rehearsal-inputs';
 import type {ConfiguredInput,RehearsalCommand,RehearsalMarker,RehearsalProject,RehearsalSource,RehearsalTab} from '../../../shared/rehearsal-desk';
-import {tx} from '../i18n';
+import {tx,getLocale} from '../i18n';
 import {deskApi,deskCommand,deskState,type DeskStatus} from './rehearsal-api';
 import {call,clock,sectionName} from './api';
 import {Player} from './Player';
@@ -27,7 +27,7 @@ function songSections(marks:RehearsalMarker[]){
   return {...s,label:totals.get(s.name)!>1?s.name+' '+number:s.name};
  });
 }
-const updateBridge='Mets à jour le pont BandPilot et redémarre REAPER.';
+
 
 type GuideTrack=NonNullable<RehearsalProject['guides']>[number];
 function GuideFader({track,disabled,apply}:{track:GuideTrack;disabled:boolean;apply:(volume:number)=>void}){
@@ -48,8 +48,9 @@ function GuideFader({track,disabled,apply}:{track:GuideTrack;disabled:boolean;ap
  </label>;
 }
 
-export function RehearsalDesk({token,visible=true}:{token?:string;visible?:boolean}){
+export function RehearsalDesk({token,visible=true,requestedSong=""}:{token?:string;visible?:boolean;requestedSong?:string}){
  const phone=token!==undefined;
+ const [requestDismissed,setRequestDismissed]=useState(false);
  const [query,setQuery]=useState(''),[state,setState]=useState<DeskStatus|null>(null),[error,setError]=useState(''),[network,setNetwork]=useState('');
  const [working,setWorking]=useState(false),[message,setMessage]=useState('');
  const [configured,setConfigured]=useState<ConfiguredInput[]>([]),[inputError,setInputError]=useState('');
@@ -128,25 +129,38 @@ export function RehearsalDesk({token,visible=true}:{token?:string;visible?:boole
   <span>{index+1} / {state?.tabs.length??0}</span>
   <button type="button" aria-label={tx('Morceau suivant')} disabled={!canPick||!state||index>=state.tabs.length-1} onClick={()=>step(1)}><ChevronRight/></button>
  </div>;
+ const normalizeTitle=(title:string)=>title.normalize('NFC').trim().toLowerCase();
+ const matchingTabs=requestedSong ? state?.tabs.filter(t=>normalizeTitle(t.title)===normalizeTitle(requestedSong))??[] : [];
  const notices=<>
+  {requestedSong&&!requestDismissed&&<div className="regie-song-request" role="status">
+   <div><small>{tx("Depuis le répertoire")}</small><strong>{requestedSong}</strong></div>
+   {state?.bridge==='ready'&&(matchingTabs.length===1
+     ? matchingTabs[0].id===active?.id ? <span>{tx("Projet actif")}</span> : <button type="button" className="xs2-btn primary" disabled={!canPick} onClick={()=>select(matchingTabs[0].id)}>{tx("Sélectionner dans REAPER")}</button>
+     : <span>{tx(matchingTabs.length?"Plusieurs projets portent ce titre. Choisis le bon dans la liste.":"Ouvre ce projet dans REAPER ou choisis un morceau dans la liste.")}</span>)}
+   <button type="button" aria-label={tx("Fermer")} onClick={()=>setRequestDismissed(true)}>×</button>
+  </div>}
   {network&&<p className={phone?'ea-banner':'xs2-msg error'} role="alert">{tx(network)}</p>}
   {error&&<p className={phone?'ea-banner':'xs2-msg error'} role="alert">{tx(error)}</p>}
   {message&&<p role="status">{tx(message)}</p>}
   {!state&&!network&&<p role="status">{tx('Connexion à REAPER…')}</p>}
  </>;
  const bridge=state&&state.bridge!=='ready'?<div className={phone?'ea-profiles':'xs2-card sh-install'}>
-  <strong>{tx(state.bridge==='update'?updateBridge:'Le pont BandPilot ne répond pas dans REAPER.')}</strong>
+  <h3>{tx(state.bridge==='update'?'Mettre à jour le pont Reaper':'Le pont BandPilot ne répond pas dans REAPER.')}</h3>
+  <p>{tx(phone?'Vérifie la connexion à REAPER sur l’ordinateur du groupe.':'Le pont permet de voir tes morceaux et de piloter la lecture. Redémarre REAPER après son installation.')}</p>
   {!phone&&<button type="button" className="xs2-btn primary" disabled={working} onClick={()=>void run(async()=>{
    await call('/api/show/install',{confirm:true});setMessage('Pont installé. Redémarre REAPER pour activer les onglets.');
   })}>{tx('Installer le pont REAPER')}</button>}
  </div>:null;
- const empty=state?.bridge==='ready'&&!state.tabs.length?'Ouvre un projet par morceau dans REAPER.':'';
+ const search = query.trim().toLocaleLowerCase(getLocale());
+ const matchingSongs = (state?.tabs ?? []).filter(t => songName(t).toLocaleLowerCase(getLocale()).includes(search));
+ const empty = state?.bridge === 'ready' && !state.tabs.length ? 'Ouvre un projet par morceau dans REAPER.'
+   : search && !matchingSongs.length ? 'Aucun morceau trouvé.' : '';
  const list=<aside className="xs2-card sh-songs" aria-label={tx('Morceaux')}>
   <h3>{tx('Morceaux')}</h3>
   {state&&state.tabs.length>1&&navigation}
-  {state&&state.tabs.length>4&&<input type="search" className="bp-song-search" aria-label={tx('Rechercher un morceau')} placeholder={tx('Rechercher un morceau')} value={query} onChange={e=>setQuery(e.target.value)}/>}
-  <div className="sh-song-list">{state?.tabs.filter(t=>state.tabs.length<=4||songName(t).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).map(t=><button type="button" key={t.id} className={`sh-song ${t.id===active?.id?'on':''}`} aria-pressed={t.id===active?.id} disabled={!canPick} onClick={()=>select(t.id)}>
-   <b>{songName(t)}</b>{t.duration!==undefined&&t.duration>0&&<small>{clock(t.duration)}</small>}
+  {state&&(state.tabs.length>4||query)&&<input type="search" className="bp-song-search" aria-label={tx('Rechercher un morceau')} placeholder={tx('Rechercher un morceau')} value={query} onChange={e=>setQuery(e.target.value)}/>}
+  <div className="sh-song-list rehearsal-song-grid">{matchingSongs.map(t=><button type="button" key={t.id} className={`sh-song ${t.id===active?.id?'on':''}`} aria-pressed={t.id===active?.id} disabled={!canPick} onClick={()=>select(t.id)}>
+   <span className="song-position">{t.number}</span><b>{songName(t)}</b>{t.duration!==undefined&&t.duration>0&&<small>{clock(t.duration)}</small>}
   </button>)}</div>
   {empty&&<p className="muted">{tx(empty)}</p>}
  </aside>;
@@ -165,13 +179,13 @@ export function RehearsalDesk({token,visible=true}:{token?:string;visible?:boole
    </div>
    {empty&&<p>{tx(empty)}</p>}
   </>}
-  {state&&active&&tab&&<SongControls key={active.id} project={active} title={songName(tab)} saved={tab.saved} state={state} configured={configured} inputError={inputError}
+  {state?.bridge==='ready'&&active&&tab&&<SongControls key={active.id} project={active} title={songName(tab)} saved={tab.saved} state={state} configured={configured} inputError={inputError}
    phone disabled={disabled} command={command}/>}
  </section>;
  return <>
   {notices}{bridge}
-  {state&&active&&tab?<SongControls key={active.id} project={active} title={songName(tab)} saved={tab.saved} state={state} configured={configured} inputError={inputError}
-   phone={false} disabled={disabled} command={command} songList={list}/>:<div className="sh-grid">{list}</div>}
+  {state?.bridge==='ready'&&(active&&tab?<SongControls key={active.id} project={active} title={songName(tab)} saved={tab.saved} state={state} configured={configured} inputError={inputError}
+   phone={false} disabled={disabled} command={command} songList={list}/>:<div className="sh-grid">{list}</div>)}
  </>;
 }
 
@@ -230,6 +244,7 @@ function SongControls({project:p,title:song,saved,state,configured,inputError,ph
  const pos=running?Math.max(p.pos,Math.min(p.stopAt??Infinity,p.pos+advance)):p.pos;
  // Use the reported audio position at loop boundaries, where extrapolation can briefly enter the next region.
  const current=sections.filter(s=>s.left.pos<=p.pos&&p.pos<s.right.pos).at(-1);
+ const nextSection=sections.find(s=>s.left.pos>p.pos);
  const looping=p.loopStart!==undefined,leaving=p.leavingAt!==undefined&&p.pos<p.leavingAt;
  const transportLabel=counting?'Décompte':looping&&p.pos>=p.loopStart!?'En boucle':leaving?'Sortie en fin de section':operation;
  const statuses=<>
@@ -240,7 +255,7 @@ function SongControls({project:p,title:song,saved,state,configured,inputError,ph
  const transport=<div className={`sh-transport bp-transport ${recording?'rec':''}`}>
   <div className="sh-transport-info"><small>{tx(operation)} · {tx(sources[busy&&p.source?p.source:source])}</small><b className="bp-current-section" aria-live="polite">{phone?(counting?tx('Décompte'):current?.label||tx(operation)):song}</b>
    {phone&&(looping||leaving)&&<small className="bp-loop-state">{tx(transportLabel)}</small>}
-   {!phone&&current&&<small>{current.label} · {tx(transportLabel)}</small>}{statuses}</div>
+   {!phone&&current&&<small>{current.label} · {tx(transportLabel)}</small>}{!phone&&nextSection&&<small className="rehearsal-next">{tx("Ensuite")} · {nextSection.label} · {clock(nextSection.left.pos)}</small>}{statuses}</div>
   <strong className="sh-clock">{clock(pos)}</strong>
   <progress className="bp-song-progress" max={Math.max(.001,duration-p.start)} value={Math.max(0,pos-p.start)} aria-label={tx('Position dans le morceau')}/>
   <div className="sh-transport-actions" role="group" aria-label={tx('Transport de répétition')}>

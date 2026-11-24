@@ -1,3 +1,4 @@
+import {ContrastSwitch,useScreenContrast} from '../xair/meter-preferences';
 import {useScoreScreen} from './useScoreScreen';
 import {SongSheet} from './SongSheet';
 import {RehearsalDesk} from '../show/RehearsalDesk';
@@ -23,7 +24,7 @@ function useEars() {
   const [sources, setSources] = useState<Source[]>([]);
   const [values, setValues] = useState<Values>({});
   const [cap, setCap] = useState(.75);
-  const [control, setControl] = useState(true);
+  const [control, setControl] = useState(false);
   const [manager,setManager]=useState(false);
   const [meters, setMeters] = useState<{ levels: number[]; bus: number; busRight?:number; at: number }>({ levels: [], bus: -128, at: 0 });
   const [toast, setToast] = useState("");
@@ -34,19 +35,36 @@ function useEars() {
 
   useEffect(() => {
     let stop = false, retry: ReturnType<typeof setTimeout> | undefined, delay = 800;
+    const resetEdits = () => {
+      for (const timer of timers.current.values()) clearTimeout(timer);
+      timers.current.clear();
+      pending.current.clear();
+      touched.current.clear();
+    };
     const connect = () => {
-      setConn(c => c === "revoked" ? c : "connecting");
+      if (stop || ws.current) return;
+      clearTimeout(retry);
+      setConn("connecting");
       const socket = new WebSocket(`${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ears-ws?token=${encodeURIComponent(token)}`);
       ws.current = socket;
-      socket.onopen = () => { setConn("online"); delay = 800; };
       socket.onclose = e => {
-        if (e.code === 4001) { setConn("revoked"); return; }
+        if (stop || ws.current !== socket) return;
+        ws.current = null;
+        resetEdits();
+        setMeters({levels:[], bus:-128, at:0});
+        setControl(false);
+        if (e.code === 4001) { stop = true; setConn("revoked"); return; }
         setConn("offline");
-        if (!stop) { retry = setTimeout(connect, delay); delay = Math.min(delay * 1.6, 8000); }
+        retry = setTimeout(connect, delay); delay = Math.min(delay * 1.6, 8000);
       };
       socket.onmessage = ev => {
+        if (stop || ws.current !== socket) return;
         const m = JSON.parse(ev.data);
-        if (m.type === "snapshot") { setShare(m.share); setSources(m.sources); setValues(m.values); setCap(m.cap); setControl(m.control); setPatch(m.patch??[]); setManager(m.rehearsal===true); }
+        if (m.type === "snapshot") {
+          if (!m.control) resetEdits();
+          setShare(m.share); setSources(m.sources); setValues(m.values); setCap(m.cap); setControl(m.control); setPatch(m.patch??[]); setManager(m.rehearsal===true);
+          setConn("online"); delay = 800;
+        }
         else if (m.type==="rehearsal-role") setManager(m.enabled===true);
         else if (m.type === "technical-card") setPatch(m.patch??[]);
         else if (m.type === "parameter") {
@@ -58,14 +76,20 @@ function useEars() {
       };
     };
     // Reconnect quickly when the phone comes back from sleep.
-    const wake = () => { if (document.visibilityState === "visible" && ws.current?.readyState !== WebSocket.OPEN && !stop) { clearTimeout(retry); connect(); } };
+    const wake = () => { if (document.visibilityState === "visible") connect(); };
     document.addEventListener("visibilitychange", wake);
     connect();
-    return () => { stop = true; clearTimeout(retry); document.removeEventListener("visibilitychange", wake); ws.current?.close(); };
+    return () => {
+      stop = true; clearTimeout(retry); resetEdits();
+      document.removeEventListener("visibilitychange", wake);
+      ws.current?.close(); ws.current = null;
+    };
   }, []);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(""), 3500); return () => clearTimeout(t); }, [toast]);
 
   const set = useCallback((address: string, value: number) => {
+    const socket = ws.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
     touched.current.set(address, Date.now());
     setValues(v => ({ ...v, [address]: value }));
     pending.current.set(address, value);
@@ -74,7 +98,7 @@ function useEars() {
       const next = pending.current.get(address);
       if (next === undefined) { timers.current.delete(address); return; }
       pending.current.delete(address);
-      if (ws.current?.readyState === WebSocket.OPEN) ws.current.send(JSON.stringify({ type: "set", address, value: next }));
+      if (ws.current === socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "set", address, value: next }));
       timers.current.set(address, setTimeout(flush, 50));
     };
     flush();
@@ -88,9 +112,15 @@ function Slider({ value, cap, onChange, disabled, label, color }: { value: numbe
   const drag = useRef<{ x: number; v: number } | null>(null);
   const pos = Math.max(0, Math.min(1, value / cap));
   const fromX = (e: ReactPointerEvent) => { const r = ref.current!.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * cap; };
-  return <div ref={ref} className={disabled ? "ea-slider disabled" : "ea-slider"} role="slider" aria-label={tx(label)} aria-valuemin={0} aria-valuemax={cap} aria-valuenow={value} aria-valuetext={tx(`${formatDb(faderToDb(value))} dB`)} tabIndex={disabled ? -1 : 0}
+  return <div ref={ref} className={disabled ? "ea-slider disabled" : "ea-slider"} role="slider" aria-disabled={disabled} aria-label={tx(label)} aria-valuemin={0} aria-valuemax={cap} aria-valuenow={value} aria-valuetext={tx(`${formatDb(faderToDb(value))} dB`)} tabIndex={disabled ? -1 : 0}
     style={{ "--c": color } as React.CSSProperties}
-    onKeyDown={e => { if (disabled) return; if (e.key === "ArrowRight" || e.key === "ArrowUp") onChange(Math.min(cap, value + .01)); if (e.key === "ArrowLeft" || e.key === "ArrowDown") onChange(Math.max(0, value - .01)); }}
+    onKeyDown={e => {
+      if (disabled) return;
+      const steps: Record<string, number> = {ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1};
+      if (!Object.hasOwn(steps, e.key)) return;
+      e.preventDefault();
+      onChange(Math.max(0, Math.min(cap, value + steps[e.key]! * .01)));
+    }}
     onPointerDown={e => { if (disabled) return; e.currentTarget.setPointerCapture(e.pointerId); drag.current = { x: e.clientX, v: value }; }}
     onPointerMove={e => {
       if (!drag.current || disabled) return;
@@ -110,6 +140,7 @@ function MeterBar({ db }: { db: number }) {
 }
 
 export function EarsApp() {
+  useScreenContrast();
   useLanguage();
   const { conn, share, manager, patch, sources, values, cap, control, meters, toast, setToast, set } = useEars();
   const [checkedSource,setCheckedSource]=useState("");
@@ -202,7 +233,7 @@ export function EarsApp() {
     </details>
 
     <section className="ea-list">
-      <div className="ea-list-head"><h2>{tx("Ce que j’entends")}</h2><label><input type="checkbox" checked={showAll} onChange={e => setShowAll(e.target.checked)} />{tx(" Tout afficher")}</label></div>
+      <div className="ea-list-head"><h2>{tx("Ce que j’entends")}</h2><label><input type="checkbox" checked={showAll} onChange={e => setShowAll(e.target.checked)} />{tx(" Afficher les autres entrées")}</label></div>
       {list.map(s => {
         const color = stripColor(num(`${s.prefix}/config/color`)), level = num(s.level), muted = num(`${s.prefix}/mix/on`, 1) === 0;
         const db = freshMeters ? Math.max(...s.meters.map(i => meters.levels[i] ?? -128)) : -128;
@@ -213,7 +244,7 @@ export function EarsApp() {
           <MeterBar db={db} />
         </article>;
       })}
-      {!list.length && <p className="ea-empty">{tx("Aucune source envoyée dans ton retour. Coche « Tout afficher » pour en ajouter.")}</p>}
+      {!list.length && <p className="ea-empty">{tx("Aucune source envoyée dans ton retour. Coche « Afficher les autres entrées » pour en ajouter.")}</p>}
     </section>
 
     <section className="ea-profiles">
@@ -233,7 +264,7 @@ export function EarsApp() {
     <footer className="ea-foot">{tx("Sécurité auditive : le niveau est plafonné à 0 dB et monte progressivement. Commence bas, puis monte ce qui te manque.")}</footer>
     </div>
     {manager&&<div hidden={!rehearsing}><RehearsalDesk token={token} visible={rehearsing}/></div>}
-    {rehearsing&&<LanguageSelect/>}
+    <ContrastSwitch/>{rehearsing&&<LanguageSelect/>}
     {toast && <div className="ea-toast" role="status">{tx(toast)}</div>}
   </main>;
 }

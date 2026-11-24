@@ -21,7 +21,7 @@ test('scene protections save metadata explicitly, discard drafts, detect conflic
    assert.ok(text.includes(i18n.translate('Protections des scènes',language)));assert.ok(text.includes('Instrument B'));
    for(const key of [shared.PROTECTION_NOTICE,shared.PROTECTION_SCOPE,shared.PROTECTION_FULL,shared.PROTECTION_INVALID,shared.PROTECTION_CONFLICT,'Enregistrer les protections','Conservés par les protections'])if(language!=='fr')assert.notEqual(i18n.translate(key,language),key);
   }
-  assert.ok(f.calls.filter(c=>c.body).every(c=>c.path==='/api/library/scene-protections'),'no audio or ReaCue request');
+  assert.ok(f.calls.filter(c=>c.body).every(c=>c.path==='/api/library/scene-protections'),'no audio request');
  }finally{i18n.setLanguage('fr');await f.close();}
 });
 

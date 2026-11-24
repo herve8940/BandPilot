@@ -16,7 +16,7 @@ test('continuous groups arm without writes, preserve offsets and silence, reject
   await f.xr.writeParameter('/ch/03/mix/fader',0);
   const before=await f.control.capture(),s=await f.live.start('one',{model:'XR18',selection:{channels:[1,2,3],target:'fader'}});
   assert.deepEqual(await f.control.capture(),before);
-  await assert.rejects(f.live.start('two',{model:'XR18',selection:{channels:[4,5],target:'fader'}}),/déjà actif/);
+  await assert.rejects(f.live.start('two',{model:'XR18',selection:{channels:[3,4],target:'fader'}}),/déjà actif/);
   const a=await f.live.move('one',{token:s.token,sequence:1,offset:3},()=>{});
   assert.equal(fromWire('/ch/01/mix/fader',await f.xr.readParameter('/ch/01/mix/fader')),-12);
   assert.equal(await f.xr.readParameter('/ch/03/mix/fader'),0);
@@ -59,5 +59,43 @@ test('stop during preparation prevents writes and releases the controller; stop 
   f.control.apply=async(...args)=>{const result=await apply(...args);applied();await completion;return result;};
   const step=f.live.move('one',{token:next.token,sequence:1,offset:2},()=>{});await written;f.live.stop('one',next.token);finish();const result=await step;assert.ok(result.backupId);
   f.control.apply=apply;const undo=await previewChannelBackup(f.xr,f.control,f.library,result.backupId!);await f.control.apply(undo.token);assert.deepEqual(await f.control.capture(),before);
+ }finally{f.close();}
+});
+
+
+test('disjoint groups coexist across controllers and mixes, including stereo-expanded conflicts',async()=>{
+ const f=fixture();try{
+  for(const ch of [1,2,3,4])for(const suffix of ['mix/fader','mix/01/level','mix/02/level'])await f.xr.writeParameter(`/ch/0${ch}/${suffix}`,.5);
+  const start=(owner:string,channels:number[],bus?:number)=>f.live.start(owner,{model:'XR18',selection:{channels,target:bus?'send':'fader',bus}});
+  const main=await start('one',[1,2]),second=await start('two',[3,4]),monitor=await start('two',[1,2],1);
+  await f.live.move('one',{token:main.token,sequence:1,offset:2},()=>{});
+  await f.live.move('two',{token:second.token,sequence:1,offset:-2},()=>{});
+  await f.live.move('two',{token:monitor.token,sequence:1,offset:3},()=>{});
+  assert.equal(fromWire('/ch/01/mix/fader',await f.xr.readParameter('/ch/01/mix/fader')),-8);
+  assert.equal(fromWire('/ch/03/mix/fader',await f.xr.readParameter('/ch/03/mix/fader')),-12);
+  assert.equal(fromWire('/ch/01/mix/01/level',await f.xr.readParameter('/ch/01/mix/01/level')),-7);
+  await assert.rejects(start('three',[2,3]),/déjà actif/);
+  f.live.stop('one',second.token); // another controller cannot stop this group
+  await f.live.move('two',{token:second.token,sequence:2,offset:-3},()=>{});
+  f.live.stop('one',main.token);
+  await start('three',[1,2]);
+  f.xr.cancelOperations(); // all stale leases are pruned when arming again
+  for(const ch of [1,2])for(const bus of [1,2])await f.xr.writeParameter(`/ch/0${ch}/mix/0${bus}/level`,.5);
+  await f.xr.writeParameter('/config/buslink/1-2',1);
+  await start('one',[1,2],1);
+  await assert.rejects(start('two',[1,2],2),/déjà actif/);
+ }finally{f.close();}
+});
+
+
+test('controller leases renew without writes and release overlapping groups after a closed browser',async()=>{
+ const f=fixture();let now=1000;const live=new LiveGroups(f.xr,f.control,f.library,()=>now);
+ try{
+  const input={model:'XR18',selection:{channels:[1,2],target:'fader'}},before=await f.control.capture();
+  const s=await live.start('one',input);now+=14000;live.pulse('one',s.token);now+=14000;
+  await assert.rejects(live.start('two',input),/déjà actif/);
+  assert.throws(()=>live.pulse('two',s.token),/désactivé/);now+=1000;
+  assert.throws(()=>live.pulse('one',s.token),/désactivé/);
+  await live.start('two',input);assert.deepEqual(await f.control.capture(),before);
  }finally{f.close();}
 });

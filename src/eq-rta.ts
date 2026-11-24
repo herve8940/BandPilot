@@ -1,12 +1,14 @@
+import {trackResonance,sustainedResonance,type Resonance} from '../shared/resonance-tracker.js';
 import {randomUUID} from 'node:crypto';
 import type {XR18} from './xr18.js';
 
 export type RtaTarget={kind:'ch'|'bus'|'lr'|'aux'|'fxrtn';n:number};
 type Frame={bands:number[];at:number};
-type Session={token:string;generation:number;source:number;post:boolean;previous:{source:number;post:boolean};expires:number;ready:number;frame:Frame|null};
+type RingPass={id:string;owner:string;bus:number;linked:boolean;until:number;candidate:Resonance|null;applying:boolean};
+type Session={ring?:RingPass;token:string;generation:number;source:number;post:boolean;previous:{source:number;post:boolean};expires:number;ready:number;frame:Frame|null};
 export const RTA_LEASE_MS=6000;
-/** One console analyser, shared across all clients. A lease changes display
- * selection only; neither this service nor its cleanup writes audio parameters. */
+/** One console analyser, shared across all clients. Monitoring changes display selection only. A separate
+ * one-shot correction requires an explicitly armed pass on the monitored bus. */
 export class EqRta {
  private session:Session|null=null;
  private tail:Promise<unknown>=Promise.resolve();
@@ -14,9 +16,14 @@ export class EqRta {
  private starting=false;
  private releasing=false;
  constructor(private xr:XR18,private analyzerBusy:()=>boolean,private clock:()=>number=Date.now){
-  xr.on('rta',(f:Frame)=>{const s=this.session;if(s&&this.clock()>=s.ready&&f.at>=s.ready&&f.at<=this.clock()+1000&&f.bands.length===100&&f.bands.every(Number.isFinite))s.frame={bands:[...f.bands],at:f.at};});
+  xr.on('rta',(f:Frame)=>{
+   const s=this.session,now=this.clock();
+   if(!s||!Number.isFinite(f.at)||now<s.ready||f.at<s.ready||f.at>now+1000||f.bands.length!==100||!f.bands.every(Number.isFinite))return;
+   s.frame={bands:[...f.bands],at:f.at};
+   if(s.ring)s.ring.candidate=trackResonance(s.ring.candidate,f,now);
+  });
   xr.on('reset',()=>{this.session=null;});
-  xr.on('osc-reply',(m:{address:string;args:unknown[]})=>{const s=this.session;if(s&&((m.address==='/-stat/rta/source'&&m.args[0]!==s.source)||(m.address==='/-stat/rta/pos'&&m.args[0]!==Number(s.post)))){s.frame=null;s.ready=this.clock()+350;}});
+  xr.on('osc-reply',(m:{address:string;args:unknown[]})=>{const s=this.session;if(s&&((m.address==='/-stat/rta/source'&&m.args[0]!==s.source)||(m.address==='/-stat/rta/pos'&&m.args[0]!==Number(s.post)))){s.frame=null;delete s.ring;s.ready=this.clock()+350;}});
   this.timer=setInterval(()=>{if(this.session&&this.session.expires<this.clock())void this.serial(async()=>{if(this.session&&this.session.expires<this.clock())await this.release();}).catch(()=>{});},1000);this.timer.unref();
  }
  private serial<T>(fn:()=>Promise<T>):Promise<T>{const next=this.tail.then(fn,fn);this.tail=next.catch(()=>{});return next;}
@@ -69,8 +76,38 @@ export class EqRta {
   if(this.session!==s||s.generation!==this.xr.connectionId())throw Error('Connexion modifiée');
   if(observed.source!==s.source||observed.post!==s.post){this.session=null;throw Error('La source RTA a changé ailleurs. Relance le spectre pour cette tranche.');}
   s.expires=this.clock()+RTA_LEASE_MS;this.xr.subscribeAnalysis();
-  return {...this.info(),frame:s.frame&&this.clock()-s.frame.at<1500?s.frame:null};
+  return {...this.info(),ringReadyId:s.ring&&s.ring.until>this.clock()&&sustainedResonance(s.ring.candidate)?s.ring.id:null,frame:s.frame&&this.clock()-s.frame.at<1500?s.frame:null};
  });}
+ armRing(token:unknown,owner:string,bus:unknown,linked:unknown,id:unknown){
+  const s=this.session;
+  if(!s||s.token!==token||this.xr.mode!=='real'||!this.xr.status().writesEnabled||!this.xr.status().connected||s.generation!==this.xr.connectionId()||
+    typeof bus!=='number'||!Number.isInteger(bus)||bus<1||bus>this.xr.model().monitorOutputs||s.source!==20+bus||s.expires<=this.clock()||!s.frame||this.clock()-s.frame.at>1000||
+    typeof linked!=='boolean'||typeof id!=='string'||!/^[-a-f0-9]{36}$/.test(id))throw Error('Vérifie le RTA et le GEQ du retour.');
+  if(s.ring&&s.ring.until>this.clock())throw Error('Une correction est déjà armée.');
+  s.ring={id,owner,bus,linked,until:this.clock()+30000,candidate:null,applying:false};
+ }
+ stopRing(token:unknown,owner:string,id:unknown){const s=this.session;if(s&&s.token===token&&s.ring&&s.ring.id===id&&s.ring.owner===owner)delete s.ring;}
+ async correctRing(token:unknown,owner:string,id:unknown,correct:(bus:number,linked:boolean,hz:number,assertPeak:()=>void,assertSession:()=>void)=>Promise<unknown>){
+  const s=this.session,pass=s?.ring;
+  if(!s||s.token!==token||!pass||pass.id!==id||pass.owner!==owner||pass.applying)throw Error('Correction arrêtée.');
+  pass.applying=true;
+  try{
+   await this.read(token);
+   const peak=pass.candidate;
+   if(!peak||!sustainedResonance(peak)||peak.hz<40||peak.hz>12500)throw Error('Aucun pic persistant repéré.');
+   const assertSession=()=>{
+    const now=this.clock();
+    if(this.session!==s||s.ring!==pass||s.generation!==this.xr.connectionId()||!this.xr.status().writesEnabled||!this.xr.status().connected||
+       now>=pass.until||s.expires<=now)throw Error('Correction arrêtée.');
+   };
+   const assertPeak=()=>{
+    assertSession();
+    const r=pass.candidate;
+    if(!r||r.since!==peak.since||Math.abs(r.bin-peak.bin)>1||this.clock()-r.at>=1500)throw Error('Correction arrêtée.');
+   };
+   assertPeak();return await correct(pass.bus,pass.linked,peak.hz,assertPeak,assertSession);
+  }finally{if(s.ring===pass)delete s.ring;}
+ }
  stop(token:unknown){return this.serial(async()=>{if(this.session?.token===token)await this.release();return {ok:true};});}
  private async release(){
   this.releasing=true;try{

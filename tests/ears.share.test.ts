@@ -1,12 +1,38 @@
 import Database from 'better-sqlite3';
 import test from "node:test";
 import assert from "node:assert/strict";
-import {mkdtempSync} from "node:fs";
+import {mkdirSync,mkdtempSync,writeFileSync} from "node:fs";
+import {gzipSync} from "node:zlib";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import WebSocket from "ws";
 import {XR18} from "../src/xr18.js";
 import {EarsShare,earAddressKind,earSafeValue,EAR_CAP,EAR_MAX_RAISE,lanAddresses} from "../src/ears.js";
+
+test("phone caches only versioned assets and serves the same content with and without gzip",async()=>{
+ const dir=mkdtempSync(join(tmpdir(),"ears-assets-"));
+ mkdirSync(join(dir,"assets"));
+ const asset="ears-12345678.js", source="const ready=true;";
+ writeFileSync(join(dir,"assets",asset),source);
+ writeFileSync(join(dir,"assets",asset+".gzip"),gzipSync(source));
+ writeFileSync(join(dir,"ears.html"),"<title>Monitor</title>");
+ const xr=new XR18({mode:"simulation",host:"127.0.0.1",port:10024,enableWrites:false});
+ const ears=new EarsShare(join(dir,"db.sqlite"),xr,()=>dir,()=>null,()=>{});
+ try {
+  const share=ears.create("Test",1), {port}=await ears.start(0);
+  const base="http://127.0.0.1:"+port;
+  for(const [accept,encoded] of [["gzip","gzip"],["gzip;q=0, identity",null],["identity",null]] as const){
+   const r=await fetch(base+"/assets/"+asset,{headers:{"Accept-Encoding":accept}});
+   assert.equal(r.headers.get("content-encoding"),encoded);
+   assert.match(r.headers.get("cache-control")??"",/immutable/);
+   assert.equal(r.headers.get("vary"),"Accept-Encoding");
+   assert.equal(await r.text(),source);
+  }
+  for(const path of ["/ears/"+share.token,"/ears-api/"+share.token+"/profiles"]){
+   const r=await fetch(base+path);assert.equal(r.status,200);assert.equal(r.headers.get("cache-control"),"no-store");
+  }
+ }finally{await ears.stop();ears.close();xr.close();}
+});
 
 test("a monitor link only reaches its own bus",()=>{
  assert.equal(earAddressKind(2,"/ch/05/mix/02/level"),"level");
@@ -135,4 +161,52 @@ test('upgrading an old mono-share database preserves its token, bus and saved mi
  const xr=new XR18({mode:'simulation',host:'127.0.0.1',port:10024,enableWrites:false});let writes=0;xr.liveSet=(_address,value)=>{writes++;return value;};
  const ears=new EarsShare(file,xr,()=>undefined,()=>null,()=>{});
  try{assert.equal(ears.list()[0]?.token,'legacy-token');assert.equal(ears.list()[0]?.bus,2);assert.equal(ears.list()[0]?.stereo,false);assert.equal(ears.profiles('old-id')[0]?.values['/ch/01/mix/02/level'],.3);assert.equal(writes,0);}finally{ears.close();xr.close();}
+});
+
+test('prepared roster replaces former musicians, keeps valid QR links and isolates personal mixes across restarts',async()=>{
+ const file=join(mkdtempSync(join(tmpdir(),'ears-roster-')),'group.sqlite');
+ const xr=new XR18({mode:'simulation',host:'127.0.0.1',port:10024,enableWrites:false,autoSync:false});
+ let ears=new EarsShare(file,xr,()=>undefined,()=>null);
+ try{
+  const old=ears.create('Alex',1),kept=ears.create('Sam',2);
+  ears.create('Jo',3);ears.create('Robin',4);ears.create('Chris',5);ears.assignManager(old.id);
+  const {port}=await ears.start(0);
+  const url=(token:string)=>`http://127.0.0.1:${port}/ears-api/${token}/profiles`;
+  const saved=await (await fetch(url(old.token),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Répétition'})})).json() as {id:string};
+  assert.ok(saved.id);
+  const ws=new WebSocket(`ws://127.0.0.1:${port}/ears-ws?token=${old.token}`);
+  await new Promise(r=>ws.once('open',r));
+  const closed=new Promise<number>(r=>ws.once('close',r));
+  const before=xr.parameterState(),roster=[{name:'Lou',bus:1},{name:'Sam',bus:2}];
+  const plan=await ears.prepareRoster(roster);assert.equal(ears.list().length,5);
+  assert.deepEqual(plan.commit(),{created:1,retired:4});
+  assert.equal(await closed,4001);assert.equal((await fetch(url(old.token))).status,401);
+  assert.equal((await fetch(url(kept.token))).status,200);
+  const next=ears.list()[0]!;assert.deepEqual(await (await fetch(url(next.token))).json(),[]);
+  assert.equal(ears.status().managerId,null);assert.deepEqual(ears.list()[1],kept);
+  assert.deepEqual((await ears.prepareRoster(roster)).commit(),{created:0,retired:0});
+  assert.deepEqual(xr.parameterState(),before);
+  await ears.stop();ears.close();ears=new EarsShare(file,xr,()=>undefined,()=>null);
+  assert.deepEqual(ears.list(),[next,kept]);assert.equal(ears.status().running,false);
+  (await ears.prepareRoster([{name:'Alex',bus:1}],1)).commit();
+  const restored=ears.list()[0]!;assert.equal(restored.id,old.id);assert.notEqual(restored.token,old.token);
+  assert.equal(ears.profiles(restored.id)[0]?.id,saved.id);assert.equal(ears.status().managerId,null);
+  assert.deepEqual(ears.list()[1],kept);
+ }finally{await ears.stop();ears.close();xr.close();}
+});
+
+test('prepared stereo return uses the linked pair and rejects conflicts on an XR12 before retiring any QR',async()=>{
+ const xr=new XR18({mode:'simulation',model:'XR12',host:'127.0.0.1',port:10024,enableWrites:false,autoSync:false});
+ const ears=new EarsShare(':memory:',xr,()=>undefined,()=>null);
+ try{
+  const old=ears.create('Ancien',2);
+  await xr.writeParameter('/config/buslink/1-2',1);
+  await assert.rejects(ears.prepareRoster([{name:'A',bus:1},{name:'B',bus:2}],2),/même paire/);
+  await assert.rejects(ears.prepareRoster([{name:'C',bus:3}]),/absente/);
+  assert.deepEqual(ears.list(),[old]);
+  (await ears.prepareRoster([{name:'Duo',bus:2}],2)).commit();
+  assert.deepEqual(ears.list().map(({name,bus,stereo})=>({name,bus,stereo})),[{name:'Duo',bus:1,stereo:true}]);
+  const kept=ears.list()[0];(await ears.prepareRoster([{name:'Duo',bus:1}])).commit();assert.deepEqual(ears.list(),[kept]);
+  (await ears.prepareRoster([])).commit();assert.deepEqual(ears.list(),[]);
+ }finally{ears.close();xr.close();}
 });

@@ -1,3 +1,5 @@
+import '../fader-design.css';
+import {useParameterLinks} from '../expert/parameter-links';
 import {nextPeak,useMeterPreferences} from './meter-preferences';
 import {tx, getLocale} from "../i18n";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
@@ -26,16 +28,18 @@ export function Meter({ indexes, wide = false }: { indexes: number[]; wide?: boo
   const levels = useMeters(), settings=useMeterPreferences();
   const identity=indexes.join(',')+':'+settings.reset;
   const last=useRef(identity);
-  const peaks = useRef<{ value: number; at: number }[]>([]);
+  const peaks = useRef<({ value: number; at: number }|undefined)[]>([]);
   if(last.current!==identity||!meterStore.fresh()||!levels.length){peaks.current=[];last.current=identity;}
   if (!indexes.length) return <div className="xm-meter none" />;
   const fresh = meterStore.fresh();
   return <div className={wide ? "xm-meter wide" : "xm-meter"}>{indexes.map((index, i) => {
-    const db = fresh ? levels[index] ?? -128 : -128;
-    const peak = peaks.current[i];
-    peaks.current[i]=nextPeak(peak,db,Date.now(),settings.holdMs);
-    const peakPos = meterPos(peaks.current[i]!.value);
-    return <div key={index} className="xm-meter-bar" title={tx(`${db.toFixed(1)} dBFS`)}>
+    const valid = fresh && Number.isFinite(levels[index]);
+    const db = valid ? levels[index] : -Infinity;
+    const peak = valid ? nextPeak(peaks.current[i],db,Date.now(),settings.holdMs,settings.decay) : undefined;
+    peaks.current[i]=peak;
+    const peakPos = peak ? meterPos(peak.value) : 0;
+    const reading = valid ? `${db.toFixed(1)} dBFS` : tx('En attente de mesure');
+    return <div key={index} className="xm-meter-bar" title={reading}>
       <div className="xm-meter-fill" style={{ clipPath: `inset(${(1 - meterPos(db)) * 100}% 0 0 0)` }} />
       {settings.holdMs!==0 && peakPos > 0 && <div className="xm-meter-peak" style={{ bottom: `${peakPos * 100}%` }} />}
       {db > -0.5 && <div className="xm-meter-clip" />}
@@ -72,28 +76,34 @@ function keyStep(value: number, onChange: (v: number) => void, disabled?: boolea
 
 // ---------- fader (real X-Air dB law) ----------
 const FADER_MARKS = [10, 5, 0, -5, -10, -20, -30, -50];
-export function Fader({ value, onChange, disabled, label, reset = .75, accent }: { value: number; onChange: (v: number) => void; disabled?: boolean; label: string; reset?: number; accent?: string }) {
-  const track = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ y: number; v: number } | null>(null);
-  return <div className={disabled ? "xm-fader disabled" : "xm-fader"} role="slider" aria-disabled={!!disabled} aria-label={tx(label)} aria-valuemin={0} aria-valuemax={1} aria-valuenow={value}
-    aria-valuetext={tx(`${formatDb(faderToDb(value))} dB`)} tabIndex={disabled ? -1 : 0} onKeyDown={keyStep(value, onChange, disabled)}
-    onWheel={e => { if (!disabled) onChange(clamp01(value - Math.sign(e.deltaY) * (e.shiftKey ? .002 : .01))); }}
-    onDoubleClick={() => { if (!disabled) onChange(reset); }}>
-    <div className="xm-fader-scale">{FADER_MARKS.map(db => <span key={db} style={{ bottom: `${dbToFader(db) * 100}%` }}>{tx(db > 0 ? db : Math.abs(db))}</span>)}</div>
-    <div className="xm-fader-track" ref={track}
-      onPointerDown={e => {
-        if (disabled || !track.current) return;
-        const rect = track.current.getBoundingClientRect(), capY = rect.bottom - value * rect.height;
-        const v = Math.abs(e.clientY - capY) > 14 ? clamp01((rect.bottom - e.clientY) / rect.height) : value;
-        if (v !== value) onChange(v);
-        drag.current = { y: e.clientY, v }; e.currentTarget.setPointerCapture(e.pointerId);
-      }}
-      onPointerMove={e => { if (!drag.current || !track.current) return; onChange(clamp01(drag.current.v + (drag.current.y - e.clientY) / track.current.clientHeight * (e.shiftKey ? .15 : 1))); }}
-      onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>
-      <div className="xm-fader-slot" />
-      <div className="xm-fader-cap" style={{ bottom: `${value * 100}%`, "--cap": accent ?? "#9aa4b1" } as React.CSSProperties}><i /></div>
-    </div>
-  </div>;
+type FaderMark={value:number;label:string;reference?:boolean};
+export function Fader({value,onChange,disabled,label,reset=.75,accent,marks,valueText,step=.01,fineStep=.002}:{value:number;onChange:(v:number)=>void;disabled?:boolean;label:string;reset?:number|null;accent?:string;marks?:FaderMark[];valueText?:string;step?:number;fineStep?:number}){
+ const {fine:precise}=useMeterPreferences();
+ const track=useRef<HTMLDivElement>(null),drag=useRef<{y:number;v:number}|null>(null);
+ const [dragging,setDragging]=useState(false);
+ const stop=()=>{drag.current=null;setDragging(false);};
+ useEffect(()=>{if(disabled){drag.current=null;setDragging(false);}},[disabled]);
+ const scale=marks??FADER_MARKS.map(db=>({value:dbToFader(db),label:db>0?'+'+db:String(db).replace('-','−'),reference:db===0}));
+ const nudge=(direction:number,fine:boolean)=>{if(!disabled)onChange(clamp01(value+direction*((fine||precise)?fineStep:step)));};
+ return <div className={'xm-fader fader-studio'+(disabled?' disabled':'')+(dragging?' dragging':'')} role="slider" aria-orientation="vertical" aria-disabled={!!disabled} aria-label={tx(label)} aria-valuemin={0} aria-valuemax={1} aria-valuenow={value}
+  aria-valuetext={valueText??tx(`${formatDb(faderToDb(value))} dB`)} tabIndex={disabled?-1:0} style={{'--fader-accent':accent??'#72cdd0'} as React.CSSProperties}
+  onKeyDown={e=>{if(['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(e.key)&&!disabled){e.preventDefault();nudge(e.key==='ArrowUp'||e.key==='ArrowRight'?1:-1,e.shiftKey);}}}
+  onWheel={e=>nudge(-Math.sign(e.deltaY),e.shiftKey)} onDoubleClick={()=>{if(!disabled&&reset!==null)onChange(reset);}}>
+  <div className="xm-fader-scale" aria-hidden="true">{scale.map(mark=><span key={mark.label} className={mark.reference?'reference':undefined} style={{bottom:`${mark.value*100}%`}}>{mark.label}</span>)}</div>
+  <div className="xm-fader-track" ref={track}
+   onPointerDown={e=>{
+    if(disabled||!track.current)return;
+    const rect=track.current.getBoundingClientRect();if(!rect.height)return;
+    const capY=rect.bottom-value*rect.height,v=!precise&&!e.shiftKey&&Math.abs(e.clientY-capY)>18?clamp01((rect.bottom-e.clientY)/rect.height):value;
+    if(v!==value)onChange(v);
+    drag.current={y:e.clientY,v};setDragging(true);e.currentTarget.setPointerCapture(e.pointerId);
+   }}
+   onPointerMove={e=>{if(disabled||!drag.current||!track.current?.clientHeight)return;onChange(clamp01(drag.current.v+(drag.current.y-e.clientY)/track.current.clientHeight*((e.shiftKey||precise)?.15:1)));}}
+   onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}>
+   <div className="xm-fader-slot"><div className="xm-fader-fill" style={{height:`${value*100}%`}}/></div>
+   <div className="xm-fader-cap" style={{bottom:`${value*100}%`}}><b/><i/><b/></div>
+  </div>
+ </div>;
 }
 
 // ---------- vertical value bar (X-AIR Edit style cyan bars) ----------
@@ -210,6 +220,7 @@ async function api(path: string, data?: unknown) {
   const result = await r.json(); if (!r.ok) throw Error(result.error ?? "Opération refusée"); return result;
 }
 export function useLiveMixer() {
+  const links=useParameterLinks();
   const [values, setValues] = useState<Values>({});
   const [online, setOnline] = useState(false);
   const [message, setMessage] = useState("");
@@ -220,16 +231,20 @@ export function useLiveMixer() {
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   useEffect(() => {
+    const clearPending=()=>{for(const timer of timers.current.values())clearTimeout(timer);timers.current.clear();queue.current.clear();touched.current.clear();};
+    let receivedSnapshot = false;
     let closed = false, retry: ReturnType<typeof setTimeout> | undefined;
     const connect = () => {
       const socket = new WebSocket(`${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`);
       ws.current = socket;
       socket.onopen = () => setOnline(true);
-      socket.onclose = () => { setOnline(false); if (!closed) retry = setTimeout(connect, 1500); };
+      socket.onclose = () => { clearPending(); if(!closed)window.dispatchEvent(new window.Event('bandpilot-console-reset')); setOnline(false); if (!closed) retry = setTimeout(connect, 1500); };
       socket.onmessage = event => {
+        if(closed||ws.current!==socket)return;
         const m = JSON.parse(event.data);
         if (m.type === "snapshot") {
-          window.dispatchEvent(new window.Event('bandpilot-console-reset'));
+          if(receivedSnapshot){clearPending();window.dispatchEvent(new window.Event('bandpilot-console-reset'));}
+          receivedSnapshot=true;
           const next: Values = {};
           for (const [address, state] of Object.entries(m.parameters ?? {})) next[address] = (state as { value: Value }).value;
           setValues(next);
@@ -247,11 +262,11 @@ export function useLiveMixer() {
       };
     };
     connect();
-    return () => { closed = true; if (retry) clearTimeout(retry); ws.current?.close(); };
+    return () => { closed = true; clearPending(); if (retry) clearTimeout(retry); ws.current?.close(); };
   }, []);
 
   /** Immediate control: shown at once, sent at most every 40 ms per control (last value always sent). */
-  const set = useCallback((address: string, value: Value) => {
+  const setDirect = useCallback((address: string, value: Value) => {
     touched.current.set(address, Date.now());
     setValues(v => ({ ...v, [address]: value }));
     queue.current.set(address, value);
@@ -282,6 +297,8 @@ export function useLiveMixer() {
       return true;
     } catch (e) { setMessage((e as Error).message); setMessageKind('error'); return false; }
   }, []);
+  const dispatch=links?.dispatch;
+  const set=useCallback((address:string,value:Value)=>dispatch?dispatch(address,value,setDirect):setDirect(address,value),[dispatch,setDirect]);
   return { values, set, confirmed, online, message, messageKind, clearMessage: () => setMessage("") };
 }
 

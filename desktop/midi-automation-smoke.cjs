@@ -17,7 +17,9 @@ module.exports=async(win,wait,screenshot)=>{
  await set({'/config/chlink/1-2':0,'/config/chlink/3-4':0,'/ch/01/mix/fader':-12,'/ch/03/mix/on':1});
  const command=await api('/api/library/commands',{name:'DEV delayed pedal',data:{version:1,model:'XR18',steps:[{channel:3,target:'mute',value:1}],delayMs:800}});
  // Header shortcut must reach the panel from Scenes without knowing its former nested location.
- await button('.topbar','MIDI');await wait(`document.querySelector('.xs2-tabs button[aria-current=page]')?.textContent==='MIDI'&&!!document.querySelector('.midi-controls[open]')`);
+ await js("document.querySelector('.quick-tools:not([open]) summary')?.click()");
+ await wait("!!document.querySelector('.quick-tools[open] .open-midi')?.getClientRects().length");
+ await button('.quick-tools','MIDI');await wait(`document.querySelector('.xs2-tabs button[aria-current=page]')?.textContent==='MIDI'&&!!document.querySelector('.midi-controls[open]')`);
  await js(`(()=>{const port=new EventTarget();Object.assign(port,{id:'dev-synthetic-midi',name:'Contrôleur de test (simulation)',state:'connected',open:async()=>port,close:async()=>port});const output={id:'dev-synthetic-led',name:'Voyants de test (simulation)',state:'connected',send:bytes=>window.__midiOutput.push(bytes)};const access=new EventTarget();Object.assign(access,{inputs:new Map([[port.id,port]]),outputs:new Map([[output.id,output]])});window.__midiPort=port;window.__midiOutput=[];Object.defineProperty(navigator,'requestMIDIAccess',{configurable:true,value:async()=>access});})()`);
  const midi=bytes=>js(`(()=>{const e=new Event('midimessage');Object.defineProperty(e,'data',{value:new Uint8Array(${JSON.stringify(bytes)})});window.__midiPort.dispatchEvent(e);})()`);
  await button('.midi-controls','Connecter un périphérique MIDI');await input('.midi-controls>label:nth-of-type(1) select','dev-synthetic-midi');await input('.midi-controls>label:nth-of-type(3) select','twos');await button('.midi-controls','Apprendre la prochaine commande');await midi([0xb0,7,1]);await wait(`document.querySelector('.midi-bindings')?.textContent.includes('CC 1/7')`);

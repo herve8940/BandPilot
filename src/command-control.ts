@@ -126,7 +126,7 @@ export class CommandControl {
    commands:preparation.commands.map(c=>({id:c.id,name:c.name,data:c.command,changes:changes(c.on),offChanges:changes(c.off)})),
   };
  }
- async arm(owner:string,token:unknown,beforeArm:()=>void){
+ async arm(owner:string,token:unknown,beforeArm:()=>void=()=>{}){
   if(this.busy||this.session&&this.session.expires>=this.now())throw Error('Une session de commandes est déjà active. Désactive-la avant de changer.');
   const p=typeof token==='string'?this.preparations.get(token):undefined;
   if(!p||p.owner!==owner)throw Error(EXPIRED);
@@ -155,7 +155,7 @@ export class CommandControl {
   if(this.session?.owner===owner&&this.session.token===token)this.session=null;
   return {ok:true};
  }
- async pulse(owner:string,input:unknown,beforeWrite:()=>void){
+ async pulse(owner:string,input:unknown,beforeWrite:()=>void=()=>{}){
   const data=input as {token:string;sequence?:number;id?:string};
   const session=this.check(owner,data?.token);
   if(this.busy)throw Error('Une exécution de commande est déjà en cours.');

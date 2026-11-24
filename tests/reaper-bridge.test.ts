@@ -4,7 +4,7 @@ import {existsSync,mkdirSync,writeFileSync,readFileSync,rmSync,watch} from 'node
 import {mkdtemp,mkdir,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {BRIDGE_VERSION,ReaperBridge,reaperResources,saveLiveRoles,toLua} from '../src/reaper-bridge.js';
+import {BRIDGE_VERSION,ReaperBridge,reaperResources,toLua} from '../src/reaper-bridge.js';
 import {REHEARSAL_BRIDGE} from '../shared/rehearsal-desk.js';
 import {RehearsalDesk} from '../src/rehearsal-desk.js';
 import {wavPeaks} from '../src/peaks.js';
@@ -31,10 +31,10 @@ test('commands are exchanged one at a time and errors come back',async()=>{
  }finally{w.close();}
 });
 test('installing the bridge keeps the existing startup script and is idempotent',async()=>{
- const dir=await mkdtemp(join(tmpdir(),'xr18-bridge-'));await mkdir(join(dir,'Scripts'));await writeFile(join(dir,'Scripts','__startup.lua'),'-- ReaCue\ndofile("x")');
+ const dir=await mkdtemp(join(tmpdir(),'xr18-bridge-'));await mkdir(join(dir,'Scripts'));await writeFile(join(dir,'Scripts','__startup.lua'),'-- Existing script\ndofile("x")');
  const b=new ReaperBridge(dir);await b.install();await b.install();
  const text=readFileSync(join(dir,'Scripts','__startup.lua'),'utf8');
- assert.ok(text.startsWith('-- ReaCue\ndofile("x")\n'));assert.equal(text.split('XR18_Studio_Bridge.lua').length-1,1);
+ assert.ok(text.startsWith('-- Existing script\ndofile("x")\n'));assert.equal(text.split('XR18_Studio_Bridge.lua').length-1,1);
  assert.ok(existsSync(join(dir,'Scripts','XR18 Studio','XR18_Studio_Bridge.lua')));
 });
 test('the previous rehearsal bridge requests an update until the corrected script restarts',async()=>{
@@ -93,12 +93,6 @@ test('a song take starts where it is told, stops by itself after the tail, and c
 test('plain Stop refuses to cut a take without saving it',async()=>{
  const {link,close}=await fake();
  try{await link.record();await assert.rejects(link.halt(),/Enregistrement en cours/);}finally{link.close();close();}
-});
-test('Qui est là goes where ReaCue reads it, without touching the rest of the setlist',async()=>{
- const dir=await mkdtemp(join(tmpdir(),'xr18-live-')),f=join(dir,'c.setlist.json');
- await writeFile(f,JSON.stringify({songs:['a'],live:['vocals'],live_exceptions:{a:{bass:'stem'}}}));
- await saveLiveRoles(f,['bass','drums']);
- assert.deepEqual(JSON.parse(readFileSync(f,'utf8')),{songs:['a'],live:['bass','drums'],live_exceptions:{a:{bass:'stem'}}});
 });
 
 test('isolated bridge mailboxes preserve concurrent clients and coalesce repeated state polls',async()=>{

@@ -78,7 +78,7 @@ export class OutputSceneRecall{
   const token=randomUUID();if(this.plans.size>=100)this.plans.clear();this.plans.set(token,{id,identity,epoch,revision:rules.revision,expires:Date.now()+PREVIEW_TTL_MS,before:{version:1,model:this.xr.model().id,values:beforeValues,fx:beforeFx,guards:activeGuards},values,fx});
   return {token,changes:Object.entries(values).filter(([a,v])=>!same(a,v,beforeValues[a]!)).map(([a,v])=>({address:a,before:fromWire(a,beforeValues[a]!),after:fromWire(a,v),sensitive:false})),fx:fx.map((f,i)=>({slot:f.slot,before:beforeFx[i]!,after:f})),excluded};
  }
- async apply(id:string,token:unknown,beforeWrite:()=>void){
+ async apply(id:string,token:unknown,beforeWrite:()=>void=()=>{}){
   this.available();const p=typeof token==='string'?this.plans.get(token):undefined;if(!p||p.id!==id||p.expires<Date.now())throw Error('Aperçu expiré ou source modifiée : recommencer.');this.plans.delete(token as string);
   const check=()=>{if(p.identity!==this.control.identity()||p.epoch!==this.xr.operationId())throw Error('Connexion modifiée ou opération interrompue');if(p.revision!==this.library.outputProtections(this.xr.model().id).revision)throw Error(PROTECTION_CONFLICT);};check();
   for(const [a,v]of Object.entries({...p.before.guards,...p.before.values})){const now=await this.xr.readParameter(a);check();if(!same(a,v,now))throw Error('État modifié : prévisualiser à nouveau');}

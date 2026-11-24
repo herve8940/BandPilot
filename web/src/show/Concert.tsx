@@ -1,53 +1,63 @@
-import {tx, getLocale} from "../i18n";
-import {useMixerModel} from '../MixerModel';
-import { useEffect, useRef, useState } from "react";
-import { BridgeInstall, needsBridge, Status } from "./Rehearse";
-import { call, clock, position, sectionName, setupIssues, songAt, useShow } from "./api";
-import "../expert/expert.css";
-import "./show.css";
+import {useLayoutEffect,useRef,useState} from 'react';
+import {ArrowLeft,ArrowRight,FileText,ListMusic,Mic2} from 'lucide-react';
+import {tx} from '../i18n';
+import {isAndroid} from '../platform';
+import {useStandView} from './StandView';
+import {ConcertAudio} from './ConcertAudio';
+import '../expert/expert.css';
+import './show.css';
+import './concert.css';
 
-/** Risky actions need two presses within 3 seconds. */
-function useTwoPress() {
-  const [armed, setArmed] = useState(""), timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  return { armed, press: (id: string, run: () => void) => { if (armed === id) { setArmed(""); run(); return; } setArmed(id); clearTimeout(timer.current); timer.current = setTimeout(() => setArmed(""), 3000); } };
+export type ConcertSong={id:string;title:string;artist:string;bpm:number|null;hasPdf?:boolean;projectId?:string;fileKey?:string};
+type Entry={song:ConcertSong;index:number};
+type Cursor={order:string;id:string;occurrence:number;phase:'ready'|'live'|'done'};
+const storageKey='bandpilot-concert-cursor';
+function savedCursor():Cursor|null{
+ try{return JSON.parse(sessionStorage.getItem(storageKey)??'null');}catch{return null;}
 }
-export function Concert() {
-  const mixerModel=useMixerModel();
-  const { show, link, error, setError, act } = useShow();
-  const [unlocked, setUnlocked] = useState(false), [recordShow, setRecordShow] = useState(true), [checks, setChecks] = useState<{ warnings: string[]; hoursFree: number | null; sampleRate: number } | null>(null);
-  const { armed, press } = useTwoPress();
-  useEffect(() => { void call<{ warnings: string[]; hoursFree: number | null; sampleRate: number }>("/api/reaper/plan").then(setChecks).catch(e => setError(e.message)); }, []);
-  const songs = show.songs ?? [], cursor = position(show, link), index = songAt(songs, cursor), song = songs[index], next = songs[index + 1];
-  const recording = !!link?.recording, running = recording || !!link?.playing || link?.state === "starting";
-  const armedTracks = (show.tracks ?? []).filter(t => t.armed).length, issues = [...setupIssues(show, checks?.sampleRate,mixerModel.usbChannels,mixerModel.label), ...(checks?.warnings ?? [])];
-  if (recordShow && !armedTracks) issues.unshift("Aucune piste armée : prépare Qui est là dans Répéter, ou passe Sans enregistrement.");
-  const section = (show.regions ?? []).find(r => cursor >= r.start && cursor < r.stop);
-  const start = () => { if (!song) return; if (recordShow) void act("/api/show/rec", { start: cursor > song.start + 1 ? cursor : song.countin, stop: song.stop }); else void act("/api/show/play"); };
-  const wanted = recordShow && !recording && running;
-  if (needsBridge(show)) return <section className="xs2 sh"><BridgeInstall act={act} show={show} /></section>;
-  return <section className="xs2 sh sh-concert" aria-label={tx("Concert")}>
-    <div className="sh-head"><b className="sh-title">{tx(show.concert || "Concert")}</b><div className="xs2-spacer" />
-      {recording ? <span className="sh-rec">{tx("● REC ")}{tx(clock(link!.elapsed))}</span> : <button type="button" className={`xs2-btn ${recordShow ? "primary" : ""}`} disabled={running} aria-pressed={recordShow} onClick={() => setRecordShow(!recordShow)}>{tx(recordShow ? "Enregistrement prévu" : "Sans enregistrement")}</button>}
-      <Status show={show} link={link} />
-      <button type="button" className="xs2-btn" onClick={() => setUnlocked(!unlocked)}>{tx(unlocked ? "Verrouiller" : "Déverrouiller")}</button></div>
-    {(error || link?.alert || wanted) && <div className="xs2-msg error" role="alert">{tx(error || link?.alert || "Attention : ce morceau joue sans être enregistré.")}<button type="button" aria-label={tx("Fermer")} onClick={() => { setError(""); if (link?.alert) void act("/api/reaper/dismiss"); }}>{tx("×")}</button></div>}
-    {show.rehearsal && <div className="xs2-msg error" role="alert">{tx("Le Main est coupé (Ears seulement) : la façade ne sort pas. Quitte ce mode dans la console Expert.")}</div>}
-    {!running && issues.length > 0 && <div className="xs2-msg" role="status">{tx(issues[0])}</div>}
-    {!running && checks?.hoursFree !== null && checks && checks.hoursFree < 3 && <div className="xs2-msg error" role="alert">{tx("Il reste environ ")}{tx(checks.hoursFree)}{tx(" h d’espace disque.")}</div>}
-    <div className="sh-show">
-      <main>
-        <div className="xs2-card sh-now"><small>{tx(songs.length ? `En cours · ${index + 1} / ${songs.length}` : "Ouvre ton concert ReaCue dans Reaper")}</small><h1>{song?.title ?? "—"}</h1><h2>{section ? sectionName(section.name) : " "}</h2>
-          <strong className="sh-clock">-{tx(clock((song?.stop ?? 0) - cursor))}</strong></div>
-        <div className="sh-cmds">
-          <button type="button" className="sh-cmd" disabled={!running} onClick={() => press("stop", () => void act("/api/show/stop"))}>{tx(armed === "stop" ? "Confirmer Stop" : "■ Stop")}<small>{tx("2 appuis")}</small></button>
-          {running ? <button type="button" className="sh-cmd next" disabled>{tx(next ? `Ensuite : ${next.title}` : "Dernier morceau")}</button>
-            : <button type="button" className="sh-cmd next" disabled={!song || link?.state !== "ready" || (recordShow && !armedTracks)} onClick={start}>▶ {tx(recordShow ? "Jouer et enregistrer" : "Jouer")} {song?.title}</button>}
-          <button type="button" className="sh-cmd" disabled={running || !next} onClick={() => next && void act("/api/show/goto", { pos: next.start })}>{tx("Morceau suivant")}</button>
-          <button type="button" className="sh-cmd danger" onClick={() => press("mute", () => void act("/api/console/mute-all", { confirm: true }))}>{tx(armed === "mute" ? "Confirmer" : "Tout couper")}<small>{tx("2 appuis")}</small></button>
-        </div>
-      </main>
-      <aside className="xs2-card"><h3>{tx("Setlist")}</h3>{songs.map((s, i) => <button key={s.start} type="button" className={`sh-song ${i === index ? "on" : ""}`} disabled={!unlocked || running} onClick={() => void act("/api/show/goto", { pos: s.start })}><b>{s.title}</b><small>{tx(clock(s.stop - s.start))}</small></button>)}
-        {!unlocked && <p className="muted">{tx("Setlist verrouillée pendant le concert.")}</p>}</aside>
+export function Concert({entries,onSetlist,onSheet}:{entries:Entry[];onSetlist:()=>void;onSheet:(id:string)=>void}){
+ const stand=useStandView();
+ const [cursor,setCursor]=useState<Cursor|null>(savedCursor),[locked,setLocked]=useState(false);
+ const order=JSON.stringify(entries.map(entry=>entry.song.id));
+ const matches=cursor?.order===order?entries.flatMap((e,i)=>e.song.id===cursor.id?[i]:[]):[];
+ const found=matches[cursor?.occurrence??0],index=found??0;
+ const phase=found===undefined?'ready':cursor?.phase??'ready';
+ const song=entries[index]?.song,next=entries[index+1]?.song;
+ const list=useRef<HTMLOListElement>(null);
+ useLayoutEffect(()=>{
+  const container=list.current;
+  const selected=container?.children[index];
+  if(!container||!selected)return;
+  const bounds=container.getBoundingClientRect(),row=selected.getBoundingClientRect();
+  if(row.top<bounds.top)container.scrollTop+=row.top-bounds.top;
+  else if(row.bottom>bounds.bottom)container.scrollTop+=row.bottom-bounds.bottom;
+ },[index,order,stand.active]);
+ function select(i:number,phase:Cursor['phase']){
+  const selected=entries[i]?.song;if(!selected)return;
+  const value={order,id:selected.id,occurrence:entries.slice(0,i).filter(e=>e.song.id===selected.id).length,phase};
+  setCursor(value);try{sessionStorage.setItem(storageKey,JSON.stringify(value));}catch{/* View remains usable in memory. */}
+ }
+ return <section className={'xs2 sh sh-concert'+(stand.active?' stand-view':'')} aria-label={tx('Concert')}>
+  <div className="sh-head"><ListMusic size={18}/><b>{tx('Setlist active')}</b><div className="xs2-spacer"/>
+   {song&&<button type="button" className="xs2-btn" disabled={locked} onClick={onSetlist}>{tx('Ouvrir la setlist')}</button>}{stand.button}</div>
+  {!song?<div className="xs2-card concert-empty"><ListMusic size={30}/><h2>{tx('Prépare ta setlist')}</h2><p>{tx('Dans Setlist, ajoute les morceaux ouverts dans Répéter et choisis leur ordre de passage.')}</p>
+   <button type="button" className="xs2-btn primary" onClick={onSetlist}>{tx('Ouvrir la setlist')}</button></div>:
+   <div className="sh-show concert-desk"><main>
+    <div className="xs2-card sh-now"><div className="concert-cue" aria-live="polite" aria-atomic="true"><div>
+     <small>{tx(phase==='done'?'Concert terminé':phase==='live'?'En scène':'Morceau sélectionné')} · {index+1} / {entries.length}</small>
+     <h1>{song.title}</h1>{song.artist&&<p>{song.artist}</p>}
+    </div><Mic2 size={28} aria-hidden="true"/></div>
+    {song.hasPdf&&<button type="button" className="xs2-btn concert-sheet" onClick={()=>onSheet(song.id)}><FileText size={17}/>{tx('Ouvrir la fiche PDF')}</button>}
+    <div className="concert-next"><small>{tx('Ensuite')}</small><b>{next?.title??tx('Fin du set')}</b></div></div>
+    <div className="sh-cmds concert-manual">
+     <button type="button" className="sh-cmd" disabled={locked||index===0} onClick={()=>select(index-1,phase==='ready'?'ready':'live')}><ArrowLeft size={18}/>{tx('Morceau précédent')}</button>
+     <button type="button" className="sh-cmd next" disabled={locked} onClick={()=>phase==='ready'?select(index,'live'):phase==='done'?select(0,'ready'):next?select(index+1,'live'):select(index,'done')}>
+      {tx(phase==='ready'?'Commencer le concert':phase==='done'?'Revenir au début':next?'Morceau suivant':'Terminer le concert')}<ArrowRight size={18}/></button>
     </div>
-  </section>;
+    {!isAndroid&&phase!=='done'&&<ConcertAudio key={song.id} song={song} onLock={setLocked}/>}
+   </main><aside className="xs2-card concert-order"><h2>{tx('Ordre de passage')}</h2><ol ref={list}>
+    {entries.map(({song:s},i)=><li key={i}><button type="button" className={'sh-song'+(index===i?' on':'')} aria-current={index===i?'step':undefined}
+     disabled={locked} onClick={()=>select(i,phase==='live'?'live':'ready')}><span className="regie-track-number">{String(i+1).padStart(2,'0')}</span><b>{s.title}</b></button></li>)}</ol></aside>
+   </div>}
+ </section>;
 }

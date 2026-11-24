@@ -1,12 +1,12 @@
 > **BandPilot** : [guide illustré actuel](USER_GUIDE_FR.md), [vidéo](VIDEO_TOUR.md) et [limites par modèle](multi-model.md). Les descriptions détaillées X-Air ci-dessous ne signifient pas une compatibilité complète X32. Les éventuelles anciennes captures de référence ne montrent pas toutes la nouvelle interface.
 
-# Scènes, FX, comptes et ReaCue
+# Scènes, FX et comptes
 
 Les ajouts partent de `release/desktop-finalization` (PR 21). Ils ne valident pas une XR18 physique.
 
 ## Comptes et permissions
 
-Configuration → Comptes et ReaCue → créer le premier administrateur. Mot de passe : 12 caractères minimum. Après activation, une connexion est obligatoire pour toute API et tout WebSocket. Les mots de passe sont dérivés par scrypt ; sessions de 12 heures en cookie HttpOnly/SameSite Strict, jetons hachés en SQLite, limitation des tentatives. La déconnexion invalide la session et ferme les connexions WebSocket ; les sessions expirées sont aussi fermées.
+Configuration → Comptes et accès → créer le premier administrateur. Mot de passe : 12 caractères minimum. Après activation, une connexion est obligatoire pour toute API et tout WebSocket. Les mots de passe sont dérivés par scrypt ; sessions de 12 heures en cookie HttpOnly/SameSite Strict, jetons hachés en SQLite, limitation des tentatives. La déconnexion invalide la session et ferme les connexions WebSocket ; les sessions expirées sont aussi fermées.
 
 Avant activation, le mode local existant reste administrateur. Le serveur demeure lié à 127.0.0.1. Ces comptes peuvent être utilisés successivement sur cet ordinateur ; l'accès simultané depuis plusieurs appareils n'est pas ouvert. Aucun mot de passe prédéfini.
 
@@ -48,28 +48,20 @@ Simulation : mémorise les quatre slots. Matériel : chemin expérimental désac
 
 Ne pas activer ce chemin avant essai contrôlé sur la console. Les presets musicaux livrés restent des propositions documentaires ; leur traduction complète en presets matériels reste à établir.
 
-## ReaCue
+## Concert
 
-Créer une association unique (identifiant morceau, section, cible scène/FX). Armer explicitement. Émettre :
-
-```json
-{"eventId":"concert1-song2-refrain-1","songId":"song2","section":"refrain"}
-```
-
-`POST /api/reacue/event` utilise la session administrateur et refuse les événements non armés, inconnus ou matériels. Un même `eventId` réussi est ignoré lors des répétitions réseau dans une session d'armement. Une nouvelle occurrence nécessite un nouvel identifiant. Déduplication en mémoire ; le désarmement explicite ou le redémarrage réinitialise la liste. Toute commande manuelle de mixage désarme l'automatisation, qui ne se réarme jamais seule.
-
-`integrations/reacue_bridge.py` est un client Python standard (sans dépendance) importable depuis un déclencheur ReaCue. Variables : `XR18_STUDIO_URL` (URL locale, port choisi par le backend), `XR18_STUDIO_USER`, `XR18_STUDIO_PASSWORD`. L'appel `client.login()` puis `client.section(song_id, section, event_id)` envoie l'événement. Le script CLI accepte ces trois paramètres. Il ne s'installe pas automatiquement dans REAPER/ReaCue ; le déclencheur de section doit encore être raccordé et testé dans le projet ReaCue existant. Le mode bureau choisit un port dynamique ; utiliser le backend au port fixe pour les premiers essais du pont.
+Ouvre tes projets dans REAPER. Dans **Répéter**, choisis **Préparer la setlist**. Sélectionne les titres à ajouter. Dans **Setlist**, déplace les morceaux et place les rappels. **Ouvrir le concert** affiche cet ordre au pupitre. Le bouton Suivant avance la liste. La lecture de l’accompagnement, de l’original ou d’une prise se lance séparément. Une fiche PDF déjà jointe au morceau est consultable sur scène.
 
 ## Windows et validation
 
 Le workflow Desktop packages installe maintenant le paquet NSIS sur le runner Windows, puis lance l'exécutable installé avec `--smoke-test` : démarrage backend, base SQLite et rendu de l'interface. Le test utilise un profil temporaire en simulation. Une réussite CI confirme ce démarrage dans le runner, pas le fonctionnement sur le PC de l'utilisateur ni sur la XR18 réelle.
 
-Validation locale : `npm test`, `npm run build:all`, compilation Python du pont. Voir les résultats de la PR pour les vérifications effectivement exécutées.
+Validation locale : `npm test`, `npm run build:all`. Voir les résultats de la PR pour les vérifications effectivement exécutées.
 
 
 ## Version 0.2.0
 
-Les restrictions de rappel applicatif et d’automatisation décrites ci-dessus concernent les scènes version 1. Les scènes complètes JSON version 2 couvrent le catalogue de paramètres connu, les routages, les DCA et les vecteurs FX typés. Leur rappel, les FX et les automatismes ReaCue dédiés disposent désormais d’un chemin matériel contrôlé. Le rappel natif `.scn` est limité aux algorithmes FX détaillés ci-dessus. Voir `FONCTIONS_0_2.md` et `ETAT_DU_PROJET.md` pour l’état actuel et les limites.
+Les restrictions de rappel applicatif et d’automatisation décrites ci-dessus concernent les scènes version 1. Les scènes complètes JSON version 2 couvrent le catalogue de paramètres connu, les routages, les DCA et les vecteurs FX typés. Leur rappel et les FX disposent désormais d’un chemin matériel contrôlé. Le rappel natif `.scn` est limité aux algorithmes FX détaillés ci-dessus. Voir `FONCTIONS_0_2.md` et `ETAT_DU_PROJET.md` pour l’état actuel et les limites.
 
 ## Presets de canal et bibliothèque (2.3.14)
 

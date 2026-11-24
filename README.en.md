@@ -41,6 +41,12 @@ Desktop: [latest stable release](https://github.com/herve8940/BandPilot/releases
 
 To separate instruments, work on lyrics and prepare songs for REAPER, discover [BandStudio](https://herve8940.github.io/BandStudio/en.html), an independent companion app.
 
+## BandPilot 3.0.0 · Soundcheck for today’s lineup
+
+Start with a blank scene, silence unused inputs and prepare each musician’s monitor mix. Their QR codes follow the lineup. In rehearsal and concert, open the songs and their PDF sheets from your setlist.
+
+[Release notes and REAPER bridge update](docs/RELEASE_NOTES.md#english)
+
 ## Mixer control, MIDI and phone rehearsals · 2.3.15
 
 BandPilot 2.3.15 brings together new mixer controls, selective recall, software groups, MIDI and REAPER rehearsals on musicians’ phones.
@@ -92,7 +98,7 @@ Back up scenes, install the matching package, explore simulation, discover hardw
 
 ## Development and validation
 
-Node 20+ (CI/packages: Node 22). `npm ci`, `npm --prefix web ci`, `npm run studio`; checks: `npm test`, `npm run test:web`, `npm run build:all`; packages: `npm run desktop:package`.
+The desktop candidate requires macOS 13 or later on Mac. Node.js 22.13+ (CI/packages: Node 22). `npm ci`, `npm --prefix web ci`, `npm run studio`; checks: `npm test`, `npm run test:web`, `npm run build:all`; packages: `npm run desktop:package`.
 
 Backend tests and React regressions cover OSC, scenes, FX, accounts, monitors, REAPER/Lua and model profiles. They do not certify acoustic results or every hardware model. Packages are published together after platform checks, with SHA-256 checksums. Legacy data identifiers and REAPER paths remain for compatibility.
 

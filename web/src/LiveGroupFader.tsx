@@ -11,8 +11,9 @@ function LiveFader({model,selection,disabled,onBackup,compact=false}:Props){
  useEffect(()=>{
   alive.current=true;
   const hidden=()=>{if(document.hidden)stop();};
+  const pulse=setInterval(()=>{const s=session.current;if(!s||moving.current||document.hidden)return;void presetApi('/api/library/live-group/pulse',{token:s.token}).catch(e=>{if(alive.current&&session.current===s){setError((e as Error).message);stop();}});},5000);
   window.addEventListener('bandpilot-console-reset',stop);document.addEventListener('visibilitychange',hidden);
-  return()=>{alive.current=false;stop();window.removeEventListener('bandpilot-console-reset',stop);document.removeEventListener('visibilitychange',hidden);};
+  return()=>{clearInterval(pulse);alive.current=false;stop();window.removeEventListener('bandpilot-console-reset',stop);document.removeEventListener('visibilitychange',hidden);};
  },[]);
  useEffect(()=>{if(disabled)stop();},[disabled]);
  const move=async(value:number)=>{

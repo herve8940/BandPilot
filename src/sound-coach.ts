@@ -2,8 +2,11 @@ import {foldLatin} from '../shared/latin-fold.js';
 import {validateTechRider,type TechRider} from '../shared/tech-rider.js';
 import {coachProcessingPreset} from './coach-presets.js';
 import {COACH_SOUNDS,MONITOR_LISTENING,gainHeadroom,isCoachSound,isGainHeadroom,type CoachSound,type GainHeadroom,type MonitorListening} from '../shared/coach-sound.js';
+import {cleanMonitorValues, previewCleanMix, unusedInputValues} from './coach-cleanup.js';
+import {previewMixPreparationBackup} from './mix-preparation.js';
 import {processingCommands} from './processing-osc.js';
 import {fromWire,descriptor,type Value} from './parameters.js';
+import type {EarsShare} from './ears.js';
 import type {XR18} from './xr18.js';
 import type {ConsoleControl} from './console-control.js';
 import type {LibraryStore} from './library-store.js';
@@ -207,6 +210,9 @@ export function levelReport(channel:number,samples:MeterSample[],now=Date.now())
  const maximum=Math.max(...values),state=maximum>=-1?'high':maximum< -55?'low':'present';
  return {available:true,samples:values.length,maximumDb:maximum,state,title:state==='high'?'Niveau reçu proche du plafond':state==='low'?'Signal reçu très faible':'Signal présent',message:state==='high'?'Vérifie les voyants et l’étage concerné. Je n’augmente aucun niveau et je ne peux pas localiser la saturation avec cette mesure seule.':state==='low'?'Vérifie le câble, la source et le canal. Cette mesure ne justifie pas une hausse automatique de gain.':'Du signal arrive. Ce résultat ne prouve ni la qualité du timbre, ni le bon équilibre, ni le volume acoustique.'};
 }
+type CoachPreparation=Awaited<ReturnType<ConsoleControl['preview']>>&{
+ title:string;explanation:string;inputs:string[];qrScope?:'group'|'bus';silentInputs?:number[];silentBuses?:number[];activeBuses?:number[];
+};
 export class SoundCoach {
  constructor(private xr:XR18,private control:ConsoleControl,private library:LibraryStore){}
  profile():CoachProfile {
@@ -261,12 +267,22 @@ export class SoundCoach {
   if(s.family==='track'){values[prefix+'/preamp/rtnsw']=1;values[`/routing/usb/${String(i.channel).padStart(2,'0')}/pos`]='IN';}
   return values;
  }
- async prepare(channel?:number){
+ async prepare(channel?:number,resetUnused=false):Promise<CoachPreparation>{
+  const identity=this.control.identity();
+  if(resetUnused&&channel!==undefined)throw Error('Le nettoyage des entrées s’applique au groupe entier.');
+  if(resetUnused&&this.xr.model().family!=='xair')throw Error('Cette opération nécessite une console X-Air / M-Air.');
   const profile=validateProfile(this.profile());if(channel!==undefined&&!this.input(channel))throw Error('Attribuer un instrument à ce canal');
   const inputs=profile.inputs.filter(i=>channel===undefined||i.channel===channel);if(!inputs.length)throw Error('Ajouter un instrument');
   const status=await this.calibrationStatus(),calibrated:string[]=[],estimated:string[]=[];
   const values:Record<string,Value>={};
   for(const i of inputs){const c=status.find(c=>c.channel===i.channel);if(c?.valid&&c.thresholds){calibrated.push(i.name);Object.assign(values,SoundCoach.channelValues(i,c.thresholds,profile.sound,profile.headroom));}else{estimated.push(i.name);Object.assign(values,SoundCoach.channelValues(i,undefined,profile.sound,profile.headroom));}}
+  if(resetUnused){
+   const used=new Set(inputs.map(i=>i.channel));
+   const silentInputs=Array.from({length:this.xr.model().channels},(_,i)=>i+1).filter(ch=>!used.has(ch));
+   const plan=await previewCleanMix(this.xr,this.control,{...unusedInputValues(this.xr,used),...values},{},identity,used);
+   return {...plan,title:'Nouvelle balance avec ce groupe',explanation:'Les instruments listés reçoivent leurs réglages. Sur les autres entrées, les noms sont effacés, les traitements remis au neutre et les faders et envois fermés. Les gains des préamplis et le 48 V sont conservés.',
+    inputs:inputs.map(i=>`${i.name} (entrée ${i.channel})`),silentInputs};
+  }
   const one=inputs.length===1?source(inputs[0]!.source):null;
   const thresholdsNote=!estimated.length?' Seuils du compresseur et du gate calés sur ton signal mesuré.':calibrated.length?` Seuils calés sur la mesure pour : ${calibrated.join(', ')}. Valeurs de départ (gain pas encore mesuré) pour : ${estimated.join(', ')} — passe par l’étape 3.`:' Seuils = valeurs de départ : règle le gain à l’étape 3 pour que je les cale sur ton vrai signal.';
   return {...await this.control.preview(values),title:one?`Configuration complète : ${one.label.toLowerCase().startsWith(inputs[0]!.name.toLowerCase())?one.label:`${inputs[0]!.name} · ${one.label}`}`:`Configuration complète de ${inputs.length} instruments`,
@@ -287,12 +303,36 @@ export class SoundCoach {
   }
   return {values,musicians};
  }
- async prepareEars(bus?:number){
+ async prepareEars(bus?:number,resetUnused=false,ears?:EarsShare):Promise<CoachPreparation>{
+  const identity=this.control.identity();
   const profile=validateProfile(this.profile());const {values,musicians}=SoundCoach.earsValues(profile,bus);
-  if(!musicians.length)throw Error(bus?'Aucun musicien sur ce bus':'Ajouter un musicien');if(!profile.inputs.length)throw Error('Ajouter un instrument');
-  return {...await this.control.preview(values),title:musicians.length===1?`Retour de ${musicians[0]!.name} (bus ${musicians[0]!.bus})`:`Retours de ${musicians.length} musiciens`,
+  if(!musicians.length&&(!resetUnused||bus!==undefined))throw Error(bus?'Aucun musicien sur ce bus':'Ajouter un musicien');if(!profile.inputs.length)throw Error('Ajouter un instrument');
+  const group=profile.musicians??[];
+  const roster=await ears?.prepareRoster(group,bus);
+  let result:CoachPreparation;
+  if(resetUnused){
+   const model=this.xr.model();
+   if(model.family!=='xair')throw Error('Cette opération nécessite une console X-Air / M-Air.');
+   if(profile.inputs.some(i=>i.channel>model.channels)||musicians.some(m=>m.bus>model.monitorOutputs))throw Error('Entrée ou sortie de retour absente sur '+model.label);
+   const clean=await cleanMonitorValues(this.xr,this.control,values,new Set((profile.musicians??[]).map(m=>m.bus)),bus);
+   const plan=await previewCleanMix(this.xr,this.control,clean.values,{...clean.guards,...roster?.guards},identity);
+   result={...plan,title:musicians.length?'Refaire le mix des retours':'Fermer tous les retours',explanation:!musicians.length?'Tous les envois vers les sorties de retour et leurs faders seront fermés.':'Les retours sélectionnés reçoivent uniquement les instruments du groupe. Les anciens envois, y compris ceux de l’entrée Aux et des effets, sont fermés. Les retours des musiciens démarrent à −10 dB.',
+    inputs:musicians.map(m=>`${m.name} → bus ${m.bus}`),silentBuses:clean.silentBuses,activeBuses:clean.activeBuses};
+  }else{
+   result={...await this.control.preview(values,false,roster?.guards,'parameter-backup',undefined,undefined,identity),title:musicians.length===1?`Retour de ${musicians[0]!.name} (bus ${musicians[0]!.bus})`:`Retours de ${musicians.length} musiciens`,
    explanation:'Chaque musicien reçoit un mix pré-fader (indépendant de la façade) : son instrument devant, puis ce dont son rôle a besoin. Le bus est nommé, sorti de la façade et démarré à −10 dB par sécurité. Garde le volume du boîtier d’écoute bas au premier essai ; chacun affine ensuite sur son téléphone.',
    inputs:musicians.map(m=>`${m.name} → bus ${m.bus}`)};
+  }
+  if(roster){
+   const assignments=(members:Musician[])=>JSON.stringify(members.filter(m=>!roster.scope||roster.scope.has(m.bus))
+    .sort((a,b)=>a.bus-b.bus).map(m=>[m.bus,m.name.trim()]));
+   const expected=assignments(group);
+   this.control.onApplied(result.token,{check:()=>{
+    if(assignments(this.profile().musicians??[])!==expected)throw Error('Les musiciens ont changé. Prépare à nouveau les retours.');
+   },commit:roster.commit});
+   result.qrScope=bus===undefined?'group':'bus';
+  }
+  return result;
  }
  async apply(token:unknown,confirm:unknown){
   if(confirm!==true)throw Error('Confirmation requise');
@@ -321,8 +361,10 @@ export class SoundCoach {
  }
  async undo(){
   const last=this.library.list('coach-history',1)[0];if(!last)throw Error('Aucun réglage guidé à annuler');
-  const before=this.library.get((last.data as {backupId:string}).backupId);if(before.kind!=='parameter-backup')throw Error('Sauvegarde incompatible');
-  return {...await this.control.preview(before.data,true),title:'Revenir au réglage précédent',explanation:'Seuls les paramètres de la dernière intervention guidée sont restaurés. Compare aussi tes éventuelles modifications manuelles depuis cette intervention.',inputs:[]};
+  const before=this.library.get((last.data as {backupId:string}).backupId);const plan=before.kind==='mix-preparation-backup'?await previewMixPreparationBackup(this.xr,this.control,this.library,before.id):
+   before.kind==='parameter-backup'?await this.control.preview(before.data,true):null;
+  if(!plan)throw Error('Sauvegarde incompatible');
+  return {...plan,title:'Revenir au réglage précédent',explanation:'Seuls les paramètres de la dernière intervention guidée sont restaurés. Compare aussi tes éventuelles modifications manuelles depuis cette intervention.',inputs:[]};
  }
  /** The preamp feeding a channel (/headamp/NN/gain), or null for USB returns / input OFF. */
  async gainAddress(channel:number){

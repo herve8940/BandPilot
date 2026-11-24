@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type Take = { valid?:boolean; index: number; name: string; file: string; active: boolean };
 export type Item = { pos: number; length: number; takes: Take[] };
@@ -7,18 +7,51 @@ export type Song = { title: string; start: number; countin: number; stop: number
 export type Show = { original?:boolean; alive: boolean; installed?: boolean; rehearsal?: boolean; audio?: { inputs: number; rate: number; device: string }; bridgeCurrent?: string; version?: string; presence: string[]; project?: string; concert?: string | null; songs?: Song[]; regions?: { start: number; stop: number; name: string }[]; tracks?: ShowTrack[]; pos?: number; playing?: boolean; recording?: boolean; loop?: { on: boolean; start: number; stop: number }; length?: number };
 export type Link = { state: "offline" | "ready" | "starting" | "recording" | "stopping" | "lost"; playing: boolean; recording: boolean; elapsed: number; clock: number; autoStopIn: number | null; markers: number; alert: string; session: { title: string } | null };
 
-export async function call<T = unknown>(path: string, data?: unknown): Promise<T> {
-  const r = await fetch(path, { method: data === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: data === undefined ? undefined : JSON.stringify(data) });
+export async function call<T = unknown>(path: string, data?: unknown, signal?: AbortSignal): Promise<T> {
+  const r = await fetch(path, { signal, method: data === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: data === undefined ? undefined : JSON.stringify(data) });
   const v = await r.json().catch(() => ({})); if (!r.ok) throw Error(v.error ?? "Erreur"); return v as T;
 }
-/** Everything shown comes from Reaper: fast for the transport, slower for the project. */
+/** Schedule the next read after this one settles. A command can request a fresh read immediately. */
+function useShowRead<T>(path: string, delay: number, initial: T) {
+  const [value, setValue] = useState(initial);
+  const [error, setError] = useState("");
+  const refresh = useRef<() => Promise<void>>(async () => {});
+  useEffect(() => {
+    let request: AbortController | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const read = async () => {
+      clearTimeout(timer);
+      request?.abort();
+      const current = new AbortController();
+      request = current;
+      try {
+        const next = await call<T>(path, undefined, current.signal);
+        if (!current.signal.aborted) { setValue(next); setError(""); }
+      } catch (e) {
+        if (!current.signal.aborted) setError((e as Error).message);
+      } finally {
+        if (!current.signal.aborted) timer = setTimeout(read, delay);
+      }
+    };
+    refresh.current = read;
+    void read();
+    return () => { refresh.current = async () => {}; request?.abort(); clearTimeout(timer); };
+  }, [path, delay]);
+  const reload = useCallback(() => refresh.current(), []);
+  return {value, error, reload};
+}
+
 export function useShow() {
-  const [show, setShow] = useState<Show>({ alive: false, presence: [] }), [link, setLink] = useState<Link | null>(null), [error, setError] = useState(""), [lost, setLost] = useState("");
-  const reload = useCallback(() => call<Show>("/api/show").then(s => { setShow(s); setLost(""); }).catch(e => setLost(e.message)), []);
-  useEffect(() => { void reload(); const t = setInterval(() => void reload(), 2000); return () => clearInterval(t); }, [reload]);
-  useEffect(() => { let on = true; const poll = () => void call<Link>("/api/reaper").then(l => { if (on) setLink(l); }).catch(e => { if (on) setLost(e.message); }); poll(); const t = setInterval(poll, 400); return () => { on = false; clearInterval(t); }; }, []);
-  const act = useCallback(async (path: string, data: unknown = {}) => { setError(""); try { const r = await call(path, data); void reload(); return r; } catch (e) { setError((e as Error).message); return null; } }, [reload]);
-  return { show, link, error: error || lost, setError, act, reload };
+  const project = useShowRead<Show>("/api/show", 2000, {alive: false, presence: []});
+  const transport = useShowRead<Link | null>("/api/reaper", 400, null);
+  const [error, setError] = useState("");
+  const reload = project.reload;
+  const act = useCallback(async (path: string, data: unknown = {}) => {
+    setError("");
+    try { const result = await call(path, data); void reload(); return result; }
+    catch (e) { setError((e as Error).message); return null; }
+  }, [reload]);
+  return {show: project.value, link: transport.value, error: error || transport.error || project.error, setError, act, reload};
 }
 export const clock = (s: number) => { const v = Math.max(0, Math.floor(s)); const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60; return `${h ? `${h}:` : ""}${String(m).padStart(2, "0")}:${String(v % 60).padStart(2, "0")}`; };
 export const position = (show: Show, link: Link | null) => link && link.state !== "offline" ? link.clock : show.pos ?? 0;

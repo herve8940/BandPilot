@@ -75,7 +75,7 @@ test('protection changes invalidate preview and undo, including direct console t
   await assert.rejects(f.recall.preview(saved.id,{channels:[1],sections:['eq']}),/protections ont changé/);
  }finally{f.close();}
 });
-test('full recalls, legacy scenes, native scenes, pending synchronisation and ReaCue cannot bypass active protections',async()=>{
+test('full recalls, legacy scenes, native scenes and pending synchronisation cannot bypass active protections',async()=>{
  const f=fixture(),processing=new ProcessingStore();try{
   const show=new ShowControl(f.xr,processing,f.library),sync=new MixerSync(f.xr,f.control,f.library),saved=await f.save();
   const legacy=f.library.save('scene','Legacy',show.capture()),native=f.library.save('native-scene','Native','/ch/01/config "Voice" 3 In01 U01');
@@ -85,7 +85,6 @@ test('full recalls, legacy scenes, native scenes, pending synchronisation and Re
   assert.throws(()=>show.preview(saved.id,true),/protections de scène/);
   await assert.rejects(show.apply(legacy.id,pending.token,true),/expirée|protections/);
   await assert.rejects(sync.preview(native.id),/protections de scène/);await assert.rejects(sync.apply(nativePlan.token,true),/protections de scène/);
-  f.library.save('cue','Synthetic cue',{songId:'song',section:'part',targetId:legacy.id});show.arm(true);await assert.rejects(show.event({eventId:'e',songId:'song',section:'part'}),/protections de scène/);assert.equal(show.state().armed,false);
   assert.deepEqual(await f.control.capture(),before);assert.equal(f.library.list('scene').length,2);
   f.protect([]);const p=show.preview(legacy.id,true);assert.ok((await show.apply(legacy.id,p.token,true)).ok);
  }finally{f.close();}

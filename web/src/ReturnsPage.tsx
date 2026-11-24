@@ -1,5 +1,6 @@
 import {useState} from 'react';
-import {EarsSharePanel} from './EarsSharePanel';
+import {tx} from './i18n';
+import {EarsSharePanel,type ReturnTarget} from './EarsSharePanel';
 import {useAirStrips} from './xair/model-strips';
 import {num,pad,useLiveMixer,useMeters,meterStore,type Values,type SetFn,type Value} from './xair/controls';
 import type {ViewProps} from './xair/views';
@@ -9,18 +10,19 @@ import {MonitorDesk} from './expert/Workspace';
 const dbText=(v:number)=>formatDb(faderToDb(v));
 const busName=(values:Values,b:number)=>{const n=values[`/bus/${b}/config/name`];return typeof n==='string'&&n.trim()?n.trim():`Bus ${b}`;};
 const earsLabel=(values:Values,b:number)=>{const n=values[`/bus/${b}/config/name`];return typeof n==='string'&&n.trim()?n.trim():`Retour ${b}`;};
-export function ReturnsPage({canWrite,mode}:{canWrite:boolean;mode:"real"|"simulation"}){
+export function ReturnsPage({canWrite,mode,startOnPhones=false}:{startOnPhones?:boolean;canWrite:boolean;mode:"real"|"simulation"}){
  const live=useLiveMixer();
- const [tab,setTab]=useState<'mix'|'phones'>('mix');
+ const [tab,setTab]=useState<'mix'|'phones'>(startOnPhones?'phones':'mix');
+ const [target,setTarget]=useState<ReturnTarget|null>(null);
  return <section className="returns-page" aria-label="Retours du groupe">
-  <nav className="bp-section-tabs" aria-label="Organisation des retours"><button type="button" aria-pressed={tab==='mix'} onClick={()=>setTab('mix')}>Mix et traitements</button><button type="button" aria-pressed={tab==='phones'} onClick={()=>setTab('phones')}>Téléphones</button></nav>
-  <p className="bp-page-hint">Choisis le musicien, règle ce qu’il entend, puis partage son retour sur son téléphone.</p>
-  {tab==='mix'?<div className="xs2 returns-mix"><EarsMix mode={mode} values={live.values} set={live.set} writable={canWrite&&live.online} confirmed={live.confirmed}/>{live.message&&<p role="status">{live.message}</p>}</div>:<EarsSharePanel/>}
+  <nav className="bp-section-tabs" aria-label="Organisation des retours"><button type="button" aria-pressed={tab==='mix'} onClick={()=>setTab('mix')}>{tx('Mix et traitements')}</button><button type="button" aria-pressed={tab==='phones'} onClick={()=>{setTarget(null);setTab('phones');}}>{tx('Téléphones')}</button></nav>
+  <p className="bp-page-hint">{tx('Choisis le musicien, règle ce qu’il entend, puis partage son retour sur son téléphone.')}</p>
+  {tab==='mix'?<div className="xs2 returns-mix"><EarsMix initialBus={target?.bus} onShare={next=>{setTarget(next);setTab('phones');}} mode={mode} values={live.values} set={live.set} writable={canWrite&&live.online} confirmed={live.confirmed}/>{live.message&&<p role="status">{live.message}</p>}</div>:<EarsSharePanel target={target}/>}
  </section>;
 }
 
 // ---------------- Ears ----------------
-function EarsMix({ values, set, writable, confirmed, mode }: { mode:"real"|"simulation"; values: Values; set: SetFn; writable: boolean; confirmed: ViewProps["confirmed"] }) {
+function EarsMix({ initialBus,onShare,values, set, writable, confirmed, mode }: { initialBus?:number;onShare:(target:ReturnTarget)=>void;mode:"real"|"simulation"; values: Values; set: SetFn; writable: boolean; confirmed: ViewProps["confirmed"] }) {
   const {ALL,MAIN,OUTPUTS,INPUTS,BUSES,FXSENDS,model}=useAirStrips();
   const levels = useMeters(), fresh = meterStore.fresh();
   const rows = INPUTS.filter(s => s.kind !== "ch" || stripName(s, values) !== s.fallback || (levels[s.meters[0]!] ?? -128) > -60);
@@ -31,7 +33,7 @@ function EarsMix({ values, set, writable, confirmed, mode }: { mode:"real"|"simu
     void confirmed(v, `Ajouter un limiteur de protection à −6 dB sur ${limiterOff.map(b => earsLabel(values, b)).join(", ")} ?`);
   };
   return <>
-    <MonitorDesk mode={mode} values={values} set={set} writable={writable} confirmed={confirmed}/>
+    <MonitorDesk initialBus={initialBus} onShare={onShare} mode={mode} values={values} set={set} writable={writable} confirmed={confirmed}/>
     <details className="monitor-matrix"><summary>Matrice complète · tous les envois et bus internes</summary>
     <div className="xs2-bar"><div><div style={{ fontSize: 18, fontWeight: 700 }}>Matrice des bus</div><div className="muted">Chaque colonne est un bus. Seuls les bus reliés à une sortie physique alimentent directement un retour.</div></div></div>
     <div className="xs2-matrix" role="table" aria-label="Envois vers les ears">

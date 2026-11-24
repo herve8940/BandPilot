@@ -40,9 +40,8 @@
 .ea .ea-rehearse .bp-transport{background:var(--bp-card);border-color:var(--bp-line)}
 .ea .ea-rehearse .bp-transport.rec{background:color-mix(in srgb,var(--danger) 16%,var(--bp-panel));border-color:var(--g-red-line)}
 .ea .ea-rehearse .bp-transport .sh-big.rec:not(:disabled){background:var(--g-red-bg);border-color:var(--g-red-line);color:var(--g-red-text)}
-.ea :is(.ea-page-switch,.ea-rehearse .sh-seg) button.on,
 .ea .ea-rehearse .bp-transport .bp-play:not(:disabled){
- background:var(--bp-selected);border:1px solid var(--bp-purple);color:var(--g-accent-ink);
+ background:var(--bp-primary);border:1px solid var(--bp-primary);color:var(--bp-primary-ink);
 }
 .bp-song-nav{display:flex;align-items:center;justify-content:space-between;gap:.75rem;font:600 .82rem/1.2 system-ui;font-variant-numeric:tabular-nums;color:var(--text-muted,var(--g-text-2))}
 .bp-song-nav button{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--g-line-2,var(--line));border-radius:12px;color:inherit;background:var(--surface-2)}

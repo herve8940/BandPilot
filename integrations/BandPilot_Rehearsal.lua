@@ -190,12 +190,12 @@ return function(H, r, helpers)
       end
     end
   end
-  local function snapshot(list, id, detail, known)
+  local function snapshot(list, id, detail, known, files)
     local busy, transport = modeFor(list)
     local active = session and tabFor(list,session.id) or busy
     local tabs = {}
     for _, tab in ipairs(list) do
-      tabs[#tabs+1]={id=tab.id,number=tab.number,title=tab.title,saved=tab.saved,current=tab.current,duration=r.GetProjectLength(tab.p)}
+      tabs[#tabs+1]={id=tab.id,number=tab.number,title=tab.title,saved=tab.saved,current=tab.current,duration=r.GetProjectLength(tab.p),filePath=files and tab.saved and tab.path or nil}
     end
     local tab = active or tabFor(list,id)
     if not tab and (not id or id == "") then
@@ -551,7 +551,7 @@ return function(H, r, helpers)
       cue=(playing&1)~=0 and sectionCue(p,pos,left,right,looping,lastMarker,region) or nil,playing=(playing&1)~=0,
       rate=r.Master_GetPlayRate(p),loop=looping,loopStart=looping and left or nil,loopEnd=looping and right or nil}
   end
-  function H.rehearsal_state(a) return snapshot(tabList(),a.project,a.detail==true,a.known) end
+  function H.rehearsal_state(a) return snapshot(tabList(),a.project,a.detail==true,a.known,a.files==true) end
   function H.rehearsal_command(a)
     local list=tabList()
     local tab=assert(tabFor(list,a.project),"Cet onglet REAPER a été fermé. Choisis un morceau.")

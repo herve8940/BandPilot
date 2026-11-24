@@ -40,3 +40,21 @@ test('measurement controls remain translated in five languages without changing 
  setLanguage('fr');
  }finally{await f.close();}
 });
+
+test('EQ dragging uses the visible chart coordinates on a short, wide screen',async()=>{
+ const f=await fixture();
+ try{
+  const {EqView}=await import('../src/xair/views'),{INPUTS}=await import('../src/xair/strips');
+  const edits:Record<string,unknown>={};
+  await f.render(<EqView strip={INPUTS[0]!} values={{'/ch/01/eq/1/type':2}} set={(key,value)=>{edits[key]=value;}} canWrite confirmed={async()=>false} open={()=>{}}/>);
+  const graph=document.querySelector<SVGSVGElement>('.xm-eq-graph')!;
+  graph.setPointerCapture=()=>{};
+  Object.defineProperty(graph,'getScreenCTM',{value:()=>({inverse:()=>({transformPoint:({x,y}:{x:number;y:number})=>({x:(x-180)*2,y:(y-80)*2})})})});
+  await f.React.act(async()=>{
+   graph.querySelector('.xm-eq-node')!.dispatchEvent(new f.dom.window.MouseEvent('pointerdown',{bubbles:true}));
+   graph.dispatchEvent(new f.dom.window.MouseEvent('pointermove',{clientX:305,clientY:155,bubbles:true}));
+  });
+  assert.equal(edits['/ch/01/eq/1/f'],.25);
+  assert.equal(edits['/ch/01/eq/1/g'],.5);
+ }finally{await f.close();}
+});

@@ -60,7 +60,7 @@ Aucune hausse aveugle de préampli, aucun changement de 48 V ni de volume des ea
 
 L’état est écrit dans SQLite avant les changements. Après interruption, un bandeau propose de restaurer les sources. Aucune restauration automatique n’est envoyée au lancement. Il faut retrouver la même console, disposer du contrôle et pouvoir vérifier l’arrêt de REAPER. **Stop** reste accessible même si la console est déconnectée.
 
-Pendant l’atelier, les lancements REC et les opérations concurrentes de préparation de session, de routage global, de scènes et de ReaCue sont bloqués côté serveur. Les réglages directs de canal et les commandes Stop restent accessibles. Les modifications depuis un autre logiciel ou directement dans REAPER restent possibles ; le logiciel vérifie les conditions avant la lecture et les corrections. L’atelier est réservé à l’administrateur.
+Pendant l’atelier, les lancements REC et les opérations concurrentes de préparation de session, de routage global et de rappel de scènes sont bloqués côté serveur. Les réglages directs de canal et les commandes Stop restent accessibles. Les modifications depuis un autre logiciel ou directement dans REAPER restent possibles ; le logiciel vérifie les conditions avant la lecture et les corrections. L’atelier est réservé à l’administrateur.
 
 ## Matériel et validation
 

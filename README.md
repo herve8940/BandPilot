@@ -49,6 +49,12 @@ Bureau : [dernière version stable](https://github.com/herve8940/BandPilot/relea
 
 Pour séparer les instruments, travailler les paroles et préparer tes morceaux pour REAPER, découvre [BandStudio](https://herve8940.github.io/BandStudio/), une application indépendante et complémentaire.
 
+## BandPilot 3.0.0 · Une balance pour le groupe du jour
+
+Pars d’une scène vierge, ferme les entrées inutilisées et prépare les retours de tes musiciens. Leurs QR suivent la configuration du groupe. En répétition et en concert, retrouve les morceaux et leurs fiches PDF dans ta setlist.
+
+[Nouveautés et mise à jour du pont REAPER](docs/RELEASE_NOTES.md#français)
+
 ## Console, MIDI et répétition sur téléphone · 2.3.15
 
 BandPilot 2.3.15 réunit les nouvelles commandes de console, les rappels sélectifs, les groupes logiciels, le MIDI et la répétition REAPER sur les téléphones des musiciens.
@@ -82,7 +88,7 @@ Version Android : 2.4.0-android.5. Android 8 minimum, Android System WebView 111
 | Console | Simple ou Expert, banques de canaux, EQ, gate, compresseur, envois, bus, DCA, FX et routage selon le modèle. Menu compact et interface adaptable. |
 | Retours | Lien QR par musicien, uniquement son bus, faders/mute, profils, plafonds et montée progressive. |
 | Répéter | Avec morceaux ou groupe seul : sections, prises, formes d’onde, présence, Original, boucle, REC/Stop et marqueurs via REAPER. |
-| Concert | Déroulement du set dans le projet préparé avec REAPER/ReaCue configurés. |
+| Concert | Setlist issue des onglets ouverts dans Répéter, ordre de passage, fiches PDF et lecture des pistes au pupitre. |
 | Préparer | Répertoire, setlists, répétitions, brouillon persistant, capture/export/import JSON de scènes et sauvegardes avant rappel. |
 | Réglages | Détection par modèle, lecture seule initiale, synchronisation, comptes facultatifs, diagnostic, IA connectée facultative et intégrations. |
 
@@ -105,7 +111,7 @@ La détection ne constitue pas une certification de toutes les fonctions. [Matri
 2. Explore la simulation, puis détecte ta console en lecture seule.
 3. Récupère **Table → PC** et conserve une sauvegarde avant d’activer le contrôle.
 4. Suis [Mon ingé son](docs/TUTO_MON_INGE_SON.md), puis vérifie le résultat à l’oreille.
-5. Pour répéter, installe le pont **REAPER 1.5.0**, sauvegarde tes projets et redémarre REAPER.
+5. Pour répéter, installe le pont REAPER fourni avec BandPilot, sauvegarde tes projets et redémarre REAPER.
 
 La simulation de console ne simule pas REAPER : REC capture ses véritables entrées audio. Les installateurs peuvent ne pas être signés/notariés.
 
@@ -127,7 +133,7 @@ La version Android autonome est disponible : [installation, compatibilité et co
 
 Dans **BandPilot 2.3.0**, l’[Atelier du son et les conseils mesurés](docs/ATELIER_DU_SON.md) ajoutent le travail sur un extrait REAPER, la comparaison A/B et la restauration des sources. Spectre par instrument, compatibilité mono, conseils EQ et essais de polarité sont intégrés. Le gate guidé utilise deux repères écoutés (repos et note faible), et la compression tient compte de l’enveloppe du jeu. Dans **Mon ingé son**, les [ambiances guidées](docs/INGE_SON.md#ambiances-guidées) proposent des effets pour le chant, les chœurs, la guitare acoustique ou solo, la caisse claire, les toms et le clavier, avec un dosage individuel par retour. Pont REAPER **1.5.0** requis pour les nouvelles mesures.
 
-Node.js 20+ (CI et installateurs : Node 22). `npm ci`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test`, `npm run test:web` et `npm run build:all`. Installateurs : `npm run desktop:package`.
+Candidate de bureau sous macOS 13 ou ultérieur. Node.js 22.13+ (CI et installateurs : Node 22). `npm ci`, `npm --prefix web ci`, puis `npm run studio`. Vérifications : `npm test`, `npm run test:web` et `npm run build:all`. Installateurs : `npm run desktop:package`.
 
 Les tests backend et les tests de régression React couvrent notamment OSC, scènes, FX, comptes, retours, REAPER, Lua et profils de console. Ils ne remplacent pas une validation acoustique et un concert complet sur chaque matériel. La publication attend les contrôles des quatre plateformes de construction et conserve les sommes SHA-256.
 

@@ -1,3 +1,4 @@
+import {validateParameterLinks,LINKS_CONFLICT,type ParameterLinksDefinition} from '../shared/parameter-links.js';
 import {surfaceModel,validateSurfaces,SURFACE_CONFLICT,type ExpertSurfaces} from '../shared/expert-surfaces.js';
 import {outputRules,type OutputProtections} from '../shared/output-recall.js';
 import Database from 'better-sqlite3';
@@ -6,7 +7,21 @@ import {protectionModel,protectionRules,PROTECTION_CONFLICT,PROTECTION_INVALID,t
 export type Entry={id:string;kind:string;name:string;data:unknown;createdAt:string};
 export class LibraryStore {
  private db:Database.Database;
- constructor(filename:string){this.db=new Database(filename);this.db.exec('CREATE TABLE IF NOT EXISTS studio_library(id TEXT PRIMARY KEY,kind TEXT NOT NULL,name TEXT NOT NULL,data TEXT NOT NULL,created_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS scene_protections(model TEXT PRIMARY KEY,revision INTEGER NOT NULL,rules TEXT NOT NULL); CREATE TABLE IF NOT EXISTS recall_scopes(scene_id TEXT NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY(scene_id,kind)); CREATE TABLE IF NOT EXISTS output_scene_protections(model TEXT PRIMARY KEY,revision INTEGER NOT NULL,rules TEXT NOT NULL); CREATE TABLE IF NOT EXISTS expert_surfaces(model TEXT PRIMARY KEY,revision INTEGER NOT NULL,surfaces TEXT NOT NULL)');}
+ constructor(filename:string){this.db=new Database(filename);this.db.exec('CREATE TABLE IF NOT EXISTS studio_library(id TEXT PRIMARY KEY,kind TEXT NOT NULL,name TEXT NOT NULL,data TEXT NOT NULL,created_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS scene_protections(model TEXT PRIMARY KEY,revision INTEGER NOT NULL,rules TEXT NOT NULL); CREATE TABLE IF NOT EXISTS recall_scopes(scene_id TEXT NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY(scene_id,kind)); CREATE TABLE IF NOT EXISTS output_scene_protections(model TEXT PRIMARY KEY,revision INTEGER NOT NULL,rules TEXT NOT NULL); CREATE TABLE IF NOT EXISTS expert_surfaces(model TEXT PRIMARY KEY,revision INTEGER NOT NULL,surfaces TEXT NOT NULL); CREATE TABLE IF NOT EXISTS parameter_links(model TEXT PRIMARY KEY,revision INTEGER NOT NULL,links TEXT NOT NULL)');}
+ parameterLinks(model:unknown):ParameterLinksDefinition{
+  const {id}=surfaceModel(model);
+  const row=this.db.prepare('SELECT revision,links FROM parameter_links WHERE model=?').get(id) as {revision:number;links:string}|undefined;
+  return validateParameterLinks({model:id,revision:row?.revision??0,links:row?JSON.parse(row.links):[]});
+ }
+ saveParameterLinks(input:unknown){
+  const next=validateParameterLinks(input);
+  return this.db.transaction(()=>{
+   if(this.parameterLinks(next.model).revision!==next.revision)throw Error(LINKS_CONFLICT);
+   const revision=next.revision+1;
+   this.db.prepare('INSERT INTO parameter_links VALUES(?,?,?) ON CONFLICT(model) DO UPDATE SET revision=excluded.revision,links=excluded.links').run(next.model,revision,JSON.stringify(next.links));
+   return {...next,revision};
+  })();
+ }
  surfaces(model:unknown):ExpertSurfaces{
   const {id}=surfaceModel(model);
   const row=this.db.prepare('SELECT revision,surfaces FROM expert_surfaces WHERE model=?').get(id) as {revision:number;surfaces:string}|undefined;

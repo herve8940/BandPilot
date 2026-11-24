@@ -1,4 +1,5 @@
-import {busLinkAddress,validStereoBus,pairedMonitorAddress} from '../shared/monitor-pairs.js';
+import {sendWebAsset} from './web-asset.js';
+import {busPairStart,busLinkAddress,validStereoBus,pairedMonitorAddress} from '../shared/monitor-pairs.js';
 import type {PersonalPatchInput} from '../shared/tech-rider.js';
 // Partage des retours sur le réseau local : chaque musicien ouvre SON mix par un lien
 // personnel (QR code). Le lien ne donne accès qu'aux envois de son bus, au volume et au
@@ -6,9 +7,9 @@ import type {PersonalPatchInput} from '../shared/tech-rider.js';
 import Database from 'better-sqlite3';
 import http from 'node:http';
 import {randomBytes,randomUUID} from 'node:crypto';
-import {readFile,stat} from 'node:fs/promises';
+import {stat} from 'node:fs/promises';
 import {networkInterfaces} from 'node:os';
-import {extname,resolve,sep} from 'node:path';
+import {resolve,sep} from 'node:path';
 import {WebSocketServer,WebSocket} from 'ws';
 import QRCode from 'qrcode';
 import type {RehearsalDesk} from './rehearsal-desk.js';
@@ -67,10 +68,11 @@ export class EarsShare {
  private manager:string|null=null;
  private managerRequests:number[]=[];
  private sockets=new Map<WebSocket,{share:EarShare;rate:number[];lastMeters:number}>();
- constructor(file:string,private xr:XR18,private webDist:()=>string|undefined,private guard:()=>string|null,private onWrite:()=>void,private patch?:(bus:number,name:string)=>PersonalPatchInput[],private rehearsal?:RehearsalDesk){
+ constructor(file:string,private xr:XR18,private webDist:()=>string|undefined,private guard:()=>string|null,private onWrite:()=>void=()=>{},private patch?:(bus:number,name:string,stereo:boolean)=>PersonalPatchInput[],private rehearsal?:RehearsalDesk){
   this.db=new Database(file);
   this.db.exec(`CREATE TABLE IF NOT EXISTS ear_sheet_sources(revision TEXT PRIMARY KEY);
   CREATE TABLE IF NOT EXISTS ear_shares(id TEXT PRIMARY KEY,name TEXT NOT NULL,bus INTEGER NOT NULL,token TEXT NOT NULL UNIQUE,created_at TEXT NOT NULL);
+   CREATE TABLE IF NOT EXISTS ear_share_archive(id TEXT PRIMARY KEY,name TEXT NOT NULL,bus INTEGER NOT NULL,stereo INTEGER NOT NULL,created_at TEXT NOT NULL);
    CREATE TABLE IF NOT EXISTS ear_mix_profiles(id TEXT PRIMARY KEY,share_id TEXT NOT NULL,name TEXT NOT NULL,values_json TEXT NOT NULL,updated_at TEXT NOT NULL);
    CREATE TABLE IF NOT EXISTS ear_rehearsal_manager(slot INTEGER PRIMARY KEY CHECK(slot=1),share_id TEXT NOT NULL)`);
   if(!(this.db.prepare('PRAGMA table_info(ear_shares)').all() as {name:string}[]).some(c=>c.name==='stereo'))this.db.exec('ALTER TABLE ear_shares ADD COLUMN stereo INTEGER NOT NULL DEFAULT 0');
@@ -91,14 +93,72 @@ export class EarsShare {
   if(typeof name!=='string'||!name.trim()||name.trim().length>40)throw Error('Nom du musicien : 1 à 40 caractères');
   if(typeof bus!=='number'||!Number.isInteger(bus)||bus<1||bus>this.xr.model().monitorOutputs)throw Error('Bus 1 à 6');
   if(stereo&&(!validStereoBus(bus,this.xr.model().monitorOutputs)||this.xr.parameterState()[busLinkAddress(bus)]?.value!==1))throw Error('Lie d’abord la paire de bus dans la console, puis crée le retour stéréo.');
-  const share:EarShare={id:randomUUID(),name:name.trim(),bus,stereo,token:randomBytes(18).toString('base64url'),createdAt:new Date().toISOString()};
-  this.db.prepare('INSERT INTO ear_shares(id,name,bus,token,created_at,stereo) VALUES(?,?,?,?,?,?)').run(share.id,share.name,share.bus,share.token,share.createdAt,stereo?1:0);
+  const share=this.insertShare(name.trim(),bus,stereo);
   this.reload();diagnostic('ears.share_created',{bus});return share;
+ }
+ private insertShare(name:string,bus:number,stereo:boolean,id:string=randomUUID()){
+  const share:EarShare={id,name,bus,stereo,token:randomBytes(18).toString('base64url'),createdAt:new Date().toISOString()};
+  this.db.prepare('INSERT INTO ear_shares(id,name,bus,token,created_at,stereo) VALUES(?,?,?,?,?,?)').run(share.id,share.name,share.bus,share.token,share.createdAt,stereo?1:0);
+  return share;
  }
  async createStereo(name:unknown,bus:unknown){
   if(typeof bus!=='number'||!validStereoBus(bus,this.xr.model().monitorOutputs)||this.xr.model().family!=='xair')throw Error('Paire stéréo indisponible sur cette console');
   const epoch=this.xr.operationId();await this.xr.readParameter(busLinkAddress(bus));
   if(epoch!==this.xr.operationId())throw Error('Connexion modifiée');return this.create(name,bus,true);
+ }
+ /** Resolve the prepared musicians against physical outputs without changing audio or access. */
+ async prepareRoster(musicians:ReadonlyArray<{bus:number;name:string}>,onlyBus?:number){
+  const model=this.xr.model(),epoch=this.xr.operationId();
+  if(model.family!=='xair')throw Error('Cette opération nécessite une console X-Air / M-Air.');
+  const guards:Record<string,number>={},desired:{bus:number;name:string;stereo:boolean}[]=[];
+  const scope=onlyBus===undefined?undefined:new Set([onlyBus]);
+  const online=this.xr.mode==='simulation'||this.xr.status().connected;
+  for(const m of musicians){
+   if(onlyBus!==undefined&&busPairStart(onlyBus)!==busPairStart(m.bus))continue;
+   if(!Number.isInteger(m.bus)||m.bus<1||m.bus>model.monitorOutputs)throw Error('Sortie de retour absente sur '+model.label);
+   const first=busPairStart(m.bus),link=busLinkAddress(first);
+   if(guards[link]===undefined){
+    const cached=this.xr.parameterState()[link]?.value;
+    const linked=online?await this.xr.readParameter(link):cached??Number(this.list().some(s=>s.bus===first&&s.stereo));
+    if(this.xr.operationId()!==epoch)throw Error('Connexion modifiée');
+    if(linked!==0&&linked!==1)throw Error('État de liaison stéréo inconnu');
+    guards[link]=linked;
+   }
+   const stereo=guards[link]===1;
+   if(scope&&!stereo&&m.bus!==onlyBus)continue;
+   const bus=stereo?first:m.bus;
+   if(desired.some(s=>s.bus===bus))throw Error('Deux musiciens occupent la même paire de retours stéréo. Vérifie leurs sorties.');
+   if(scope&&stereo){scope.add(first);scope.add(first+1);}
+   desired.push({bus,name:m.name.trim(),stereo});
+  }
+  return {guards,scope,commit:()=>this.replaceRoster(desired,scope)};
+ }
+ private replaceRoster(desired:{bus:number;name:string;stereo:boolean}[],scope?:Set<number>){
+  const current=this.list(),retired=new Set(current.filter(s=>!scope||scope.has(s.bus)||(s.stereo&&scope.has(s.bus+1))));
+  const missing=desired.filter(m=>{
+   const match=current.find(s=>s.bus===m.bus&&s.name===m.name&&!!s.stereo===m.stereo);
+   if(match)retired.delete(match);
+   return !match;
+  });
+  this.db.transaction(()=>{
+   for(const share of retired){
+    // Keep personal presets with their owner, without keeping the old token valid.
+    if(this.db.prepare('SELECT 1 FROM ear_mix_profiles WHERE share_id=? LIMIT 1').get(share.id))this.db.prepare('INSERT INTO ear_share_archive VALUES(?,?,?,?,?)').run(share.id,share.name,share.bus,Number(!!share.stereo),share.createdAt);
+    this.db.prepare('DELETE FROM ear_shares WHERE id=?').run(share.id);
+    this.db.prepare('DELETE FROM ear_rehearsal_manager WHERE share_id=?').run(share.id);
+   }
+   for(const m of missing){
+    const old=this.db.prepare('SELECT id FROM ear_share_archive WHERE name=? AND bus=? AND stereo=? ORDER BY created_at DESC,rowid DESC LIMIT 1').get(m.name,m.bus,Number(m.stereo)) as {id:string}|undefined;
+    this.insertShare(m.name,m.bus,m.stereo,old?.id);
+    if(old)this.db.prepare('DELETE FROM ear_share_archive WHERE id=?').run(old.id);
+   }
+  })();
+  this.reload();
+  for(const share of retired){
+   if(this.manager===share.id){this.manager=null;this.managerRequests=[];}
+   this.disconnect(share.id);
+  }
+  return {created:missing.length,retired:retired.size};
  }
  private async checkShare(share:EarShare){
   const epoch=this.xr.operationId();
@@ -187,8 +247,8 @@ export class EarsShare {
    const desk=/^\/ears-api\/([A-Za-z0-9_-]{20,40})\/rehearsal\/(state|command|configured-inputs)$/.exec(path);
    if(desk&&this.rehearsal)return await this.handleRehearsal(req,res,url,desk[1]!,desk[2]!,this.rehearsal);
    const page=/^\/ears\/([A-Za-z0-9_-]{20,40})$/.exec(path);
-   if(req.method==='GET'&&page)return this.serveFile(res,'ears.html',!!this.shares.get(page[1]!));
-   if(req.method==='GET'&&/^\/assets\/[A-Za-z0-9._-]+$/.test(path))return this.serveFile(res,path.slice(1),true);
+   if(req.method==='GET'&&page)return await this.serveFile(req,res,'ears.html',!!this.shares.get(page[1]!));
+   if(req.method==='GET'&&/^\/assets\/[A-Za-z0-9._-]+$/.test(path))return await this.serveFile(req,res,path.slice(1),true);
    const api=/^\/ears-api\/([A-Za-z0-9_-]{20,40})\/(profiles)(?:\/([a-f0-9-]{36})(?:\/(recall))?)?$/.exec(path);
    const share=api?this.shares.get(api[1]!):undefined;
    if(api&&!share){res.writeHead(401,{'Content-Type':'application/json'});res.end('{"error":"Lien invalide ou révoqué"}');return;}
@@ -251,16 +311,14 @@ export class EarsShare {
   }
   send(405,{error:'Méthode non autorisée'});
  }
- private async serveFile(res:http.ServerResponse,file:string,valid:boolean){
+ private async serveFile(req:http.IncomingMessage,res:http.ServerResponse,file:string,valid:boolean){
   const dist=this.webDist();
   if(!valid){res.writeHead(404,{'Content-Type':'text/html; charset=utf-8'});res.end('<!doctype html><meta name="viewport" content="width=device-width"><body style="background:#0b0d10;color:#e8ecf1;font-family:system-ui;padding:32px"><h1>Lien expiré</h1><p>Ce QR code n’est plus valable. Demande un nouveau lien à la personne qui gère la console.</p>');return;}
   if(!dist){res.writeHead(503);res.end('Interface indisponible');return;}
   const root=resolve(dist),target=resolve(root,file);
   if(!target.startsWith(root+sep)||!(await stat(target).catch(()=>null))?.isFile()){res.writeHead(404);res.end();return;}
-  const mime:Record<string,string>={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2'};
-  res.setHeader('Content-Type',mime[extname(target)]??'application/octet-stream');
   res.setHeader('Content-Security-Policy',"default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data:; media-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-ancestors 'none'");
-  res.end(await readFile(target));
+  await sendWebAsset(req,res,target,"/"+file);
  }
 
  // ---------- profiles ----------
@@ -268,6 +326,7 @@ export class EarsShare {
   return (this.db.prepare('SELECT id,share_id AS shareId,name,values_json,updated_at AS updatedAt FROM ear_mix_profiles WHERE share_id=? ORDER BY updated_at DESC').all(shareId) as (Omit<EarMixProfile,'values'>&{values_json:string})[]).map(({values_json,...r})=>({...r,values:JSON.parse(values_json)}));
  }
  private saveProfile(share:EarShare,name:unknown){
+  if(this.shares.get(share.token)?.id!==share.id)throw Error('Lien invalide ou révoqué');
   if(typeof name!=='string'||!name.trim()||name.trim().length>40)throw Error('Nom du profil : 1 à 40 caractères');
   if(this.profiles(share.id).length>=20)throw Error('20 profils maximum');
   const state=this.xr.parameterState(),values:Record<string,number>={};
@@ -315,7 +374,7 @@ export class EarsShare {
   ws.on('error',()=>this.sockets.delete(ws));
  }
  refreshTechnicalCards(){
-  for(const [ws,{share}] of this.sockets)if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:"technical-card",patch:this.patch?.(share.bus,share.name)??[]}));
+  for(const [ws,{share}] of this.sockets)if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:"technical-card",patch:this.patch?.(share.bus,share.name,!!share.stereo)??[]}));
  }
  private sendSnapshot(ws:WebSocket){
   const c=this.sockets.get(ws);if(!c||ws.readyState!==WebSocket.OPEN)return;
@@ -324,7 +383,7 @@ export class EarsShare {
   const state=this.xr.parameterState(),values:Record<string,unknown>={};
   for(const a of this.visible(share.bus,!!share.stereo))if(state[a])values[a]=state[a]!.value;
   const st=this.xr.status();
-  ws.send(JSON.stringify({type:'snapshot',share:{name:share.name,bus:share.bus,stereo:!!share.stereo},rehearsal:share.id===this.manager,cap:EAR_CAP,sources:this.sources(),values,patch:this.patch?.(share.bus,share.name)??[],
+  ws.send(JSON.stringify({type:'snapshot',share:{name:share.name,bus:share.bus,stereo:!!share.stereo},rehearsal:share.id===this.manager,cap:EAR_CAP,sources:this.sources(),values,patch:this.patch?.(share.bus,share.name,!!share.stereo)??[],
    control:(share.stereo?state[busLinkAddress(share.bus)]?.value===1:state[busLinkAddress(share.bus)]?.value!==1)&&(st.mode==='simulation'||(st.connected&&st.writesEnabled)),mode:st.mode}));
  }
  private async onMessage(ws:WebSocket,raw:Buffer){

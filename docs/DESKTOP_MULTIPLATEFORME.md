@@ -10,7 +10,7 @@ Electron starts the backend in its main process and serves the compiled Vite int
 
 ## Reproducible local build
 
-Use Node.js 22 and native compilation prerequisites for better-sqlite3:
+The Electron 45 desktop candidate targets macOS 13 and later on Intel and Apple Silicon. Use Node.js 22.13 or later to build. SQLite uses the Node-API binary for the target platform and processor.
 
 ```sh
 npm ci

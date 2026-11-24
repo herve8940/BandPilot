@@ -24,8 +24,8 @@ module.exports=async(win,wait,screenshot)=>{
  await screenshot('stereo-preset-preview.png');await js(`document.querySelector('.coach-dialog button.primary').click()`);
  await wait(`!document.querySelector('.coach-dialog')&&document.querySelector('.scene-msg')?.textContent.includes('Preset appliqué')`);
  if(await read('/ch/03/eq/1/g')!==source[0]||await read('/ch/04/eq/1/g')!==source[1])throw Error('Stereo recall lost L/R');
- await js(`document.querySelector('button[title="Régler le son"]').click()`);await wait(`!!document.querySelector('.rail-pages')`);
- await js(`[...document.querySelectorAll('.rail-pages button')].find(b=>b.textContent.trim()==='Console').click()`);await wait(`!!document.querySelector('.xs2-tabs')`);
+ await js(`document.querySelector('button[title="Console"]').click()`);await wait(`!!document.querySelector('.subnav')`);
+ await js(`[...document.querySelectorAll('.subnav button')].find(b=>b.textContent.trim()==='Mixage').click()`);await wait(`!!document.querySelector('.xs2-tabs')`);
  await js(`[...document.querySelectorAll('.xs2-tabs button')].find(b=>b.textContent.trim()==='Mélangeur').click()`);await wait(`!!document.querySelector('.group-adjustments>button')`);
  await js(`document.querySelector('.group-adjustments>button').click()`);await wait(`document.querySelectorAll('.group-adjust-channels input').length===16`);
  await js(`document.querySelectorAll('.group-adjust-channels input')[0].click();document.querySelectorAll('.group-adjust-channels input')[2].click();document.querySelector('.group-adjustments').scrollIntoView({block:'start'})`);

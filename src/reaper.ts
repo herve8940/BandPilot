@@ -116,7 +116,7 @@ export function renderRpp(plan:SessionPlan,now=Date.now(),platform:string=proces
  return lines.join('\n');
 }
 
-/** ReaCue role that a console instrument replaces, so that a present musician silences his stem. */
+/** Backing track role that a console instrument replaces, so that a present musician silences his stem. */
 const SOURCE_ROLE:Record<string,string>={'electric-solo':'lead_guitar'};
 const FAMILY_ROLE:Record<string,string>={voice:'vocals',backing:'vocals',bass:'bass',guitar:'guitars',kick:'drums',snare:'drums',toms:'drums',cymbals:'drums',edrums:'drums',keys:'keys'};
 export function roleOf(track:Pick<TrackPlan,'preset'>){
@@ -207,7 +207,7 @@ export class ReaperLink{
   if(!t.recording&&this.recordFlag){
    const songEnded=this.autoStopAt!==null&&this.clock>=this.autoStopAt-this.autoStopTail-1;
    if(this.wasRecording&&!this.stopRequested&&!songEnded)this.alert='Enregistrement arrêté depuis Reaper. La prise est gardée.';
-   // Stopped by Reaper or ReaCue at the end of a song: the take must not stay in memory only.
+   // Stopped by REAPER at the end of a song: the take must not stay in memory only.
    if(this.wasRecording&&!this.stopRequested)void this.io.actions([ACTION.saveProject]).catch(()=>undefined);
    this.recordFlag=false;this.wasRecording=false;this.recordingSince=0;this.clockMovedAt=0;this.autoStopAt=null;
   }else if(t.recording&&!this.recordFlag){this.recordFlag=true;this.clockMovedAt=0;this.stopRequested=false;this.alert='';this.markers=0;}

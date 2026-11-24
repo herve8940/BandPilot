@@ -48,7 +48,7 @@ Commence par **Table → PC** pour récupérer l’état de la console et sauveg
 
 - **Jouer** : Console, Retours, Mon ingé son.
 - **Répéter** : avec tes morceaux ou groupe seul, via REAPER.
-- **Concert** : déroulement du set dans le projet préparé.
+- En concert, BandPilot suit la setlist active.
 - **Préparer** : répertoire, setlists, répétitions et scènes.
 - **Réglages** : connexion, comptes, diagnostic et intégrations.
 
@@ -84,7 +84,7 @@ Le téléphone suit les changements lecture seule/contrôle sans rechargement. L
 
 <h2 id="reaper">8. Répéter et enregistrer avec REAPER</h2>
 
-1. **Préparer REAPER** — Installe à nouveau le pont livré avec 2.3.15, même si son numéro affiche déjà 1.5.0, puis redémarre REAPER. Ouvre un projet par onglet avec ses médias. Dans Répéter → Avec mes morceaux, sélectionne le projet, vérifie ses entrées et pistes armées, sa piste Original et sa fin. REC crée une prise séparée dans ce projet ; vérifie les véritables entrées audio avant l’essai.
+1. **Préparer REAPER** — Installe le pont fourni avec BandPilot si Répéter le demande, puis redémarre REAPER. Ouvre un projet par onglet avec ses médias. Dans Répéter → Avec mes morceaux, sélectionne le projet, vérifie ses entrées et pistes armées, sa piste Original et sa fin. REC crée une prise séparée dans ce projet ; vérifie les véritables entrées audio avant l’essai.
 
 2. **Donner la main au gestionnaire** — Dans Retours → Téléphones, crée un lien de retour par musicien et désigne le gestionnaire sur sa fiche. Sur le même réseau local, son QR donne accès à Mon retour, Mon morceau et Répéter. Le rôle est révocable. Le gestionnaire choisit le morceau, l’original, l’accompagnement ou une prise, le morceau entier ou une section, la boucle et le décompte proposés.
 
@@ -111,7 +111,6 @@ Les scènes complètes peuvent être capturées et exportées/importées en JSON
 ## 10. Analyse, concert, comptes et dépannage
 
 - **Analyse X-Air** : niveaux, spectre et conseils utilisent les mesures matérielles disponibles. Vérifie les propositions A/B et annule si le résultat ne convient pas. Pas de spectre X32 dans cette version.
-- **Concert / ReaCue** : prépare et vérifie setlist, régions, médias et associations avant le live. L’intégration externe dépend de son adaptateur et n’a pas été validée sur un concert complet lors des derniers essais.
 - **Comptes facultatifs** : administrateur pour la configuration ; musicien limité à ses bus ; invité en consultation. L’activation change les accès : conserve tes identifiants.
 - Console absente : vérifie réseau commun, IP, autorisation Réseau local et pare-feu. Téléphone inaccessible : même réseau, partage actif, bon QR. Pont indisponible : installe sa version actuelle et redémarre REAPER après sauvegarde.
 - Avant mise à jour : exporte les scènes et sauvegarde les projets et leurs médias. Pour un incident, télécharge le diagnostic dans Réglages ; relis-le avant de le joindre publiquement, car il contient les IP locales.
@@ -160,3 +159,7 @@ Après remplacement d’un instrument, refais sa mesure de gain. Changer sa pris
 Un soutien volontaire aide à consacrer du temps aux corrections, aux essais sur les consoles et aux guides en cinq langues. Un retour de terrain, une traduction ou un partage du projet sont aussi utiles.
 
 [Comment aider le projet](SUPPORT_FR.md) · [Données et confidentialité (FR / EN)](PRIVACY.md)
+
+## Jouer le concert
+
+Ouvre tes projets dans REAPER. Dans **Répéter**, choisis **Préparer la setlist**. Sélectionne les titres à ajouter. Dans **Setlist**, déplace les morceaux et place les rappels. **Ouvrir le concert** affiche cet ordre au pupitre. Le bouton Suivant avance la liste. La lecture de l’accompagnement, de l’original ou d’une prise se lance séparément. Une fiche PDF déjà jointe au morceau est consultable sur scène.

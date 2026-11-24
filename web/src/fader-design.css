@@ -1,0 +1,22 @@
+/* One physical control vocabulary for the console, personal mixes and surfaces. */
+.xm-fader.fader-studio {--fader-width:30px;display:flex;justify-content:center;gap:5px;min-width:0;isolation:isolate;}
+.xm-fader.fader-studio .xm-fader-scale {display:block;flex:none;width:19px;font:9px/1 ui-monospace,SFMono-Regular,Consolas,monospace;color:#7e92a7;}
+.xm-fader.fader-studio .xm-fader-scale span {right:0;padding-right:6px;}
+.xm-fader.fader-studio .xm-fader-scale span::after {content:'';position:absolute;right:0;top:50%;height:1px;width:4px;background:#405064;}
+.xm-fader.fader-studio .xm-fader-scale .reference {color:#d3e1ec;font-weight:700;}
+.xm-fader.fader-studio .xm-fader-scale .reference::after {background:var(--fader-accent);width:5px;}
+.xm-fader.fader-studio[role=slider] .xm-fader-track {width:var(--fader-width);flex:none;background:none;border-radius:6px;}
+.xm-fader.fader-studio .xm-fader-slot {width:6px;border:1px solid #03080e;border-radius:5px;background:linear-gradient(90deg,#01060b,#101c2a);box-shadow:1px 0 0 #ffffff12,-1px 0 0 #0009,inset 0 0 4px #000;overflow:hidden;}
+.xm-fader.fader-studio .xm-fader-fill {position:absolute;bottom:0;left:1px;right:1px;border-radius:3px;background:var(--fader-accent);opacity:.38;}
+.xm-fader.fader-studio .xm-fader-cap {left:50%;width:var(--fader-width);height:36px;transform:translate(-50%,50%);box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:6px;border:1px solid #b9c5d0;border-bottom-color:#627184;border-radius:6px;background:linear-gradient(180deg,#e1e8ee 0%,#bbc8d3 11%,#8293a4 42%,#b6c4d0 47%,#f4f7fa 51%,#d9e2e9 64%,#99a9b8 100%);box-shadow:0 3px 2px #0008,0 7px 12px #0006,inset 0 1px 0 #fff9,inset 1px 0 0 #fff4;transition:box-shadow .12s,border-color .12s;}
+.xm-fader.fader-studio .xm-fader-cap b {display:block;height:1px;margin:0 5px;background:#23354844;box-shadow:0 1px 0 #ffffff55;}
+.xm-fader.fader-studio .xm-fader-cap i {position:static;display:block;height:3px;margin:0 3px;border-radius:2px;background:#1a2b3a;box-shadow:0 1px 0 #fff8;}
+.xm-fader.fader-studio:hover:not(.disabled) .xm-fader-cap,.xm-fader.fader-studio:focus-visible .xm-fader-cap,.xm-fader.fader-studio.dragging .xm-fader-cap {border-color:var(--fader-accent);box-shadow:0 4px 9px #0009,0 0 0 2px color-mix(in srgb,var(--fader-accent) 22%,transparent),inset 0 1px 0 #fff9;}
+.xm-fader.fader-studio.dragging .xm-fader-track {cursor:grabbing;}
+.xm-fader.fader-studio.disabled {opacity:.46;}
+.xs2-strip .xm-fader.fader-studio {--fader-width:24px;gap:3px;}
+.xs2-strip .xm-fader.fader-studio .xm-fader-scale {width:13px;font-size:8px;}
+.xs2-strip .xm-fader.fader-studio .xm-fader-scale span {padding-right:4px;}
+.xs2-strip .xm-fader.fader-studio .xm-fader-scale span::after {width:2px;}
+.sm-fader .xm-fader.fader-studio {--fader-width:36px;}
+@media(max-width:760px){.sm-fader .xm-fader.fader-studio {--fader-width:26px;}.sm-fader .xm-fader.fader-studio .xm-fader-scale {display:none;}}

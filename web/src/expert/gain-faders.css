@@ -1,0 +1,15 @@
+.gain-fader {display:flex;flex-direction:column;align-items:stretch;gap:7px;flex:1;min-width:0;min-height:0;height:100%;box-sizing:border-box;padding:8px 5px 5px;border:1px solid #344152;border-top:2px solid #c69e63;border-radius:8px;background:linear-gradient(180deg,#182332,#0c1521);color:#e7edf4;box-shadow:inset 0 1px 0 #ffffff06;}
+.gain-fader>small {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;line-height:12px;letter-spacing:.04em;text-align:center;color:#d9b784;}
+.gain-fader-control {flex:1;min-height:80px;padding-block:18px;box-sizing:border-box;}
+.gain-fader output {display:flex;align-items:baseline;justify-content:center;gap:3px;padding:5px 1px 4px;border:1px solid #28384a;border-radius:4px;background:#070e17;font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap;}
+.gain-fader output strong {font:600 13px/1 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:-.04em;color:#f0e2ce;}
+.gain-fader output span {font-size:8px;color:#8795a5;}
+.gain-fader-steps {display:flex;gap:4px;}
+.gain-fader .gain-fader-steps button {flex:1;min-width:0;min-height:23px;padding:0;border:1px solid #334356;border-radius:4px;background:linear-gradient(#243346,#172434);color:#b9c9d9;font-size:14px;line-height:20px;}
+.gain-fader .gain-fader-steps button:hover:not(:disabled) {border-color:#c69e63;color:#f0d8b4;}
+.gain-fader .gain-fader-steps button:disabled {opacity:.35;}
+.gain-fader-notice {border-left:3px solid #c69e63;padding:.5rem .75rem;color:#d2c0a5;font-size:.85rem;}
+.xs-expert-desk .expert-console.gain-faders-active .main>.xs2-strips {grid-auto-columns:minmax(90px,1fr);}
+.xs-expert-desk .expert-console .xs2-strip .fz.gain-fader-zone {height:270px;min-height:270px;padding-block:0;}
+.gain-fader .xm-fader.fader-studio {--fader-width:25px;gap:4px;}
+.gain-fader .xm-fader.fader-studio .xm-fader-scale {width:17px;font-size:8px;}

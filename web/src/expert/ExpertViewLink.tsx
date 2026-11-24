@@ -2,12 +2,12 @@ import {useEffect,useRef,useState} from 'react';
 import {presetApi} from '../preset-controls';
 import {tx} from '../i18n';
 
-const views=['console','channel','analysis'] as const;
+const views=['console','channel','analysis','meters'] as const;
 type View=typeof views[number];
 type Selection={view:View;channel:number};
 const path='/api/expert-view-link';
-export function ExpertViewLink({view,channel,scope,onReceive}:{view:string;channel:number;scope:string;onReceive:(selection:Selection)=>void}){
- const [role,setRole]=useState<'off'|'share'|'follow'>('off'),[status,setStatus]=useState('');
+export function ExpertViewLink({view,channel,scope,onReceive}:{view:string;channel:number;scope:string;onReceive:(selection:Selection,channelOnly:boolean)=>void}){
+ const [role,setRole]=useState<'off'|'share'|'follow'|'channel'>('off'),[status,setStatus]=useState('');
  const publisher=useRef('');
  const current=useRef({view,channel,onReceive});
  current.current={view,channel,onReceive};
@@ -28,7 +28,7 @@ export function ExpertViewLink({view,channel,scope,onReceive}:{view:string;chann
     }else{
      const selection=await presetApi<Selection|null>(path);
      if(alive){
-      if(selection&&views.includes(selection.view)&&Number.isInteger(selection.channel))current.current.onReceive(selection);
+      if(selection&&views.includes(selection.view)&&Number.isInteger(selection.channel))current.current.onReceive(selection,role==='channel');
       setStatus(selection?'Vue suivie':'En attente d’une vue partagée');
      }
     }
@@ -44,6 +44,7 @@ export function ExpertViewLink({view,channel,scope,onReceive}:{view:string;chann
    <option value="off">{tx('Indépendant')}</option>
    <option value="share">{tx('Partager la vue')}</option>
    <option value="follow">{tx('Suivre la vue partagée')}</option>
+   <option value="channel">{tx('Suivre uniquement le canal')}</option>
   </select></label>
   <p>{tx('Relie des écrans connectés au même serveur BandPilot. La navigation partagée n’envoie aucun réglage audio.')}</p>
   {status&&<p role="status">{tx(status)}</p>}

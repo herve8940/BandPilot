@@ -45,3 +45,5 @@
 .scenes-page .scene-autos{margin-top:22px;padding-top:16px;border-top:1px solid #2c3c4b}
 .scenes-page .scene-autos summary{cursor:pointer;font-weight:650;color:#c9d9e6}
 .scenes-page .scene-empty{font-style:italic}
+
+.scenes-page .scene-blank-actions { margin: 0 0 .75rem; padding: 0; border: 0; min-width: 0; flex-wrap: wrap; }

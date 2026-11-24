@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import {MARK_ID,PROJECT_ID,TAKE_ID,TRACK_ID,type ConfiguredInput,type RehearsalAction,type RehearsalCommand,type RehearsalStatus} from '../shared/rehearsal-desk.js';
 import type {ReaperBridge} from './reaper-bridge.js';
 
@@ -54,11 +55,15 @@ export class RehearsalDesk {
    ...(revision===known?{}:{sheet:useSource?data.source:data.sheet})};
  }
  constructor(private bridge:Bridge,private blocked:()=>boolean,readonly configuredInputs:()=>Promise<ConfiguredInput[]>=async()=>[]){}
- async state(project?:string,detail=false,known?:string):Promise<RehearsalStatus>{
+ async state(project?:string,detail=false,known?:string,files=false):Promise<RehearsalStatus>{
   if(project&&!PROJECT_ID.test(project))throw Error(invalid);
   if(!this.bridge.alive())return {bridge:'offline',tabs:[],transport:'idle'};
   if(!this.bridge.supportsRehearsal())return {bridge:'update',tabs:[],transport:'idle'};
-  const result=await this.bridge.call<Omit<RehearsalStatus,'bridge'>>('rehearsal_state',{...(known&&known.length<180?{known}:{}),...(project?{project}:{}),...(detail?{detail:true}:{})});
+  const result=await this.bridge.call<Omit<RehearsalStatus,'bridge'>>('rehearsal_state',{...(known&&known.length<180?{known}:{}),...(project?{project}:{}),...(detail?{detail:true}:{}),...(files?{files:true}:{})});
+  if(files)result.tabs=result.tabs.map(tab=>{
+   const {filePath,...safe}=tab as typeof tab & {filePath?:string};
+   return filePath?{...safe,fileKey:createHash('sha256').update(filePath).digest('hex')}:safe;
+  });
   return {...result,bridge:'ready'};
  }
  async command(input:Record<string,unknown>,detail=false):Promise<RehearsalStatus>{

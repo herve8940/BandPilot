@@ -8,7 +8,9 @@ function valid(value) {
   return entries.length <= 60 && entries.every(([key, layout]) =>
     /^[A-Za-z0-9_-]+:(small|medium|wide)$/.test(key) && layout &&
     typeof layout === 'object' && !Array.isArray(layout) &&
-    Object.keys(layout).every(k => ['hidden', 'outputs', 'density', 'banks', 'activeBank'].includes(k)) &&
+    Object.keys(layout).every(k => ['hidden', 'outputs', 'density', 'banks', 'activeBank','hiddenMixes','hiddenModules'].includes(k)) &&
+    (layout.hiddenMixes===undefined||Array.isArray(layout.hiddenMixes)&&layout.hiddenMixes.length<=10&&layout.hiddenMixes.every(n=>Number.isInteger(n)&&n>=1&&n<=10)) &&
+    (layout.hiddenModules===undefined||Array.isArray(layout.hiddenModules)&&layout.hiddenModules.length<=3&&layout.hiddenModules.every(k=>['input','eq','comp'].includes(k))) &&
     Array.isArray(layout.hidden) && layout.hidden.length <= 80 && layout.hidden.every(id => typeof id === 'string' && id.length <= 40) &&
     typeof layout.outputs === 'boolean' && ['compact', 'comfortable'].includes(layout.density) &&
     (layout.activeBank === undefined || typeof layout.activeBank === 'string' && layout.activeBank.length <= 80) &&

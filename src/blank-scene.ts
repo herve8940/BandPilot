@@ -1,4 +1,4 @@
-import {PARAMETERS,AIR_PARAMETER_ADDRESSES,type Value} from './parameters.js';
+import {AIR_PARAMETER_ADDRESSES,type Value} from './parameters.js';
 
 /**
  * "Start from a blank scene": every mixing setting back to neutral, in OSC wire values.
@@ -30,21 +30,24 @@ const RULES:[RegExp,Value][]=[
  [/^\/(?:ch\/\d\d|rtn\/(?:aux|[1-4]))\/mix\/lr$/,1],
  [/^\/bus\/[1-6]\/mix\/lr$/,0],
  [new RegExp(`^\\/(?:${PROCESSED})\\/mix\\/pan$`),.5],
- [/^\/(?:ch\/\d\d|rtn\/(?:aux|[1-4]))\/mix\/\d\d\/(?:level|pan)$/,NaN],
+ [/^\/(?:ch\/\d\d|rtn\/(?:aux|[1-4]))\/mix\/\d\d\/(?:level|pan|grpon)$/,NaN],
  [new RegExp(`^\\/(?:${STRIPS}|fxsend\\/[1-4])\\/grp\\/(?:dca|mute)$`),0],
  [/^\/ch\/\d\d\/automix\/group$/,0],
  [/^\/config\/mute\/[1-4]$/,0],
  [/^\/fx\/[1-4]\/insert$/,0]
 ];
-export function blankSceneValues():Record<string,Value>{
- const values:Record<string,Value>={};
+export function blankSceneValues(keepMainMuted=false):Record<string,Value>{
+ const levels:Record<string,Value>={},settings:Record<string,Value>={};
  for(const address of [...AIR_PARAMETER_ADDRESSES]){
   if((/^\/(?:headamp|routing|fx)\//.test(address)&&!/^\/fx\/[1-4]\/insert$/.test(address))||/\/(?:phantom|insrc|rtnsrc)$/.test(address))continue;
   const rule=RULES.find(([r])=>r.test(address));if(!rule)continue;
   // Sends: level fully down, pan centred.
-  values[address]=Number.isNaN(rule[1])?(address.endsWith('/pan')?.5:0):rule[1];
+  const value=Number.isNaN(rule[1])?(address.endsWith('/pan')?.5:0):rule[1];
+  if(value===0&&/\/(?:fader|level|grpon)$/.test(address))levels[address]=value;
+  else settings[address]=keepMainMuted&&address==='/lr/mix/on'?0:value;
  }
- return values;
+ // Close levels before clearing mutes or changing the processing of a live strip.
+ return {...levels,...settings};
 }
 export const BLANK_SCENE_TEXT={
  title:'Partir d’une scène vierge',

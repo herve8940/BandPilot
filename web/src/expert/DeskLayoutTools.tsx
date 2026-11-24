@@ -7,7 +7,7 @@ import {tx} from '../i18n';
 import {num, type Values} from '../xair/controls';
 import {stripColor} from '../xairMath';
 import {stripName, type Strip} from '../xair/strips';
-import {displayDefaults, type DeskLayout} from './desk-layout';
+import {displayDefaults, stripModules, mixLayers, type DeskLayout} from './desk-layout';
 import {moveStrip, type FaderBank} from './fader-banks';
 import './desk-customize.css';
 
@@ -42,7 +42,7 @@ function LayoutEditor({strips, allStrips = strips, monitorOutputs=0, values, des
   const initial = desk.layout.banks.find(bank => bank.id === desk.layout.activeBank) || desk.layout.banks[0];
   const blank = ():FaderBank => ({id:`bank-${crypto.randomUUID()}`, name:tx('Ma vue'), strips:[]});
   const [draft, setDraft] = useState<FaderBank>(() => initial ? {...initial, strips:[...initial.strips]} : blank());
-  const [display, setDisplay] = useState(() => ({hidden:[...desk.layout.hidden], outputs:desk.layout.outputs, density:desk.layout.density}));
+  const [display, setDisplay] = useState(() => ({hiddenModules:desk.layout.hiddenModules??[], hiddenMixes:desk.layout.hiddenMixes??[],hidden:[...desk.layout.hidden], outputs:desk.layout.outputs, density:desk.layout.density}));
   const [tab, setTab] = useState<'views'|'display'>('views');
   const [group, setGroup] = useState('inputs');
   const [search, setSearch] = useState('');
@@ -121,6 +121,12 @@ function LayoutEditor({strips, allStrips = strips, monitorOutputs=0, values, des
         <p>{tx('Ces options règlent l’affichage sur cet écran. Tes vues personnelles sont conservées.')}</p>
         <div className="desk-density" role="group" aria-label={tx('Largeur des tranches')}>{(['compact','comfortable'] as const).map(value => <button type="button" key={value} aria-pressed={display.density === value} onClick={() => setDisplay({...display, density:value})}><Columns3 aria-hidden="true"/><b>{tx(value === 'compact' ? 'Compacte' : 'Confortable')}</b><small>{tx(value === 'compact' ? 'Plus de tranches à l’écran' : 'Des commandes plus espacées')}</small></button>)}</div>
         <label className="desk-output-option"><input type="checkbox" checked={display.outputs} onChange={event => setDisplay({...display, outputs:event.target.checked})}/>{tx('Afficher les sorties et le Master')}</label>
+        <fieldset className="strip-options"><legend>{tx("Éléments des tranches")}</legend>
+          {stripModules.map(k=><label key={k}><input type="checkbox" checked={!display.hiddenModules.includes(k)} onChange={e=>setDisplay({...display,hiddenModules:e.target.checked?display.hiddenModules.filter(v=>v!==k):[...display.hiddenModules,k]})}/>{tx({input:"Préampli et gate",eq:"Égaliseur",comp:"Compresseur"}[k])}</label>)}
+        </fieldset>
+        <fieldset className="strip-options"><legend>{tx("Mix visibles sur les faders")}</legend>
+          {mixLayers.map(n=><label key={n}><input type="checkbox" checked={!display.hiddenMixes.includes(n)} onChange={e=>setDisplay({...display,hiddenMixes:e.target.checked?display.hiddenMixes.filter(v=>v!==n):[...display.hiddenMixes,n]})}/>{n<=6?(values[`/bus/${n}/config/name`]||`Bus ${n}`):`FX ${n-6}`}</label>)}
+        </fieldset>
         <details className="desk-standard-visibility"><summary>{tx('Masquer des tranches dans les vues standard')}</summary><div className="desk-visibility-actions"><button type="button" onClick={() => setDisplay({...display, hidden:[]})}>{tx('Tout afficher')}</button><button type="button" onClick={() => setDisplay({...display, hidden:strips.filter(s => stripName(s, values) === s.fallback).map(s => s.id)})}>{tx('Garder les entrées nommées')}</button></div><div className="desk-visibility-choices">{strips.map(strip => <label key={strip.id}><input type="checkbox" aria-label={`${tx('Afficher')} ${stripName(strip, values)}`} checked={!display.hidden.includes(strip.id)} onChange={event => setDisplay({...display, hidden:event.target.checked ? display.hidden.filter(id => id !== strip.id) : [...display.hidden, strip.id]})}/>{stripName(strip, values)}</label>)}</div></details>
         <button type="button" className="desk-reset" onClick={() => setDisplay({...displayDefaults})}>{tx('Réinitialiser l’affichage')}</button>
       </section>}

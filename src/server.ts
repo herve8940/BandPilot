@@ -1,3 +1,7 @@
+import {sendWebAsset} from './web-asset.js';
+import {serveSongPdf} from './song-pdf.js';
+import {previewRoomEq} from './mix-preparation.js';
+import {busLinkAddress} from '../shared/monitor-pairs.js';
 import {ExpertViewLink} from './expert-view-link.js';
 import {EqRta,type RtaTarget} from './eq-rta.js';
 import {AdjustmentGroups} from './adjustment-groups.js';
@@ -10,15 +14,15 @@ import {MIXER_MODELS} from '../shared/mixer-models.js';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {Workshop} from './workshop.js';
 import type {GateReference} from '../shared/workshop-envelope.js';
-import {VocalFx} from './vocal-fx.js';
+import {AmbienceConflict,VocalFx} from './vocal-fx.js';
 import {Analyzer,familyFromName,type Instrument} from './analysis.js';
 import {ReaperLink,planSession,createSession,openInReaper,defaultSessionsFolder,freeHours,presenceCommands} from './reaper.js';
-import {ReaperBridge,BRIDGE_VERSION,saveLiveRoles} from './reaper-bridge.js';
+import {ReaperBridge,BRIDGE_VERSION} from './reaper-bridge.js';
 import {wavPeaks} from './peaks.js';
 import {source as coachSource} from './sound-coach.js';
 import {MixerSync} from './mixer-sync.js';
 import {DiagnosticLog,setDiagnosticLogger,diagnostic} from './diagnostics.js';
-import {SoundCoach,identifySymptom} from "./sound-coach.js";
+import {SoundCoach,identifySymptom,validateProfile,suggestMusicians} from "./sound-coach.js";
 import {askConnectedCoach} from "./coach-ai.js";
 import {PARAMETERS,fromWire,type Value} from "./parameters.js";
 import {processingCommands} from "./processing-osc.js";
@@ -26,7 +30,7 @@ import {homedir} from 'node:os';
 import http from "node:http";
 import https from "node:https";
 import { readFile, stat } from "node:fs/promises";
-import { resolve, extname, sep } from "node:path";
+import { resolve, sep } from "node:path";
 import { WebSocketServer, WebSocket } from "ws";
 import {discoverXR18} from "./discovery.js";
 import {EarsShare} from "./ears.js";
@@ -132,7 +136,7 @@ const rehearsalDesk=new RehearsalDesk(bridge,()=>workshop.blocksRecording(),asyn
  return plan.tracks.filter(t=>t.selected).map(({usb,name,stereo})=>({usb,name,stereo,available:plan.usbMode!=='2x2'||usb+Number(stereo)<=2}));
 });
 // Musicians' monitor mixes on the local network (QR links). Off until started from the app.
-const ears=new EarsShare(dbPath,xr18,()=>process.env.XR18_WEB_DIST,()=>studioApi.busy?'Une opération est en cours sur l’ordinateur, réessaie dans un instant':null,()=>show.manualOverride(),(bus,name)=>personalPatch(coach.profile(),bus,name),rehearsalDesk);
+const ears=new EarsShare(dbPath,xr18,()=>process.env.XR18_WEB_DIST,()=>studioApi.busy?'Une opération est en cours sur l’ordinateur, réessaie dans un instant':null,undefined,(bus,name,stereo)=>personalPatch(coach.profile(),bus,name,stereo),rehearsalDesk);
 const listenHost=process.env.XR18_HTTP_HOST??'127.0.0.1';
 const tls=process.env.XR18_TLS_CERT&&process.env.XR18_TLS_KEY?{cert:await readFile(process.env.XR18_TLS_CERT),key:await readFile(process.env.XR18_TLS_KEY)}:undefined;
 if(!['127.0.0.1','localhost'].includes(listenHost)&&(!tls||!access.enabled()))throw Error('Accès réseau : HTTPS et comptes configurés requis.');
@@ -145,7 +149,7 @@ const handler: http.RequestListener = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if(!sameOrigin(req)){res.writeHead(403);res.end(JSON.stringify({error:"Origine refusée"}));return;}
   if(process.env.BANDPILOT_ANDROID==='1'&&path==='/api/android/suspend'&&req.method==='POST'){
-   show.manualOverride();await connection.suspend();res.end(JSON.stringify({ok:true}));return;
+   await connection.suspend();res.end(JSON.stringify({ok:true}));return;
   }
   if(process.env.BANDPILOT_ANDROID==='1'&&/^\/api\/(?:reaper|workshop)(?:\/|$)/.test(path)){
    res.writeHead(501);res.end(JSON.stringify({error:'REAPER et l’Atelier du son sont disponibles dans BandPilot sur ordinateur.'}));return;
@@ -160,6 +164,8 @@ const handler: http.RequestListener = async (req, res) => {
   if(path==='/api/auth/logout'&&req.method==='POST'){access.logout(req);res.setHeader('Set-Cookie','xr18_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');for(const ws of wss.clients)ws.terminate();res.end(JSON.stringify({ok:true}));return;}
   const user=access.user(req);
   if(path.startsWith('/api/')&&(!user||!permitted(user,req.method??'GET',path))){res.writeHead(user?403:401);res.end(JSON.stringify({error:user?'Droits insuffisants':'Connexion requise'}));return;}
+  const songPdf=/^\/api\/songs\/([a-f0-9-]+)\/pdf$/.exec(path);
+  if(songPdf){await serveSongPdf(req,res,database,songPdf[1]!);return;}
   if(androidUpdates&&path.startsWith('/api/android/update')){
    if(user?.role!=='admin'){res.writeHead(403);res.end(JSON.stringify({error:'Administration requise'}));return;}
    let result:unknown;
@@ -206,7 +212,11 @@ const handler: http.RequestListener = async (req, res) => {
    const url=new URL(req.url!,'http://localhost'),route=path.slice('/api/rehearsal-desk/'.length);
    try{
     let result:unknown;
-    if(req.method==='GET'&&route==='state')result=await rehearsalDesk.state(url.searchParams.get('project')??undefined,true,url.searchParams.get('known')??undefined);
+    if(req.method==='GET'&&route==='state')result=await rehearsalDesk.state(url.searchParams.get('project')??undefined,url.searchParams.get('files')!=='1',url.searchParams.get('known')??undefined,url.searchParams.get('files')==='1');
+    else if(req.method==='POST'&&route==='import-songs'){
+     const {projects}=await body(req),state=await rehearsalDesk.state(undefined,false,undefined,true);
+     result={songIds:database.importOpenProjects(projects,state.tabs)};
+    }
     else if(req.method==='POST'&&route==='command')result=await rehearsalDesk.command(await body(req),true);
     else if(req.method==='GET'&&route==='configured-inputs')result=await rehearsalDesk.configuredInputs();
     else if(req.method==='GET'&&route==='peaks')result=await rehearsalDesk.peaks(url.searchParams.get('project'),url.searchParams.get('track'),url.searchParams.has('item')?Number(url.searchParams.get('item')):null,url.searchParams.has('take')?Number(url.searchParams.get('take')):null);
@@ -215,7 +225,6 @@ const handler: http.RequestListener = async (req, res) => {
    }catch(error){res.writeHead(400);res.end(JSON.stringify({error:(error as Error).message}));}
    return;
   }
-  // Stored selections are metadata: never interrupt ReaCue or acquire an audio lock.
   if(path==='/api/adjustment-groups'||path==='/api/adjustment-groups/remove'){
    if(user?.role!=='admin'){res.writeHead(403);res.end(JSON.stringify({error:'Administration requise'}));return;}
    try{
@@ -227,22 +236,18 @@ const handler: http.RequestListener = async (req, res) => {
     res.end(JSON.stringify(result));
    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
-  if(workshop.blocksRecording()&&req.method!=='GET'&&(['/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/show/presence','/api/show/original','/api/show/take','/api/show/track','/api/show/play','/api/show/loop','/api/show/goto','/api/mixer-sync/apply','/api/console/apply','/api/monitor/copy/apply','/api/coach/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo','/api/coach/vocal-fx/keep','/api/analysis/listen','/api/reacue/event','/api/reacue/arm'].includes(path)||path.startsWith('/api/library/command-control/')&&!path.endsWith('/stop')||/^\/api\/library\/[^/]+\/apply$/.test(path))){res.writeHead(409);res.end(JSON.stringify({error:'Termine l’Atelier du son et restaure les sources avant cette action ; les réglages directs de canal restent disponibles dans Console'}));return;}
-  if(path==='/api/reacue/stop'&&req.method==='POST'){show.arm(false);access.log(user!,'Arrêt ReaCue');res.end(JSON.stringify({ok:true}));return;}
-  const readOnlyCoach=['/api/library/command-control/stop','/api/library/live-group/stop','/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
+  if(workshop.blocksRecording()&&req.method!=='GET'&&(['/api/eq-rta/ring/apply','/api/reaper/rec','/api/reaper/session','/api/show/rec','/api/show/presence','/api/show/original','/api/show/take','/api/show/track','/api/show/play','/api/show/loop','/api/show/goto','/api/mixer-sync/apply','/api/console/apply','/api/monitor/copy/apply','/api/coach/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo','/api/coach/vocal-fx/keep','/api/analysis/listen'].includes(path)||path.startsWith('/api/library/command-control/')&&!path.endsWith('/stop')||/^\/api\/library\/[^/]+\/apply$/.test(path))){res.writeHead(409);res.end(JSON.stringify({error:'Termine l’Atelier du son et restaure les sources avant cette action ; les réglages directs de canal restent disponibles dans Console'}));return;}
+  const readOnlyCoach=['/api/library/live-group/pulse','/api/library/parameter-links/stop','/api/library/parameter-links/pulse','/api/library/command-control/stop','/api/library/live-group/stop','/api/coach/ask','/api/coach/advice','/api/coach/measure','/api/coach/suggest','/api/coach/prepare','/api/coach/ears','/api/coach/gain','/api/coach/bleed','/api/coach/calibration','/api/coach/undo',
     // Analysis only changes what the console's analyser looks at, never the sound: no global lock.
     '/api/reaper/plan','/api/reaper/session','/api/reaper/rec','/api/reaper/stop','/api/reaper/marker','/api/reaper/dismiss','/api/show/install','/api/show/goto','/api/show/loop','/api/show/take','/api/show/track','/api/show/play','/api/show/stop','/api/show/continue','/api/show/presence','/api/show/original','/api/show/rec',
-    '/api/eq-rta/start','/api/eq-rta/read','/api/eq-rta/stop','/api/analysis/start','/api/analysis/stop','/api/analysis/target','/api/analysis/scan','/api/analysis/dismiss','/api/analysis/release'].includes(path);
+    '/api/eq-rta/ring/arm','/api/eq-rta/ring/stop','/api/eq-rta/start','/api/eq-rta/read','/api/eq-rta/stop','/api/analysis/start','/api/analysis/stop','/api/analysis/target','/api/analysis/scan','/api/analysis/dismiss','/api/analysis/release'].includes(path);
   if(path.startsWith('/api/')&&req.method!=='GET'&&!readOnlyCoach){
-    const coachMetadata=path==='/api/library/commands'||path.startsWith('/api/library/midi-scenes')||path==='/api/library/convert-channel'||path==='/api/library/capture-portable'||path==='/api/library/output-protections'||path==='/api/library/scene-protections'||(path.startsWith('/api/coach/')&&!['/api/coach/apply','/api/coach/vocal-fx/apply','/api/coach/vocal-fx/undo'].includes(path))||(path.startsWith('/api/mixer-sync')&&path!=='/api/mixer-sync/apply')||path.startsWith('/api/ears-share')||path==='/api/monitor/copy/preview';
-    if(studioApi.busy&&!path.startsWith('/api/reacue')&&!coachMetadata){show.manualOverride();}
     if(studioApi.busy){res.writeHead(409);res.end(JSON.stringify({error:'Une opération est déjà en cours'}));return;}
     studioApi.busy=true;ownsWriteLock=true;
     access.log(user!,`${req.method} ${path}`);
-    if(!path.startsWith('/api/reacue')&&!path.startsWith('/api/library')&&!coachMetadata)show.manualOverride();
   }
   if(req.method==='GET'&&path==='/api/models'){res.end(JSON.stringify(Object.values(MIXER_MODELS)));return;}
-  if(xr18.model().family==='x32'&&(path.startsWith('/api/ears-share')||path.startsWith('/api/coach')||path.startsWith('/api/mixer-sync')||path.startsWith('/api/reacue')||path.startsWith('/api/analysis')||path==='/api/rehearsal')){res.writeHead(409);res.end(JSON.stringify({error:'Cette fonction nécessite l’adaptateur avancé X32. Le mélangeur X32 reste disponible.'}));return;}
+  if(xr18.model().family==='x32'&&(path.startsWith('/api/ears-share')||path.startsWith('/api/coach')||path.startsWith('/api/mixer-sync')||path.startsWith('/api/analysis')||path==='/api/rehearsal')){res.writeHead(409);res.end(JSON.stringify({error:'Cette fonction nécessite l’adaptateur avancé X32. Le mélangeur X32 reste disponible.'}));return;}
   if(path.startsWith('/api/ears-share')){
    try{
     const m=/^\/api\/ears-share(?:\/(start|stop|musicians|manager)(?:\/([a-f0-9-]{36})(?:\/(regenerate|qr))?)?)?$/.exec(path);
@@ -351,8 +356,6 @@ const handler: http.RequestListener = async (req, res) => {
       const {rec:add,unarm,roles}=presenceCommands(rec,present);
       await bridge.call('apply_presence',{project:d.project,rec:add,unarm,roles});
       const state=await bridge.state();
-      // ReaCue applies this itself when its window is open. The mutes above already cover the case where it is closed.
-      if(state.setlist)await saveLiveRoles(state.setlist,Object.keys(roles).filter(r=>roles[r])).catch(e=>diagnostic('reacue-live',{error:(e as Error).message}));
       result={present};
      }
      else if(path==='/api/show/original'){
@@ -408,6 +411,21 @@ const handler: http.RequestListener = async (req, res) => {
   if(path.startsWith('/api/eq-rta')){
     try{const d=req.method==='GET'?{}:await body(req);let result:unknown;
       if(req.method==='GET'&&path==='/api/eq-rta')result=eqRta.info();
+      else if(req.method==='POST'&&path.startsWith('/api/eq-rta/ring/')){
+       if(user?.role!=='admin')throw Error('Administration requise');
+       if(path.endsWith('/stop')){eqRta.stopRing(d.token,user.id,d.id);result={ok:true};}
+       else if(path.endsWith('/arm')&&d.confirm===true){eqRta.armRing(d.token,user.id,d.bus,d.linked,d.id);result={ok:true};}
+       else if(path.endsWith('/apply'))result=await eqRta.correctRing(d.token,user.id,d.id,async(bus,linked,hz,assertPeak,assertSession)=>{
+        const link=busLinkAddress(bus);
+        if(await xr18.readParameter(link)!==Number(linked))throw Error('Les liaisons ou les sources ont changé. Prépare un nouvel aperçu.');
+        const plan=await previewRoomEq(xr18,show.console,{model:xr18.model().id,target:'/bus/'+bus,peak:hz,maxCut:2});
+        if(!plan.token)return {written:0};
+        if(plan.changes.length!==(linked?2:1))throw Error('Les liaisons ou les sources ont changé. Prépare un nouvel aperçu.');
+        await eqRta.read(d.token);assertPeak();
+        return show.console.apply(plan.token,false,false,assertSession);
+       });
+       else throw Error('Confirmation requise');
+      }
       else if(req.method==='POST'&&path==='/api/eq-rta/start')result=await eqRta.start(d.target as RtaTarget,d.post);
       else if(req.method==='POST'&&path==='/api/eq-rta/read')result=await eqRta.read(d.token);
       else if(req.method==='POST'&&path==='/api/eq-rta/stop')result=await eqRta.stop(d.token);
@@ -441,21 +459,31 @@ const handler: http.RequestListener = async (req, res) => {
   }
   if(path==='/api/coach/vocal-fx'&&req.method==='GET'){res.end(JSON.stringify(vocalFx.status()));return;}
   if(path.startsWith('/api/coach/vocal-fx/')&&req.method==='POST'){
-    try{const d=await body(req);const result=path==='/api/coach/vocal-fx/archive'?await vocalFx.archive(d.confirm===true):path==='/api/coach/vocal-fx/reconnect'?await vocalFx.reconnect(d.confirm===true):path==='/api/coach/vocal-fx/read-doses'?await vocalFx.readDoses():path==='/api/coach/vocal-fx/preview'?await vocalFx.preview(d):path==='/api/coach/vocal-fx/apply'?await vocalFx.apply(d.token,d.confirm):path==='/api/coach/vocal-fx/keep'?await vocalFx.keep():path==='/api/coach/vocal-fx/undo'?await vocalFx.undo(d.all===true,d.confirm===true):null;if(!result)throw Error('Action d’ambiance inconnue');diagnostic('ambience.action',{action:path});res.end(JSON.stringify(result));}catch(e){diagnostic('ambience.error',{action:path,message:(e as Error).message,stack:(e as Error).stack});res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+    try{const d=await body(req);const result=path==='/api/coach/vocal-fx/archive'?await vocalFx.archive(d.confirm===true):path==='/api/coach/vocal-fx/reconnect'?await vocalFx.reconnect(d.confirm===true):path==='/api/coach/vocal-fx/read-doses'?await vocalFx.readDoses():path==='/api/coach/vocal-fx/preview'?await vocalFx.preview(d):path==='/api/coach/vocal-fx/apply'?await vocalFx.apply(d.token,d.confirm):path==='/api/coach/vocal-fx/keep'?await vocalFx.keep():path==='/api/coach/vocal-fx/undo'?await vocalFx.undo(d.all===true,d.confirm===true):null;if(!result)throw Error('Action d’ambiance inconnue');diagnostic('ambience.action',{action:path});res.end(JSON.stringify(result));}catch(e){
+      if(e instanceof AmbienceConflict){
+        diagnostic('ambience.conflict',{action:path,message:e.message});
+        res.writeHead(409);res.end(JSON.stringify({code:'ambience-conflict',error:e.message,state:vocalFx.status()}));
+      }else{
+        diagnostic('ambience.error',{action:path,message:(e as Error).message,stack:(e as Error).stack});
+        res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));
+      }
+    }
+    return;
   }
   if(path.startsWith('/api/coach/')&&req.method==='POST'){
     try{const d=await body(req);let result:unknown;
       if(path==='/api/coach/profile'){result=coach.saveProfile(d.profile);ears.refreshTechnicalCards();}
-      else if(path==='/api/coach/prepare')result=await coach.prepare(d.channel===undefined?undefined:Number(d.channel));
+      else if(path==='/api/coach/prepare')result=await coach.prepare(d.channel===undefined?undefined:Number(d.channel),d.resetUnused===true);
       else if(path==='/api/coach/gain')result=await coach.gainCheck(Number(d.channel));
       else if(path==='/api/coach/bleed')result=await coach.bleedCheck(Number(d.channel));
       else if(path==='/api/coach/calibration')result=await coach.calibrationStatus({sound:d.sound,headroom:d.headroom});
-      else if(path==='/api/coach/ears')result=await coach.prepareEars(d.bus===undefined?undefined:Number(d.bus));
+      else if(path==='/api/coach/ears')result=await coach.prepareEars(d.bus===undefined?undefined:Number(d.bus),d.resetUnused===true,ears);
       else if(path==='/api/coach/ears/share'){
-        // Personal QR link for every musician that has none yet on its bus.
-        const musicians=coach.profile().musicians??[];let created=0;
-        for(const m of musicians)if(!ears.list().some(s=>s.bus===m.bus)){ears.create(m.name,m.bus);created++;}
-        result={created,status:ears.status()};
+        const profile=d.profile===undefined?coach.profile():validateProfile(d.profile);
+        const roster=await ears.prepareRoster(profile.musicians??suggestMusicians(profile.inputs));
+        if(d.profile!==undefined)coach.saveProfile(profile);
+        result={...roster.commit(),status:ears.status()};
+        ears.refreshTechnicalCards();
       }
       else if(path==='/api/coach/suggest')result=await coach.suggest(Number(d.channel),String(d.symptom));
       else if(path==='/api/coach/apply'){if(d.confirm!==true)throw Error('Confirmation requise');result=await coach.apply(d.token,d.confirm);}
@@ -483,7 +511,11 @@ const handler: http.RequestListener = async (req, res) => {
     try{const d=await body(req);res.end(JSON.stringify(await show.console.preview(d.values)));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path==='/api/console/blank'&&req.method==='POST'){
-    try{res.end(JSON.stringify({...await show.console.preview(Object.fromEntries(Object.entries(blankSceneValues()).filter(([a])=>xr18.supports(a))),true),...BLANK_SCENE_TEXT,inputs:[]}));}catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
+    try{
+      if(xr18.model().family!=='xair')throw Error('Cette opération nécessite une console X-Air / M-Air.');
+      const values=Object.fromEntries(Object.entries(blankSceneValues(xr18.isRehearsal())).filter(([a])=>xr18.supports(a)));
+      res.end(JSON.stringify({...await show.console.preview(values,true),...BLANK_SCENE_TEXT,inputs:[]}));
+    }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path==='/api/console/restore'&&req.method==='POST'){
     // Preview going back to the values saved just before an apply (undo).
@@ -638,11 +670,8 @@ const handler: http.RequestListener = async (req, res) => {
     if(requested===root||requested.startsWith(root+sep)){
       try{
         const target=(await stat(requested)).isFile()?requested:resolve(root,"index.html");
-        const bytes=await readFile(target);
-        const mime:Record<string,string>={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8",".svg":"image/svg+xml",".png":"image/png",".ico":"image/x-icon",".woff2":"font/woff2"};
-        res.setHeader("Content-Type",mime[extname(target)]??"application/octet-stream");
         res.setHeader("Content-Security-Policy","default-src 'self'; connect-src 'self' ws://127.0.0.1:* wss:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; object-src 'none'; frame-ancestors 'none'");
-        res.end(bytes);return;
+        await sendWebAsset(req,res,target,path);return;
       }catch{ /* Fall through to 404. */ }
     }
   }
@@ -666,7 +695,6 @@ function handleLive(ws:WebSocket,req:http.IncomingMessage,raw:Buffer){
     if(!liveControlPermitted(user,address))throw Error('Droits insuffisants pour '+address);
     if(studioApi.busy)throw Error('Une opération est déjà en cours');
     if(typeof value!=='number'&&typeof value!=='string')throw Error('Valeur invalide');
-    show.manualOverride();
     xr18.liveSet(address,value);
   }catch(e){reply({type:'live-error',address,error:(e as Error).message});}
 }

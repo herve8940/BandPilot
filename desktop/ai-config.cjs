@@ -1,7 +1,11 @@
 const {readFileSync,writeFileSync,renameSync,rmSync}=require('node:fs');
 function loadAI(path,storage){
- if(!storage.isEncryptionAvailable()||storage.getSelectedStorageBackend?.()==='basic_text')return null;
- try{const saved=JSON.parse(readFileSync(path,'utf8'));const config=JSON.parse(storage.decryptString(Buffer.from(saved.encrypted,'base64')));return validate(config);}catch{return null;}
+ try{
+  const saved=JSON.parse(readFileSync(path,'utf8'));
+  if(typeof saved?.encrypted!=='string'||!saved.encrypted)return null;
+  if(!storage.isEncryptionAvailable()||storage.getSelectedStorageBackend?.()==='basic_text')return null;
+  return validate(JSON.parse(storage.decryptString(Buffer.from(saved.encrypted,'base64'))));
+ }catch{return null;}
 }
 function validate(input){
  if(!input||typeof input.apiKey!=='string'||input.apiKey.trim().length<10||input.apiKey.length>1000||typeof input.model!=='string'||!/^[a-zA-Z0-9._:-]{1,100}$/.test(input.model.trim()))throw Error('Clé API et nom de modèle requis');

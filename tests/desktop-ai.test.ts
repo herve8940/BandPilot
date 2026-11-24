@@ -7,6 +7,9 @@ import {join} from 'node:path';
 const {loadAI,saveAI}=createRequire(import.meta.url)('../desktop/ai-config.cjs');
 test('desktop credentials delegate to OS encryption, refuse plaintext backend, and can be removed',()=>{
  const directory=mkdtempSync(join(tmpdir(),'xr18-ai-store-')),file=join(directory,'secret.json');
+ let keychainRequests=0;
+ assert.equal(loadAI(file,{isEncryptionAvailable(){keychainRequests++;return true;}}),null);
+ assert.equal(keychainRequests,0);
  // Fixture codec only: production supplies Electron safeStorage.
  const storage={isEncryptionAvailable:()=>true,getSelectedStorageBackend:()=> 'test-encrypted',encryptString:(s:string)=>Buffer.from(s).map(v=>v^165),decryptString:(b:Buffer)=>Buffer.from(b).map(v=>v^165).toString()};
  try{

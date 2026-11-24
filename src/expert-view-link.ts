@@ -1,6 +1,6 @@
 import type {MixerProfile} from '../shared/mixer-models.js';
 
-export const LINKED_VIEWS=['console','channel','analysis'] as const;
+export const LINKED_VIEWS=['console','channel','analysis','meters'] as const;
 type View=typeof LINKED_VIEWS[number];
 type Selection={owner:string;scope:string;view:View;channel:number;until:number};
 

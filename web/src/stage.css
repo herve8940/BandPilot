@@ -1,0 +1,19 @@
+/* Shared surfaces for the control room and musicians' phones. */
+html:root {
+  --bp-bg:#0e1221; --bp-rail:#13182a; --bp-panel:#1b2135; --bp-panel-raised:#282e46;
+  --bp-line:#3b435c; --bp-line-soft:#2c344b; --bp-text:#f4f3fc; --bp-muted:#bdc3d8;
+  --bp-purple:#bea6ff; --bp-primary:#ad92ff; --bp-primary-ink:#211634;
+  --bp-selected:#38304e; --bp-card:var(--bp-panel);
+  --stage-inset:#101528; --stage-active:#302a46; --stage-edge:#74628f;
+  --bp-gutter:clamp(16px,2.7vw,44px); --bp-reading-width:1560px;
+
+}
+.display-switch {border:1px solid var(--bp-line);border-radius:8px;background:var(--stage-inset);color:var(--bp-text);min-height:36px;padding:6px 12px;cursor:pointer}
+.display-switch[aria-pressed=true] {border-color:#ae98da;background:var(--stage-active);color:white}
+.display-prefs .display-switch {margin:4px 8px 0 0}
+html.stage-contrast {--bp-bg:#05070d;--bp-panel:#101526;--bp-panel-raised:#171d34;--bp-text:#fff;--bp-muted:#ecedf6;--bp-line:#828ca8;--bp-card:#101526;--stage-inset:#080b14;--stage-active:#403065;--stage-edge:#ceb4ff}
+html.stage-contrast :is(.studio.app2,.ea) :is(button,input,select,textarea,summary) {border-color:#8791a8}
+html.stage-contrast :is(.studio.app2,.ea) :is(button[aria-pressed=true],button[aria-selected=true],button.active,button.on) {outline:2px solid #dfd0ff;outline-offset:-2px}
+html.stage-contrast :is(.studio.app2,.ea) :is(p,small,.muted,.sh-check,.xm-label) {color:#e7eaf6}
+html.stage-contrast :is(.studio.app2,.ea) :is(button,input,select,textarea,summary):focus-visible {outline:3px solid #ffda82;outline-offset:2px}
+html.stage-contrast :is(.studio.app2,.ea) .xm-fader-slot {border:1px solid #9da4bb}

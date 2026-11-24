@@ -55,11 +55,10 @@ server.tool('studio_refresh_parameters','Lire un groupe de paramètres depuis la
 server.tool('studio_preview_parameters','Prévisualiser des changements typés, en dB, Hz, ms ou options. Aucun réglage modifié.',{values:z.record(z.string(),z.union([z.number(),z.string()]))},async({values})=>result(await bridge('/api/console/preview','POST',{values})));
 server.tool('studio_apply_parameters','Appliquer une prévisualisation après accord explicite, sauvegarde et comparaison OSC.',{token:z.string().uuid(),confirm:confirmed,allowPhantom:z.boolean().default(false)},async({token,confirm,allowPhantom})=>{if(!confirm)throw Error('Confirmation requise');return result(await bridge('/api/console/apply','POST',{token,confirm,allowPhantom}));});
 server.tool('studio_save_complete_scene','Capturer tous les paramètres et FX dans une scène persistante.',{name:z.string().min(1).max(120),excludePhantom:z.boolean().default(false)},async({name,excludePhantom})=>result(await bridge('/api/library','POST',{kind:'scene',name,complete:true,excludePhantom})));
-server.tool('studio_list_presets','Scènes, FX et associations ReaCue sauvegardés.',{},async()=>result(await bridge('/api/library')));
+server.tool('studio_list_presets','Scènes et presets FX sauvegardés.',{},async()=>result(await bridge('/api/library')));
 server.tool('studio_preview_preset','Comparer une scène ou un FX avant rappel.',{id:z.string().uuid()},async({id})=>result(await bridge('/api/library/'+id+'/preview','POST',{})));
 server.tool('studio_apply_preset','Rappeler une scène ou un FX après confirmation explicite.',{id:z.string().uuid(),token:z.string().uuid(),confirm:confirmed,allowPhantom:z.boolean().default(false)},async({id,token,confirm,allowPhantom})=>{if(!confirm)throw Error('Confirmation requise');return result(await bridge('/api/library/'+id+'/apply','POST',{token,confirm,allowPhantom}));});
 server.tool('studio_monitor_level','Régler un envoi de retour autorisé, plafond 0,75 et variation contrôlée.',{bus:z.number().int().min(1).max(6),channel:z.number().int().min(1).max(16),value:z.number().min(0).max(.75),confirm:confirmed},async({bus,channel,value,confirm})=>{if(!confirm)throw Error('Confirmation requise');return result(await bridge(`/api/monitor/${bus}/channels/${channel}`,'POST',{value}));});
-server.tool('studio_stop_reacue','Arrêter immédiatement les automatismes ReaCue.',{},async()=>result(await bridge('/api/reacue/stop','POST',{})));
 process.on("SIGINT", () => { db.close(); process.exit(0); });
 const transport = new StdioServerTransport();
 await server.connect(transport);

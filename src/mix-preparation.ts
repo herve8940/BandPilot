@@ -3,7 +3,7 @@ import type {ConsoleControl} from './console-control.js';
 import type {LibraryStore} from './library-store.js';
 import {channelLink,channelPrefix,channelReader} from './channel-operations.js';
 import {busLinkAddress,busPairStart} from '../shared/monitor-pairs.js';
-import {GEQ_KEYS,roomCorrections} from '../shared/room-eq.js';
+import {GEQ_KEYS,roomCorrections,roomAnalysis,type RoomEstimate} from '../shared/room-eq.js';
 import {descriptor,fromWire,toWire,type Value} from './parameters.js';
 
 const sourceError='Le gain compensé exige une entrée dédiée et un trajet sans liaison stéréo, Automix ni effet inséré.';
@@ -23,7 +23,8 @@ function orderedGain(values:Record<string,Value>,before:Record<string,Value>){
  return Object.fromEntries(Number(gain[1])<Number(before[gain[0]])?[gain,...others]:[...others,gain]);
 }
 export async function previewGainCompensation(xr:XR18,control:ConsoleControl,input:unknown){
- const {model,channel,delta}=input as {model:string;channel:number;delta:number};
+ const {model,channel,delta,includeShared=false}=input as {model:string;channel:number;delta:number;includeShared?:boolean};
+ if(typeof includeShared!=='boolean')throw Error('Option de sources partagées invalide.');
  available(xr,model);
  if(!Number.isInteger(channel)||channel<1||channel>xr.model().channels||!Number.isFinite(delta)||delta===0||Math.abs(delta)>6||!Number.isInteger(delta*2))throw Error('Choisis une variation de gain de −6 à +6 dB par demi-décibel.');
  const reader=channelReader(xr,control),guards:Record<string,Value>={},before:Record<string,Value>={},values:Record<string,Value>={};
@@ -38,33 +39,45 @@ export async function previewGainCompensation(xr:XR18,control:ConsoleControl,inp
   values[address]=toWire(address,Math.max(min!,Math.min(max!,desired)));
  };
  const prefix=channelPrefix(channel);
- if(await guard(channelLink(channel))===1||await guard(prefix+'automix/group')!==0||
-    await guard(prefix+'insert/on')===1&&await guard(prefix+'insert/sel')!==0)throw Error(sourceError);
+ const affected=new Set([channel]);
+ if(await guard(channelLink(channel))===1)throw Error(sourceError);
  const usb=xr.supports(prefix+'preamp/rtnsw')&&await guard(prefix+'preamp/rtnsw')===1;
  const source=Number(await guard(prefix+'config/insrc'));
  const gain=usb?prefix+'preamp/rtntrim':`/headamp/${formatBus(source+1)}/gain`;
  if(!usb&&(source<0||source>=xr.model().micPreamps||!xr.supports(gain)))throw Error(sourceError);
  if(usb&&xr.supports(prefix+'config/rtnsrc'))await guard(prefix+'config/rtnsrc');
+ // A shared analogue preamp changes every channel routed to that socket.
+ // Opt in explicitly, gather all consumers, then compensate each exactly once.
  for(let i=1;i<=xr.model().channels;i++){
   const input=channelPrefix(i);
-  if(i!==channel&&!usb){
-   const otherSource=await guard(input+'config/insrc');
-   const otherUSB=xr.supports(input+'preamp/rtnsw')&&await guard(input+'preamp/rtnsw')===1;
-   if(otherSource===source&&!otherUSB)throw Error(sourceError);
+  const otherSource=await guard(input+'config/insrc');
+  const otherUSB=xr.supports(input+'preamp/rtnsw')&&await guard(input+'preamp/rtnsw')===1;
+  if(i!==channel&&!usb&&otherSource===source&&!otherUSB){
+   if(!includeShared)throw Error(sourceError);
+   affected.add(i);
   }
+ }
+ for(const ch of affected){
+  const p=channelPrefix(ch);
+  if(await guard(channelLink(ch))===1||await guard(p+'automix/group')!==0||await guard(p+'insert/on')===1&&await guard(p+'insert/sel')!==0)throw Error(sourceError);
+ }
+ for(let i=1;i<=xr.model().channels;i++){
+  const input=channelPrefix(i);
   for(const processor of ['gate','dyn']){
    const on=await guard(input+processor+'/on'),key=input+processor+'/keysrc';
    if(!on)continue;
-   const keyIndex=Number(await guard(key));
-   if(i===channel&&keyIndex!==0||i!==channel&&descriptor(key).options?.[keyIndex]===`Ch${formatBus(channel)}`)throw Error(chainError);
-   if(i===channel)await shift(input+processor+'/thr',delta);
+   const keyIndex=Number(await guard(key)),keyName=descriptor(key).options?.[keyIndex];
+   if(affected.has(i)&&keyIndex!==0||!affected.has(i)&&[...affected].some(ch=>keyName===`Ch${formatBus(ch)}`))throw Error(chainError);
+   if(affected.has(i))await shift(input+processor+'/thr',delta);
   }
  }
  // Bus compressors can also take an input channel as their detector.
  for(const output of ['/lr',...Array.from({length:xr.model().buses},(_,i)=>'/bus/'+(i+1))]){
   const on=output+'/dyn/on',key=output+'/dyn/keysrc';
-  if(xr.supports(on)&&xr.supports(key)&&await guard(on)&&descriptor(key).options?.[Number(await guard(key))]===`Ch${formatBus(channel)}`)throw Error(chainError);
+  if(xr.supports(on)&&xr.supports(key)&&await guard(on)&&[...affected].map(ch=>`Ch${formatBus(ch)}`).includes(descriptor(key).options?.[Number(await guard(key))]??''))throw Error(chainError);
  }
+ for(const ch of affected){
+ const prefix=channelPrefix(ch);
  await shift(prefix+'mix/fader',-delta,true);
  const taps=new Map<number,Value>();
  for(let bus=1;bus<=10;bus++){
@@ -81,17 +94,18 @@ export async function previewGainCompensation(xr:XR18,control:ConsoleControl,inp
   const second=prefix+`mix/${formatBus(busPairStart(bus)+1)}/level`;
   if(taps.get(bus)!==taps.get(bus+1)||values[first]!==values[second])throw Error(sourceError);
  }
+ }
  await shift(gain,delta);
  reader.check();
- return control.preview(orderedGain(values,before),true,guards,'mix-preparation-backup',before);
+ return {...await control.preview(orderedGain(values,before),true,guards,'mix-preparation-backup',before),affectedChannels:[...affected].sort((a,b)=>a-b)};
 }
 
 export async function previewRoomEq(xr:XR18,control:ConsoleControl,input:unknown){
- const {model,target,curve,peak,maxCut}=input as {model:string;target:string;curve:unknown;peak:unknown;maxCut:number};
+ const {model,target,curve,peak,maxCut,targetCurve}=input as {model:string;target:string;curve:unknown;peak:unknown;maxCut:number;targetCurve?:unknown};
  available(xr,model);
  const bus=/^\/bus\/(\d)$/.exec(target);
  if(target!=='/lr'&&(!bus||Number(bus[1])<1||Number(bus[1])>xr.model().monitorOutputs))throw Error('Sortie de mesure invalide.');
- const cuts=roomCorrections(curve,peak,maxCut);
+ const cuts=roomCorrections(curve,peak,maxCut,targetCurve);
  const reader=channelReader(xr,control),guards:Record<string,Value>={},before:Record<string,Value>={},values:Record<string,Value>={};
  const targets=[target];
  if(bus){
@@ -117,8 +131,16 @@ export async function previewRoomEq(xr:XR18,control:ConsoleControl,input:unknown
   for(const key of GEQ_KEYS)if(before[left+'/geq/'+key]!==before[right+'/geq/'+key])throw Error('Les deux côtés du retour stéréo ont des égaliseurs différents.');
  }
  reader.check();
- if(!Object.keys(values).length)return {token:null,changes:[]};
- return control.preview(values,true,guards,'mix-preparation-backup',before);
+ let roomEstimate:RoomEstimate|undefined;
+ if(peak===undefined){
+  const analysis=roomAnalysis(curve,targetCurve);
+  roomEstimate=analysis.centres.map(({hz,index,db,target:desired})=>{
+   const a=targets[0]+'/geq/'+GEQ_KEYS[index],delta=values[a]===undefined?0:Number(fromWire(a,values[a]!))-Number(fromWire(a,before[a]!));
+   return {hz,measured:db-analysis.baseline,target:desired,estimated:db-analysis.baseline+delta};
+  });
+ }
+ if(!Object.keys(values).length)return {token:null,changes:[],roomEstimate};
+ return {...await control.preview(values,true,guards,'mix-preparation-backup',before),roomEstimate};
 }
 export async function previewMixPreparationBackup(xr:XR18,control:ConsoleControl,library:LibraryStore,id:string){
  const entry=library.get(id);

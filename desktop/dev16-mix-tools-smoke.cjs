@@ -44,7 +44,9 @@ module.exports=async(win,wait,screenshot)=>{
  await confirm();
  if(await read('/ch/01/preamp/hpon')!==1||await read('/ch/02/preamp/hpon')!==1||await read('/ch/03/preamp/hpon')!==0)throw Error('Batch edit affected the wrong channels');
  await button('.batch-edit','Mémoriser un lien de pistes');
- await button('.parameter-links-switch','Activer les liens de pistes');
+ await js(`window.__bp16Confirm=window.confirm;window.confirm=()=>true;true`);
+ try{await button('.parameter-links-switch','Activer les liens de pistes');await wait(`!!document.querySelector('.parameter-links-switch button[aria-pressed=true]')`);}
+ finally{await js(`window.confirm=window.__bp16Confirm;delete window.__bp16Confirm`);}
  await button('.xs2-tabs','Canal');
  await wait(`!!document.querySelector('.parameter-links-switch button[aria-pressed=true]')`);
  await button('.visual-bank-select','Canaux');
@@ -77,7 +79,9 @@ module.exports=async(win,wait,screenshot)=>{
  await js(`document.querySelector('.scope-matrix').scrollIntoView({block:'center'})`);
  await shot('scene-scope.png');
 
- await button('.topbar','MIDI');
+ await js("document.querySelector('.quick-tools:not([open]) summary')?.click()");
+ await wait("!!document.querySelector('.quick-tools[open] .open-midi')?.getClientRects().length");
+ await button('.quick-tools','MIDI');
  await button('.xs2-tabs','Analyse');
  await js(`document.querySelector('.mix-preparation summary').click()`);
  await js(`(()=>{const curve=[40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000].map(f=>f+' '+(f===1000?88:76)+' 0').join(String.fromCharCode(10));

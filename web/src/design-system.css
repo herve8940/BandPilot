@@ -1,9 +1,7 @@
 /* Shared BandPilot visual language, based on the channel-processing console.
    Applied last in both entry points; semantic audio/status colours remain distinct. */
 html:root{
- --bp-bg:#0b1121;--bp-panel:#141d31;--bp-panel-raised:#1c2840;--bp-line:#374665;
- --bp-text:#e5ebfa;--bp-muted:#a6b5cf;--bp-purple:#a778fa;--bp-cyan:#35d3e9;
- --bp-selected:linear-gradient(135deg,#8152e5,#49328c);--bp-card:linear-gradient(150deg,#19233a,#10182a);
+ --bp-cyan:#35d3e9;
  --bg:var(--bp-bg);--surface:var(--bp-panel);--surface-2:var(--bp-panel-raised);--surface-3:#25324b;
  --line:var(--bp-line);--line-2:#4b5c7b;--text:var(--bp-text);--text-2:var(--bp-muted);--text-3:#8d9db9;
  --accent:var(--bp-purple);--accent-2:#835be3;--accent-soft:#a778fa22;--radius:10px;--radius-lg:16px;

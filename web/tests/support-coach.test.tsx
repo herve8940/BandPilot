@@ -4,7 +4,7 @@ import {createRequire} from 'node:module';
 const {JSDOM}=createRequire(import.meta.url)('jsdom');
 async function fixture(){
  const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost'}),saved=new Map();
- for(const [k,v] of Object.entries({window:dom.window,document:dom.window.document,localStorage:dom.window.localStorage,navigator:dom.window.navigator,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true,requestAnimationFrame:(fn:any)=>setTimeout(fn,0),fetch:async(path:string)=>new Response(JSON.stringify(path==='/api/auth'?{user:{role:'admin'}}:{version:'2.3.2',build:'fixture'}))})){saved.set(k,Object.getOwnPropertyDescriptor(globalThis,k));Object.defineProperty(globalThis,k,{value:v,writable:true,configurable:true});}
+ for(const [k,v] of Object.entries({window:dom.window,document:dom.window.document,localStorage:dom.window.localStorage,sessionStorage:dom.window.sessionStorage,navigator:dom.window.navigator,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true,requestAnimationFrame:(fn:any)=>setTimeout(fn,0),fetch:async(path:string)=>new Response(JSON.stringify(path==='/api/auth'?{user:{role:'admin'}}:{version:'2.3.2',build:'fixture'}))})){saved.set(k,Object.getOwnPropertyDescriptor(globalThis,k));Object.defineProperty(globalThis,k,{value:v,writable:true,configurable:true});}
  dom.window.HTMLDialogElement.prototype.showModal=function(){this.open=true;};dom.window.HTMLDialogElement.prototype.close=function(){this.open=false;};
  dom.window.HTMLElement.prototype.scrollIntoView=function(){};
  const React=await import('react');saved.set('React',Object.getOwnPropertyDescriptor(globalThis,'React'));Object.defineProperty(globalThis,'React',{value:React,configurable:true});
@@ -154,5 +154,137 @@ test('Android support shows logs, exports them and installs only after explicit 
   await f.click('Aide et incidents');assert.match(f.dom.window.document.body.textContent,/Autorise BandPilot/);
   await f.click('Afficher les logs');assert.match(f.dom.window.document.querySelector('pre').textContent,/android.engine_start/);
   await f.click('Exporter les logs');assert.equal(exports,1);assert.equal(installs,1);
+ }finally{await f.close();}
+});
+
+test('guided soundcheck measures the selected input in read-only mode and never applies the gain',async()=>{
+ const f=await fixture();
+ try{
+  const {SoundCoach}=await import('../src/SoundCoach');
+  const profile={version:1,inputs:[{channel:3,source:'bass-di',name:'Basse'}],completed:[]};
+  const requests:{path:string;body:any}[]=[];
+  globalThis.fetch=async(path:any,init:any)=>{
+   const body=JSON.parse(init?.body??'{}');requests.push({path,body});
+   const data=path==='/api/coach'?{role:'admin',profile,steps:[{id:'levels',title:'3. Niveaux',text:''}],sources:[],templates:[],symptoms:[],drumKit:[]}:
+    path==='/api/coach/calibration'?[]:path==='/api/coach/gain'?{report:{available:false,title:'Signal trop faible'},decision:null,proposal:null}:{};
+   return new Response(JSON.stringify(data));
+  };
+  await f.mount(<SoundCoach status={{mode:'real',connected:true,writesEnabled:false}} online meters={{channels:[],available:false,updatedAt:null}} onConnect={()=>{}} onMonitors={()=>{}} onExpert={()=>{}}/>);
+  assert.equal(requests.some(r=>r.path==='/api/coach/gain'),false);
+  await f.click('Lancer la mesure');
+  assert.deepEqual(requests.filter(r=>r.path==='/api/coach/gain').map(r=>r.body),[{channel:3}]);
+  assert.equal(requests.some(r=>r.path.endsWith('/apply')),false);
+  assert.match(f.dom.window.document.querySelector('.gain-result').textContent,/Signal trop faible/);
+ }finally{await f.close();}
+});
+
+test('a changed effect offers live readings and an explicit exit from the trial',async()=>{
+ const f=await fixture(),originalConfirm=globalThis.confirm;
+ try{
+  const {VocalAmbience}=await import('../src/VocalAmbience');
+  const conflict='L’ambiance utilisait Plate Reverb. La console utilise actuellement Room Reverb.';
+  let session:any={slot:1,phase:'trial',sameConsole:true,choice:{channel:1,ambience:'rock',doses:{1:-18}}};
+  const state=()=>({session,supported:true,voices:[{channel:1,name:'Micro 1',source:'lead-rock'}],monitors:[{bus:1,name:'Chant'}]});
+  const calls:string[]=[];
+  globalThis.fetch=async(path:any,init:any)=>{
+   if(init?.method!=='POST')return Response.json(state());
+   calls.push(path.split('/').at(-1));
+   if(path.endsWith('/keep')){
+    session={...session,conflict};
+    return Response.json({code:'ambience-conflict',error:conflict,state:state()},{status:409});
+   }
+   if(path.endsWith('/read-doses'))return Response.json({...state(),readings:{1:-13}});
+   assert.ok(path.endsWith('/archive'));assert.equal(JSON.parse(init.body).confirm,true);
+   session=null;return Response.json(state());
+  };
+  await f.mount(<VocalAmbience canApply simulation={false}/>);
+  await f.click('Garder cette ambiance');
+  const doc=f.dom.window.document;
+  assert.match(doc.body.textContent,/Plate Reverb.*Room Reverb/);
+  assert.doesNotMatch(doc.body.textContent,/Garder cette ambiance|Revenir avant l’essai/);
+  await f.click('Relire les dosages des musiciens');
+  assert.match(doc.body.textContent,/Niveaux actuels du retour d’effet.*Chant · -13.0 dB/);
+  globalThis.confirm=()=>false;await f.click('Terminer le suivi');
+  assert.deepEqual(calls,['keep','read-doses']);
+  globalThis.confirm=()=>true;await f.click('Terminer le suivi');
+  assert.deepEqual(calls,['keep','read-doses','archive']);
+  assert.equal(doc.querySelector('fieldset').disabled,false);
+ }finally{if(originalConfirm)globalThis.confirm=originalConfirm;else delete(globalThis as any).confirm;await f.close();}
+});
+
+test('Concert resumes the exact encore, opens its attached PDF and starts a reordered set at its first song',async()=>{
+ const f=await fixture();
+ try{
+  const {Concert}=await import('../src/show/Concert');
+  const intro={id:'a',title:'Intro',artist:'',bpm:null,hasPdf:true};
+  const final={id:'b',title:'Final',artist:'',bpm:null};
+  const sheets:string[]=[],commands:string[]=[];
+  globalThis.fetch=async(path,init)=>{
+   if(init?.method==='POST')commands.push(String(path));
+   return Response.json({bridge:'offline',tabs:[],transport:'idle'});
+  };
+  const render=(songs:typeof final[])=>f.mount(<Concert entries={songs.map((song,index)=>({song,index}))} onSetlist={()=>{}} onSheet={id=>sheets.push(id)}/>);
+  const text=(selector:string)=>f.dom.window.document.querySelector(selector)?.textContent;
+  await render([intro,final,intro]);
+  await f.click('Commencer le concert');
+  await f.click('Morceau suivant');
+  assert.equal(text('.concert-cue h1'),'Final');
+  await f.click('Morceau suivant');
+  await f.click('Ouvrir la fiche PDF');
+  assert.deepEqual(sheets,['a']);
+  await f.mount(null);
+  await render([intro,final,intro]);
+  assert.match(text('.concert-cue small'),/3 \/ 3/);
+  await f.click('Terminer le concert');
+  await render([final,intro]);
+  assert.equal(text('.concert-cue h1'),'Final');
+  assert.match(text('.concert-cue small'),/sélectionné · 1 \/ 2/);
+  assert.deepEqual(commands,[]);
+ }finally{await f.close();}
+});
+
+test('fresh soundcheck and monitor choices request a scoped preview and wait for confirmation',async()=>{
+ const f=await fixture();try{
+  const {SoundCoach}=await import('../src/SoundCoach');
+  const {SoundCoach:Engine}=await import('../../src/sound-coach');
+  const {XR18}=await import('../../src/xr18'),{ConsoleControl}=await import('../../src/console-control'),{LibraryStore}=await import('../../src/library-store');
+  const xr=new XR18({mode:'simulation',host:'127.0.0.1',port:10024,enableWrites:false,autoSync:false}),db=new LibraryStore(':memory:');
+  const {EarsShare}=await import('../../src/ears');
+  const phones=new EarsShare(':memory:',xr,()=>undefined,()=>null);
+  try{
+   const engine=new Engine(xr,new ConsoleControl(xr,db),db);
+   phones.create('Ancien',3);
+   engine.saveProfile({version:1,completed:[],inputs:[{channel:1,source:'lead-rock',name:'Voix'},{channel:4,source:'bass-di',name:'Basse'}],musicians:[{bus:1,role:'chant',name:'Voix',channels:[1]}]});
+   let writes=0;
+   globalThis.fetch=async(path:any,init:any)=>{
+    const data=JSON.parse(init?.body??'{}');let result:unknown={};
+    if(path==='/api/coach')result={...engine.catalog(),role:'admin'};
+    if(path==='/api/coach/profile')result=engine.saveProfile(data.profile);
+    if(path==='/api/coach/prepare')result=await engine.prepare(data.channel,data.resetUnused);
+    if(path==='/api/coach/ears')result=await engine.prepareEars(data.bus,data.resetUnused,phones);
+    if(path==='/api/coach/ears/share'){engine.saveProfile(data.profile);result=(await phones.prepareRoster(engine.profile().musicians??[])).commit();}
+    if(path==='/api/coach/apply'){writes++;result=await engine.apply(data.token,data.confirm);}
+    return new Response(JSON.stringify(result));
+   };
+   const render=async(step:string)=>{
+    f.dom.window.localStorage.setItem('xr18-coach-step',step);
+    await f.mount(<SoundCoach key={step} status={{mode:'simulation',connected:true,writesEnabled:false}} online meters={{channels:[],available:false,updatedAt:null}} onConnect={()=>{}} onMonitors={()=>{}} onExpert={()=>{}}/>);
+   };
+   await render('inputs');await f.click('Nouvelle balance avec ce groupe');
+   assert.match(f.dom.window.document.querySelector('dialog').textContent,/Entrées ramenées au silence · 2, 3, 5/);
+   await f.click('Annuler, ne rien changer');assert.equal(writes,0);
+   await render('ears');
+   await f.click('Enregistrer les musiciens et leurs QR');assert.deepEqual(phones.list().map(s=>s.name),['Voix']);assert.equal(writes,0);
+   const checkbox=f.dom.window.document.querySelector('.coach-section input[type=checkbox]');
+   assert.equal(checkbox.checked,false);await f.React.act(async()=>checkbox.click());
+   await f.click('Préparer les réglages');
+   assert.match(f.dom.window.document.querySelector('dialog').textContent,/Bus des musiciens · 1/);
+   assert.doesNotMatch(f.dom.window.document.querySelector('dialog').textContent,/Bus ramenés au silence/);
+   assert.match(f.dom.window.document.querySelector('dialog').textContent,/Le QR de ce retour/);
+   await f.click('Annuler, ne rien changer');await f.click('Appliquer les retours de tous (1)');
+   assert.match(f.dom.window.document.querySelector('dialog').textContent,/Bus ramenés au silence · 2, 3, 4, 5, 6/);
+   assert.match(f.dom.window.document.querySelector('dialog').textContent,/Les QR suivront la liste du groupe/);
+   assert.equal(writes,0);await f.click('Essayer en simulation');assert.equal(writes,1);
+  }finally{phones.close();xr.close();db.close();}
  }finally{await f.close();}
 });

@@ -1,3 +1,4 @@
+import {useStandView} from './StandView';
 import {RehearsalDesk} from './RehearsalDesk';
 import {tx, getLocale} from "../i18n";
 import {Workshop} from './Workshop';
@@ -18,23 +19,24 @@ export const needsBridge = (s: { alive: boolean; version?: string; bridgeCurrent
 export function BridgeInstall({ act, show }: { act: (p: string, d?: unknown) => Promise<unknown>; show: { alive: boolean; installed?: boolean; version?: string; bridgeCurrent?: string } }) {
   const [done, setDone] = useState(false);
   if (show.installed && !show.alive && !done) return <div className="xs2-card sh-install"><h3>{tx("Reaper ne répond pas")}</h3><p className="muted">{tx("Ouvre Reaper. S’il est déjà ouvert, regarde s’il affiche une fenêtre, puis ferme-la.")}</p></div>;
-  return <div className="xs2-card sh-install"><h3>{tx(show.version ? "Mettre à jour le pont Reaper" : "Relier BandPilot à Reaper")}</h3><p className="muted">{tx("Une seule fois : j’ajoute un petit script dans Reaper, qui sert à Rec, Stop et à l’affichage de tes morceaux. Redémarre ensuite Reaper.")}</p>
+  return <div className="xs2-card sh-install"><h3>{tx(show.version ? "Mettre à jour le pont Reaper" : "Relier BandPilot à Reaper")}</h3><p className="muted">{tx("Le pont permet de voir tes morceaux et de piloter la lecture. Redémarre REAPER après son installation.")}</p>
     <button type="button" className="xs2-btn primary" onClick={() => { if (confirm(tx("Ajouter le pont BandPilot au démarrage de Reaper ?"))) void act("/api/show/install", { confirm: true }).then(r => { if (r) setDone(true); }); }}>{tx("Installer le pont")}</button>
     {done && <p role="status">{tx("Installé. Redémarre Reaper.")}</p>}</div>;
 }
-export function Rehearse({onExpert}:{onExpert?:(channel:number)=>void}){
- const [mode,setMode]=useState<'tabs'|'band'>(()=>{try{return localStorage.getItem('xr18-rehearse')==='band'?'band':'tabs';}catch{return 'tabs';}});
- const [atelier,setAtelier]=useState(()=>{try{return sessionStorage.getItem('bandpilot-workshop-view')==='true';}catch{return false;}});
+export function Rehearse({onExpert,onSetlist,requestedSong=""}:{onSetlist?:()=>void;requestedSong?:string;onExpert?:(channel:number)=>void}){
+ const stand=useStandView();
+ const [mode,setMode]=useState<'tabs'|'band'>(()=>{if(requestedSong)return 'tabs';try{return localStorage.getItem('xr18-rehearse')==='band'?'band':'tabs';}catch{return 'tabs';}});
+ const [atelier,setAtelier]=useState(()=>{if(requestedSong)return false;try{return sessionStorage.getItem('bandpilot-workshop-view')==='true';}catch{return false;}});
  const go=(next:typeof mode)=>{setMode(next);setAtelier(false);try{localStorage.setItem('xr18-rehearse',next);sessionStorage.removeItem('bandpilot-workshop-view');}catch{/* preferences only */}};
  const workshop=()=>{setAtelier(!atelier);try{sessionStorage.setItem('bandpilot-workshop-view',String(!atelier));}catch{/* preferences only */}};
- return <section className="xs2 sh sh-rehearse" aria-label={tx('Répéter')}>
+ return <section className={`xs2 sh sh-rehearse${stand.active?" stand-view":""}`} aria-label={tx('Répéter')}>
   <div className="sh-head">
    <div className="sh-seg" role="group" aria-label={tx('Type de répétition')}>
     {([['tabs','Avec mes morceaux'],['band','Groupe seul']] as const).map(([key,label])=><button key={key} type="button" className={!atelier&&mode===key?'on':''} aria-pressed={!atelier&&mode===key} onClick={()=>go(key)}>{tx(label)}</button>)}
    </div>
-   <button type="button" className={`xs2-btn ${atelier?'primary':''}`} onClick={workshop}>{tx(atelier?'Revenir à la répétition':'Atelier du son')}</button>
+   <button type="button" className={`xs2-btn ${atelier?'primary':''}`} onClick={workshop}>{tx(atelier?'Revenir à la répétition':'Atelier du son')}</button>{mode==='tabs'&&!atelier&&onSetlist&&<button type="button" className="xs2-btn" onClick={onSetlist}>{tx('Préparer la setlist')}</button>}{stand.button}
   </div>
-  {mode==='tabs'&&!atelier?<RehearsalDesk/>:<LegacyRehearse key={mode} onExpert={onExpert} mode={mode==='band'?'band':'songs'} atelier={atelier}/>}
+  {mode==='tabs'&&!atelier?<RehearsalDesk requestedSong={requestedSong}/>:<LegacyRehearse key={mode} onExpert={onExpert} mode={mode==='band'?'band':'songs'} atelier={atelier}/>}
  </section>;
 }
 function LegacyRehearse({onExpert,mode,atelier}:{onExpert?:(channel:number)=>void;mode:'songs'|'band';atelier:boolean}){
@@ -85,13 +87,13 @@ function LegacyRehearse({onExpert,mode,atelier}:{onExpert?:(channel:number)=>voi
 
     {mode === "band" && !firstRec && !needsBridge(show) && <RecordingView embedded />}
         {needsBridge(show) ? <BridgeInstall act={act} show={show} /> : (mode === "songs" || firstRec) && <div className={`sh-grid ${mode === "band" ? "band" : ""}`}>
-      {mode === "songs" && <aside className="xs2-card sh-songs" aria-label={tx("Morceaux")}><h3>{tx(show.concert || "Morceaux")}</h3><div className="sh-song-list">{songs.length ? songs.map((s, i) => <button key={s.start} type="button" className={`sh-song ${s === song ? "on" : ""}`} disabled={busy} onClick={() => pick(i)}><b>{s.title}</b><small>{tx(clock(s.stop - s.start))}</small></button>) : <p className="muted">{tx("Ouvre un projet ReaCue dans Reaper.")}</p>}</div></aside>}
+      {mode === "songs" && <aside className="xs2-card sh-songs" aria-label={tx("Morceaux")}><h3>{tx(show.concert || "Morceaux")}</h3><div className="sh-song-list">{songs.length ? songs.map((s, i) => <button key={s.start} type="button" className={`sh-song ${s === song ? "on" : ""}`} disabled={busy} onClick={() => pick(i)}><b>{s.title}</b><small>{tx(clock(s.stop - s.start))}</small></button>) : <p className="muted">{tx("Ouvre un projet dans REAPER.")}</p>}</div></aside>}
       <main className="xs2-card sh-main"><Player show={show} band={mode === "band"} cursor={cursor} range={range} disabled={busy} onSeek={t => void act("/api/show/goto", { pos: t })} onTrack={onTrack} />
         <div className="sh-tools">{mode === "songs" && loop && !section && <button type="button" className="xs2-btn primary" disabled={busy} onClick={()=>void act("/api/show/loop",{on:false,project:show.project})}>{tx("Arrêter la boucle")}</button>}{mode === "songs" && section && <button type="button" className={`xs2-btn ${loop ? "primary" : ""}`} disabled={busy} onClick={() => void act("/api/show/loop", { project:show.project, on: !loop, start: section.start, stop: section.stop })}>{tx(loop ? "Arrêter la boucle" : "Boucler cette section")}</button>}</div></main>
       <aside className="sh-side">
-        {mode === "songs" && <div className="xs2-card"><h3>{tx("Qui est là aujourd’hui ?")}</h3><p className="muted">{tx("Les cases reflètent les pistes REC armées du projet ouvert. Cocher prépare l’enregistrement et coupe la piste ReaCue correspondante.")}</p>{plan?.tracks.filter(t => t.selected).map(t => <label key={t.id} className="sh-check"><input type="checkbox" disabled={busy} checked={(present ?? []).includes(t.id)} onChange={() => toggle(t.id)} /><span>{t.name}<small>{tx((present ?? []).includes(t.id) ? "Prêt à enregistrer" : "Absent")}</small></span></label>)}</div>}
+        {mode === "songs" && <div className="xs2-card"><h3>{tx("Qui est là aujourd’hui ?")}</h3><p className="muted">{tx("Les cases reflètent les pistes REC armées du projet ouvert. Cocher prépare l’enregistrement et coupe la piste d’accompagnement correspondante.")}</p>{plan?.tracks.filter(t => t.selected).map(t => <label key={t.id} className="sh-check"><input type="checkbox" disabled={busy} checked={(present ?? []).includes(t.id)} onChange={() => toggle(t.id)} /><span>{t.name}<small>{tx((present ?? []).includes(t.id) ? "Prêt à enregistrer" : "Absent")}</small></span></label>)}</div>}
         <div className="xs2-card"><h3>{tx("Prises")}</h3>{takes ? takeIndices.map(i => <button key={i} type="button" className={`sh-song ${i === activeTake && !original ? "on" : ""}`} disabled={busy} onClick={() => useTake(i)}><b>{tx("Prise ")}{tx(i + 1)}</b>{mode === "band" && items[i] && <small>{tx(clock(items[i]!.length))}</small>}</button>) : <p className="muted">{tx("Pas encore de prise.")}</p>}
-          {mode === "songs" && takes > 0 && <button type="button" className={`sh-song ${original ? "on" : ""}`} disabled={busy} onClick={() => { const on = !original; void act("/api/show/original", { on, project:show.project }); }}><b>{tx("Original ReaCue")}</b></button>}</div>
+          {mode === "songs" && takes > 0 && <button type="button" className={`sh-song ${original ? "on" : ""}`} disabled={busy} onClick={() => { const on = !original; void act("/api/show/original", { on, project:show.project }); }}><b>{tx("Original")}</b></button>}</div>
       </aside>
     </div>}
   </>}

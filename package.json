@@ -1,6 +1,6 @@
 {
   "name": "xr18-studio",
-  "version": "2.3.16",
+  "version": "3.0.0",
   "description": "BandPilot: free multilingual mixer control, guided soundchecks, PDF technical rider, stage plot and source ambience. Windows, macOS, Linux and standalone Android. REAPER on desktop; model-aware X-Air/M-Air support, partial X32.",
   "keywords": [
     "behringer",
@@ -61,11 +61,11 @@
     "desktop:package:dev:mac": "node scripts/package-dev-mac.cjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.0",
-    "better-sqlite3": "^12.11.1",
+    "better-sqlite3": "13.2.0",
     "qrcode": "^1.5.4",
     "ws": "^8.18.0"
   },
@@ -75,7 +75,7 @@
     "@types/qrcode": "^1.5.5",
     "@types/ws": "^8.5.0",
     "concurrently": "^9.1.2",
-    "electron": "^33.4.11",
+    "electron": "45.4.1",
     "electron-builder": "^25.1.8",
     "fengari-node-cli": "^0.1.0",
     "jsdom": "^26.1.0",
@@ -95,6 +95,9 @@
       "dist/shared/**/*",
       "integrations/**/*",
       "node_modules/**/*",
+      "!node_modules/better-sqlite3/{deps,src,build}/**/*",
+      "!node_modules/better-sqlite3/prebuilds/**",
+      "!node_modules/better-sqlite3/binding.gyp",
       "package.json",
       "!**/*.map",
       "THIRD_PARTY_NOTICES.txt",
@@ -109,14 +112,18 @@
     "asarUnpack": [
       "node_modules/better-sqlite3/**/*"
     ],
-    "npmRebuild": true,
+    "npmRebuild": false,
+    "afterPack": "scripts/verify-desktop-files.cjs",
     "win": {
+      "files": [{"from":"node_modules/better-sqlite3/prebuilds","to":"node_modules/better-sqlite3/prebuilds","filter":["win32-${arch}.node"]}],
       "target": [
         "nsis"
       ],
       "artifactName": "BandPilot-Windows-${version}.${ext}"
     },
     "mac": {
+      "minimumSystemVersion": "13.0",
+      "files": [{"from":"node_modules/better-sqlite3/prebuilds","to":"node_modules/better-sqlite3/prebuilds","filter":["darwin-${arch}.node"]}],
       "target": [
         "dmg",
         "zip"
@@ -135,6 +142,7 @@
       "sign": "scripts/sign-mac.cjs"
     },
     "linux": {
+      "files": [{"from":"node_modules/better-sqlite3/prebuilds","to":"node_modules/better-sqlite3/prebuilds","filter":["linux-${arch}.node","linuxmusl-${arch}.node"]}],
       "target": [
         "AppImage",
         "deb"

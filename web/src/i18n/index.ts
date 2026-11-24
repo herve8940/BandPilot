@@ -39,12 +39,12 @@ function makeCatalog(entries:Record<string,string>){
 
  return {catalog,cache,patterns};
 }
-const catalogs = Object.fromEntries(Object.entries(dictionaries).map(([lang,entries])=>[lang,makeCatalog(entries)])) as Record<Exclude<Language,'fr'>,ReturnType<typeof makeCatalog>>;
+const catalogs: Partial<Record<Exclude<Language,'fr'>,ReturnType<typeof makeCatalog>>> = {};
 
 /** Display only. Never translate OSC addresses, IDs, form values or user names. */
 export function translate(text: string, lang: Language): string {
   if (!isLanguage(lang) || lang === 'fr' || !text || !/[a-zÀ-ÿ]/i.test(text)) return text;
-  const {catalog,cache,patterns}=catalogs[lang];
+  const {catalog,cache,patterns} = catalogs[lang] ??= makeCatalog(dictionaries[lang]);
   const cached = cache.get(text);
   if (cached !== undefined) return cached;
   let result = catalog.get(normalize(text));

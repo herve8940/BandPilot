@@ -1,11 +1,10 @@
 -- XR18 Studio : pont fichier dans REAPER. Lit request.lua, écrit response.json dans <ressources>/XR18Studio.
--- Ne touche à aucun fichier de ReaCue : il lit seulement le fichier .concert.lua du projet ouvert.
 local r = reaper
 local SEP = package.config:sub(1, 1)
 local DIR = r.GetResourcePath() .. SEP .. "XR18Studio"
 r.RecursiveCreateDirectory(DIR, 0)
 local REQ, RES, BEAT = DIR .. SEP .. "request.lua", DIR .. SEP .. "response.json", DIR .. SEP .. "heartbeat.txt"
-local VERSION = "1.5.1"
+local VERSION = "1.5.2"
 
 local function jstr(s)
   return '"' .. tostring(s):gsub('[%z\1-\31\\"]', function(c)
@@ -37,7 +36,7 @@ local function read_file(path)
 end
 local function track_name(tr) local _, n = r.GetTrackName(tr); return n end
 
--- mêmes noms exacts que ReaCue : VOIX, CUES, CLICK et Mix ne sont jamais des instruments
+-- Rôles des pistes d’accompagnement : VOIX, CUES, CLICK et Mix ne sont jamais des instruments
 local ROLE_BY_NAME = { chant = "vocals", vocals = "vocals", batterie = "drums", drums = "drums", batt = "drums", basse = "bass", bass = "bass",
   guitares = "guitars", guitars = "guitars", guitare = "guitars", guitar = "guitars", ["guitare solo"] = "lead_guitar", ["lead guitar"] = "lead_guitar",
   ["lead guitars"] = "lead_guitar", claviers = "keys", keys = "keys", clavier = "keys", piano = "keys", synth = "keys", autres = "other", other = "other" }
@@ -51,15 +50,6 @@ local function find_track(name)
   for i = 0, r.CountTracks(0) - 1 do local t = r.GetTrack(0, i); if track_name(t) == name then return t end end
 end
 
-local function concert_of(project)
-  if project == "" then return nil end
-  local src = read_file((project:gsub("%.[Rr][Pp][Pp]$", "")) .. ".concert.lua")
-  if not src then return nil end
-  local chunk = load(src, "concert", "t", {})
-  if not chunk then return nil end
-  local ok, d = pcall(chunk)
-  if ok and type(d) == "table" and type(d.songs) == "table" and #d.songs > 0 then return d end
-end
 local function regions()
   local out, _, nm, nr = {}, r.CountProjectMarkers(0)
   for i = 0, nm + nr - 1 do
@@ -123,11 +113,10 @@ function H.state()
       mute = r.GetMediaTrackInfo_Value(tr, "B_MUTE") == 1, solo = r.GetMediaTrackInfo_Value(tr, "I_SOLO") ~= 0,
       armed = r.GetMediaTrackInfo_Value(tr, "I_RECARM") == 1, items = items_of(tr) }
   end)
-  local c, songs = concert_of(project), {}
-  if c then for i, s in ipairs(c.songs) do songs[i] = { title = s.title or s.name or ("Morceau " .. i), start = s.start, countin = s.countin or s.start, stop = s.stop } end end
+  local songs = {}
   local play = r.GetPlayState()
   local a, b = r.GetSet_LoopTimeRange(false, true, 0, 0, false)
-  return { version = VERSION, original = original_mixes[project] ~= nil, project = project, setlist = c and c.setlist or nil, concert = c and (c.name or "") or nil, songs = songs, regions = regions(), tracks = tracks,
+  return { version = VERSION, original = original_mixes[project] ~= nil, project = project, songs = songs, regions = regions(), tracks = tracks,
     pos = (play & 1) == 1 and r.GetPlayPosition() or r.GetCursorPosition(), playing = (play & 1) == 1, recording = (play & 4) == 4,
     loop = { on = r.GetSetRepeat(-1) == 1, start = a, stop = b }, length = r.GetProjectLength(0),
     audio = { inputs = r.GetNumAudioInputs(), rate = tonumber(select(2, r.GetAudioDeviceInfo("SRATE", ""))) or 0, device = select(2, r.GetAudioDeviceInfo("IDENT_IN", "")) or "" } }
@@ -215,7 +204,7 @@ function H.apply_mutes(a)
   end)
   return { ok = true }
 end
--- Ajoute les pistes REC manquantes en fin de projet, sans jamais toucher aux pistes ReaCue.
+-- Ajoute les pistes REC manquantes en fin de projet, sans jamais toucher aux pistes d’accompagnement.
 function H.apply_presence(a)
   editable(a)
   H.listen_original({on=false, project=a.project})

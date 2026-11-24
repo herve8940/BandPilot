@@ -23,3 +23,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+
+PDF.js — Mozilla and contributors, Apache License 2.0.
+https://github.com/mozilla/pdf.js
+The distribution includes the license in web-dist/licenses/PDF.js.txt (desktop)
+or runtime/web/licenses/PDF.js.txt (Android).

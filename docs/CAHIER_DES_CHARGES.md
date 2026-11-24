@@ -36,10 +36,10 @@ Une application de répétition et de pilotage de la Behringer X Air XR18, moder
 - Demander une confirmation explicite pour le 48 V, les modifications globales et les niveaux sensibles.
 - Les données OSC seules ne permettent pas une analyse acoustique du son : module audio séparé requis.
 
-## 7. ReaCue
-- Intégration future modulaire par API/événements.
-- Presets et changements par morceau/section, déclencheurs manuels/automatisés, transitions contrôlées.
-- Arbitrage des conflits entre gestes manuels et automatisations, arrêt d'urgence.
+## 7. Concert
+- Sélection des projets ouverts dans Répéter.
+- Ordre défini dans Setlist et suivi manuel au pupitre.
+- Lecture des fichiers sur action du musicien.
 
 ## 8. UX
 - React + TypeScript + Tailwind CSS + shadcn/ui.
@@ -67,7 +67,7 @@ Une application de répétition et de pilotage de la Behringer X Air XR18, moder
 2. Mixeur web + retours in-ear validés.
 3. Répétitions + setlists + snapshots opérationnels.
 4. MCP sécurisé testé.
-5. Adaptateur ReaCue testé.
+5. Parcours Répéter, Setlist et Concert testé.
 
 Critères transversaux : tests automatisés, documentation des commandes OSC, comparaison des états, sécurité auditive, compatibilité tactile, validation sur console réelle.
 

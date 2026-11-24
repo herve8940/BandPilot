@@ -31,7 +31,7 @@ export function PortableScenesPanel({entries,sources,admin,busy,canWrite,run,onP
  });
  return <section className="portable-scenes" aria-label={tx('Scènes portables')}>
   <header className="library-section-heading"><div><h3>{tx('Scènes portables')}</h3>
-   <p>{tx(PORTABLE_MODEL)} {tx('Transfère les noms, couleurs, niveaux, mutes, panoramas et EQ de pistes mono. Le format JSON peut être importé sur un autre BandPilot.')}</p></div></header>
+   <p>{tx(PORTABLE_MODEL)} {tx('Transfère les noms, couleurs, niveaux, mutes, panoramas et EQ de pistes mono ou de paires stéréo complètes. Le format JSON peut être importé sur un autre BandPilot.')}</p></div></header>
   {admin&&<fieldset className="scene-save feature-actions" disabled={busy}>
    <label>{tx('Nom de la scène')}<input value={name} maxLength={120} onChange={e=>setName(e.target.value)}/></label>
    <label>{tx('Source de la scène')}<select value={sourceId} onChange={e=>{setSourceId(e.target.value);setNativeSource('');}}>
@@ -74,6 +74,8 @@ function PortableMapping({entry,busy,canWrite,run,onPreview}:{entry:LibraryEntry
  },[model.id]);
  const channels=Object.entries(mapping).filter(([,target])=>target>0).map(([source,target])=>({source:Number(source),target}));
  const duplicate=new Set(channels.map(m=>m.target)).size!==channels.length;
+ const paired=(ch:number)=>scene.tracks.some(t=>t.channel===(ch%2?ch+1:ch-1)&&t.linked);
+ const assign=(source:number,target:number,linked:boolean)=>setMapping(old=>({...old,[source]:target,...(linked?{[source+1]:target?target+1:0}:{})}));
  const preview=()=>void run('portable-preview',async()=>{
   const plan=await presetApi<Omit<Plan,'token'|'title'|'explanation'|'inputs'>&{token:string|null}>(`/api/library/${entry.id}/preview`,{model:model.id,mapping:channels,sections});
   if(!plan.token)return plan.excluded?.length?'Les protections conservent les réglages concernés. Aucun changement à appliquer.':'Rien ne change dans la sélection. Aucun réglage envoyé.';
@@ -83,21 +85,21 @@ function PortableMapping({entry,busy,canWrite,run,onPreview}:{entry:LibraryEntry
  });
  return <section ref={panel} className="portable-scenes" aria-label={tx('Affecter les pistes')}>
   <h4>{entry.name} → {model.brand} {model.label}</h4>
-  <p>{tx('Associe les entrées que tu veux rappeler et coche les réglages à transférer. Les pistes stéréo liées demandent un rappel natif ou sélectif.')}</p>
+  <p>{tx('Associe les entrées et coche les réglages à transférer. Une paire stéréo doit rejoindre une paire déjà liée, en gardant gauche et droite. Les options de liaison restent inchangées.')}</p>
   <fieldset disabled={busy} className="feature-actions">
    <legend>{tx('Réglages à transférer')}</legend>
    {PORTABLE_SECTIONS.map(s=><label key={s} className="portable-toggle"><input type="checkbox" checked={sections.includes(s)} onChange={e=>setSections(e.target.checked?[...sections,s]:sections.filter(x=>x!==s))}/>{tx(PORTABLE_LABELS[s])}</label>)}
   </fieldset>
   <div className="feature-actions">
-   <button type="button" disabled={busy} onClick={()=>setMapping(Object.fromEntries(scene.tracks.filter(track=>!track.linked&&track.channel<=model.channels).map(track=>[track.channel,track.channel])))}>{tx('Garder les mêmes numéros')}</button>
+   <button type="button" disabled={busy} onClick={()=>setMapping(Object.fromEntries(scene.tracks.filter(track=>(!track.linked||paired(track.channel))&&track.channel<=model.channels).map(track=>[track.channel,track.channel])))}>{tx('Garder les mêmes numéros')}</button>
    <button type="button" disabled={busy||!channels.length} onClick={()=>setMapping({})}>{tx('Effacer les affectations')}</button>
   </div>
   <div className="portable-mapping">
-   {scene.tracks.map(track=><label key={track.channel}>
-    <span>{tx('Canal')} {track.channel}{track.name?' · '+track.name:''}</span>
-    {track.linked?<small>{tx('Piste stéréo liée')}</small>:<select value={mapping[track.channel]??0} disabled={busy} onChange={e=>setMapping({...mapping,[track.channel]:Number(e.target.value)})}>
+   {scene.tracks.filter(track=>!track.linked||!paired(track.channel)||track.channel%2===1).map(track=><label key={track.channel}>
+    <span>{tx('Canal')} {track.channel}{track.linked&&paired(track.channel)?' / '+(track.channel+1):''}{track.name?' · '+track.name:''}</span>
+    {track.linked&&!paired(track.channel)?<small>{tx('Paire stéréo incomplète : rappel indisponible.')}</small>:<select value={mapping[track.channel]??0} disabled={busy} onChange={e=>assign(track.channel,Number(e.target.value),track.linked)}>
      <option value={0}>{tx('Ignorer cette piste')}</option>
-     {Array.from({length:model.channels},(_,i)=><option key={i} value={i+1}>{tx('Canal')} {i+1}{targets[i]?.name?' · '+targets[i]!.name:''}</option>)}
+     {Array.from({length:model.channels},(_,i)=>i+1).filter(ch=>!track.linked||ch%2===1&&ch<model.channels).map(ch=><option key={ch} value={ch}>{tx('Canal')} {ch}{track.linked?' / '+(ch+1):''}{targets[ch-1]?.name?' · '+targets[ch-1]!.name:''}</option>)}
     </select>}
    </label>)}
   </div>

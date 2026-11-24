@@ -82,8 +82,8 @@ export function patchSignature(profile:PatchProfile){
 
 export type PersonalPatchInput=TechInput&{channel:number;name:string};
 
-export function personalPatch(profile:PatchProfile,bus:number,name:string):PersonalPatchInput[]{
- const musician=profile.musicians?.find(m=>m.bus===bus&&m.name===name);
+export function personalPatch(profile:PatchProfile,bus:number,name:string,stereo=false):PersonalPatchInput[]{
+ const musician=profile.musicians?.find(m=>(m.bus===bus||(stereo&&m.bus===bus+1))&&m.name.trim()===name.trim());
  return musician?profile.inputs.filter(i=>musician.channels.includes(i.channel)).sort((a,b)=>a.channel-b.channel)
   .map(i=>({channel:i.channel,name:i.name,...profile.tech?.inputs?.[i.channel]})):[];
 }

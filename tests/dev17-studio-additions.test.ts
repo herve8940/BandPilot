@@ -73,7 +73,7 @@ test('XR18 portable capture and legacy conversion recall to MR12 with explicit m
   const selection={model:'MR12',mapping:[{source:1,target:3}],sections:['eq','levels','labels']};
   const prepare=(body:Record<string,unknown>)=>previewPortable(dest.mixer,dest.control,dest.library,scene,body);
   await assert.rejects(prepare({...selection,mapping:[{source:1,target:13}]}),/destinations/);
-  await assert.rejects(prepare({...selection,mapping:[{source:15,target:3}]}),/indépendantes/);
+  await assert.rejects(prepare({...selection,mapping:[{source:15,target:3}]}),/paire stéréo/);
   await assert.rejects(prepare({...selection,mapping:[{source:1,target:3},{source:2,target:3}]}),/destinations/);
   const plan=await prepare(selection);
   assert.equal(await dest.get('/ch/03/mix/pan'),0);
@@ -89,7 +89,7 @@ test('XR18 portable capture and legacy conversion recall to MR12 with explicit m
   assert.equal(await dest.get('/ch/01/config/name'),before.values['/ch/01/config/name']);
   const backup=dest.library.get(result.backupId);
   await dest.set('/config/chlink/3-4',1);
-  await assert.rejects(previewPortableBackup(dest.mixer,dest.control,dest.library,backup),/indépendantes/);
+  await assert.rejects(previewPortableBackup(dest.mixer,dest.control,dest.library,backup),/paire stéréo/);
   await dest.set('/config/chlink/3-4',0);
   await dest.set('/ch/03/config/insrc',4);
   await assert.rejects(previewPortableBackup(dest.mixer,dest.control,dest.library,backup),/sources ont changé/);

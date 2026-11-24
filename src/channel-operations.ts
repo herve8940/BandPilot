@@ -1,4 +1,4 @@
-import {BATCH_SETTINGS,batchPath,type BatchSetting} from '../shared/batch-edit.js';
+import {BATCH_SETTINGS,batchPath,batchUsesBand,type BatchSetting} from '../shared/batch-edit.js';
 import {groupSelection} from '../shared/adjustment-group.js';
 import type {XR18} from './xr18.js';
 import type {ConsoleControl} from './console-control.js';
@@ -143,7 +143,7 @@ function assertGroupSendLevels(guards:Record<string,Value>){
   if(Object.entries(guards).some(([a,v])=>/\/mix\/\d{2}\/tap$/.test(a)&&v===5))throw Error('Cet envoi utilise le mode sous-groupe. Choisis un retour avec un niveau d’envoi réglable.');
 }
 
-export async function previewBatchEdit(xr:XR18,control:ConsoleControl,input:unknown){
+export async function previewBatchEdit(xr:XR18,control:ConsoleControl,input:unknown,relativeTo?:number){
   available(xr);
   const request=input as {model:string;channels:number[];setting:BatchSetting;bus?:number;band?:number;value:number;wire?:boolean};
   if(request?.model!==xr.model().id||!Object.hasOwn(BATCH_SETTINGS,request.setting))throw Error('Sélection de modification multiple invalide.');
@@ -159,7 +159,7 @@ export async function previewBatchEdit(xr:XR18,control:ConsoleControl,input:unkn
     buses=guards[link]===1?[busPairStart(bus),busPairStart(bus)+1]:[bus];
   }
   const band=request.band??1;
-  if(request.setting==='eqGain'&&(!Number.isInteger(band)||band<1||band>4))throw Error('Choisis une bande EQ de 1 à 4.');
+  if(batchUsesBand(request.setting)&&(!Number.isInteger(band)||band<1||band>4))throw Error('Choisis une bande EQ de 1 à 4.');
   const values:Record<string,Value>={};
   for(const channel of channels)for(const bus of buses){
     const address=channelPrefix(channel)+batchPath(request.setting,bus,band);
@@ -168,6 +168,15 @@ export async function previewBatchEdit(xr:XR18,control:ConsoleControl,input:unkn
     const display=request.wire?Number(fromWire(address,validateWire(address,request.value))):request.value;
     if(display<setting.min||display>setting.max)throw Error('Sélection de modification multiple invalide.');
     values[address]=request.wire?request.value:toWire(address,display);
+  }
+  if(relativeTo!==undefined){
+    if(!request.wire||!channels.includes(relativeTo)||!['eqGain','eqFrequency','eqQ','gateThreshold','compressorThreshold','hpf','pan'].includes(request.setting))throw Error('Sélection de modification multiple invalide.');
+    const origin=channelPrefix(relativeTo)+batchPath(request.setting,1,band);
+    // A common normalized displacement preserves dB differences and frequency ratios.
+    // Stop the whole group at the first limit so individual offsets survive the gesture.
+    const initial=Object.values(before).map(Number);
+    const delta=Math.max(-Math.min(...initial),Math.min(1-Math.max(...initial),request.value-Number(before[origin])));
+    for(const address of Object.keys(values))values[address]=Math.min(1,Math.max(0,Number(before[address])+delta));
   }
   const plan=await previewChannelOperation(xr,control,values,guards,before);
   reader.check();

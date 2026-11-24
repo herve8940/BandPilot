@@ -1,3 +1,4 @@
+import {ParameterLinks} from './parameter-links.js';
 import {capturePortable,portableFromEntry,previewPortable,previewPortableBackup} from './portable-scenes.js';
 import {validatePortableScene} from '../shared/portable-scene.js';
 import {previewGainCompensation,previewRoomEq,previewMixPreparationBackup} from './mix-preparation.js';
@@ -26,13 +27,14 @@ export class StudioApi {
  private sceneRecall:SceneRecall;
  private midiScenes:MidiScenes;
  private liveGroups:LiveGroups;
+ private parameterLinks:ParameterLinks;
  private outputRecall:OutputSceneRecall;
  private commands:ConsoleCommands;
  private commandControl:CommandControl;
- constructor(private xr:XR18,private access:Access,private library:LibraryStore,private show:ShowControl,private patchSignature?:()=>string){this.commands=new ConsoleCommands(xr,show.console,library);this.outputRecall=new OutputSceneRecall(xr,show.console,library);this.liveGroups=new LiveGroups(xr,show.console,library);this.fxPresets=new FxPresets(xr,show.console,library,fx=>show.rememberFx(fx));this.nativeScenes=new MixerSync(xr,show.console,library);this.sceneRecall=new SceneRecall(xr,show.console,library);this.midiScenes=new MidiScenes(xr,library,this.sceneRecall);this.commandControl=new CommandControl(xr,show.console,library,Date.now,this.midiScenes);}
+ constructor(private xr:XR18,private access:Access,private library:LibraryStore,private show:ShowControl,private patchSignature?:()=>string){this.parameterLinks=new ParameterLinks(xr,show.console,library);this.commands=new ConsoleCommands(xr,show.console,library);this.outputRecall=new OutputSceneRecall(xr,show.console,library);this.liveGroups=new LiveGroups(xr,show.console,library);this.fxPresets=new FxPresets(xr,show.console,library,fx=>show.rememberFx(fx));this.nativeScenes=new MixerSync(xr,show.console,library);this.sceneRecall=new SceneRecall(xr,show.console,library);this.midiScenes=new MidiScenes(xr,library,this.sceneRecall);this.commandControl=new CommandControl(xr,show.console,library,Date.now,this.midiScenes);}
  async handle(req:IncomingMessage,res:ServerResponse,path:string,user:User){
  const send=(data:unknown)=>res.end(JSON.stringify(data));
- if(!/^\/api\/(users|audit|library|reacue|monitor)(\/|$)/.test(path))return false;
+ if(!/^\/api\/(users|audit|library|monitor)(\/|$)/.test(path))return false;
  try{
   if(path==='/api/users'&&req.method==='GET'){send(this.access.list());return true;}
   if(path==='/api/users'&&req.method==='POST'){const d=await body(req);send(this.access.create(d.name,d.password,d.role,d.buses));return true;}
@@ -41,7 +43,7 @@ export class StudioApi {
   if(account&&req.method==='DELETE'){send(this.access.remove(account[1]!));return true;}
   if(path==='/api/audit'&&req.method==='GET'){send(this.access.audit());return true;}
   if(path==='/api/library'&&req.method==='GET'){const signature=this.patchSignature?.();
-   send(['scene','channel-preset','fx','cue','native-scene','fx-backup','parameter-backup','scene-recall-backup','output-recall-backup','channel-operation-backup','mix-preparation-backup','portable-scene','portable-scene-backup','balance-sheet'].flatMap(k=>this.library.list(k)).map(entry=>{
+   send(['scene','channel-preset','fx','native-scene','fx-backup','parameter-backup','scene-recall-backup','output-recall-backup','channel-operation-backup','mix-preparation-backup','portable-scene','portable-scene-backup','balance-sheet'].flatMap(k=>this.library.list(k)).map(entry=>{
     if(entry.kind!=='balance-sheet')return entry;
     const {patchSignature,...data}=entry.data as {patchSignature?:string;sceneId:string;notes:string;updatedAt:string};
     return {...entry,data:{...data,patchChanged:!!patchSignature&&signature!==patchSignature}};
@@ -61,7 +63,7 @@ export class StudioApi {
    const id=outputRecall[1]!;
    if(req.method==='GET'&&outputRecall[2]==='options')send(this.outputRecall.options(id));
    else if(req.method==='POST'){const d=await body(req);if(outputRecall[2]==='preview')send(this.library.get(id).kind==='output-recall-backup'?await this.outputRecall.backup(id):await this.outputRecall.preview(id,d.scope));
-    else if(outputRecall[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.outputRecall.apply(id,d.token,()=>this.show.manualOverride()));}else throw Error('Méthode non autorisée');
+    else if(outputRecall[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.outputRecall.apply(id,d.token));}else throw Error('Méthode non autorisée');
    }else throw Error('Méthode non autorisée');return true;
   }
   if(path==='/api/library/scene-protections'){
@@ -77,8 +79,8 @@ export class StudioApi {
    if(user.role!=='admin'||req.method!=='POST')throw Error('Accès administrateur requis');
    const d=await body(req);
    if(path.endsWith('/prepare'))send(await this.commandControl.prepare(user.id,d));
-   else if(path.endsWith('/arm')){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.commandControl.arm(user.id,d.token,()=>this.show.manualOverride()));}
-   else if(path.endsWith('/pulse'))send(await this.commandControl.pulse(user.id,d,()=>this.show.manualOverride()));
+   else if(path.endsWith('/arm')){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.commandControl.arm(user.id,d.token));}
+   else if(path.endsWith('/pulse'))send(await this.commandControl.pulse(user.id,d));
    else if(path.endsWith('/stop'))send(this.commandControl.stop(user.id,d.token));
    else throw Error('Méthode non autorisée');return true;
   }
@@ -101,7 +103,7 @@ export class StudioApi {
    if(user.role!=='admin')throw Error('Accès administrateur requis');
    if(req.method==='DELETE'&&!command[2])send({ok:this.commands.remove(command[1]!)});
    else if(req.method==='POST'&&command[2]==='preview')send(await this.commands.preview(command[1]!));
-   else if(req.method==='POST'&&command[2]==='apply'){const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');send(await this.commands.apply(command[1]!,d.token,()=>this.show.manualOverride()));}
+   else if(req.method==='POST'&&command[2]==='apply'){const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');send(await this.commands.apply(command[1]!,d.token));}
    else throw Error('Méthode non autorisée');return true;
   }
   if(path==='/api/library/convert-channel'&&req.method==='POST'){
@@ -143,7 +145,6 @@ export class StudioApi {
     value={sceneId:scene.id,notes:v.notes,updatedAt:new Date().toISOString(),patchSignature:this.patchSignature?.()};
     if(existing){this.library.update(existing.id,value);send(this.library.get(existing.id));return true;}
    }
-   else if(d.kind==='cue'){const v=d.data as Record<string,unknown>;if(!v||typeof v.songId!=='string'||!v.songId.trim()||v.songId.length>120||typeof v.section!=='string'||!v.section.trim()||v.section.length>120||typeof v.targetId!=='string')throw Error('Morceau, section et cible requis');const target=this.library.get(v.targetId);if(!['scene','fx'].includes(target.kind))throw Error('Cible non rappelable');if(this.library.list('cue').some(e=>{const x=e.data as Record<string,unknown>;return x.songId===v.songId&&x.section===v.section;}))throw Error('Association déjà existante');value={songId:v.songId,section:v.section,targetId:v.targetId};}
    else throw Error('Type inconnu');
    if(d.kind==='scene'&&d.excludePhantom===true&&(value as {version?:number}).version===2){const scene=value as {values:Record<string,unknown>};for(const a of Object.keys(scene.values))if(a.endsWith('/phantom'))delete scene.values[a];}
    send(this.library.save(d.kind as string,d.name,value));return true;
@@ -153,7 +154,7 @@ export class StudioApi {
    send(await this.fxPresets.preview('edit',d.data,undefined,d.expected));return true;
   }
   if(path==='/api/library/fx-edit/apply'&&req.method==='POST'){
-   const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');this.show.manualOverride();send(await this.fxPresets.apply('edit',d.token));return true;
+   const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');send(await this.fxPresets.apply('edit',d.token));return true;
   }
   const recallScope=/^\/api\/library\/([a-f0-9-]{36})\/recall-scope\/(inputs|outputs)$/.exec(path);
   if(recallScope){
@@ -174,17 +175,35 @@ export class StudioApi {
   if(selective&&req.method==='POST'){
    const d=await body(req);
    if(selective[2]==='preview')send(await this.sceneRecall.preview(selective[1]!,d.scope));
-   else if(selective[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');this.show.manualOverride();send(await this.sceneRecall.apply(selective[1]!,d.token,d.confirm));}
+   else if(selective[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.sceneRecall.apply(selective[1]!,d.token,d.confirm));}
    else throw Error('Méthode non autorisée');
    return true;
   }
   const item=/^\/api\/library\/([a-f0-9-]+)(?:\/(preview|apply))?$/.exec(path);
+  if(path==='/api/library/parameter-links'){
+   if(user.role!=='admin')throw Error('Accès administrateur requis');
+   if(req.method==='GET')send(this.library.parameterLinks(this.xr.model().id));
+   else if(req.method==='POST'){const d=await body(req);if(d.model!==this.xr.model().id)throw Error('Connexion modifiée');send(this.library.saveParameterLinks(d));}
+   else throw Error('Méthode non autorisée');
+   return true;
+  }
+  if(path.startsWith('/api/library/parameter-links/')){
+   if(user.role!=='admin'||req.method!=='POST')throw Error('Accès administrateur requis');
+   const d=await body(req);
+   if(path.endsWith('/start')){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.parameterLinks.start(user.id,d));}
+   else if(path.endsWith('/move'))send(await this.parameterLinks.move(user.id,d));
+   else if(path.endsWith('/pulse'))send(this.parameterLinks.pulse(user.id,d.token));
+   else if(path.endsWith('/stop'))send(this.parameterLinks.stop(user.id,d.token));
+   else throw Error('Méthode non autorisée');
+   return true;
+  }
   if(path.startsWith('/api/library/live-group/')){
    if(user.role!=='admin'||req.method!=='POST')throw Error('Accès administrateur requis');
    const d=await body(req);
-   if(path.endsWith('/start')){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.liveGroups.start(user.id,d,()=>this.show.manualOverride()));}
-   else if(path.endsWith('/move'))send(await this.liveGroups.move(user.id,d,()=>this.show.manualOverride()));
+   if(path.endsWith('/start')){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.liveGroups.start(user.id,d));}
+   else if(path.endsWith('/move'))send(await this.liveGroups.move(user.id,d));
    else if(path.endsWith('/stop'))send(this.liveGroups.stop(user.id,d.token));
+   else if(path.endsWith('/pulse'))send(this.liveGroups.pulse(user.id,d.token));
    else throw Error('Méthode non autorisée');
    return true;
   }
@@ -203,14 +222,14 @@ export class StudioApi {
    if(item[2]==='preview')send(entry.kind==='portable-scene'?await previewPortable(this.xr,this.show.console,this.library,entry,d):await previewPortableBackup(this.xr,this.show.console,this.library,entry));
    else{
     if(item[2]!=='apply'||d.confirm!==true)throw Error('Confirmation requise');
-    this.show.manualOverride();send(await this.show.console.apply(d.token));
+    send(await this.show.console.apply(d.token));
    }
    return true;
   }
   if(item&&req.method==='POST'&&this.library.get(item[1]!).kind==='mix-preparation-backup'){
    const d=await body(req);
    if(item[2]==='preview')send(await previewMixPreparationBackup(this.xr,this.show.console,this.library,item[1]!));
-   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');this.show.manualOverride();send(await this.show.console.apply(d.token));}
+   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.show.console.apply(d.token));}
    else throw Error('Méthode non autorisée');
    return true;
   }
@@ -221,52 +240,49 @@ export class StudioApi {
   }
   if(path==='/api/library/group-mute/preview'&&req.method==='POST'){if(user.role!=='admin')throw Error('Accès administrateur requis');send(await previewGroupMute(this.xr,this.show.console,await body(req)));return true;}
   if(path==='/api/library/group-adjust/preview'&&req.method==='POST'){send(await previewGroupedAdjustment(this.xr,this.show.console,await body(req)));return true;}
-  if(path==='/api/library/group-adjust/apply'&&req.method==='POST'){const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');this.show.manualOverride();send(await this.show.console.apply(d.token));return true;}
+  if(path==='/api/library/group-adjust/apply'&&req.method==='POST'){const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');send(await this.show.console.apply(d.token));return true;}
   if(item&&req.method==='POST'&&this.library.get(item[1]!).kind==='channel-operation-backup'){
    const d=await body(req);
    if(item[2]==='preview')send(await previewChannelBackup(this.xr,this.show.console,this.library,item[1]!));
-   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');this.show.manualOverride();send(await this.show.console.apply(d.token));}
+   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.show.console.apply(d.token));}
    else throw Error('Méthode non autorisée');
    return true;
   }
   if(item&&req.method==='POST'&&this.library.get(item[1]!).kind==='scene-recall-backup'){
    const d=await body(req);
    if(item[2]==='preview')send(await this.sceneRecall.previewBackup(item[1]!));
-   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');this.show.manualOverride();send(await this.sceneRecall.apply(item[1]!,d.token,d.confirm));}
+   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.sceneRecall.apply(item[1]!,d.token,d.confirm));}
    else throw Error('Méthode non autorisée');
    return true;
   }
   if(item&&req.method==='POST'&&this.library.get(item[1]!).kind==='native-scene'){
    const d=await body(req);
    if(item[2]==='preview')send(await this.nativeScenes.preview(item[1]!,false));
-   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');this.show.manualOverride();send(await this.nativeScenes.apply(d.token,true,false,item[1]!));}
+   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.nativeScenes.apply(d.token,true,false,item[1]!));}
    else throw Error('Méthode non autorisée');
    return true;
   }
   if(item&&req.method==='POST'&&['fx','fx-backup'].includes(this.library.get(item[1]!).kind)){
    const entry=this.library.get(item[1]!),d=await body(req);
    if(item[2]==='preview')send(await this.fxPresets.preview(entry.id,entry.data,d.slot));
-   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');this.show.manualOverride();send(await this.fxPresets.apply(entry.id,d.token));}
+   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.fxPresets.apply(entry.id,d.token));}
    else throw Error('Méthode non autorisée');
    return true;
   }
   if(item&&req.method==='POST'&&this.library.get(item[1]!).kind==='channel-preset'){
    const entry=this.library.get(item[1]!),d=await body(req);
    if(item[2]==='preview')send(await previewChannelPreset(this.xr,this.show.console,entry.data,d.channel,d.sections));
-   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');this.show.manualOverride();send(await this.show.console.apply(d.token));}
+   else if(item[2]==='apply'){if(d.confirm!==true)throw Error('Confirmation requise');send(await this.show.console.apply(d.token));}
    else throw Error('Méthode non autorisée');
    return true;
   }
-  if(item){const id=item[1]!;if(req.method==='DELETE'&&!item[2]){send({ok:this.library.delete(id)});return true;}if(req.method==='GET'&&!item[2]){send(this.library.get(id));return true;}if(req.method==='POST'&&item[2]==='preview'){const d=await body(req);const entry=this.library.get(id);send(entry.kind==='parameter-backup'?await this.show.console.preview(entry.data,true):this.show.preview(id,d.excludePhantom===true));return true;}if(req.method==='POST'&&item[2]==='apply'){const d=await body(req);this.show.manualOverride();if(d.confirm!==true)throw Error('Confirmation requise');send(this.library.get(id).kind==='parameter-backup'?await this.show.console.apply(d.token,d.allowPhantom===true):await this.show.apply(id,d.token,d.confirm,d.allowPhantom));return true;}}
-  if(path==='/api/reacue'&&req.method==='GET'){send(this.show.state());return true;}
-  if(path==='/api/reacue/arm'&&req.method==='POST'){const d=await body(req);if(typeof d.armed!=='boolean'||d.confirm!==true)throw Error('Confirmation requise');send(this.show.arm(d.armed));return true;}
-  if(path==='/api/reacue/event'&&req.method==='POST'){send(await this.show.event(await body(req)));return true;}
+  if(item){const id=item[1]!;if(req.method==='DELETE'&&!item[2]){send({ok:this.library.delete(id)});return true;}if(req.method==='GET'&&!item[2]){send(this.library.get(id));return true;}if(req.method==='POST'&&item[2]==='preview'){const d=await body(req);const entry=this.library.get(id);send(entry.kind==='parameter-backup'?await this.show.console.preview(entry.data,true):this.show.preview(id,d.excludePhantom===true));return true;}if(req.method==='POST'&&item[2]==='apply'){const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');send(this.library.get(id).kind==='parameter-backup'?await this.show.console.apply(d.token,d.allowPhantom===true):await this.show.apply(id,d.token,d.confirm,d.allowPhantom));return true;}}
   if(path==='/api/monitor/copy/preview'&&req.method==='POST'){const d=await body(req);send(await previewMonitorCopy(this.xr,this.show.console,d.source,d.target));return true;}
-  if(path==='/api/monitor/copy/apply'&&req.method==='POST'){const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');this.show.manualOverride();send(await this.show.console.apply(d.token));return true;}
+  if(path==='/api/monitor/copy/apply'&&req.method==='POST'){const d=await body(req);if(d.confirm!==true)throw Error('Confirmation requise');send(await this.show.console.apply(d.token));return true;}
   const readMonitor=/^\/api\/monitor\/([1-6])$/.exec(path);
   if(readMonitor&&req.method==='GET'){const bus=Number(readMonitor[1]);if(bus>this.xr.model().monitorOutputs)throw Error('Sortie de retour absente sur ce modèle');const levels=[];for(let channel=1;channel<=this.xr.model().channels;channel++)levels.push(await this.xr.readParameter(`/ch/${String(channel).padStart(2,'0')}/mix/${String(bus).padStart(2,'0')}/level`));send({bus,levels});return true;}
   const monitor=/^\/api\/monitor\/([1-6])\/channels\/(\d+)$/.exec(path);
-  if(monitor&&req.method==='POST'){if(Number(monitor[1])>this.xr.model().monitorOutputs)throw Error('Sortie de retour absente sur ce modèle');const d=await body(req);if(typeof d.value!=='number'||!Number.isFinite(d.value)||d.value<0||d.value>0.75||!Number.isInteger(Number(monitor[2]))||Number(monitor[2])<1||Number(monitor[2])>this.xr.model().channels)throw Error('Canal 1..16 et niveau 0..0,75 requis');const current=await this.xr.readParameter(`/ch/${String(Number(monitor[2])).padStart(2,'0')}/mix/${String(Number(monitor[1])).padStart(2,'0')}/level`);if(user.role==='musician'&&Math.abs(d.value-Number(current))>.1001)throw Error('Variation limitée à 0,10 par geste');this.show.manualOverride();await this.xr.setMonitor(Number(monitor[1]),Number(monitor[2]),d.value);send({ok:true,hardwareAcknowledged:false});return true;}
+  if(monitor&&req.method==='POST'){if(Number(monitor[1])>this.xr.model().monitorOutputs)throw Error('Sortie de retour absente sur ce modèle');const d=await body(req);if(typeof d.value!=='number'||!Number.isFinite(d.value)||d.value<0||d.value>0.75||!Number.isInteger(Number(monitor[2]))||Number(monitor[2])<1||Number(monitor[2])>this.xr.model().channels)throw Error('Canal 1..16 et niveau 0..0,75 requis');const current=await this.xr.readParameter(`/ch/${String(Number(monitor[2])).padStart(2,'0')}/mix/${String(Number(monitor[1])).padStart(2,'0')}/level`);if(user.role==='musician'&&Math.abs(d.value-Number(current))>.1001)throw Error('Variation limitée à 0,10 par geste');await this.xr.setMonitor(Number(monitor[1]),Number(monitor[2]),d.value);send({ok:true,hardwareAcknowledged:false});return true;}
   res.writeHead(405);send({error:'Méthode non autorisée'});
  }catch(e){const error=e as Error&{backupId?:string};res.writeHead(400);send({error:error.message,...(error.backupId?{backupId:error.backupId}:{})});}
  return true;

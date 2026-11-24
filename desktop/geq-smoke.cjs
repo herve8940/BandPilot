@@ -9,7 +9,7 @@ module.exports=async(win,wait,screenshot)=>{
  const initial=await api('/api/library/fx-edit/preview',{data:desired,expected:original});const setup=await api('/api/library/fx-edit/apply',{token:initial.token,confirm:true});
  const button=(scope,label)=>js(`[...document.querySelectorAll(${JSON.stringify(scope+' button')})].find(b=>b.textContent.trim()===${JSON.stringify(label)}).click()`);
  const input=(selector,value)=>js(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event(e.tagName==='SELECT'?'change':'input',{bubbles:true}));})()`);
- await button('.rail-pages','Console');await button('body','Expert');await wait(`!!document.querySelector('.xs2-tabs')`);await button('.xs2-tabs','Effets');await wait(`!!document.querySelector('.fx-editor')`);
+ await button('.subnav','Mixage');await button('body','Expert');await wait(`!!document.querySelector('.xs2-tabs')`);await button('.xs2-tabs','Effets');await wait(`!!document.querySelector('.fx-editor')`);
  await js(`document.querySelector('.fx-editor').closest('details').open=true`);await button('.fx-editor','Lire le slot');await wait(`document.querySelectorAll('.fx-geq input[type=range]').length===31`);
  await input('.fx-geq-faders label:nth-child(18) input','-4.5');await button('.fx-geq','Côté B (droite)');await input('.fx-geq-detail select','30');await input('.fx-geq-detail label:nth-of-type(2) input','-6');
  if(JSON.stringify(await api('/api/console/fx?slot=1'))!==JSON.stringify(desired))throw Error('GEQ draft wrote audio');

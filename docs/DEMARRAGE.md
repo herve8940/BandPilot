@@ -5,7 +5,7 @@
 # Démarrage du prototype OSC
 
 ## Pré-requis
-Node.js 20+ et npm. Aucun accès XR18 requis en mode simulation.
+Node.js 22.13+ et npm. Aucun accès XR18 requis en mode simulation.
 
 ## Simulation
 ```sh

@@ -1,3 +1,4 @@
+import {useAirStrips} from './model-strips';
 import {MeterDisplaySettings} from './meter-preferences';
 import {OutputEqMode,OutputGraphicEq} from './OutputGraphicEq';
 import {useEqSpectrum} from '../expert/EqSpectrum';
@@ -332,10 +333,17 @@ export function EqView(props: ViewProps) {
   if (!hasEq) return <NotAvailable>{tx("Pas d’égaliseur sur cette sortie.")}</NotAvailable>;
   const move = (e: ReactPointerEvent) => {
     if (drag.current === null || !canWrite || !svg.current) return;
-    const r = svg.current.getBoundingClientRect(), band = drag.current, b = `${p}/eq/${band + 1}`;
-    set(`${b}/f`, clamp01((e.clientX - r.left) / r.width));
-    const t = bands[band]!.type;
-    if (t !== 0 && t !== 5) set(`${b}/g`, clamp01(linInv(Math.round(Math.max(-15, Math.min(15, (EQ_H / 2 - (e.clientY - r.top) / r.height * EQ_H) / (EQ_H / 2) * 18)) * 4) / 4, -15, 15)));
+    const transform = svg.current.getScreenCTM();
+    if (!transform) return;
+    const point = transform.inverse().transformPoint({x:e.clientX,y:e.clientY});
+    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return;
+    const band = drag.current, base = `${p}/eq/${band + 1}`;
+    set(`${base}/f`, clamp01(point.x / EQ_W));
+    const type = bands[band]!.type;
+    if (type !== 0 && type !== 5) {
+      const db = Math.max(-15, Math.min(15, 18 - point.y / EQ_H * 36));
+      set(`${base}/g`, linInv(Math.round(db * 4) / 4, -15, 15));
+    }
   };
   const mode=output?<OutputEqMode {...props}/>:null;
   if(output&&![0,1,2].includes(Number(values[`${p}/eq/mode`])))return <div className="xm-eq">{mode}<p>{tx('Non reçu')}</p></div>;
@@ -343,8 +351,7 @@ export function EqView(props: ViewProps) {
   const names = count === 6 ? BAND_NAMES6 : BAND_NAMES4;
   return <div className="xm-eq">
     {mode}
-    {spectrum.controls}
-    <svg ref={svg} className={eqOn ? "xm-eq-graph" : "xm-eq-graph off"} viewBox={`0 0 ${EQ_W} ${EQ_H}`} onPointerMove={move} onPointerUp={() => { drag.current = null; }}>
+    <svg ref={svg} className={eqOn ? "xm-eq-graph" : "xm-eq-graph off"} viewBox={`0 0 ${EQ_W} ${EQ_H}`} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}>
       {[30, 50, 100, 200, 300, 500, 1000, 2000, 3000, 5000, 10000].map(f => <g key={f}><line x1={xOf(f)} x2={xOf(f)} y1={0} y2={EQ_H} className="xm-grid" /><text x={xOf(f) + 3} y={EQ_H - 5} className="xm-grid-label">{tx(formatHz(f))}</text></g>)}
       {[-12, -6, 0, 6, 12].map(d => <g key={d}><line x1={0} x2={EQ_W} y1={yOf(d)} y2={yOf(d)} className={d === 0 ? "xm-grid zero" : "xm-grid"} /><text x={4} y={yOf(d) - 3} className="xm-grid-label">{tx(d > 0 ? `+${d}` : d)}</text></g>)}
       {spectrum.overlay(EQ_W,EQ_H)}
@@ -377,6 +384,7 @@ export function EqView(props: ViewProps) {
         </div>
       </div>; })}
     </div>
+    {spectrum.controls}
   </div>;
 }
 
@@ -395,8 +403,8 @@ export function SendsView({ strip, values, set, canWrite }: ViewProps) {
     </div>;
   };
   return <div className="xm-sends-view">
-    <div className="xm-send-group"><h5>{tx("Retours (bus)")}</h5><div>{tx(BUSES.map((b, i) => col(i + 1, b, BUS_TINT[i]!)))}</div></div>
-    <div className="xm-send-group"><h5>{tx("Effets")}</h5><div>{tx(FXSENDS.map((f, i) => col(i + 7, f, "#2563eb")))}</div></div>
+    <div className="xm-send-group"><h5>{tx("Retours (bus)")}</h5><div role="region" aria-label={tx("Retours (bus)")} tabIndex={0}>{tx(BUSES.map((b, i) => col(i + 1, b, BUS_TINT[i]!)))}</div></div>
+    <div className="xm-send-group"><h5>{tx("Effets")}</h5><div role="region" aria-label={tx("Effets")} tabIndex={0}>{tx(FXSENDS.map((f, i) => col(i + 7, f, "#2563eb")))}</div></div>
   </div>;
 }
 
@@ -496,19 +504,17 @@ export function RoutingView({ values, canWrite, confirmed }: ViewProps) {
 }
 
 // ---------- METERS ----------
-function MeterGroup({ title, items }: { title: string; items: [string, number[]][] }) {
-  return <section className="xm-meter-group"><h5>{tx(title)}</h5><div>{items.map(([label, idx]) => <div key={label} className="xm-meter-cell"><Meter indexes={idx} wide /><small>{tx(label)}</small></div>)}</div></section>;
+export function MeterView({values={},onInspect}:{values?:Values;onInspect?:(s:Strip)=>void}={}) {
+ const {INPUTS,BUSES,FXSENDS,MAIN}=useAirStrips();
+ const groups=[{title:'Entrées',items:INPUTS.filter(s=>s.kind!=='fxrtn')},{title:'Bus',items:BUSES},
+   {title:'Envois FX',items:FXSENDS},{title:'Retours FX',items:INPUTS.filter(s=>s.kind==='fxrtn')},{title:'Main',items:[MAIN]}];
+ return <div className="xm-meter-view meter-overview">
+   <MeterDisplaySettings/>
+   {groups.map(g=><section key={g.title} className="xm-meter-group"><h5>{tx(g.title)} <small>dBFS</small></h5><div><div aria-hidden="true" className="meter-axis">{[0,-12,-24,-36,-48,-60].map(n=><span key={n}>{n}</span>)}</div>{g.items.map(s=>{
+     const name=stripName(s,values);
+     return <div className="xm-meter-cell" key={s.id}><Meter indexes={s.meters} wide/>{onInspect?<button type="button" title={name} onClick={()=>onInspect(s)}>{name}</button>:<small>{name}</small>}</div>;
+   })}</div></section>)}
+   <section className="xm-meter-group"><h5>{tx("Mon/Solo")}</h5><div><div className="xm-meter-cell"><Meter indexes={[38,39]} wide/><small>L/R</small></div></div></section>
+ </div>;
 }
-export function MeterView() {
-  return <div className="xm-meter-view"><MeterDisplaySettings/>
-    <section className="xm-meter-group"><h5>{tx("&nbsp;")}</h5><div><div className="xm-meter-cell"><div className="xm-scale">{[0, -5, -10, -20, -30, -40, -50].map(d => <span key={d} style={{ bottom: `${(d + 60) / 60 * 100}%` }}>{tx(d)}</span>)}</div><small>{tx("dB")}</small></div></div></section>
-    <MeterGroup title={tx("Entrées")} items={[...Array.from({ length: 16 }, (_, i): [string, number[]] => [String(i + 1), [i]]), ["Aux", [16, 17]]]} />
-    <MeterGroup title={tx("Envois FX")} items={[1, 2, 3, 4].map(n => [String(n), [31 + n]])} />
-    <MeterGroup title={tx("Retours FX")} items={[1, 2, 3, 4].map(n => [`FX${n}`, [16 + n * 2, 17 + n * 2]])} />
-    <MeterGroup title={tx("Bus")} items={[1, 2, 3, 4, 5, 6].map(n => [String(n), [25 + n]])} />
-    <MeterGroup title={tx("Mon/Solo")} items={[["L R", [38, 39]]]} />
-    <MeterGroup title={tx("Main")} items={[["L R", [36, 37]]]} />
-  </div>;
-}
-
 export { stripColor };

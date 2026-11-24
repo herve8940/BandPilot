@@ -1,0 +1,8 @@
+html .ea { color:var(--bp-text); background:var(--bp-bg); }
+html .ea :is(.ea-master,.ea-row,.ea-profiles,.ea-card,.bp-section-picker) { background:var(--bp-card); border-color:var(--bp-line); }
+html .ea .ea-head h1 { font-size:clamp(26px,6vw,36px); letter-spacing:-.04em; }
+html .ea :is(button,summary,input):focus-visible { outline:2px solid #c4a7ff; outline-offset:3px; }
+html .ea .ea-head {background:linear-gradient(115deg,#24253f,#161c30);border:1px solid var(--bp-line);border-radius:16px;padding:16px;gap:10px}
+html .ea .ea-page-switch {background:var(--stage-inset);border:1px solid var(--bp-line)}
+html .ea .ea-row,html .ea .ea-master {border-color:var(--bp-line);border-radius:12px}
+html .ea .ea-head h1 {overflow-wrap:anywhere;line-height:1.15}

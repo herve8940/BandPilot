@@ -7,7 +7,8 @@ try {
  const executable=process.argv[2]||require('electron');
  const args=process.argv[2]?['--smoke-test']:['.','--smoke-test'];
  if(process.platform==='linux'&&process.env.CI)args.push('--no-sandbox');
- const result=spawnSync(executable,args,{env:{...process.env,XR18_SMOKE_DATA:data},timeout:180000,killSignal:'SIGKILL',stdio:'inherit'});
+ // The packaged test now exercises all stage workflows, including timed recording fixtures.
+ const result=spawnSync(executable,args,{env:{...process.env,XR18_SMOKE_DATA:data},timeout:600000,killSignal:'SIGKILL',stdio:'inherit'});
  if(result.error)throw result.error;
  if(result.status!==0)throw Error('Échec démarrage XR18 : '+result.status);
  console.log('XR18 : backend, SQLite et interface démarrés.');

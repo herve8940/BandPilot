@@ -25,7 +25,6 @@ async function fixture(auth:()=>Promise<unknown>=async()=>({enabled:false,user:{
   else if(path==='/api/mixer-sync')data={sources:[]};
   else if(['/api/users','/api/library','/api/songs','/api/setlists','/api/rehearsals'].includes(path))data=[];
   else if(path.startsWith('/ears-api/'))data=[];
-  else if(path==='/api/reacue')data={armed:false};
   else if(path.includes('/processing'))data={state:{revision:0}};
   else if(path.startsWith('/api/coach')){code=503;data={error:'Coach unused by this test'};}
   return new Response(JSON.stringify(data),{status:code,headers:{'Content-Type':'application/json'}});
@@ -95,6 +94,35 @@ test('display translation preserves interpolated names, whitespace, types and va
   const sourceSlots=new Set([...source.matchAll(/\{\{(\d+)\}\}/g)].map(m=>m[1]));
   for(const match of String(target).matchAll(/\{\{(\d+)\}\}/g))assert.ok(sourceSlots.has(match[1]),source);
  }
+});
+
+test('a phone waits for its new monitor snapshot after waking and never replays a queued fader move',async()=>{
+ const f=await fixture();
+ try{
+  const {EarsApp}=await import('../src/ears/EarsApp');
+  await f.mount(<EarsApp/>);
+  const doc=f.dom.window.document;
+  Object.defineProperty(doc,'visibilityState',{configurable:true,value:'visible'});
+  const wake=()=>doc.dispatchEvent(new f.dom.window.Event('visibilitychange'));
+  const first=f.sockets.at(-1)!;
+  const snapshot={type:'snapshot',share:{name:'Monitor',bus:1},sources:[],values:{},cap:.75,control:true};
+  await f.React.act(async()=>first.emit(snapshot));
+  const fader=doc.querySelector('[role=slider]')!;
+  const move=()=>fader.dispatchEvent(new f.dom.window.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true}));
+  await f.React.act(async()=>{assert.equal(move(),false);move();});
+  const writes=f.socketWrites.length;
+  assert.equal(writes,1);
+  await f.React.act(async()=>{first.onclose({code:1006});wake();wake();});
+  const second=f.sockets.at(-1)!;
+  assert.notEqual(second,first);assert.equal(f.sockets.length,2);
+  assert.equal(doc.querySelector('[role=slider]')?.getAttribute('aria-disabled'),'true');
+  await f.React.act(async()=>{first.emit(snapshot);await new Promise(r=>setTimeout(r,70));});
+  assert.equal(f.socketWrites.length,writes);
+  await f.React.act(async()=>second.emit(snapshot));
+  assert.equal(doc.querySelector('[role=slider]')?.getAttribute('aria-disabled'),'false');
+  await f.React.act(async()=>{second.onclose({code:4001});wake();});
+  assert.equal(f.sockets.length,2);assert.equal(doc.querySelector('[role=slider]'),null);
+ }finally{await f.close();}
 });
 
 test('All five monitor languages keeps musician, channel and saved profile names intact and sends no fader commands',async()=>{

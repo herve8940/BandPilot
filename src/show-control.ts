@@ -11,7 +11,6 @@ export function validateFx(input:unknown):Fx{
 export type Scene={version:1;scope:'application';channels:ChannelState[];main:ChannelState;processing:ProcessingState[];fx:Fx[];advanced:Record<string,{value:number|string;updatedAt:string}>};
 export class ShowControl {
  private fx=new Map<number,Fx>();private previewTokens=new Map<string,{id:string;fingerprint:string;expires:number;excludePhantom:boolean}>();
- private armed=false;private seen=new Set<string>();
  readonly console:ConsoleControl;
  rememberFx(f:Fx){this.fx.set(f.slot,validateFx(f));}
  constructor(private xr:XR18,private processing:ProcessingStore,private library:LibraryStore){this.console=new ConsoleControl(xr,library);}
@@ -34,9 +33,4 @@ export class ShowControl {
   }else await this.xr.applyFx(f);this.fx.set(f.slot,f);return {ok:true,simulationOnly:this.xr.mode==='simulation',hardwareAcknowledged:false};}
   throw Error('Type non rappelable');
  }
- state(){return {armed:this.armed,events:this.seen.size};}
- arm(value:boolean){if(!value)this.xr.cancelOperations();this.armed=value;if(!value)this.seen.clear();return this.state();}
- async event(input:Record<string,unknown>){if(!this.armed)throw Error('ReaCue désarmé');const {eventId,songId,section}=input;if(typeof eventId!=='string'||!eventId||eventId.length>120||typeof songId!=='string'||typeof section!=='string')throw Error('eventId, songId et section requis');if(this.seen.has(eventId))return {ok:true,duplicate:true};const cue=this.library.list('cue').find(e=>{const d=e.data as Record<string,unknown>;return d.songId===songId&&d.section===section;});if(!cue)throw Error('Aucune association ReaCue pour ce morceau / cette section');const d=cue.data as {targetId:string};const target=this.library.get(d.targetId);if(target.kind==='fx'&&this.library.outputProtections(this.xr.model().id).rules.some(r=>r.target===`fx:${validateFx(target.data).slot}`))throw Error('Ce slot FX est protégé pour les rappels de scène.');if(this.xr.mode==='real'&&(target.kind!=='scene'||(target.data as {version?:number}).version!==2))throw Error('ReaCue matériel : scène complète version 2 requise');if(this.xr.mode==='real'&&Object.keys((target.data as {values:Record<string,unknown>}).values).some(a=>a.endsWith('/phantom')))throw Error('ReaCue ne change jamais le 48 V : retirer ces paramètres de la scène dédiée');if(this.seen.size>=10000)throw Error('Limite événements atteinte : désarmer puis réarmer');this.seen.add(eventId);try{return await this.perform(target.id);}catch(e){this.armed=false;throw e;}}
- manualOverride(){if(this.armed)this.xr.cancelOperations();this.armed=false;}
 }
-

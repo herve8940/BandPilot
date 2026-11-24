@@ -79,3 +79,14 @@ test('new feature labels are translated in every shipped language',()=>{
  const keys=files.flatMap(file=>[...readFileSync(new URL('../src/'+file,import.meta.url),'utf8').matchAll(/tx\('([^']+)'\)/g)].map(m=>m[1]!));
  for(const lang of ['en','it','es','de']){const catalog=JSON.parse(readFileSync(new URL(`../src/i18n/${lang}.json`,import.meta.url),'utf8'));for(const key of keys)assert.ok(catalog[key],`${lang}: ${key}`);}
 });
+
+test('meter peak decay starts after the hold and is independent of the display frame rate',async()=>{
+ const {nextPeak}=await import('../src/xair/meter-preferences');
+ const start={value:-3,at:1000};
+ assert.deepEqual(nextPeak(start,-30,2400,1500,12),start);
+ const halfway=nextPeak(start,-30,2750,1500,12);
+ assert.equal(halfway.value,-6);
+ assert.equal(nextPeak(halfway,-30,3000,1500,12).value,nextPeak(start,-30,3000,1500,12).value);
+ assert.equal(nextPeak(start,-30,9000,-1,12).value,-3);
+ assert.equal(nextPeak(start,-30,3000,1500).value,-30);
+});

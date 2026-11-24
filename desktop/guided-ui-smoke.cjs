@@ -1,0 +1,142 @@
+// Run on the disposable simulator used by the native smoke suite.
+module.exports=async function guidedUI(win,wait,capture){
+ const js=code=>win.webContents.executeJavaScript(code);
+ const screenshot=async name=>{
+   await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+   await new Promise(resolve=>setTimeout(resolve,220));
+   await capture(name);
+ };
+ const click=async(selector,label)=>{
+   const query=`[...document.querySelectorAll(${JSON.stringify(selector)})].find(b=>b.textContent.trim()===${JSON.stringify(label)}&&b.getClientRects().length)`;
+   await wait(`!!(${query})`);await js(`(${query}).click()`);
+ };
+ const space=name=>js(`document.querySelector('button[title='+CSS.escape(${JSON.stringify(name)})+']').click()`);
+ await space('Balance');
+ await wait("!!document.querySelector('.balance-lead button.primary')");
+ await screenshot('balance-desktop.png');
+ const bounds=win.getBounds();
+ const minimum=win.getMinimumSize();
+ try{
+   win.setMinimumSize(320,480);win.setSize(390,760);
+   await wait("innerWidth<=420 && document.querySelector('.balance-lead button.primary').getBoundingClientRect().right<=innerWidth");
+   if(await js('document.documentElement.scrollWidth>innerWidth+1'))throw Error('Mobile soundcheck overflows horizontally');
+   await screenshot('balance-mobile.png');
+ }finally{win.setBounds(bounds);win.setMinimumSize(...minimum);}
+ await click('.balance-track button','Niveaux');
+ await wait("!!document.querySelector('.in-step .gain-picker')&&!document.querySelector('.coach-next')");
+ await screenshot('balance-levels.png');
+ await click('.balance-back','Vue d’ensemble');
+ await wait("!!document.querySelector('.coach-next')&&!document.querySelector('.in-step')");
+ const rows=await js("document.querySelectorAll('.regie-open-strip').length");
+ if(rows){
+   const strip=Math.min(1,rows-1);
+   const channel=await js(`Number(document.querySelectorAll('.regie-track-number')[${strip}].textContent)`);
+   await js(`document.querySelectorAll('.regie-open-strip')[${strip}].click()`);
+   await wait(`Number(document.querySelector('.visual-channel-rail [aria-selected=true] small')?.textContent)===${channel}`);
+ }
+ await space('Console');
+ await click('.seg button','Simple');
+ await wait("document.querySelectorAll('.sm-mixes button').length>1");
+ await js("document.querySelectorAll('.sm-mixes button')[1].click()");
+ if(await js("!!document.querySelector('.sm-strips .mute,.sm-strips .solo')"))throw Error('Global mute or solo exposed on a personal return');
+ await screenshot('console-simple-monitor.png');
+ await click('.seg button','Expert');
+ await wait("!!document.querySelector('.xs2-tabs')");
+ await click('.xs2-tabs button','Mélangeur');
+ await wait("!!document.querySelector('.strip-inspect')");
+ await js("document.querySelector('.strip-inspect').click()");
+ await wait("!!document.querySelector('.processor-eq')");
+ await js("window.dispatchEvent(new KeyboardEvent('keydown',{key:'k',ctrlKey:true,bubbles:true}))");
+ await wait("!!document.querySelector('.desk-finder[open]')");
+ await js("(()=>{const el=document.querySelector('.desk-finder input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'ch2 eq');el.dispatchEvent(new Event('input',{bubbles:true}));})()");
+ await wait("document.querySelectorAll('.finder-results button').length===1");
+ await screenshot('expert-search.png');
+ await js("document.querySelector('.finder-input input').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))");
+ await wait("!document.querySelector('.desk-finder')&&!!document.querySelector('.processor-eq')&&document.querySelector('.visual-channel-rail [aria-selected=true] small')?.textContent.match(/^0?2$/)");
+ await wait("document.querySelector('.processor-eq .xm-eq-graph').getBoundingClientRect().top<document.querySelector('.processor-eq .eq-spectrum-tools').getBoundingClientRect().top");
+ await screenshot('expert-eq.png');
+ await click('.quick-gang summary','Groupe temporaire');
+ await js("document.querySelector('.quick-gang input:not(:checked)').click()");
+ await click('.quick-gang button','Lier temporairement');
+ await click('.parameter-links-switch button','Délier le groupe temporaire');
+ await click('.xs2-tabs button','Vumètres');
+ await wait("document.querySelectorAll('.meter-overview .xm-meter-cell>button').length>10");
+ await click('.meter-bridge summary','Affichage des crêtes');
+ await js("(()=>{const select=document.querySelectorAll('.meter-bridge select')[1];select.value='12';select.dispatchEvent(new Event('change',{bubbles:true}));})()");
+ await wait("document.querySelectorAll('.meter-bridge select')[1].value==='12'");
+ await screenshot('expert-meters.png');
+ await click('.expert-view-link summary','Synchroniser les vues');
+ await js("fetch('/api/expert-view-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({publisher:crypto.randomUUID(),channel:3,view:'channel'})}).then(r=>{if(!r.ok)throw Error('Cannot share simulated view')})");
+ await js("(()=>{const el=document.querySelector('.expert-view-link select');el.value='channel';el.dispatchEvent(new Event('change',{bubbles:true}));})()");
+ await wait("document.querySelector('.expert-view-link [role=status]')?.textContent==='Vue suivie'&&!!document.querySelector('.meter-overview')");
+ await js("(()=>{const el=document.querySelector('.expert-view-link select');el.value='off';el.dispatchEvent(new Event('change',{bubbles:true}));})()");
+ await js("document.querySelector('.meter-overview .xm-meter-cell>button').click()");
+ await wait("!!document.querySelector('.visual-channel-rail')");
+
+ await click('.subnav button','Retours');
+ await click('.monitor-desk button','Partager ce retour');
+ await wait("!!document.querySelector('.es-hero')");
+ await screenshot('share-monitor.png');
+ await space('Répertoire');await click('.subnav button','Fiche technique');
+ await wait("!!document.querySelector('.tech-rider[open]')");
+ await space('Répertoire');await wait("!!document.querySelector('.song-form label')");
+ if(await js("document.querySelector('.song-form').hidden"))await js("document.querySelector('.library-add-toggle').click()");
+ const input=async(selector,value)=>js(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,${JSON.stringify(value)});el.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+ for(const title of ['Ouverture','Rappel']){
+   await input('.song-form input',title);await click('.song-form button','Ajouter');
+   await wait(`[...document.querySelectorAll('.song-list b')].some(el=>el.textContent===${JSON.stringify(title)})`);
+   await js(`[...document.querySelectorAll('.song-list b')].find(el=>el.textContent===${JSON.stringify(title)}).closest('.song-list>div').querySelector('.add-to-setlist').click()`);
+ }
+ await js("document.querySelector('.setlist-row:last-child button').click()");
+ await wait("document.querySelector('.setlist-inspector strong')?.textContent==='Rappel'");
+ await js("document.querySelector('.setlist-inspector .setlist-order button').click()");
+ await wait("[...document.querySelectorAll('.setlist-row b')].slice(-2).map(el=>el.textContent).join(',')==='Rappel,Ouverture'");
+ await js("document.querySelector('.library-add-toggle').click()");
+ await screenshot('prepare-desktop.png');
+ await js("document.querySelector('.setlist-rehearse').click()");await wait("document.querySelector('.regie-song-request strong')?.textContent==='Rappel'");await js("document.querySelector('.regie-song-request button:last-child').click()");await wait("!!document.querySelector('.sh-rehearse')");
+ await wait("!!document.querySelector('.bp-transport')&&!!document.querySelector('.rehearsal-song-grid button')");
+ await screenshot('rehearse-home.png');
+ await click('.stand-switch','Vue pupitre');await wait("getComputedStyle(document.querySelector('.rail')).display==='none'&&!!document.querySelector('.bp-play')");
+ await screenshot('rehearsal-stand.png');
+ await js("window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+ await wait("!document.querySelector('.stand-view')");
+ await click('.sh-head button','Préparer la setlist');
+ await wait("document.querySelectorAll('.concert-import input').length===3");
+ await js("const inputs=document.querySelectorAll('.concert-import input');inputs[0].click();inputs[2].click()");
+ await click('.concert-import fieldset button','Ajouter à la setlist (2)');
+ await wait("[...document.querySelectorAll('.setlist-row b')].slice(-2).map(el=>el.textContent).join(',')==='Fixture Intro,Fixture Outro'");
+ await js("document.querySelector('.setlist-row:last-child button').click()");
+ await wait("document.querySelector('.setlist-inspector strong')?.textContent==='Fixture Outro'");
+ await js("document.querySelector('.setlist-order button').click()");
+ await wait("[...document.querySelectorAll('.setlist-row b')].slice(-2).map(el=>el.textContent).join(',')==='Fixture Outro,Fixture Intro'");
+ await click('.concert-open','Ouvrir le concert');
+ await wait("!!document.querySelector('.concert-cue h1')&&!!document.querySelector('.concert-next')");
+ await js("(()=>{window.__concertCommands=[];const base=window.fetch;window.fetch=(...args)=>{if(String(args[0]).endsWith('/rehearsal-desk/command')&&args[1]?.body)window.__concertCommands.push(JSON.parse(args[1].body));return base(...args)}})()");
+ await click('.concert-order button b','Fixture Outro');await click('.concert-manual button','Commencer le concert');
+ await wait("document.querySelector('.concert-cue h1')?.textContent==='Fixture Outro'&&document.querySelector('.concert-next b')?.textContent==='Fixture Intro'&&!!document.querySelector('.concert-transport button:not(:disabled)')");
+ if(await js("window.__concertCommands.length"))throw Error('Navigating the setlist issued a transport command');
+ await click('.stand-switch','Vue pupitre');
+ await screenshot('concert-desktop.png');
+ await click('.concert-transport button','Lancer la lecture');
+ await wait("window.__concertCommands.some(c=>c.action==='play'&&c.project.endsWith('-3'))");
+ await wait("!!document.querySelector('.concert-manual .next:not(:disabled)')");
+ await click('.concert-manual button','Morceau suivant');
+ await wait("document.querySelector('.concert-cue h1')?.textContent==='Fixture Intro'");
+ await click('.concert-manual button','Terminer le concert');
+ await wait("document.querySelector('.concert-cue small')?.textContent.includes('Concert terminé')");
+ if(await js("window.__concertCommands.length!==1"))throw Error('Finishing or advancing Concert started audio');
+ await click('.stand-switch','Quitter la vue pupitre');
+ await space('Réglages');await wait("!!document.querySelector('#bp-connection button')");
+ await click('.settings-jump button','Préférences');
+ await wait("!!document.querySelector('#bp-preferences:not([hidden]) .bandpilot-language')&&!!document.querySelector('#bp-connection[hidden]')");
+ for(const label of ['Contraste renforcé','Faders fins']){
+   await click('#bp-preferences button',label);
+   await wait(`[...document.querySelectorAll('#bp-preferences .display-switch')].some(b=>b.textContent===${JSON.stringify(label)}&&b.getAttribute('aria-pressed')==='true')`);
+   await click('#bp-preferences button',label);
+ }
+ await js("window.dispatchEvent(new Event('xr18-open-connection'))");
+ await wait("!!document.querySelector('#bp-connection:not([hidden])')");
+ await screenshot('settings-desktop.png');
+ await space('Balance');
+ console.log('Guided UI: responsive soundcheck, personal monitor scope, Expert, sharing and technical rider passed.');
+};

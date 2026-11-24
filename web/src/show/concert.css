@@ -1,0 +1,25 @@
+.concert-empty{display:grid;justify-items:start;gap:12px;padding:clamp(20px,4vw,48px)}
+.concert-order ol{list-style:none;padding:0;margin:0;display:grid;gap:4px}
+.concert-order .sh-song{width:100%;align-items:center;min-height:44px}
+.concert-order .sh-song b{flex:1;text-align:start;overflow-wrap:anywhere}
+html .studio.app2 .concert-manual{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.concert-manual button,.concert-sheet,.concert-transport button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px}
+.concert-cue h1,.concert-next b,.concert-transport label{min-width:0;overflow-wrap:anywhere}
+.concert-cue>svg{color:var(--bp-purple);flex:none}
+.concert-sheet{align-self:flex-start;margin-block:10px}
+.concert-audio{display:grid;gap:10px;margin-top:14px}
+.concert-audio h2,.concert-order h2,.concert-import h3{font-size:16px;margin:0}
+.concert-audio p{margin:0;color:var(--bp-muted)}
+.concert-transport,.concert-import>div{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.concert-audio label{display:grid;gap:5px}
+.concert-audio select{max-width:100%}
+.concert-import{margin-block:12px;padding:14px;border:1px solid var(--bp-line);border-radius:8px}
+.concert-import>div{align-items:center;justify-content:space-between}
+.concert-import fieldset{margin:10px 0 0;padding:0;border:0;display:grid;gap:6px}
+.concert-import fieldset label{display:flex;align-items:center;gap:8px;min-height:40px}
+.concert-import fieldset button{justify-self:start}
+.concert-playhead{font-variant-numeric:tabular-nums}
+@media(max-width:760px){.concert-desk{display:grid;grid-template-columns:minmax(0,1fr)}.concert-order{min-width:0}.concert-transport{align-items:stretch}}
+.concert-playhead progress{width:100%;height:8px;accent-color:var(--bp-purple)}
+.concert-order ol{max-height:65dvh;overflow-y:auto;scrollbar-width:thin}
+.concert-open,.import-projects-toggle{display:inline-flex;align-items:center;gap:8px;min-height:44px}

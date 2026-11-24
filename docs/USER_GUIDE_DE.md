@@ -46,7 +46,7 @@ Beginnen Sie mit **Mischpult → PC**, um den aktuellen Mischpult-Status auszule
 
 ## 4. Haupträume
 
-**Spielen** enthält Mischpult, Monitore und **Mein Tontechniker**. **Proben** arbeitet mit REAPER. **Live** folgt dem vorbereiteten Konzertprojekt. **Vorbereiten** enthält Songs, Setlists, Proben und Szenen. **Einstellungen** enthält Verbindung, Konten und Integrationen. Klappe die Seitenleiste ein, um dem Mischpult mehr Platz zu geben. Auf kleineren Bildschirmen erreichst du weitere Bedienelemente über Kanalbänke und Scrollen.
+**Spielen** enthält Mischpult, Monitore und **Mein Tontechniker**. **Proben** arbeitet mit REAPER. **Konzert** folgt der aktiven Setlist. **Vorbereiten** enthält Songs, Setlists, Proben und Szenen. **Einstellungen** enthält Verbindung, Konten und Integrationen. Klappe die Seitenleiste ein, um dem Mischpult mehr Platz zu geben. Auf kleineren Bildschirmen erreichst du weitere Bedienelemente über Kanalbänke und Scrollen.
 
 ## 5. Geführter Soundcheck
 
@@ -78,7 +78,7 @@ Bereits geöffnete Telefone folgen schreibgeschützten/kontrollierten Änderunge
 
 <h2 id="reaper">8. REAPER-Proben und Aufnahme</h2>
 
-1. **REAPER vorbereiten** — Installiere die mit 2.3.15 gelieferte Bridge erneut, auch wenn bereits 1.5.0 angezeigt wird, und starte REAPER neu. Öffne ein Projekt pro Tab mit seinen Medien. Wähle unter Proben → Mit meinen Songs das Projekt und prüfe Eingänge, aufnahmebereite Spuren, Originalspur und Ende. REC erzeugt einen getrennten Take in diesem Projekt; prüfe vorher die echten Audioeingänge.
+1. **REAPER vorbereiten** — Wenn die Probe-Ansicht dich dazu auffordert, installiere die mit BandPilot gelieferte Bridge und starte REAPER neu. Öffne ein Projekt pro Tab mit seinen Medien. Wähle unter Proben → Mit meinen Songs das Projekt und prüfe Eingänge, aufnahmebereite Spuren, Originalspur und Ende. REC erzeugt einen getrennten Take in diesem Projekt; prüfe vorher die echten Audioeingänge.
 
 2. **Probenleitung zuweisen** — Erstelle unter Monitore → Smartphones einen Monitorlink pro Musiker und weise auf dessen Karte die Probenleitung zu. Im selben lokalen Netzwerk öffnet der QR Mein Monitor, Mein Song und Proben. Die Rolle ist widerrufbar. Die Leitung wählt Song, Original, Begleitung oder Take, ganzen Song oder Abschnitt sowie verfügbare Schleifen- und Einzähloptionen.
 
@@ -104,7 +104,7 @@ Erfassen Sie Szenen und importieren/exportieren Sie JSON. Rückrufe führen ein 
 
 ## 10. Analyse, Shows, Konten und Fehlerbehebung
 
-Die X-Air-Analyse nutzt verfügbare Hardwarepegel, Spektrum- und Dynamikmessungen; Überprüfen Sie A/B-Vorschläge, bevor Sie sich bewerben. Das X32-Spektrum ist nicht verfügbar. Bereiten Sie Show-Setlists, Regionen, Medien und ReaCue-Zuordnungen vor dem Live-Einsatz vor; Ein komplettes Konzert wurde in der letzten manuellen Sitzung nicht validiert.
+Die X-Air-Analyse nutzt verfügbare Hardwarepegel, Spektrum- und Dynamikmessungen; Überprüfen Sie A/B-Vorschläge, bevor Sie sich bewerben. Das X32-Spektrum ist nicht verfügbar.
 
 Optionale Konten trennen Administrator, zugewiesenen Busmusiker und schreibgeschützten Gastzugriff. Keine Reaktion des Mischpults: Überprüfen Sie die Netzwerk-, IP- und lokalen Netzwerk-/Firewall-Berechtigungen. Telefon nicht verfügbar: Überprüfen Sie die Freigabe, das WLAN und den QR-Link. Bridge nicht verfügbar: Installieren Sie die aktuelle Version und starten Sie REAPER nach dem Speichern neu. Sichern Sie Szenen und Projektmedien vor dem Aktualisieren. Die Diagnose umfasst lokale IPs: Überprüfen Sie diese, bevor Sie sie öffentlich veröffentlichen.
 
@@ -131,3 +131,7 @@ Der Zugang zum Technical Rider öffnet Musikerkarten und den druckbaren Bühnenp
 Freiwillige Unterstützung schafft Zeit für Fehlerbehebungen, Mischpulttests und Anleitungen in fünf Sprachen. Erfahrungsberichte, Übersetzungen und das Weiterempfehlen des Projekts helfen ebenfalls.
 
 [So kannst du helfen](SUPPORT_DE.md) · [Daten und Datenschutz (FR / EN)](PRIVACY.md)
+
+## Konzert spielen
+
+Öffne die Projekte in REAPER. Wähle in **Probe** **Setlist vorbereiten**. Füge die gewünschten Songs hinzu. Lege unter **Setlists** Reihenfolge und Zugaben fest und wähle **Konzert öffnen**. Weiter blättert zum nächsten Song. Begleitspuren, Originale und Takes startest du separat. Angehängte Song-PDFs sind auf der Bühne verfügbar.

@@ -23,7 +23,7 @@ function createFixture(dataPath){
   const selected=active||id||selectedTab;
   const prefs=settings.get(selected)??{armed:true,autoSave:false};
   return {tabs,active:active||undefined,transport,owned:!!active,notice:noticed,project:{
-   id:selected,original:track,choices:[{id:track,name:'Original'}],marks,start:0,ending:10,endMarker:'',autoSave:prefs.autoSave,
+   id:selected,during:active?(transport==='recording'?'record':'play'):undefined,original:track,choices:[{id:track,name:'Original'}],marks,start:0,ending:10,endMarker:'',autoSave:prefs.autoSave,
    takes:recorded===selected?[take]:[],armed:prefs.armed?1:0,pos:from,loopStart,leavingAt,stopAt:active?to:undefined,source,dirty:!!recorded,
    guides:[{id:guideId,name:'Métronome',volume:guideLevels.get(selected)??1,mute:false}],
    inputs:2,recordTracks:[{id:track,name:'REC Voix',channels:[1],available:true,armed:prefs.armed}],
@@ -36,8 +36,12 @@ function createFixture(dataPath){
   const cmd=fields.cmd,read=field=>fields[field];
   const id=read('project'),action=read('action');
   if(cmd==='transport')return {playing:!!active,recording:transport==='recording',pos:from};
-  if(cmd==='state')return {version:'1.5.1',project:'',tracks:[],songs:[],regions:[],playing:false,recording:false,pos:0,length:0,loop:{on:false,start:0,stop:0}};
-  if(cmd==='rehearsal_state')return snapshot(id,src.includes('["detail"]=true'));
+  if(cmd==='state')return {version:'1.5.2',project:'Concert test',concert:'Concert test',tracks:[],songs:[{title:'Ouverture',start:0,stop:90,countin:0},{title:'Rappel',start:90,stop:180,countin:90}],regions:[],playing:false,recording:false,pos:0,length:180,loop:{on:false,start:0,stop:0}};
+  if(cmd==='rehearsal_state'){
+   const data=snapshot(id,src.includes('["detail"]=true'));
+   if(src.includes('["files"]=true'))data.tabs=data.tabs.map(t=>({...t,filePath:path.join(root,t.title+'.rpp')}));
+   return data;
+  }
   if(cmd==='rehearsal_peaks')return {peaks:Array.from({length:480},(_,i)=>Math.abs(Math.sin(i*.12)))};
   if(cmd!=='rehearsal_command')throw Error('Commande hors du test');
   calls.push({id,action,source:read('source'),a:read('a'),b:read('b')});
@@ -72,7 +76,7 @@ function createFixture(dataPath){
  const tick=()=>{
   update();
   const heartbeat=path.join(mailbox,'heartbeat.txt');
-  atomic(heartbeat,'BandPilotBridge/2\n1.5.1\n1700000000\nrehearsal-tabs/3\nrehearsal-tabs/4\nrehearsal-tabs/5\nrehearsal-tabs/6\nrehearsal-tabs/7\nrehearsal-tabs/9\nrehearsal-tabs/10');
+  atomic(heartbeat,'BandPilotBridge/2\n1.5.2\n1700000000\nrehearsal-tabs/3\nrehearsal-tabs/4\nrehearsal-tabs/5\nrehearsal-tabs/6\nrehearsal-tabs/7\nrehearsal-tabs/9\nrehearsal-tabs/10');
   for(const file of fs.readdirSync(mailbox)){
    const id=/^request-([a-f0-9-]+)\.lua$/.exec(file)?.[1];
    if(!id)continue;
@@ -142,8 +146,8 @@ async function verify({main,createWindow,screenshot,fixture,port}){
   await other.loadURL(phoneURL(original.shares.find(s=>s.name==='Autre musicien')));
   await wait(phone,`!!document.querySelector('.ea-master')&&![...document.querySelectorAll('.ea-page-switch button')].some(b=>b.textContent==='Répéter')`);
   await wait(other,`!!document.querySelector('.ea-master')&&![...document.querySelectorAll('.ea-page-switch button')].some(b=>b.textContent==='Répéter')`);
-  await main.webContents.executeJavaScript(`document.querySelector('button[title="Régler le son"]').click()`);
-  await click(main,'.topbar .subnav','Retours');
+  await main.webContents.executeJavaScript(`document.querySelector('button[title="Console"]').click()`);
+  await click(main,'.regie-pagehead .subnav','Retours');
   await click(main,'.returns-page .bp-section-tabs','Téléphones');
   await wait(main,`document.querySelectorAll('.es-card .es-qr svg path').length>=2&&document.querySelectorAll('.es-url code').length===2`);
   await main.webContents.executeJavaScript(`[...document.querySelectorAll('.es-card')].find(c=>c.textContent.includes('Gestionnaire test')).querySelector('.es-actions button').click()`);
@@ -200,7 +204,14 @@ async function verify({main,createWindow,screenshot,fixture,port}){
   await wait(phone,`!document.querySelector('.ea-monitor-page').hidden`);
   await click(phone,'.ea-page-switch','Répéter');
   await wait(phone,`document.querySelector('.bp-range-type button:nth-child(2)')?.getAttribute('aria-pressed')==='true'`);
-  if(!await js(`getComputedStyle(document.querySelector('.ea-page-switch button.on')).backgroundImage.includes('linear-gradient')&&getComputedStyle(document.querySelector('.bp-listen-sources button.on')).backgroundImage.includes('linear-gradient')`))throw Error('The rehearsal tab does not use the BandPilot selection accent');
+  const selectedStyles=await js(`['.ea-page-switch','.bp-listen-sources'].map(selector=>{
+    const group=document.querySelector(selector);
+    const active=getComputedStyle(group.querySelector('button.on'));
+    const idle=getComputedStyle(group.querySelector('button:not(.on)'));
+    return {fill:active.backgroundColor,line:active.boxShadow,idle:idle.backgroundColor};
+  })`);
+  if(selectedStyles[0].fill!==selectedStyles[1].fill||selectedStyles[0].line!==selectedStyles[1].line||
+    selectedStyles.some(style=>style.fill===style.idle||style.line==='none'))throw Error('Phone navigation and playback need the same visible selection accent');
   phone.setContentSize(320,730);
   await wait(phone,`innerWidth===320`);
   const sourcesFit=await js(`[...document.querySelectorAll('.bp-listen-sources button')].every(button=>{

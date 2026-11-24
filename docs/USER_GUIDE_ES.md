@@ -46,7 +46,7 @@ Comience con **Mesa de mezclas → PC** para leer y guardar el estado de la mesa
 
 ## 4. Espacios principales
 
-**Tocar** reúne la consola, los monitores y **Mi ingeniero de sonido**. **Ensayar** funciona con REAPER. **Concierto** sigue el proyecto preparado para el directo. **Preparar** contiene canciones, repertorios, ensayos y escenas. **Ajustes** contiene la conexión, las cuentas y las integraciones. Reduce el menú lateral para dejar más espacio a la mesa. En pantallas pequeñas, usa los bancos y el desplazamiento para acceder a todos los controles.
+**Tocar** reúne la consola, los monitores y **Mi ingeniero de sonido**. **Ensayar** funciona con REAPER. **Concierto** sigue el orden de la setlist activa. **Preparar** contiene canciones, repertorios, ensayos y escenas. **Ajustes** contiene la conexión, las cuentas y las integraciones. Reduce el menú lateral para dejar más espacio a la mesa. En pantallas pequeñas, usa los bancos y el desplazamiento para acceder a todos los controles.
 
 ## 5. Prueba de sonido guiada
 
@@ -78,7 +78,7 @@ Los teléfonos ya abiertos siguen cambios de control/solo lectura sin recarga. L
 
 <h2 id="reaper">8. REAPER ensayos y grabación</h2>
 
-1. **Preparar REAPER** — Reinstala el puente incluido con 2.3.15 aunque indique ya 1.5.0 y reinicia REAPER. Abre un proyecto por pestaña con sus medios. En Ensayar → Con mis canciones, selecciona el proyecto y verifica entradas, pistas armadas, pista Original y final. REC crea una toma separada en ese proyecto; comprueba antes las entradas de audio reales.
+1. **Preparar REAPER** — Si Ensayar lo solicita, instala el puente incluido con BandPilot y reinicia REAPER. Abre un proyecto por pestaña con sus medios. En Ensayar → Con mis canciones, selecciona el proyecto y verifica entradas, pistas armadas, pista Original y final. REC crea una toma separada en ese proyecto; comprueba antes las entradas de audio reales.
 
 2. **Asignar al responsable** — En Monitores → Teléfonos crea el enlace de cada músico y asigna al responsable en su ficha. En la misma red local, su QR abre Mi monitor, Mi canción y Ensayar. El rol es revocable. El responsable elige canción, original, acompañamiento o toma, canción completa o sección, bucle y cuenta previa disponibles.
 
@@ -104,7 +104,7 @@ Capture escenas e importe/exporte JSON. Los retiros mantienen una copia de segur
 
 ## 10. Análisis, shows, cuentas y solución de problemas
 
-El análisis X-Air utiliza niveles de hardware disponibles, mediciones de espectro y dinámica; revise las propuestas A/B antes de presentar la solicitud. El espectro X32 no está disponible. Prepare listas de canciones, regiones, medios y asignaciones de ReaCue antes de su uso en vivo; un concierto completo no fue validado en la última sesión manual.
+El análisis X-Air utiliza niveles de hardware disponibles, mediciones de espectro y dinámica; revise las propuestas A/B antes de presentar la solicitud. El espectro X32 no está disponible.
 
 Las cuentas opcionales separan el administrador, el músico del bus asignado y el acceso de invitado de solo lectura. No hay respuesta de la mesa de mezclas: verifique los permisos de red, IP y red local/firewall. Teléfono no disponible: verifique compartir, Wi-Fi y enlace QR. Puente no disponible: instale la versión actual y reinicie REAPER después de guardar. Haga una copia de seguridad de las escenas y los medios del proyecto antes de actualizar. Los diagnósticos incluyen IP locales: revíselas antes de publicarlas públicamente.
 
@@ -131,3 +131,7 @@ El acceso a la ficha técnica abre las tarjetas de músicos y el plano imprimibl
 El apoyo voluntario ayuda a dedicar tiempo a las correcciones, las pruebas con mesas y las guías en cinco idiomas. Los comentarios, las traducciones y compartir el proyecto también ayudan.
 
 [Cómo ayudar al proyecto](SUPPORT_ES.md) · [Datos y privacidad (FR / EN)](PRIVACY.md)
+
+## Tocar en concierto
+
+Abre los proyectos en REAPER. En **Ensayar**, elige **Preparar la setlist**. Añade los temas que necesites. Ordena los temas y los bises en **Setlists** y pulsa **Abrir el concierto**. Siguiente avanza al próximo tema. Inicia el acompañamiento, el original o una toma por separado. Puedes consultar en el escenario el PDF adjunto al tema.

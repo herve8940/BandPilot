@@ -46,7 +46,7 @@ Start with **Mixer → PC** to read and save the existing mixer state. **PC → 
 
 ## 4. Main spaces
 
-**Jouer / Play** contains Console, Monitors and Sound-check coach. **Répéter / Rehearse** works with REAPER. **Concert** follows the prepared show project. **Préparer / Prepare** contains songs, setlists, rehearsals and scenes. **Réglages / Settings** contains connection, accounts and integrations. Collapse the sidebar to give the console more room. Smaller screens use banks and scrolling for remaining controls.
+**Jouer / Play** contains Console, Monitors and Sound-check coach. **Répéter / Rehearse** works with REAPER. **Concert** follows the active setlist. **Préparer / Prepare** contains songs, setlists, rehearsals and scenes. **Réglages / Settings** contains connection, accounts and integrations. Collapse the sidebar to give the console more room. Smaller screens use banks and scrolling for remaining controls.
 
 ## 5. Guided sound check
 
@@ -78,7 +78,7 @@ Already open phones follow read-only/control changes without a reload. Profiles 
 
 <h2 id="reaper">8. REAPER rehearsals and recording</h2>
 
-1. **Prepare REAPER** — Reinstall the bridge supplied with 2.3.15, even if it already displays version 1.5.0, then restart REAPER. Open one project per tab with its media. In Rehearse → With my songs, select the project and check its inputs, armed tracks, Original track and ending. REC creates a separate take in that project; verify real audio inputs before trying it.
+1. **Prepare REAPER** — If Rehearse prompts you, install the bridge bundled with BandPilot and restart REAPER. Open one project per tab with its media. In Rehearse → With my songs, select the project and check its inputs, armed tracks, Original track and ending. REC creates a separate take in that project; verify real audio inputs before trying it.
 
 2. **Assign the manager** — In Monitors → Phones, create each musician’s monitor link and assign the rehearsal manager on their card. On the same local network, their QR opens My monitor, My song and Rehearse. The role can be revoked. The manager chooses a song, original, backing or take, the full song or a section, and available loop/count-in options.
 
@@ -104,7 +104,7 @@ Capture scenes and import/export JSON. Recalls keep a backup and require a valid
 
 ## 10. Analysis, shows, accounts and troubleshooting
 
-X-Air analysis uses available hardware levels, spectrum and dynamics measurements; review A/B proposals before applying. X32 spectrum is unavailable. Prepare show setlists, regions, media and ReaCue mappings before live use; a complete concert was not validated in the last manual session.
+X-Air analysis uses available hardware levels, spectrum and dynamics measurements; review A/B proposals before applying. X32 spectrum is unavailable.
 
 Optional accounts separate administrator, assigned-bus musician and read-only guest access. No mixer response: check network, IP and local-network/firewall permissions. Phone unavailable: check sharing, Wi-Fi and QR link. Bridge unavailable: install the current version and restart REAPER after saving. Back up scenes and project media before updating. Diagnostics include local IPs: review them before posting publicly.
 
@@ -131,3 +131,7 @@ The technical rider shortcut opens musician cards and the printable stage plot. 
 Voluntary support helps make time for fixes, mixer testing and guides in five languages. Field reports, translations and sharing the project also help.
 
 [Ways to help the project](SUPPORT_EN.md) · [Data and privacy (FR / EN)](PRIVACY.md)
+
+## Playing a concert
+
+Open your projects in REAPER. In **Rehearse**, choose **Prepare setlist**. Add the songs you need. Arrange them and any encores in **Setlists**, then choose **Open concert**. Next advances the running order. Start a backing track, original or take separately. An attached song PDF is available on stage.
