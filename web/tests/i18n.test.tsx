@@ -170,3 +170,32 @@ test('every catalogue covers the same messages and preserves every dynamic place
  }
  assert.equal(labels.size,4,'each language has an independent translation cache');
 });
+
+test('phone meters hold independent source and stereo output peaks and clear them on reset or signal loss',async()=>{
+ const f=await fixture();
+ try{
+  const {EarsApp}=await import('../src/ears/EarsApp');
+  const {meterPreferences}=await import('../src/xair/meter-preferences');
+  const previous=meterPreferences.get().holdMs;
+  await f.mount(<EarsApp/>);
+  const socket=f.sockets.at(-1)!;
+  await f.React.act(async()=>{
+   meterPreferences.set(-1);
+   socket.emit({type:'snapshot',share:{name:'Mix',bus:1,stereo:true},groups:[],control:false,cap:.75,
+    sources:[{prefix:'/ch/01',label:'Mic',meters:[0]}],values:{'/ch/01/config/name':'Mic'}});
+  });
+  try{
+   const meters=(levels:number[],bus:number,busRight:number)=>socket.emit({type:'meters',levels,bus,busRight});
+   await f.React.act(async()=>meters([-9],-12,-19));
+   await f.React.act(async()=>meters([-20],-14,-21));
+   const peaks=()=>[...f.dom.window.document.querySelectorAll('.ea-peak')].map((el:any)=>el.title).sort();
+   assert.deepEqual(peaks(),['-12.0 dBFS','-19.0 dBFS','-9.0 dBFS'].sort());
+   await f.React.act(async()=>meterPreferences.reset());
+   assert.deepEqual(peaks(),[]);
+   await f.React.act(async()=>meters([-30],-28,-25));
+   assert.deepEqual(peaks(),['-30.0 dBFS','-28.0 dBFS','-25.0 dBFS'].sort());
+   await f.React.act(async()=>socket.onclose({code:1006}));
+   assert.deepEqual(peaks(),[]);assert.equal(f.socketWrites.length,0);
+  }finally{await f.React.act(async()=>meterPreferences.set(previous));}
+ }finally{await f.close();}
+});

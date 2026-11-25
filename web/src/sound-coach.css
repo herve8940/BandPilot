@@ -71,3 +71,26 @@
 .gain-result .gain-moved{margin:8px 0 0;padding:8px 10px;border-radius:8px;background:#12303a;color:#bdf3f3}
 
 .coach-sound-choice{display:grid;gap:8px;padding:16px;margin-bottom:18px;border:1px solid var(--bp-line,#3a4552);border-radius:10px}.coach-sound-choice label{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-weight:600}.coach-sound-choice select{max-width:100%;min-width:180px}.coach-sound-choice p{margin:0;font-size:13px;line-height:1.5}
+
+.coach .balance-lead .balance-resume {display:block;margin-top:10px;min-height:44px;max-width:100%}
+.balance-readback {display:grid;gap:22px;min-width:0;margin:16px 0 24px}
+.balance-readback section {min-width:0}
+.balance-table-head {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.balance-table-head h3 {margin:0}
+.balance-table-scroll {max-width:100%;overflow-x:auto;border:1px solid var(--bp-line);border-radius:9px}
+.balance-readback table {width:100%;border-collapse:separate;border-spacing:0;font-size:13px;font-variant-numeric:tabular-nums}
+.balance-readback th,.balance-readback td {padding:6px 10px;text-align:left;border-bottom:1px solid var(--bp-line-soft);white-space:nowrap}
+.balance-readback thead th,.balance-masters {background:var(--bp-panel-raised);color:var(--bp-text)}
+.balance-readback th:first-child {position:sticky;left:0;z-index:1;background:var(--bp-panel);border-right:1px solid var(--bp-line)}
+.balance-readback tbody th {font-weight:600}
+.balance-readback th small,.balance-readback td small {display:block;color:var(--bp-muted);font-weight:400}
+.coach .balance-readback tbody th button {min-height:36px;padding:2px 6px;background:transparent;border:0;text-align:left;justify-content:flex-start;color:var(--bp-text)}
+.balance-readback tbody th span {color:var(--bp-muted);font-weight:400}
+.balance-readback .balance-enabled {color:#a4e7d2}
+.balance-selection-tools {margin:8px 0 12px;align-items:center}
+.balance-selection-tools [role=status] {margin-right:auto;font-variant-numeric:tabular-nums}
+.coach .balance-readback .balance-pick {display:flex;align-items:center;flex-direction:row;justify-content:flex-start;gap:8px;margin:0;min-height:38px;cursor:pointer}
+.coach .balance-pick input[type=checkbox] {width:20px;height:20px;min-width:20px;margin:0;padding:0;accent-color:#a69bff}
+.balance-inputs tbody tr {cursor:pointer}
+.balance-inputs .balance-picked td,.balance-readback .balance-picked th:first-child {background:var(--stage-active,#353454)}
+.coach .balance-readback .balance-inspect {min-height:32px;padding:3px 9px}

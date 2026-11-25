@@ -15,17 +15,18 @@ export const INSTRUMENT_AMBIENCES=[
  {id:'piano-hall',name:'Petit hall',style:'Clavier · piano',description:'Donne de la profondeur à un clavier sec. Écoute les accords tenus avant de garder.',algorithm:0,preDelayMs:16,decaySeconds:1.15,size:32,highCutHz:6500}
 ] as const;
 
-export const GUIDED_AMBIENCES=[...VOCAL_AMBIENCES,...INSTRUMENT_AMBIENCES];
+const SHORT_ROOM={id:'short-room',name:'Salle courte',style:'Réverbération',description:'Ajoute un peu d’espace autour de cette entrée.',algorithm:0,preDelayMs:12,decaySeconds:.7,size:25,highCutHz:6500} as const;
+export const GUIDED_AMBIENCES=[...VOCAL_AMBIENCES,...INSTRUMENT_AMBIENCES,SHORT_ROOM];
 export function ambiencesForSource(source:string|undefined){
  switch(source){
   case undefined: case 'lead-rock': return [...VOCAL_AMBIENCES];
   case 'backing-vocal': return [INSTRUMENT_AMBIENCES[0],...VOCAL_AMBIENCES];
-  case 'acoustic-guitar': return [INSTRUMENT_AMBIENCES[1]];
-  case 'electric-solo': return [INSTRUMENT_AMBIENCES[2]];
-  case 'snare': return [INSTRUMENT_AMBIENCES[3],INSTRUMENT_AMBIENCES[4]];
-  case 'tom1': case 'tom2': case 'tom3': case 'toms': return [INSTRUMENT_AMBIENCES[3]];
-  case 'keys': return [INSTRUMENT_AMBIENCES[5]];
-  default: return [];
+  case 'acoustic-guitar': return [INSTRUMENT_AMBIENCES[1],SHORT_ROOM,VOCAL_AMBIENCES[4]];
+  case 'electric-solo': return [INSTRUMENT_AMBIENCES[2],SHORT_ROOM,VOCAL_AMBIENCES[4]];
+  case 'snare': return [INSTRUMENT_AMBIENCES[3],INSTRUMENT_AMBIENCES[4],VOCAL_AMBIENCES[4]];
+  case 'tom1': case 'tom2': case 'tom3': case 'toms': return [INSTRUMENT_AMBIENCES[3],VOCAL_AMBIENCES[4]];
+  case 'keys': return [INSTRUMENT_AMBIENCES[5],SHORT_ROOM,VOCAL_AMBIENCES[4]];
+  default: return [SHORT_ROOM,VOCAL_AMBIENCES[4]];
  }
 }
 export const VOCAL_DOSES=[{db:-90,name:'Sec'},{db:-24,name:'Très discret'},{db:-18,name:'Discret'},{db:-12,name:'Présent'},{db:-6,name:'Ample'}] as const;

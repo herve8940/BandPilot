@@ -218,6 +218,10 @@ app.whenReady().then(async () => {
         await require('./layout-smoke.cjs')(win,waitForRenderer);
         rehearsalSmoke.stop();app.exit(0);return;
       }
+      if(process.argv.includes('--smoke-balance-effects')){
+        await require('./balance-effects-smoke.cjs')(win,waitForRenderer,screenshot);
+        rehearsalSmoke.stop();app.exit(0);return;
+      }
       if(process.argv.includes('--smoke-guided-only')){
         await require('./guided-ui-smoke.cjs')(win,waitForRenderer,screenshot);
         rehearsalSmoke.stop();app.exit(0);return;

@@ -1,3 +1,5 @@
+import {EarGroups,planEarGroupMove} from './ear-groups.js';
+import {channelLink} from './channel-operations.js';
 import {sendWebAsset} from './web-asset.js';
 import {busPairStart,busLinkAddress,validStereoBus,pairedMonitorAddress} from '../shared/monitor-pairs.js';
 import type {PersonalPatchInput} from '../shared/tech-rider.js';
@@ -60,6 +62,7 @@ function safeInterfaces(){try{return networkInterfaces();}catch{return {};}}
 
 export class EarsShare {
  private db:Database.Database;
+ private groups:EarGroups;
  private server?:http.Server;
  private wss?:WebSocketServer;
  private port=0;
@@ -76,13 +79,14 @@ export class EarsShare {
    CREATE TABLE IF NOT EXISTS ear_mix_profiles(id TEXT PRIMARY KEY,share_id TEXT NOT NULL,name TEXT NOT NULL,values_json TEXT NOT NULL,updated_at TEXT NOT NULL);
    CREATE TABLE IF NOT EXISTS ear_rehearsal_manager(slot INTEGER PRIMARY KEY CHECK(slot=1),share_id TEXT NOT NULL)`);
   if(!(this.db.prepare('PRAGMA table_info(ear_shares)').all() as {name:string}[]).some(c=>c.name==='stereo'))this.db.exec('ALTER TABLE ear_shares ADD COLUMN stereo INTEGER NOT NULL DEFAULT 0');
+  this.groups=new EarGroups(this.db);
   this.reload();
   const assigned=this.db.prepare('SELECT share_id AS id FROM ear_rehearsal_manager WHERE slot=1').get() as {id:string}|undefined;
   if(assigned&&this.list().some(s=>s.id===assigned.id))this.manager=assigned.id;
   xr.on('parameter',(state:{address:string;value:unknown;updatedAt:string})=>this.pushParameter(state));
   xr.on('meters',()=>this.pushMeters());
   xr.on('connection',()=>{for(const ws of this.sockets.keys())this.sendSnapshot(ws);});
-  xr.on('reset',()=>{for(const ws of this.sockets.keys())this.sendSnapshot(ws);});
+  xr.on('reset',()=>{this.groups.clearOffsets();for(const ws of this.sockets.keys())this.sendSnapshot(ws);});
  }
  private reload(){
   this.shares.clear();
@@ -143,7 +147,7 @@ export class EarsShare {
   this.db.transaction(()=>{
    for(const share of retired){
     // Keep personal presets with their owner, without keeping the old token valid.
-    if(this.db.prepare('SELECT 1 FROM ear_mix_profiles WHERE share_id=? LIMIT 1').get(share.id))this.db.prepare('INSERT INTO ear_share_archive VALUES(?,?,?,?,?)').run(share.id,share.name,share.bus,Number(!!share.stereo),share.createdAt);
+    if(this.groups.list(share.id).length || this.db.prepare('SELECT 1 FROM ear_mix_profiles WHERE share_id=? LIMIT 1').get(share.id))this.db.prepare('INSERT INTO ear_share_archive VALUES(?,?,?,?,?)').run(share.id,share.name,share.bus,Number(!!share.stereo),share.createdAt);
     this.db.prepare('DELETE FROM ear_shares WHERE id=?').run(share.id);
     this.db.prepare('DELETE FROM ear_rehearsal_manager WHERE share_id=?').run(share.id);
    }
@@ -156,6 +160,7 @@ export class EarsShare {
   this.reload();
   for(const share of retired){
    if(this.manager===share.id){this.manager=null;this.managerRequests=[];}
+   this.groups.clearOffsets(share.id);
    this.disconnect(share.id);
   }
   return {created:missing.length,retired:retired.size};
@@ -195,6 +200,8 @@ export class EarsShare {
  }
  remove(id:string){
   if(this.manager===id)this.assignManager(null);
+  this.groups.clearOffsets(id);
+  this.db.prepare('DELETE FROM ear_groups WHERE share_id=?').run(id);
   const changes=this.db.prepare('DELETE FROM ear_shares WHERE id=?').run(id).changes;
   this.db.prepare('DELETE FROM ear_mix_profiles WHERE share_id=?').run(id);
   this.reload();this.disconnect(id);if(!changes)throw Error('Musicien introuvable');
@@ -249,6 +256,19 @@ export class EarsShare {
    const page=/^\/ears\/([A-Za-z0-9_-]{20,40})$/.exec(path);
    if(req.method==='GET'&&page)return await this.serveFile(req,res,'ears.html',!!this.shares.get(page[1]!));
    if(req.method==='GET'&&/^\/assets\/[A-Za-z0-9._-]+$/.test(path))return await this.serveFile(req,res,path.slice(1),true);
+   const groupRoute=/^\/ears-api\/([A-Za-z0-9_-]{20,40})\/groups(?:\/([a-f0-9-]{36}))?$/.exec(path);
+   if(groupRoute){
+    const [,token,id]=groupRoute;
+    const share=this.shares.get(token!);
+    if(!share){res.writeHead(401);res.end();return;}
+    if((req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`) || req.headers['content-type']?.split(';')[0]!=='application/json'){res.writeHead(403);res.end();return;}
+    if(req.method!=='POST'&&!(id&&req.method==='DELETE')){res.writeHead(405);res.end();return;}
+    const body=await readBody(req);
+    if(this.shares.get(token!)?.id!==share.id){res.writeHead(401);res.end();return;}
+    this.groups.edit(share.id,id,body,this.sources().map(s=>s.prefix),req.method==='DELETE');
+    this.pushGroups(share.id);
+    res.writeHead(200,{'Content-Type':'application/json'});res.end('{"ok":true}');return;
+   }
    const api=/^\/ears-api\/([A-Za-z0-9_-]{20,40})\/(profiles)(?:\/([a-f0-9-]{36})(?:\/(recall))?)?$/.exec(path);
    const share=api?this.shares.get(api[1]!):undefined;
    if(api&&!share){res.writeHead(401,{'Content-Type':'application/json'});res.end('{"error":"Lien invalide ou révoqué"}');return;}
@@ -355,7 +375,7 @@ export class EarsShare {
     }
     await new Promise(r=>setTimeout(r,100));
    }
-  }finally{this.recalling.delete(share.id);}
+  }finally{this.recalling.delete(share.id);this.groups.clearOffsets(share.id);this.pushGroups(share.id);}
   return {ok:true};
  }
 
@@ -383,18 +403,74 @@ export class EarsShare {
   const state=this.xr.parameterState(),values:Record<string,unknown>={};
   for(const a of this.visible(share.bus,!!share.stereo))if(state[a])values[a]=state[a]!.value;
   const st=this.xr.status();
-  ws.send(JSON.stringify({type:'snapshot',share:{name:share.name,bus:share.bus,stereo:!!share.stereo},rehearsal:share.id===this.manager,cap:EAR_CAP,sources:this.sources(),values,patch:this.patch?.(share.bus,share.name,!!share.stereo)??[],
+  ws.send(JSON.stringify({type:'snapshot',share:{name:share.name,bus:share.bus,stereo:!!share.stereo},groups:this.groups.list(share.id),rehearsal:share.id===this.manager,cap:EAR_CAP,sources:this.sources(),values,patch:this.patch?.(share.bus,share.name,!!share.stereo)??[],
    control:(share.stereo?state[busLinkAddress(share.bus)]?.value===1:state[busLinkAddress(share.bus)]?.value!==1)&&(st.mode==='simulation'||(st.connected&&st.writesEnabled)),mode:st.mode}));
+ }
+ private pushGroups(owner:string,levels?:Record<string,number>){
+  const data=JSON.stringify({type:'groups',groups:this.groups.list(owner),levels});
+  for(const [ws,c] of this.sockets)if(c.share.id===owner&&ws.readyState===WebSocket.OPEN)ws.send(data);
+ }
+ private moveGroup(share:EarShare,id:unknown,revision:unknown,target:unknown){
+  const group=this.groups.list(share.id).find(item=>item.id===id);
+  if(!group||revision!==group.revision)throw Error('Le groupe a changé. Rouvre son éditeur.');
+  const state=this.xr.parameterState(), levels=new Map<string,number>();
+  const allowed=new Set(this.sources().map(s=>s.prefix));
+  for(const prefix of group.members){
+   if(!allowed.has(prefix))throw Error('Sélection d’entrées invalide');
+   const prefixes=[prefix];
+   // On linked inputs the mixer can mirror sends. Treat both sides as one source.
+   if(prefix.startsWith('/ch/')){
+    const ch=Number(prefix.slice(4)),link=state[channelLink(ch)]?.value;
+    if(link===undefined)throw Error('Réglage non reçu : relire le retour');
+    if(link===1&&state['/config/linkcfg/fdrmute']?.value!==0){
+     const peer='/ch/'+pad(ch%2?ch+1:ch-1);
+     if(allowed.has(peer)){
+      if(!group.members.includes(peer))throw Error('Inclus les deux entrées de la paire liée dans le groupe.');
+      prefixes.push(peer);
+     }
+    }
+   }
+   const addresses=prefixes.flatMap(p=>{
+    const a=p+'/mix/'+pad(share.bus)+'/level',pair=share.stereo?pairedMonitorAddress(share.bus,a):null;
+    return pair?[a,pair]:[a];
+   });
+   const block=addresses.map(address=>{
+    const value=state[address]?.value;
+    if(typeof value!=='number'||!Number.isFinite(value))throw Error('Réglage non reçu : relire le retour');
+    return [address,value] as const;
+   });
+   if(block.some(([,v])=>v===0))continue;
+   if(prefixes.length>1 && block[0]![1]!==block[share.stereo?2:1]![1])throw Error('Les niveaux de la paire liée sont incohérents. Relis le retour.');
+   for(const [address,value] of block)levels.set(address,value);
+  }
+  const plan=planEarGroupMove(levels,group.offset,target,EAR_CAP,EAR_MAX_RAISE);
+  if(plan.writes.size)this.onWrite();
+  try{
+   for(const [address,value] of plan.writes)this.xr.liveSet(address,value);
+  }catch(error){
+   this.groups.setOffset(group.id,0);
+   for(const [ws,c] of this.sockets)if(c.share.id===share.id)this.sendSnapshot(ws);
+   throw error;
+  }
+  this.groups.setOffset(group.id,plan.offset);
+  this.pushGroups(share.id,Object.fromEntries(plan.writes));
  }
  private async onMessage(ws:WebSocket,raw:Buffer){
   const c=this.sockets.get(ws);if(!c)return;
   const now=Date.now();c.rate=c.rate.filter(t=>now-t<1000);c.rate.push(now);
   if(c.rate.length>60)return; // ~60 moves per second is far more than a finger needs.
-  let m:{type?:unknown;address?:unknown;value?:unknown};try{m=JSON.parse(raw.toString('utf8'));}catch{return;}
-  if(m.type!=='set'||typeof m.address!=='string')return;
+  let m:{type?:unknown;address?:unknown;value?:unknown;id?:unknown;revision?:unknown};try{m=JSON.parse(raw.toString('utf8'));}catch{return;}
+
   const reply=(data:unknown)=>{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(data));};
   try{
    if(c.share.bus>this.xr.model().monitorOutputs||this.xr.model().family!=='xair')throw Error('Retour indisponible sur cette console');
+   if(m.type==='group-volume'){
+    await this.checkShare(c.share);
+    if(this.sockets.get(ws)!==c||ws.readyState!==WebSocket.OPEN)return;
+    if(this.recalling.has(c.share.id))throw Error('Rappel en cours');
+    this.moveGroup(c.share,m.id,m.revision,m.value);return;
+   }
+   if(m.type!=='set'||typeof m.address!=='string')return;
    const kind=earAddressKind(c.share.bus,m.address,!!c.share.stereo);if(!kind||!this.xr.supports(m.address))throw Error('Réglage non autorisé pour ton retour');
    await this.checkShare(c.share);if(this.recalling.has(c.share.id))throw Error('Rappel en cours');
    this.onWrite();const value=this.setShared(c.share,m.address,kind,m.value);

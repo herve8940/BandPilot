@@ -106,3 +106,23 @@ test('phone roster follows confirmed monitor plans, including single-bus scope, 
   assert.deepEqual(ears.list(),[]);assert.equal(ears.status().running,false);
  }finally{ears.close();close();}
 });
+
+test('resumed monitor preparation uses the checked inputs and the edited roster independently of the saved group',async()=>{
+ const {xr,coach,profile,close}=fixture('MR12');
+ try{
+  coach.saveProfile(profile);const saved=coach.profile();
+  const draft:CoachProfile={version:1,completed:['inputs'],inputs:[{channel:0,name:'Aux',source:''},{channel:11,name:'Accordéon',source:''}],
+   musicians:[{name:'Scène',bus:2,role:'unknown',channels:[0]}],tech:{monitors:{2:{kind:'wedge'}}}};
+  await xr.writeParameter('/ch/11/mix/02/level',.25);
+  const before=xr.parameterState(),plan=await coach.prepareEars(2,false,undefined,draft);
+  assert.deepEqual(xr.parameterState(),before);
+  assert.ok(plan.changes.some(c=>c.address==='/rtn/aux/mix/02/level'&&c.after===-3));
+  assert.ok(!plan.changes.some(c=>c.address.startsWith('/ch/')));
+  await coach.apply(plan.token,true);
+  assert.equal(await xr.readParameter('/bus/2/config/name'),'Scene');
+  assert.equal(await xr.readParameter('/ch/11/mix/02/level'),.25);
+  assert.deepEqual(coach.profile(),saved);
+  await assert.rejects(coach.prepareEars(undefined,false,undefined,{...draft,musicians:[{...draft.musicians![0],bus:3}]}));
+  await assert.rejects(coach.prepareEars(undefined,false,undefined,{...draft,inputs:[{channel:13,name:'X',source:''}]}));
+ }finally{close();}
+});

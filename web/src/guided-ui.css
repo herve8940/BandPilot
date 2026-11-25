@@ -24,7 +24,6 @@ html .studio.app2 .monitor-share { justify-self:start; color:#dfd1ff; border-col
 html .studio.app2 :is(.sh-concert,.sh-rehearse) .sh-head { background:#141a30; border-color:var(--bp-line); }
 html .studio.app2 .sh-transport { border-color:#514469; }
 html .studio.app2 .xs2 .xs2-tabs button.on { background:#44335f; box-shadow:inset 0 -2px #af88f5; }
-html .studio.app2 .usage-notice { flex-shrink:0; }
 html .studio.app2 .coach { max-width:1200px; width:100%; margin-inline:auto; padding:clamp(20px,3vw,48px); }
 .balance-title { font-size:clamp(28px,3.6vw,48px); letter-spacing:-.045em; line-height:1.12; margin:0 0 24px; }
 html .studio.app2 .coach-overview { display:block; background:none; border:0; box-shadow:none; margin:0; }
@@ -289,3 +288,57 @@ html .studio.app2 .sh-rehearse.stand-view .bp-tab-grid {display:grid;grid-templa
 html .studio.app2 .sh-rehearse.stand-view .bp-tab-grid>.sh-songs {display:grid;grid-template-columns:minmax(90px,1fr) minmax(140px,250px);gap:8px}
 html .studio.app2 .sh-rehearse.stand-view .bp-tab-grid .rehearsal-song-grid {grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;max-height:22vh;overflow:auto}
 html .studio.app2 .sh-rehearse.stand-view .bp-section-strip button {min-height:52px}
+
+/* The starting scene and the current step share one soundcheck workspace. */
+html .studio.app2 .balance-session .balance-entry {display:block;padding:clamp(22px,3vw,42px);min-height:0;overflow:hidden}
+.balance-start {position:relative;isolation:isolate}
+.balance-start .balance-lead {width:min(70%,670px)}
+html .studio.app2 .balance-start .balance-lead h2 {font-size:clamp(25px,3vw,43px);margin:0 0 8px;line-height:1.14}
+html .studio.app2 .balance-start .balance-lead p {font-size:clamp(14px,1.35vw,18px);margin:0;line-height:1.5}
+html .studio.app2 .balance-start .balance-mic {inset:-24px -8px 60px 67%;background-position:right top}
+.balance-start-options {position:relative;display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:clamp(30px,5vw,62px)}
+html .studio.app2 .balance-start-options .balance-start-card {display:grid;grid-template-columns:38px minmax(0,1fr) 18px;align-items:center;text-align:left;gap:14px;width:100%;height:100%;min-height:95px;margin:0;padding:18px;border:1px solid #71749c;border-radius:13px;background:#242a43;color:#f6f4ff}
+html .studio.app2 .balance-start-options .balance-blank {background:#192e36;border-color:#537881}
+.balance-start-card>svg:first-child {width:36px;height:36px;padding:7px;border-radius:9px;background:#49426b;color:#e2d6ff;box-sizing:border-box}
+.balance-blank>svg:first-child {background:#29474c;color:#aaede1}
+.balance-start-card>svg:last-child {width:18px}
+.balance-start-card strong,.balance-start-card small {display:block}
+.balance-start-card strong {font-size:clamp(15px,1.5vw,21px);line-height:1.3}
+html .studio.app2 .balance-start-card small {margin:5px 0 0;color:#cbd2df;font-size:14px;font-weight:400;line-height:1.45}
+html .studio.app2 .balance-start-card:hover:enabled {border-color:#d2c5f7;background:#323751}
+html .studio.app2 .balance-start-card.balance-blank:hover:enabled {border-color:#a6ddd3;background:#233f45}
+.balance-start-card:focus-visible,.guided-return-toggle:focus-visible {outline:3px solid #cfbeff;outline-offset:3px}
+.balance-start-card:disabled {opacity:.55}
+.balance-connect {margin-top:12px}
+.balance-resume-session,.balance-resume-session>div,.balance-strip-readings dl {display:flex;gap:12px}
+.balance-resume-session {align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:14px;padding:12px 16px;border:1px solid var(--bp-line);background:var(--bp-panel);border-radius:10px}
+.balance-resume-session>div {flex-direction:column;gap:3px}
+.balance-resume-session small,.balance-origin,.balance-strip-readings dt {color:var(--bp-muted)}
+.balance-origin {font-size:14px}
+.balance-strip-readings {padding:14px 16px;border-left:3px solid #a394d4;background:var(--bp-panel);border-radius:4px}
+.balance-strip-readings h3 {font-size:15px;margin:0 0 8px}
+.balance-strip-readings dl {flex-wrap:wrap;margin:0;gap:10px 24px}
+.balance-strip-readings dt {font-size:12px}
+.balance-strip-readings dd {margin:0;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.guided-return-mix {margin:4px 0 16px}
+.coach .guided-return-toggle {min-height:44px;gap:10px}
+.guided-return-toggle[aria-expanded=true]>svg:last-child {transform:rotate(180deg)}
+.guided-live-returns {margin-top:12px}
+@media(max-width:760px){
+  .balance-start-options {grid-template-columns:1fr;gap:9px;margin-top:20px}
+  html .studio.app2 .balance-start-options .balance-start-card {min-height:74px;padding:12px;gap:10px}
+  .balance-start .balance-lead {width:80%}
+  html .studio.app2 .balance-start .balance-mic {inset:-6px -5px auto auto;width:18%;height:80px;display:block}
+  html .studio.app2 .balance-start .balance-lead h2 {min-height:0;padding-right:0}
+}
+.balance-review ul {display:flex;flex-wrap:wrap;gap:6px 10px;padding:0;list-style:none}
+.balance-review li {display:flex;align-items:center;gap:6px;padding:3px 8px;border:1px solid var(--bp-line);border-radius:6px}
+.balance-review li small {color:var(--bp-muted);font-variant-numeric:tabular-nums}
+.guided-front {margin:12px 0}
+.guided-front-levels {display:grid;gap:12px;margin:10px 0;padding:14px;border:1px solid var(--bp-line);border-radius:10px}
+.coach .guided-front-levels label {display:grid;align-items:center;grid-template-columns:minmax(90px,1fr) minmax(90px,2fr) 64px;gap:12px}
+.guided-front-levels label small {margin-left:6px;color:var(--bp-muted)}
+.guided-front-levels input[type=range] {width:100%;accent-color:#ae9dff}
+.guided-front-levels output {text-align:right;font-variant-numeric:tabular-nums}
+.guided-front-levels>button {justify-self:start}
+@media(max-width:480px){.coach .guided-front-levels label {grid-template-columns:minmax(0,1fr) auto}.guided-front-levels label>span {grid-column:1/-1}}

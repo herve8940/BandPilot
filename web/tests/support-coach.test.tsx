@@ -10,8 +10,12 @@ async function fixture(){
  const React=await import('react');saved.set('React',Object.getOwnPropertyDescriptor(globalThis,'React'));Object.defineProperty(globalThis,'React',{value:React,configurable:true});
  const {createRoot}=await import('react-dom/client'),root=createRoot(dom.window.document.getElementById('root'));
  const mount=async(node:any)=>React.act(async()=>{root.render(node);await new Promise(r=>setTimeout(r,0));});
- const click=async(text:string)=>{const button=[...dom.window.document.querySelectorAll('button')].find((b:any)=>b.textContent.trim()===text) as HTMLButtonElement;assert.ok(button,text);await React.act(async()=>{button.click();await new Promise(r=>setTimeout(r,0));});};
+ const click=async(text:string)=>{const button=[...dom.window.document.querySelectorAll('button')].find((b:any)=>b.textContent.trim()===text||dom.window.document.getElementById(b.getAttribute('aria-labelledby')??'')?.textContent===text) as HTMLButtonElement;assert.ok(button,text);await React.act(async()=>{button.click();await new Promise(r=>setTimeout(r,0));});};
  return {dom,React,root,mount,click,async close(){await React.act(async()=>root.unmount());dom.window.close();for(const[k,d]of saved){if(d)Object.defineProperty(globalThis,k,d);else delete(globalThis as any)[k];}}};
+}
+function restoreBlank(dom:any,profile:any,mode:string){
+ const key=JSON.stringify(['bp-guided-mixer','XR18',mode,undefined,undefined]);
+ dom.window.sessionStorage.setItem(key,JSON.stringify({kind:'blank',step:'inputs',profile,fresh:false}));
 }
 test('adding and choosing an input stays local; failed saving never advances the coach',async()=>{
  const f=await fixture();try{
@@ -75,8 +79,9 @@ test('a failed instrument validation is visible inside its dialog and cannot res
    if(path==='/api/coach/apply'){applied++;return new Response(JSON.stringify({error:'État modifié : prévisualiser à nouveau'}),{status:400});}
    return new Response(JSON.stringify(path==='/api/coach'?catalog:path==='/api/coach/prepare'?{token:'once',title:'Chant',explanation:'Réglages',inputs:['Chant'],changes:[]}:{}));
   };
-  f.dom.window.localStorage.setItem('xr18-coach-step','inputs');
+  restoreBlank(f.dom,profile,'simulation');
   await f.mount(<SoundCoach status={{mode:'simulation',connected:true,writesEnabled:false}} online meters={{channels:[],available:false,updatedAt:null}} onConnect={()=>{}} onMonitors={()=>{}} onExpert={()=>{}}/>);
+  await f.click('Instruments');
   await f.click('Préparer les réglages');await f.click('Essayer en simulation');
   const dialog=f.dom.window.document.querySelector('dialog');assert.match(dialog.querySelector('[role=alert]')?.textContent??'',/État modifié/);
   assert.equal(dialog.querySelector('button.primary').disabled,true);await f.click('Essayer en simulation');assert.equal(applied,1);
@@ -169,9 +174,10 @@ test('guided soundcheck measures the selected input in read-only mode and never 
     path==='/api/coach/calibration'?[]:path==='/api/coach/gain'?{report:{available:false,title:'Signal trop faible'},decision:null,proposal:null}:{};
    return new Response(JSON.stringify(data));
   };
+  restoreBlank(f.dom,profile,'real');
   await f.mount(<SoundCoach status={{mode:'real',connected:true,writesEnabled:false}} online meters={{channels:[],available:false,updatedAt:null}} onConnect={()=>{}} onMonitors={()=>{}} onExpert={()=>{}}/>);
   assert.equal(requests.some(r=>r.path==='/api/coach/gain'),false);
-  await f.click('Lancer la mesure');
+  await f.click('Niveaux');await f.click('Mesurer (5 s)');
   assert.deepEqual(requests.filter(r=>r.path==='/api/coach/gain').map(r=>r.body),[{channel:3}]);
   assert.equal(requests.some(r=>r.path.endsWith('/apply')),false);
   assert.match(f.dom.window.document.querySelector('.gain-result').textContent,/Signal trop faible/);
@@ -252,12 +258,14 @@ test('fresh soundcheck and monitor choices request a scoped preview and wait for
   const {EarsShare}=await import('../../src/ears');
   const phones=new EarsShare(':memory:',xr,()=>undefined,()=>null);
   try{
-   const engine=new Engine(xr,new ConsoleControl(xr,db),db);
+   const control=new ConsoleControl(xr,db),engine=new Engine(xr,control,db);
+   const {blankSceneValues,BLANK_SCENE_TEXT}=await import('../../src/blank-scene');
    phones.create('Ancien',3);
    engine.saveProfile({version:1,completed:[],inputs:[{channel:1,source:'lead-rock',name:'Voix'},{channel:4,source:'bass-di',name:'Basse'}],musicians:[{bus:1,role:'chant',name:'Voix',channels:[1]}]});
    let writes=0;
    globalThis.fetch=async(path:any,init:any)=>{
     const data=JSON.parse(init?.body??'{}');let result:unknown={};
+    if(path==='/api/console/blank')result={...await control.preview(Object.fromEntries(Object.entries(blankSceneValues()).filter(([a])=>xr.supports(a))),true),...BLANK_SCENE_TEXT,inputs:[]};
     if(path==='/api/coach')result={...engine.catalog(),role:'admin'};
     if(path==='/api/coach/profile')result=engine.saveProfile(data.profile);
     if(path==='/api/coach/prepare')result=await engine.prepare(data.channel,data.resetUnused);
@@ -267,13 +275,20 @@ test('fresh soundcheck and monitor choices request a scoped preview and wait for
     return new Response(JSON.stringify(result));
    };
    const render=async(step:string)=>{
-    f.dom.window.localStorage.setItem('xr18-coach-step',step);
     await f.mount(<SoundCoach key={step} status={{mode:'simulation',connected:true,writesEnabled:false}} online meters={{channels:[],available:false,updatedAt:null}} onConnect={()=>{}} onMonitors={()=>{}} onExpert={()=>{}}/>);
    };
-   await render('inputs');await f.click('Nouvelle balance avec ce groupe');
+   await render('inputs');
+   const previous=engine.profile();
+   await f.click('Partir d’une scène vierge');assert.match(f.dom.window.document.querySelector('dialog').textContent,/48 V/);
+   await f.click('Annuler, ne rien changer');assert.equal(writes,0);assert.deepEqual(engine.profile(),previous);
+   await f.click('Partir d’une scène vierge');await f.click('Essayer en simulation');assert.equal(writes,1);
+   assert.equal(f.dom.window.document.querySelectorAll('.coach-input2').length,0);
+   assert.deepEqual(engine.profile(),previous);writes=0;
+   await f.click('Reprendre les instruments de mon groupe enregistré');
+   await f.click('Préparer le groupe et fermer les entrées inutilisées');
    assert.match(f.dom.window.document.querySelector('dialog').textContent,/Entrées ramenées au silence · 2, 3, 5/);
    await f.click('Annuler, ne rien changer');assert.equal(writes,0);
-   await render('ears');
+   await render('ears');await f.click('Retours');
    await f.click('Enregistrer les musiciens et leurs QR');assert.deepEqual(phones.list().map(s=>s.name),['Voix']);assert.equal(writes,0);
    const checkbox=f.dom.window.document.querySelector('.coach-section input[type=checkbox]');
    assert.equal(checkbox.checked,false);await f.React.act(async()=>checkbox.click());
@@ -286,5 +301,100 @@ test('fresh soundcheck and monitor choices request a scoped preview and wait for
    assert.match(f.dom.window.document.querySelector('dialog').textContent,/Les QR suivront la liste du groupe/);
    assert.equal(writes,0);await f.click('Essayer en simulation');assert.equal(writes,1);
   }finally{phones.close();xr.close();db.close();}
+ }finally{await f.close();}
+});
+
+test('resuming a mixer shows all channels and sends before the optional gain test',async()=>{
+ const f=await fixture();
+ try{
+  const {SoundCoach}=await import('../src/SoundCoach');
+  const {STEPS,SOURCES,ROLES,MONITOR_RECIPES,OWN_LEVEL}=await import('../../src/sound-coach');
+  const {MixerModelContext}=await import('../src/MixerModel');
+  const {MIXER_MODELS}=await import('../../shared/mixer-models');
+  for(const model of [MIXER_MODELS.XR18,MIXER_MODELS.MR12]){
+   const calls:string[]=[],measured:number[]=[];
+   const opened:(number|'aux')[]=[];
+   const values={'/ch/01/config/name':'Accordéon','/ch/01/config/insrc':2,'/headamp/03/gain':.5,
+    '/ch/01/preamp/rtnsw':0,'/ch/01/mix/02/level':.5,'/ch/01/mix/fader':0,'/ch/01/mix/on':0,
+    '/ch/02/preamp/rtnsw':1,'/ch/02/config/rtnsrc':5,'/ch/02/preamp/rtntrim':.75,
+    '/config/chlink/1-2':1,'/config/buslink/1-2':1,'/bus/2/config/name':'Casque','/rtn/aux/config/name':'Synthé'};
+   const entry={kind:'scene',id:model.id,name:'Base',data:{version:2,model:model.id,values,fx:[]}};
+   const group={version:1,inputs:[{channel:2,name:'Autre groupe',source:'keys'}],completed:[]};
+   const catalog={role:'admin',profile:group,steps:STEPS,symptoms:[],sources:SOURCES,templates:[],presets:{},drumKit:[],roles:ROLES,recipes:MONITOR_RECIPES,ownLevel:OWN_LEVEL};
+   globalThis.fetch=async(path:any,init:any)=>{
+    calls.push(path);
+    let result;
+    if(path==='/api/coach/mixer-capture'||path==='/api/library/'+model.id)result=entry;
+    else if(path==='/api/coach')result=catalog;
+    else if(path==='/api/coach/calibration')result=[];
+    else if(path==='/api/coach/gain'){const body=JSON.parse(init.body);assert.equal(body.fromMixer,true);measured.push(body.channel);result={report:{title:'Signal',message:'Signal'},decision:null,proposal:null};}
+    else throw Error(path);
+    return new Response(JSON.stringify(result));
+   };
+   const mount=async(key:string)=>f.mount(<MixerModelContext.Provider value={model}><SoundCoach key={key} status={{model:model.id,mode:'real',host:'127.0.0.1',port:10024,connected:true,writesEnabled:false}} online meters={{channels:[],available:false,updatedAt:null}} onConnect={()=>{}} onMonitors={()=>{}} onExpert={(n,_view,aux)=>opened.push(aux??n!)}/></MixerModelContext.Provider>);
+   f.dom.window.localStorage.setItem('xr18-coach-step','levels');
+   await mount(model.id);
+   assert.ok(f.dom.window.document.querySelector('.coach-next .balance-mic'));
+   assert.ok(f.dom.window.document.querySelector('.balance-start-options .balance-resume'));
+   await f.click('Reprendre le mélangeur actuel');
+   const doc=f.dom.window.document;
+   assert.equal(doc.querySelectorAll('.balance-inputs tbody tr').length,model.channels+1);
+   assert.equal(doc.querySelectorAll('.balance-sends thead th').length,model.buses+1);
+   assert.match(doc.querySelector('.balance-inputs [data-strip=ch1]').textContent,/Accordéon.*Stéréo 1–2.*Prise 3.*\+24\.0 dB.*-∞ dB.*Coupé/);
+   assert.match(doc.querySelector('.balance-sends [data-strip=ch1] td:nth-child(3)').textContent,/-10\.0 dB/);
+   assert.match(doc.querySelector('.balance-sends thead').textContent,/Casque/);
+   assert.match(doc.querySelector('.balance-inputs [data-strip=aux]').textContent,/Synthé/);
+   assert.match(doc.querySelector('.balance-inputs [data-strip=ch3]').textContent,/—/);
+   if(model.usbChannels)assert.match(doc.querySelector('.balance-inputs [data-strip=ch2]').textContent,/USB 6.*\+9\.0 dB.*Trim USB/);
+   else assert.match(doc.querySelector('.balance-sends thead').textContent,/Bus interne/);
+   assert.doesNotMatch(doc.body.textContent,/Mesurer le gain|Profil précédent/);
+   const rows=(strip:string)=>doc.querySelector('.balance-inputs [data-strip='+strip+']');
+   const actClick=(el:HTMLElement)=>f.React.act(async()=>el.click());
+   const next=()=>Array.from(doc.querySelectorAll('button')).find((b:any)=>b.textContent==='Continuer avec la sélection') as HTMLButtonElement;
+   assert.ok(next().disabled);
+   await f.click('Cocher les entrées nommées (2)');
+   assert.deepEqual(Array.from(doc.querySelectorAll('.balance-pick input:checked'),(el:any)=>el.closest('tr').dataset.strip),['ch1','aux']);
+   await f.click('Tout cocher');assert.equal(doc.querySelectorAll('.balance-pick input:checked').length,model.channels+1);
+   await f.click('Tout décocher');assert.ok(next().disabled);
+   await actClick(rows('ch1').querySelector('label'));
+   await actClick(rows('ch3').querySelector('td'));
+   await actClick(rows('aux').querySelector('input'));
+   await actClick(rows('ch2').querySelector('.balance-inspect'));
+   assert.deepEqual(opened,[2]);assert.equal(doc.querySelectorAll('.balance-pick input:checked').length,3);
+   await mount(model.id+'-again');
+   assert.ok(doc.querySelector('.coach-next .balance-mic'));await f.click('Instruments');
+   assert.equal(doc.querySelectorAll('.balance-pick input:checked').length,3);
+   await f.click('Continuer avec la sélection');
+   assert.equal(doc.querySelector('.balance-track [aria-current=step]').textContent,'Niveaux');
+   const selector=()=>doc.querySelector('.gain-picker select');
+   const change=async(value:string)=>f.React.act(async()=>{const el=selector();el.value=value;el.dispatchEvent(new f.dom.window.Event('change',{bubbles:true}));});
+   assert.deepEqual(Array.from(selector().options,(o:any)=>o.value),['1','3','0']);
+   assert.match(doc.querySelector('.gain-card').textContent,/Gain au départ de la balance.*24/);
+   await change('0');assert.doesNotMatch(doc.querySelector('.gain-step').textContent,/Mesurer \(5 s\)/);
+   await f.click('Ouvrir la tranche');assert.deepEqual(opened,[2,'aux']);
+   await f.click('Continuer · Écoute');assert.equal(doc.querySelector('.balance-track [aria-current=step]').textContent,'Écoute');
+   assert.deepEqual(Array.from(doc.querySelector('.coach-channel select').options,(o:any)=>o.value),['1','3','0']);
+   await f.click('Continuer · Retours');assert.equal(doc.querySelector('.balance-track [aria-current=step]').textContent,'Retours');
+   assert.deepEqual(Array.from(doc.querySelectorAll('.balance-sends tr[data-strip]'),(tr:any)=>tr.dataset.strip),['ch1','ch3','aux']);
+   await f.click('Ajouter un musicien');
+   const card=()=>doc.querySelector('.coach-musician');
+   await actClick(card().querySelector('.own button'));
+   const choose=async(index:number,value:string)=>f.React.act(async()=>{
+    const select=card().querySelectorAll('select')[index];select.value=value;select.dispatchEvent(new f.dom.window.Event('change',{bubbles:true}));
+   });
+   await choose(1,'guitare');await choose(2,'wedge');
+   assert.deepEqual(Array.from(card().querySelectorAll('.own button'),(b:any)=>b.textContent),['Accordéon','Entrée 3','Synthé']);
+   await mount(model.id+'-returns');await f.click('Retours');
+   assert.equal(card().querySelectorAll('select')[2].value,'wedge');
+   assert.equal(card().querySelector('.own .on').textContent,'Accordéon');
+   assert.match(card().querySelector('.mixbars').textContent,/Accordéon-3 dB/);
+   assert.doesNotMatch(card().textContent,/Autre groupe/);
+   await f.click('Continuer · Sauvegarde');assert.equal(doc.querySelector('.balance-track [aria-current=step]').textContent,'Sauvegarde');
+   assert.deepEqual([...new Set(calls)].sort(),['/api/coach','/api/coach/mixer-capture','/api/library/'+model.id].sort());
+   await f.click('Niveaux');await change('3');await f.click('Mesurer (5 s)');assert.deepEqual(measured,[3]);
+   await f.click('Vue d’ensemble');await f.click('Continuer ma balance');
+   assert.equal(doc.querySelector('.balance-track [aria-current=step]').textContent,'Niveaux');
+
+  }
  }finally{await f.close();}
 });

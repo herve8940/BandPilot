@@ -7,7 +7,7 @@ import {Eraser,Check,Drum,Headphones,Plus,QrCode,Trash2,Users,Wand2} from 'lucid
 
 export type Input={channel:number;source:string;name:string};
 export type Role='chant'|'guitare'|'basse'|'batterie'|'clavier';
-export type Musician={name:string;bus:number;role:Role;channels:number[]};
+export type Musician={name:string;bus:number;role:Role|'unknown';channels:number[]};
 export type Profile={version:1;sound?:CoachSound;headroom?:GainHeadroom;inputs:Input[];completed:string[];musicians?:Musician[];tech?:TechRider};
 export type Source={id:string;label:string;group:string;family:string;color:number;name:string;pan:number};
 export type PresetCard={title:string;description:string;advice:string;lines:string[]};
@@ -22,8 +22,8 @@ function InstrumentSelect({data,value,disabled,onChange}:{data:CoachData;value:s
  return <select disabled={disabled} value={value} onChange={e=>onChange(e.target.value)}>{groups.map(g=><optgroup key={g} label={tx(g)}>{data.sources.filter(s=>s.group===g).map(s=><option key={s.id} value={s.id}>{tx(s.label)}</option>)}</optgroup>)}</select>;
 }
 
-export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyChannel,onApplyAll,onSave,notify,onNext,onBlank}:{
- data:CoachData;profile:Profile;setProfile:(p:Profile)=>void;admin:boolean;busy:boolean;canApply:boolean;
+export function InputsStep({guided=false,data,profile,setProfile,admin,busy,canApply,onApplyChannel,onApplyAll,onSave,notify,onNext,onBlank}:{
+ guided?:boolean;data:CoachData;profile:Profile;setProfile:(p:Profile)=>void;admin:boolean;busy:boolean;canApply:boolean;
  onApplyChannel:(p:Profile,channel:number)=>void;onApplyAll:(p:Profile,resetUnused?:boolean)=>void;onSave:(p:Profile)=>Promise<boolean>;notify:(m:string)=>void;onNext:()=>void;onBlank:()=>void}){
  const model=useMixerModel();
  const [open,setOpen]=useState<number|null>(null);
@@ -68,10 +68,11 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
    <button disabled={!admin||busy||profile.inputs.length>=model.channels} onClick={()=>{const ch=freeChannel(profile.inputs,0,model.channels);if(ch)update({...profile,inputs:[...profile.inputs,{channel:ch,source:'lead-rock',name:'Micro '+ch}].sort((a,b)=>a.channel-b.channel)});}}><Plus size={15}/>{tx(" Ajouter un instrument")}</button>
    <button disabled={!admin||busy} onClick={()=>onSave(profile)}>{tx("Enregistrer mon groupe")}</button>
    <button className="primary" disabled={!admin||busy||!canApply||!profile.inputs.length} onClick={()=>onApplyAll(profile)}><Wand2 size={16}/>{tx(" Préparer les réglages du groupe (")}{tx(profile.inputs.length)}{tx(" instruments)")}</button>
-   <button disabled={!admin||busy||!canApply||!profile.inputs.length} onClick={()=>onApplyAll(profile,true)}><Eraser size={16}/>{tx('Nouvelle balance avec ce groupe')}</button>
-   <button disabled={!admin||busy||!profile.inputs.length} onClick={()=>void onSave(profile).then(saved=>{if(saved)onNext();})}>{tx("Étape suivante : régler les gains →")}</button>
+   {!guided&&<button disabled={!admin||busy||!canApply||!profile.inputs.length} onClick={()=>onApplyAll(profile,true)}><Eraser size={16}/>{tx('Nouvelle balance avec ce groupe')}</button>}
+   {!guided&&<button disabled={!admin||busy||!profile.inputs.length} onClick={()=>void onSave(profile).then(saved=>{if(saved)onNext();})}>{tx("Étape suivante : régler les gains →")}</button>}
   </div>
-  <p className="coach-note">{tx('Pour remplacer une ancienne balance, « Nouvelle balance avec ce groupe » ferme aussi les entrées absentes et leurs envois vers les retours et les effets.')}</p>
+  {!guided&&<p className="coach-note">{tx('Pour remplacer une ancienne balance, « Nouvelle balance avec ce groupe » ferme aussi les entrées absentes et leurs envois vers les retours et les effets.')}</p>}
+  {guided&&profile.inputs.length>0&&<details className="gain-reference"><summary>{tx('Options du groupe')}</summary><button disabled={!admin||busy||!canApply} onClick={()=>onApplyAll(profile,true)}>{tx('Préparer le groupe et fermer les entrées inutilisées')}</button></details>}
   <details className="gain-reference"><summary>{tx("Base sonore et marge à l’entrée")}</summary>
 <div className="coach-sound-choice">
    <label>{tx('Base sonore')}<select aria-label={tx('Base sonore')} disabled={!admin||busy} value={sound.id} onChange={e=>{setProfile({...profile,sound:e.target.value as CoachSound});notify('Base sonore choisie. Enregistre ton groupe ou prépare les réglages pour voir les changements.');}}>{COACH_SOUNDS.map(s=><option key={s.id} value={s.id}>{tx(s.label)}</option>)}</select></label>
@@ -81,19 +82,26 @@ export function InputsStep({data,profile,setProfile,admin,busy,canApply,onApplyC
    <p>{tx('Plus de marge laisse davantage de place aux crêtes imprévues. Ce choix est indépendant du style sonore et du type de retour ; il sera utilisé pour régler les gains à l’étape 3.')}</p>
   </div>
   </details>
-  <details className="gain-reference"><summary>{tx("Partir d’une scène vierge")}</summary><div className="coach-blank"><Eraser size={18}/><p><b>{tx("La console garde les réglages d’un autre groupe ou d’un ancien concert ?")}</b>{tx(" Repars d’une scène vierge : tout revient à neutre, volumes en bas. Le 48 V, les gains et le routage ne bougent pas.")}</p><button disabled={!admin||busy||!canApply} onClick={onBlank}>{tx(busy?"Lecture de la console…":"Partir d’une scène vierge")}</button></div></details>
+  {!guided&&<details className="gain-reference"><summary>{tx("Partir d’une scène vierge")}</summary><div className="coach-blank"><Eraser size={18}/><p><b>{tx("La console garde les réglages d’un autre groupe ou d’un ancien concert ?")}</b>{tx(" Repars d’une scène vierge : tout revient à neutre, volumes en bas. Le 48 V, les gains et le routage ne bougent pas.")}</p><button disabled={!admin||busy||!canApply} onClick={onBlank}>{tx(busy?"Lecture de la console…":"Partir d’une scène vierge")}</button></div></details>}
   <p className="coach-note">{tx('Les presets sont des points de départ à adapter à tes sources et à l’écoute. Règle les gains à l’étape 3. Chaque application affiche la comparaison avant / après et crée une sauvegarde.')} {sound.id==='natural'&&tx('En mode Naturel, les gates restent désactivés : les seules crêtes fortes ne suffisent pas à préserver les notes faibles.')}</p>
  </div>;
 }
 
-export function EarsStep({data,profile,setProfile,admin,busy,canApply,onSuggest,onApply,onShare,onSave}:{
+export function EarsStep({fromMixer=false,data,profile,setProfile,admin,busy,canApply,onSuggest,onApply,onShare,onSave}:{
  data:CoachData;profile:Profile;setProfile:(p:Profile)=>void;admin:boolean;busy:boolean;canApply:boolean;
- onSuggest:()=>void;onApply:(p:Profile,bus?:number,resetUnused?:boolean)=>void;onShare:(p:Profile)=>void;onSave:(p:Profile)=>void}){
+ fromMixer?:boolean;onSuggest:()=>void;onApply:(p:Profile,bus?:number,resetUnused?:boolean)=>void;onShare:(p:Profile)=>void;onSave:(p:Profile)=>void}){
  const model=useMixerModel();
  const musicians=profile.musicians??[];
  const [resetUnused,setResetUnused]=useState(false);
  const src=(id:string)=>data.sources.find(s=>s.id===id)!;
- const set=(list:Musician[])=>setProfile({...profile,musicians:list});
+ const set=(list:Musician[])=>{
+  const tech=profile.tech&&{...profile.tech};
+  for(const m of musicians.filter(previous=>!list.some(next=>next.bus===previous.bus))){
+   if(tech?.monitors){tech.monitors={...tech.monitors};delete tech.monitors[m.bus];}
+   if(tech?.positions){tech.positions={...tech.positions};delete tech.positions[m.bus];}
+  }
+  setProfile({...profile,musicians:list,tech});
+ };
  const edit=(i:number,patch:Partial<Musician>)=>{
   const next=musicians.map((m,n)=>n===i?{...m,...patch}:m),oldBus=musicians[i]!.bus;
   if(patch.bus===undefined||patch.bus===oldBus||!profile.tech){set(next);return;}
@@ -109,25 +117,30 @@ export function EarsStep({data,profile,setProfile,admin,busy,canApply,onSuggest,
  };
  const listening=(m:Musician)=>profile.tech?.monitors?.[m.bus]?.kind;
  const setListening=(m:Musician,kind:MonitorListening|undefined)=>setProfile({...profile,tech:{...profile.tech,monitors:{...profile.tech?.monitors,[m.bus]:{...profile.tech?.monitors?.[m.bus],kind}}}});
- const level=(m:Musician,input:Input)=>{const family=src(input.source).family,kind=listening(m),recipes=(kind&&data.recipesByListening?.[kind])||data.recipes;return m.channels.includes(input.channel)&&!(m.role==='batterie'&&family!=='edrums')?data.ownLevel:recipes[m.role][family]!;};
+ const level=(m:Musician,input:Input)=>{
+  const family=src(input.source)?.family,own=m.channels.includes(input.channel);
+  if(!family||m.role==='unknown')return own?data.ownLevel:resetUnused?-90:null;
+  const kind=listening(m),recipes=(kind&&data.recipesByListening?.[kind])||data.recipes;
+  return own&&!(m.role==='batterie'&&family!=='edrums')?data.ownLevel:recipes[m.role][family]!;
+ };
  const freeBus=Array.from({length:model.monitorOutputs},(_,i)=>i+1).find(b=>!musicians.some(m=>m.bus===b));
  return <div className="coach-section">
   <div className="coach-checklist"><p><Headphones size={18}/>{tx(" Chaque musicien a son propre bus (sortie Aux 1 à ")}{tx(model.monitorOutputs)}{tx(" de la console) : branche-y son boîtier in-ear ou son retour.")}</p><p><Check size={17}/>{tx(" Je prépare un mix de départ ")}<b>{tx("pré-fader")}</b>{tx(" : ce que tu changes en façade ne bouge pas ses oreilles.")}</p><p><QrCode size={17}/>{tx(" Ensuite, chacun scanne son QR code et ajuste son mix sur son téléphone.")}</p></div>
-  <div className="coach-actions"><button disabled={!admin||busy} onClick={onSuggest}><Users size={15}/>{tx(" Proposer les musiciens d’après mon groupe")}</button><button disabled={!admin||busy||!freeBus} onClick={()=>freeBus&&set([...musicians,{name:'Musicien '+freeBus,bus:freeBus,role:'chant',channels:[]}])}><Plus size={15}/>{tx(" Ajouter un musicien")}</button></div>
+  <div className="coach-actions"><button disabled={!admin||busy} onClick={onSuggest}><Users size={15}/>{tx(" Proposer les musiciens d’après mon groupe")}</button><button disabled={!admin||busy||!freeBus} onClick={()=>freeBus&&set([...musicians,{name:'Musicien '+freeBus,bus:freeBus,role:fromMixer?'unknown':'chant',channels:[]}])}><Plus size={15}/>{tx(" Ajouter un musicien")}</button></div>
   {!musicians.length&&<p className="coach-note">{tx("Aucun musicien pour l’instant : clique sur « Proposer les musiciens d’après mon groupe ».")}</p>}
   <label><input type="checkbox" checked={resetUnused} disabled={!admin||busy} onChange={e=>setResetUnused(e.target.checked)}/> {tx('Refaire le mix des retours')}</label>
   <p className="coach-note">{tx('Ce choix ferme les anciens envois sur le retour préparé. Si tu appliques à tous, les sorties sans musicien sont aussi ramenées au silence.')}</p>
-  <div className="coach-musicians">{musicians.map((m,i)=>{const role=data.roles.find(r=>r.id===m.role)!;const rows=[...profile.inputs].map(input=>({input,db:level(m,input)})).sort((a,b)=>b.db-a.db);return <article className="coach-musician" key={i}>
+  <div className="coach-musicians">{musicians.map((m,i)=>{const role=data.roles.find(r=>r.id===m.role);const rows=[...profile.inputs].map(input=>({input,db:level(m,input)})).sort((a,b)=>(b.db??-100)-(a.db??-100));return <article className="coach-musician" key={i}>
    <div className="row">
     <label>{tx("Musicien")}<input disabled={!admin||busy} value={m.name} maxLength={12} onChange={e=>edit(i,{name:e.target.value})}/></label>
     <label>{tx("Sortie / bus")}<select disabled={!admin||busy} value={m.bus} onChange={e=>edit(i,{bus:Number(e.target.value)})}>{Array.from({length:model.monitorOutputs},(_,b)=><option key={b+1} value={b+1} disabled={b+1!==m.bus&&musicians.some(x=>x.bus===b+1)}>{tx("Bus ")}{tx(b+1)}{tx(" (Aux ")}{tx(b+1)})</option>)}</select></label>
-    <label>{tx("Rôle")}<select disabled={!admin||busy} value={m.role} onChange={e=>edit(i,{role:e.target.value as Role})}>{data.roles.map(r=><option key={r.id} value={r.id}>{tx(r.label)}</option>)}</select></label>
+    <label>{tx("Rôle")}<select disabled={!admin||busy} value={m.role} onChange={e=>edit(i,{role:e.target.value as Musician['role']})}>{fromMixer&&<option value="unknown">{tx('À préciser')}</option>}{data.roles.map(r=><option key={r.id} value={r.id}>{tx(r.label)}</option>)}</select></label>
     <label>{tx('Écoute')}<select aria-label={tx('Écoute de '+m.name)} disabled={!admin||busy} value={listening(m)??''} onChange={e=>setListening(m,(e.target.value||undefined) as MonitorListening|undefined)}><option value="">{tx('À préciser · mix historique')}</option>{MONITOR_LISTENING.map(l=><option key={l.id} value={l.id}>{tx(l.label)}</option>)}</select></label>
     <div className="row-actions"><button className="apply" disabled={!admin||busy||!canApply} onClick={()=>onApply(profile,m.bus,resetUnused)}><Wand2 size={15}/>{tx(" Préparer les réglages")}</button><button disabled={!admin||busy} aria-label={tx('Retirer '+m.name)} onClick={()=>set(musicians.filter((_,n)=>n!==i))}><Trash2 size={15}/></button></div>
    </div>
-   <small className="role-hint">{tx(role.hint)}</small>
+   {role&&<small className="role-hint">{tx(role.hint)}</small>}
    <div className="own"><span>{tx("Ses instruments (mis devant) :")}</span>{profile.inputs.map(input=><button key={input.channel} disabled={!admin||busy} className={m.channels.includes(input.channel)?'on':''} onClick={()=>edit(i,{channels:m.channels.includes(input.channel)?m.channels.filter(c=>c!==input.channel):[...m.channels,input.channel]})}>{input.name}</button>)}</div>
-   <div className="mixbars" aria-label={tx('Mix de départ de '+m.name)}>{rows.map(({input,db})=><div key={input.channel} className={db<=-90?'off':''}><span>{input.name}</span><i><b style={{width:db<=-90?'0%':Math.max(4,Math.round((db+40)/40*100))+'%',background:swatch(src(input.source).color)}}/></i><em>{tx(db<=-90?'coupé':db+' dB')}</em></div>)}</div>
+   <div className="mixbars" aria-label={tx('Mix de départ de '+m.name)}>{rows.map(({input,db})=><div key={input.channel} className={db===null||db<=-90?'off':''}><span>{input.name}</span><i><b style={{width:db===null||db<=-90?'0%':Math.max(4,Math.round((db+40)/40*100))+'%',background:swatch(src(input.source)?.color??0)}}/></i><em>{tx(db===null?'Niveau conservé':db<=-90?'coupé':db+' dB')}</em></div>)}</div>
   </article>;})}</div>
   <p className="coach-note">{tx("Les QR suivent le nom et la sortie de chaque musicien. Enregistrer le groupe désactive les anciens liens et conserve les réglages audio.")}</p>
   <div className="coach-actions">
@@ -151,15 +164,15 @@ function PeakBar({peak,target=-6}:{peak:number;target?:number}){
  const pos=(v:number)=>Math.max(0,Math.min(100,(v+60)/60*100));
  return <div className="peakbar" aria-label={tx('Crête '+db(peak))}><span className="zone" style={{left:pos(target-3)+'%',width:(pos(target+3)-pos(target-3))+'%'}}/><i style={{width:pos(peak)+'%'}} className={peak>=-1?'clip':Math.abs(peak-target)<=3?'good':'off'}/><small style={{left:pos(target)+'%'}}>{String(target).replace('-','−')}</small></div>;
 }
-export function GainStep({gain,measuringGain,onMeasureGain,profile,channel,setChannel,admin,busy,canApply,real,refresh,api,run,onPlan,onApplyChannel,onApplyAll,onMeasured}:{
- gain:GainResult|null;measuringGain:boolean;onMeasureGain:()=>void;profile:Profile;channel:number;setChannel:(c:number)=>void;admin:boolean;busy:boolean;canApply:boolean;real:boolean;refresh:number;
+export function GainStep({fromMixer=false,gainAtStart,openAux,gain,measuringGain,onMeasureGain,profile,channel,setChannel,admin,busy,canApply,real,refresh,api,run,onPlan,onApplyChannel,onApplyAll,onMeasured}:{
+ fromMixer?:boolean;gainAtStart?:number|null;openAux?:()=>void;gain:GainResult|null;measuringGain:boolean;onMeasureGain:()=>void;profile:Profile;channel:number;setChannel:(c:number)=>void;admin:boolean;busy:boolean;canApply:boolean;real:boolean;refresh:number;
  api:(path:string,data?:unknown)=>Promise<any>;run:(fn:()=>Promise<void>)=>void;onMeasured?:()=>void;onPlan:(plan:any)=>void;onApplyChannel:(p:Profile,ch:number)=>void;onApplyAll:(p:Profile)=>void}){
  const [status,setStatus]=useState<Cal[]>([]),[bleed,setBleed]=useState<BleedResult|null>(null),[measuring,setMeasuring]=useState<''|'bleed'>('');
  const natural=profile.sound==='natural',target=gainHeadroom(profile.headroom).targetPeakDb;
- useEffect(()=>{let live=true;api('/api/coach/calibration',{sound:profile.sound??DEFAULT_COACH_SOUND,headroom:profile.headroom??DEFAULT_GAIN_HEADROOM}).then(s=>{if(live)setStatus(s);}).catch(()=>{});return()=>{live=false;};},[refresh,channel,profile.inputs.length,profile.sound,profile.headroom,gain,bleed]);
+ useEffect(()=>{let live=true;if(fromMixer){setStatus([]);return;}api('/api/coach/calibration',{sound:profile.sound??DEFAULT_COACH_SOUND,headroom:profile.headroom??DEFAULT_GAIN_HEADROOM}).then(s=>{if(live)setStatus(s);}).catch(()=>{});return()=>{live=false;};},[fromMixer,refresh,channel,profile.inputs.length,profile.sound,profile.headroom,gain,bleed]);
  useEffect(()=>{setBleed(null);},[channel,profile.sound,profile.headroom,gain]);
  const current=status.find(s=>s.channel===channel),input=profile.inputs.find(i=>i.channel===channel);
- const done=status.filter(s=>s.state==='ok').length,index=profile.inputs.findIndex(i=>i.channel===channel),next=profile.inputs[index+1];
+ const done=status.filter(s=>s.state==='ok'&&profile.inputs.some(i=>i.channel===s.channel)).length,index=profile.inputs.findIndex(i=>i.channel===channel),next=profile.inputs[index+1];
  const measureBleed=()=>run(async()=>{setMeasuring('bleed');try{setBleed(await api('/api/coach/bleed',{channel}));}finally{setMeasuring('');onMeasured?.();}});
 
  const th=bleed?.thresholds??current?.thresholds??null;
@@ -167,9 +180,11 @@ export function GainStep({gain,measuringGain,onMeasureGain,profile,channel,setCh
  const gainMoved=!!gain&&gain.gainDb!=null&&current?.gainDb!=null&&current.gainDb!==gain.gainDb;
  return <div className="coach-section gain-step">
   {!real&&<p className="coach-message warn">{tx("La mesure a besoin de la vraie console et des musiciens qui jouent. En simulation, aucun niveau n’est inventé : connecte la console pour régler les gains.")}</p>}
-  {profile.inputs.length>0&&<label className="gain-picker">{tx("Instrument à mesurer")}<select value={channel} disabled={busy} onChange={e=>setChannel(Number(e.target.value))}>{profile.inputs.map(i=><option key={i.channel} value={i.channel}>{i.channel} · {i.name}</option>)}</select><small>{done} / {profile.inputs.length} {tx("calés")}</small></label>}
-  {input&&<div className="gain-card">
+  {profile.inputs.length>0&&<label className="gain-picker">{tx("Instrument à mesurer")}<select value={channel} disabled={busy} onChange={e=>setChannel(Number(e.target.value))}>{profile.inputs.map(i=><option key={i.channel} value={i.channel}>{i.channel||'Aux'} · {i.name}</option>)}</select>{!fromMixer&&<small>{done} / {profile.inputs.length} {tx("calés")}</small>}</label>}
+  {input&&channel===0&&fromMixer&&<div className="gain-card"><h3>{input.name}</h3><p>{tx('Vérifie le niveau de l’entrée Aux stéréo dans sa tranche.')}</p><button onClick={openAux}>{tx('Ouvrir la tranche')}</button></div>}
+  {input&&channel>0&&<div className="gain-card">
    <h3>{input.name} <small>{tx("entrée ")}{tx(channel)}{tx(current?.gainDb!=null?` · gain actuel ${db(current.gainDb)}`:'')}</small></h3>
+   {fromMixer&&gainAtStart!=null&&<p>{tx('Gain au départ de la balance')} · {db(gainAtStart)}</p>}
    {current?.state==='stale'&&<p className="coach-message warn">{tx('La mesure ne correspond plus au gain ou à la marge choisie. Remesure.')}</p>}
    <ol className="gain-steps">
     <li className={current?.state==='ok'?'done':''}><div><b>{tx("Régler le gain")}</b><p>{tx("Fais jouer ")}<b>{input.name}</b>{tx(profile.headroom==='extra'?' seul, au volume du passage le plus fort du concert, pendant 5 secondes. Je vise des crêtes vers −9 dB.':" seul, au volume du passage le plus fort du concert, pendant 5 secondes. Je vise des crêtes vers −6 dB.")}</p></div>
@@ -180,13 +195,13 @@ export function GainStep({gain,measuringGain,onMeasureGain,profile,channel,setCh
      <button disabled={!admin||busy||!real||current.state!=='ok'} onClick={measureBleed}>{tx(measuring==='bleed'?'Mesure… les autres jouent !':'Mesurer la repisse (5 s)')}</button>
      {bleed&&<div className="gain-result"><b>{tx(bleed.thresholds?'Repisse mesurée : '+db(bleed.report.maximumDb):bleed.report.title)}</b><p>{tx(bleed.message??(bleed.thresholds?bleed.thresholds.note:bleed.report.message))}</p></div>}
     </li>}
-    <li className={current?.state==='ok'?'':'locked'}><div><b>{tx(natural?"Préparer le son naturel":"Appliquer la configuration calée")}</b><p>{th?<>{tx(th.compThrDb===null?"Compresseur désactivé":"Compresseur à partir de ")}{th.compThrDb!==null&&<b>{tx(db(th.compThrDb))}</b>}{th.gateThrDb!==null&&<>{tx(", gate à ")}<b>{tx(db(th.gateThrDb))}</b></>}. {tx(th.note)}</>:tx('Les seuils seront calculés sur ta mesure dès que le gain sera bien réglé.')}</p></div>
+    {!fromMixer&&<li className={current?.state==='ok'?'':'locked'}><div><b>{tx(natural?"Préparer le son naturel":"Appliquer la configuration calée")}</b><p>{th?<>{tx(th.compThrDb===null?"Compresseur désactivé":"Compresseur à partir de ")}{th.compThrDb!==null&&<b>{tx(db(th.compThrDb))}</b>}{th.gateThrDb!==null&&<>{tx(", gate à ")}<b>{tx(db(th.gateThrDb))}</b></>}. {tx(th.note)}</>:tx('Les seuils seront calculés sur ta mesure dès que le gain sera bien réglé.')}</p></div>
      <button className="primary" disabled={!admin||busy||!canApply||current?.state!=='ok'} onClick={()=>onApplyChannel(profile,channel)}><Wand2 size={15}/>{tx(" Appliquer à ")}{input.name}</button>
-    </li>
+    </li>}
    </ol>
-   <div className="coach-actions">{next&&<button disabled={busy} onClick={()=>setChannel(next.channel)}>{tx("Instrument suivant : ")}{next.name} →</button>}<button disabled={!admin||busy||!canApply||!profile.inputs.length} onClick={()=>onApplyAll(profile)}><Wand2 size={15}/>{tx(done===1?"Appliquer tout le groupe (1 calé)":`Appliquer tout le groupe (${done} calés)`)}</button></div>
+   <div className="coach-actions">{next&&<button disabled={busy} onClick={()=>setChannel(next.channel)}>{tx("Instrument suivant : ")}{next.name} →</button>}{!fromMixer&&<button disabled={!admin||busy||!canApply||!profile.inputs.length} onClick={()=>onApplyAll(profile)}><Wand2 size={15}/>{tx(done===1?"Appliquer tout le groupe (1 calé)":`Appliquer tout le groupe (${done} calés)`)}</button>}</div>
   </div>}
-  <details className="gain-reference"><summary>{tx("Niveaux des instruments")}</summary>
+  {!fromMixer&&<details className="gain-reference"><summary>{tx("Niveaux des instruments")}</summary>
   <h3>{tx("Où en est chaque instrument ")}<small>{tx(done)} / {tx(profile.inputs.length)}{tx(" calés")}</small></h3>
   <div className="gain-table" role="table">
    <div role="row" className="head"><span>{tx("Instrument")}</span><span>{tx("Gain")}</span><span>{tx("Niveau max")}</span><span>{tx("Repisse")}</span><span>{tx("Compresseur")}</span><span>{tx("Gate")}</span><span>{tx("État")}</span></div>
@@ -194,7 +209,7 @@ export function GainStep({gain,measuringGain,onMeasureGain,profile,channel,setCh
     <span><b>{i.name}</b> <small>{tx("entrée ")}{tx(i.channel)}</small></span><span>{tx(db(s?.gainDb))}</span><span>{tx(s?.valid?db(s.peakDb):'—')}</span><span>{tx(s?.valid&&s.needsBleed?db(s.bleedDb):s?.needsBleed?'—':'inutile')}</span>
     <span>{tx(s?.thresholds?.compThrDb!=null?db(s.thresholds.compThrDb):'—')}</span><span>{tx(natural?'off':s?.thresholds?.gateThrDb!=null?db(s.thresholds.gateThrDb):s?.needsBleed?'—':'off')}</span><span className="pill">{tx(STATE_LABEL[s?.state??'todo'])}</span></button>;})}
   </div>
-  </details>
+  </details>}
   <details className="gain-reference"><summary>{tx("Pourquoi mesurer le gain en premier ?")}</summary><p className="coach-note">{tx("Pourquoi cet ordre : le compresseur et le gate travaillent sur le signal qui sort du préampli, avec des seuils fixes. Si le gain monte de 6 dB après coup, le compresseur écrase 6 dB de plus et le gate laisse passer la repisse. Si tu changes un gain plus tard, je te le signale ici (« à refaire »). Je ne touche jamais au 48 V et je ne monte pas de plus de 6 dB à la fois.")}</p></details>
  </div>;
 }

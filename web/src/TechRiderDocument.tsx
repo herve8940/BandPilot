@@ -38,7 +38,7 @@ export function StagePlot({profile,onMove}:{profile:Profile;onMove?:(bus:number,
   <div className="rider-stage-caption"><span>{tx('Fond de scène')}</span><span>{tx('Vue depuis la salle')}</span></div>
   <div className={'rider-stage'+(onMove?' is-editable':'')} ref={stage}>
    {people.map((person,index)=>{
-    const pos=stageCoordinates(preview?.bus===person.bus?preview.position:tech.positions?.[person.bus],index),Icon=icons[person.role],monitor=tech.monitors?.[person.bus];
+    const pos=stageCoordinates(preview?.bus===person.bus?preview.position:tech.positions?.[person.bus],index),Icon=person.role==='unknown'?Headphones:icons[person.role],monitor=tech.monitors?.[person.bus];
     const content=<><Icon className="rider-instrument" size={25}/><strong>{person.name}</strong><span className="rider-stage-channels">{tx('Entrées')} {person.channels.join(' · ')||'—'}</span><span className="rider-stage-monitor">{monitor?.kind==='wedge'?<Speaker size={12}/>:<Headphones size={12}/>} {tx('Retour')} {person.bus}{monitor?.power&&<Plug size={13} aria-label={tx('Prise électrique')}/>}</span></>;
     const style={left:pos.x+'%',top:pos.y+'%'};
     return onMove?<button type="button" className="rider-stage-person" key={person.bus} style={style} aria-label={tx('Déplacer ')+person.name} onPointerDown={e=>begin(e,person.bus,index)} onPointerMove={move} onPointerUp={end} onPointerCancel={()=>{drag.current=null;setPreview(null);}} onLostPointerCapture={()=>{drag.current=null;setPreview(null);}} onKeyDown={e=>{

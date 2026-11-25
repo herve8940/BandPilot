@@ -1,4 +1,6 @@
-import { pad, type Values } from "./controls";
+import type { Values } from "./controls";
+
+export const pad = (n: number) => String(n).padStart(2, "0");
 
 export type Kind = "ch" | "aux" | "fxrtn" | "bus" | "fxsend" | "lr" | "dca";
 export interface Strip { id: string; kind: Kind; prefix: string; short: string; fallback: string; meters: number[] }

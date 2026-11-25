@@ -210,3 +210,78 @@ test('prepared stereo return uses the linked pair and rejects conflicts on an XR
   (await ears.prepareRoster([])).commit();assert.deepEqual(ears.list(),[]);
  }finally{ears.close();xr.close();}
 });
+
+test('personal group order survives a new QR; group moves follow manual levels and preserve silent sends',async()=>{
+ const file=join(mkdtempSync(join(tmpdir(),'ears-groups-')),'ears.sqlite');
+ const xr=new XR18({mode:'simulation',model:'XR18',host:'127.0.0.1',port:10024,enableWrites:false});
+ await xr.syncLiveView();
+ let writes=0;
+ let ears=new EarsShare(file,xr,()=>undefined,()=>null,()=>{writes++;});
+ const channels=['/ch/01','/ch/02','/ch/03'];
+ const address=(n:number,bus='01')=>channels[n]+'/mix/'+bus+'/level';
+ const state=(n:number,bus='01')=>xr.parameterState()[address(n,bus)]?.value;
+ let ws:WebSocket|undefined;
+ try{
+  const share=ears.create('Drums',1),other=ears.create('Vocal',2);
+  let {port}=await ears.start(0);
+  const messages:{type:string;groups?:import('../shared/ear-group.js').EarGroup[]}[]=[];
+  const connect=async(token:string)=>{
+   messages.length=0;
+   ws=new WebSocket(`ws://127.0.0.1:${port}/ears-ws?token=${token}`);
+   ws.on('message',data=>messages.push(JSON.parse(String(data))));await waitFor(()=>messages.some(m=>m.type==='snapshot'));
+   return messages.find(m=>m.type==='snapshot')!.groups!;
+  };
+  const edit=(token:string,body:unknown,id='')=>fetch(`http://127.0.0.1:${port}/ears-api/${token}/groups${id?'/'+id:''}`,{
+   method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+  });
+  assert.deepEqual(await connect(share.token),[]);
+  xr.liveSet(address(0),.5);xr.liveSet(address(1),.25);xr.liveSet(address(2),0);
+  const before=xr.parameterState();
+  assert.equal((await edit(share.token,{name:'Batterie',members:channels})).status,200);
+  await waitFor(()=>messages.some(m=>m.type==='groups'));
+  const group=messages.find(m=>m.type==='groups')!.groups![0]!;
+  const members=[channels[2],channels[0],channels[1]];
+  assert.equal((await edit(other.token,{name:'Autre',members,revision:1},group.id)).status,400);
+  assert.equal((await edit(share.token,{name:'Batterie',members,revision:1},group.id)).status,200);
+  assert.equal((await edit(share.token,{name:'Stale',members:channels,revision:1},group.id)).status,400);
+  assert.deepEqual(xr.parameterState(),before);assert.equal(writes,0);
+  const move=async(target:number)=>{
+   messages.length=0;ws!.send(JSON.stringify({type:'group-volume',id:group.id,revision:2,value:target}));
+   await waitFor(()=>messages.some(m=>m.type==='groups'));assert.ok(messages.some(m=>m.type==='groups'));
+  };
+  await move(2);
+  assert.equal(state(0),.55);assert.equal(state(1),.275);assert.equal(state(2),0);
+  assert.equal(state(0,'02'),before[address(0,'02')]!.value);
+  ws!.send(JSON.stringify({type:'set',address:address(2),value:.1}));
+  await waitFor(()=>state(2)===.1);
+  await move(4);assert.ok(Number(state(2))>.1);
+  ws!.send(JSON.stringify({type:'set',address:address(0),value:0}));await waitFor(()=>state(0)===0);
+  await move(6);assert.equal(state(0),0);
+  ws!.close();await ears.stop();ears.close();
+  ears=new EarsShare(file,xr,()=>undefined,()=>null);port=(await ears.start(0)).port;
+  const renewed=ears.regenerate(share.id);const restored=await connect(renewed.token);
+  assert.deepEqual(restored[0]?.members,members);assert.equal(restored[0]?.offset,0);
+  ws!.close();assert.deepEqual(await connect(other.token),[]);
+ }finally{ws?.close();await ears.stop();ears.close();xr.close();}
+});
+
+test('an XR12 stereo monitor leaves a silent side alone during group moves',async()=>{
+ const xr=new XR18({mode:'simulation',model:'XR12',host:'127.0.0.1',port:10024,enableWrites:false});
+ await xr.syncLiveView();xr.liveSet('/config/buslink/1-2',1);
+ const ears=new EarsShare(':memory:',xr,()=>undefined,()=>null);
+ let ws:WebSocket|undefined;
+ try{
+  const share=await ears.createStereo('Duo',1),{port}=await ears.start(0);
+  xr.liveSet('/ch/01/mix/01/level',.4);
+  xr.liveSet('/ch/01/mix/02/level',0);
+  for(const bus of ['01','02'])xr.liveSet('/ch/02/mix/'+bus+'/level',.5);
+  const edit=await fetch('http://127.0.0.1:'+port+'/ears-api/'+share.token+'/groups',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Voix',members:['/ch/01','/ch/02']})});
+  assert.equal(edit.status,200);
+  ws=new WebSocket('ws://127.0.0.1:'+port+'/ears-ws?token='+share.token);
+  ws.on('message',raw=>{const msg=JSON.parse(String(raw));if(msg.type==='snapshot')ws!.send(JSON.stringify({type:'group-volume',id:msg.groups[0].id,revision:1,value:2}));});
+  await waitFor(()=>xr.parameterState()['/ch/02/mix/01/level']?.value===.55);
+  assert.equal(xr.parameterState()['/ch/01/mix/01/level']?.value,.4);
+  assert.equal(xr.parameterState()['/ch/01/mix/02/level']?.value,0);
+  assert.equal(xr.parameterState()['/ch/02/mix/02/level']?.value,.55);
+ }finally{ws?.close();await ears.stop();ears.close();xr.close();}
+});

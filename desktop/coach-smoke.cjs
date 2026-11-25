@@ -8,9 +8,12 @@ module.exports=async function coachSmoke(win,wait){
  };
  const status=await js(`fetch('/api/status').then(r=>r.json())`);
  if(status.mode!=='simulation'||status.writesEnabled)throw Error('Coach smoke requires simulation');
- await click('.coach-journey button','Instruments');
+ // The preceding mixer-resume scenario has its own input selector. Start the
+ // blank-scene journey to exercise adding and saving a new instrument.
+ await click('.balance-blank strong','Partir d’une scène vierge');
+ await click('.coach-dialog button','Essayer en simulation');
  await wait(`!!document.querySelector('.coach-inputs')`);
- const before=await js(`fetch('/api/coach').then(r=>r.json()).then(d=>d.profile.inputs.length)`);
+ const before=await js(`document.querySelectorAll('.coach-input2').length`);
  await click('.coach-actions button','Ajouter un instrument');
  await wait(`document.querySelectorAll('.coach-input2').length===${before+1}`);
  await js(`(()=>{const row=[...document.querySelectorAll('.coach-input2')].at(-1),select=row.querySelectorAll('select')[1];select.value='bass-di';select.dispatchEvent(new Event('change',{bubbles:true}));})()`);
@@ -34,8 +37,9 @@ module.exports=async function coachSmoke(win,wait){
  await wait(`[...document.querySelectorAll('.coach-input2 input')].some(i=>i.value==='Basse Éric')`);
  // Read-only preview also exercises the source ambience screen in the native build.
  await js(`document.querySelector('.balance-tools summary').click()`);
- await click('.coach-shortcuts button','Ambiances des sources');
+ await click('.coach-shortcuts button','Effets par instrument');
  await wait(`!!document.querySelector('.vocal-kit fieldset')`);
+ await js(`(()=>{const level=document.querySelector('[aria-label="Dosage en façade"]');level.value='-18';level.dispatchEvent(new Event('change',{bubbles:true}));})()`);
  await click('.vocal-kit button','Préparer mon ambiance');
  await wait(`!!document.querySelector('.vocal-preview')`);
  console.log('Coach : ajout, nom accentué, validation, persistance et aperçu ambiance vérifiés.');

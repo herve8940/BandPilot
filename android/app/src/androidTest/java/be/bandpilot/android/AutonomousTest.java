@@ -37,23 +37,8 @@ public class AutonomousTest {
   InstrumentationRegistry.getInstrumentation().runOnMainSync(()->web=find(activity.getWindow().getDecorView()));
   waitFor("!!document.querySelector('.studio')");
   InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{assertTrue("Keep the test emulator unlocked and the app in front",activity.hasWindowFocus());web.requestFocus();});
-  JSONObject usage=api("/api/usage-stats",null);
-  assertTrue("Usage counting is included in the Android runtime",usage.getBoolean("available"));
-  assertTrue("The native app can edit its own preference",usage.getBoolean("canEdit"));
-  if(!usage.getBoolean("noticeSeen")){
-   waitFor("!!document.querySelector('.usage-notice')");
-   js("[...document.querySelectorAll('.usage-notice button')].find(b=>b.textContent.trim()==='Désactiver').click()");
-   waitFor("!document.querySelector('.usage-notice')");
-  }else{
-   api("/api/usage-stats",new JSONObject().put("enabled",false));
-   reload();
-  }
-  usage=api("/api/usage-stats",null);
-  assertFalse("Automated device tests must not count as an installation",usage.getBoolean("enabled"));
-  assertTrue(usage.getBoolean("noticeSeen"));
   js("document.querySelector('button[title=\"Réglages\"]').click()");
-  waitFor("!!document.querySelector('.usage-settings input')");
-  assertEquals("false",js("document.querySelector('.usage-settings input').checked"));
+  waitFor("!!document.querySelector('#bp-connection')");
   assertEquals("true",js("document.documentElement.scrollWidth <= window.innerWidth+2"));
   api("/api/connection",new JSONObject().put("mode","simulation").put("host","127.0.0.1").put("enableWrites",false));
   assertEquals("true",js("!!window.BandPilotAndroid && document.documentElement.dataset.platform==='android'"));
@@ -103,7 +88,6 @@ public class AutonomousTest {
   assertTrue(js("document.querySelector('.support-dialog pre').textContent").contains("android.engine_start"));
   assertTrue(api("/api/android/update/status",null).has("automaticEnabled"));
   reload();
-  assertFalse("Usage preference survives a WebView reload",api("/api/usage-stats",null).getBoolean("enabled"));
   assertEquals("Basse Éric",api("/api/coach",null).getJSONObject("profile").getJSONArray("inputs").getJSONObject(inputs.length()-1).getString("name"));
  }
  private void liveConsole()throws Exception{

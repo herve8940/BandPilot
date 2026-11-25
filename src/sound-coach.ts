@@ -1,3 +1,5 @@
+import {busLinkAddress} from '../shared/monitor-pairs.js';
+import type {MixerProfile} from '../shared/mixer-models.js';
 import {foldLatin} from '../shared/latin-fold.js';
 import {validateTechRider,type TechRider} from '../shared/tech-rider.js';
 import {coachProcessingPreset} from './coach-presets.js';
@@ -68,7 +70,7 @@ export function monitorRecipes(listening?:MonitorListening):typeof MONITOR_RECIP
 }
 /** Acoustic kit mics follow the listening recipe rather than a blanket own-instrument boost. */
 export function monitorLevel(role:Role,family:Family,own:boolean,listening?:MonitorListening){return own&&!(role==='batterie'&&family!=='edrums')?OWN_LEVEL:monitorRecipes(listening)[role][family];}
-export type Musician={name:string;bus:number;role:Role;channels:number[]};
+export type Musician={name:string;bus:number;role:Role|'unknown';channels:number[]};
 export type Input={channel:number;source:string;name:string};
 export type Calibration={peakDb:number;gainDb:number|null;bleedDb?:number;at:string};
 export type CoachProfile={version:1;sound?:CoachSound;headroom?:GainHeadroom;inputs:Input[];completed:string[];musicians?:Musician[];calibration?:Record<string,Calibration>;tech?:TechRider};
@@ -105,14 +107,18 @@ export const TEMPLATES:{id:string;label:string;description:string;inputs:Input[]
 export const GROUP_TEMPLATE:Input[]=TEMPLATES[0]!.inputs;
 const ROLE_OF:Record<Family,Role>={voice:'chant',backing:'chant',guitar:'guitare',bass:'basse',kick:'batterie',snare:'batterie',toms:'batterie',cymbals:'batterie',edrums:'batterie',keys:'clavier',track:'clavier'};
 /** One musician per player: the lead singer, each guitar, the bassist, the whole kit, keys. Max 6 buses. */
-export function suggestMusicians(inputs:Input[]):Musician[]{
+export function suggestMusicians(inputs:Input[],maxBuses=6):Musician[]{
  const out:Musician[]=[];
  for(const i of [...inputs].sort((a,b)=>a.channel-b.channel)){
+  if(!i.source){
+   if(out.length<maxBuses)out.push({name:i.name.slice(0,12),bus:out.length+1,role:'unknown',channels:[i.channel]});
+   continue;
+  }
   const s=source(i.source),role=ROLE_OF[s.family];
   if(s.family==='backing'||s.family==='track')continue;
   const shared=role==='batterie'||role==='basse'||role==='clavier'?out.find(m=>m.role===role):undefined;
   if(shared){shared.channels.push(i.channel);continue;}
-  if(out.length>=6)continue;
+  if(out.length>=maxBuses)continue;
   const label=role==='batterie'?'Batterie':role==='basse'?'Basse':role==='clavier'?'Clavier':role==='chant'?'Chant':i.name;
   out.push({name:label.slice(0,12),bus:out.length+1,role,channels:[i.channel]});
  }
@@ -120,20 +126,22 @@ export function suggestMusicians(inputs:Input[]):Musician[]{
 }
 /** XR18 names are 12 bytes; keep them ASCII so the console reads back exactly what was sent. */
 export function consoleName(name:string){return foldLatin(name).replace(/[^\x20-\x7e]/g,'').slice(0,12).trim()||'Micro';}
-export function validateProfile(value:unknown):CoachProfile {
+export function validateProfile(value:unknown,mixer?:MixerProfile):CoachProfile {
  let p=value as CoachProfile;
- if(!p||p.version!==1||!Array.isArray(p.inputs)||p.inputs.length>16||!Array.isArray(p.completed)||p.completed.some(id=>!STEPS.some(s=>s.id===id)))throw Error('Préparation de groupe invalide');
+ if(mixer&&mixer.family!=='xair')throw Error('Cette opération nécessite une console X-Air / M-Air.');
+ const first=mixer?0:1,last=mixer?.channels??16;
+ if(!p||p.version!==1||!Array.isArray(p.inputs)||p.inputs.length>last-first+1||!Array.isArray(p.completed)||p.completed.some(id=>!STEPS.some(s=>s.id===id)))throw Error('Préparation de groupe invalide');
  const legacyNatural=(p.sound as string)==='inears-natural';
  if(p.sound!==undefined&&!isCoachSound(p.sound)&&!legacyNatural)throw Error('Profil sonore inconnu');
  if(p.headroom!==undefined&&!isGainHeadroom(p.headroom))throw Error('Marge à l’entrée inconnue');
  if(new Set(p.inputs.map(i=>i.channel)).size!==p.inputs.length)throw Error('Une seule source par canal');
  // Keep the musician's Unicode label; channelValues converts it with consoleName
  // at the hardware boundary. Match the form's 12-character limit, not UTF-8 bytes.
- for(const i of p.inputs)if(!i||!Number.isInteger(i.channel)||i.channel<1||i.channel>16||!SOURCES.some(s=>s.id===i.source)||typeof i.name!=='string'||!i.name.trim()||i.name.length>12||/[\x00-\x1f\x7f]/.test(i.name))throw Error('Source, canal 1 à 16 et nom de 12 caractères maximum requis');
+ for(const i of p.inputs)if(!i||!Number.isInteger(i.channel)||i.channel<first||i.channel>last||(!(mixer&&i.source==='')&&!SOURCES.some(s=>s.id===i.source))||typeof i.name!=='string'||!i.name.trim()||i.name.length>(mixer?40:12)||/[\x00-\x1f\x7f]/.test(i.name))throw Error('Source, canal 1 à 16 et nom de 12 caractères maximum requis');
  if(p.musicians!==undefined){
   if(!Array.isArray(p.musicians)||p.musicians.length>6)throw Error('6 musiciens maximum (un bus chacun)');
   if(new Set(p.musicians.map(m=>m.bus)).size!==p.musicians.length)throw Error('Un bus différent par musicien');
-  for(const m of p.musicians)if(!m||typeof m.name!=='string'||!m.name.trim()||m.name.length>12||/[\x00-\x1f\x7f]/.test(m.name)||!Number.isInteger(m.bus)||m.bus<1||m.bus>6||!ROLES.some(r=>r.id===m.role)||!Array.isArray(m.channels)||m.channels.some(c=>!Number.isInteger(c)||c<1||c>16))throw Error('Musicien : nom (12 caractères), bus 1 à 6, rôle et instruments requis');
+  for(const m of p.musicians)if(!m||typeof m.name!=='string'||!m.name.trim()||m.name.length>12||/[\x00-\x1f\x7f]/.test(m.name)||!Number.isInteger(m.bus)||m.bus<1||m.bus>(mixer?.monitorOutputs??6)||(!(mixer&&m.role==='unknown')&&!ROLES.some(r=>r.id===m.role))||!Array.isArray(m.channels)||m.channels.some(c=>!Number.isInteger(c)||c<first||c>last||(!!mixer&&!p.inputs.some(i=>i.channel===c))))throw Error('Musicien : nom (12 caractères), bus 1 à 6, rôle et instruments requis');
  }
  if(p.calibration!==undefined){
   if(!p.calibration||typeof p.calibration!=='object'||Array.isArray(p.calibration))throw Error('Mesures invalides');
@@ -215,19 +223,28 @@ type CoachPreparation=Awaited<ReturnType<ConsoleControl['preview']>>&{
 };
 export class SoundCoach {
  constructor(private xr:XR18,private control:ConsoleControl,private library:LibraryStore){}
+ async captureMixerBalance(name:unknown,target:{model?:unknown;mode?:unknown;host?:unknown;port?:unknown}){
+  const status=this.xr.status();
+  if(status.model!==target.model||status.mode!==target.mode||status.host!==target.host||status.port!==target.port)throw Error('Connexion modifiée');
+  if(status.mode==='real'&&!status.connected)throw Error('Connecte le mélangeur pour reprendre sa balance.');
+  const identity=this.control.identity(),epoch=this.xr.operationId();
+  const scene=await this.control.capture();
+  if(identity!==this.control.identity()||epoch!==this.xr.operationId()||(this.xr.mode==='real'&&!this.xr.status().connected))throw Error('Connexion modifiée');
+  return this.library.save('scene',name,scene);
+ }
  profile():CoachProfile {
   const stored=this.library.list('coach-profile',1)[0]?.data as CoachProfile??{version:1,inputs:structuredClone(GROUP_TEMPLATE),completed:[]};
   const p=(stored.sound as string)==='inears-natural'?validateProfile(stored):stored;
   return p.musicians?p:{...p,musicians:suggestMusicians(p.inputs)};
  }
  /** Measurements belong to the server: a profile sent by the browser never overwrites them. */
- saveProfile(input:unknown,measurements=false){
+ saveProfile(input:unknown,measurements=false,newBalance=false){
   const p=validateProfile(input);
   if(p.inputs.some(i=>i.channel>this.xr.model().channels)||p.musicians?.some(m=>m.bus>this.xr.model().monitorOutputs))throw Error('Entrée ou sortie de retour absente sur '+this.xr.model().label);
   if(!measurements){
    const stored=this.library.list('coach-profile',1)[0]?.data as CoachProfile|undefined;
    // A measurement belongs to the source on that input, not to its socket forever.
-   if(stored?.calibration)p.calibration=Object.fromEntries(Object.entries(stored.calibration).filter(([channel])=>p.inputs.some(i=>i.channel===Number(channel)&&stored.inputs.some(old=>old.channel===i.channel&&old.source===i.source))));
+   if(stored?.calibration&&!newBalance)p.calibration=Object.fromEntries(Object.entries(stored.calibration).filter(([channel])=>p.inputs.some(i=>i.channel===Number(channel)&&stored.inputs.some(old=>old.channel===i.channel&&old.source===i.source))));
    else delete p.calibration;
   }
   const saved=this.library.save('coach-profile','Ma préparation',p);return {...p,id:saved.id};
@@ -248,6 +265,12 @@ export class SoundCoach {
     `Placé ${pan} dans la façade.`]}];}));
  }
  private input(channel:number){if(!Number.isInteger(channel)||channel<1||channel>16)throw Error('Canal 1 à 16 requis');return this.profile().inputs.find(i=>i.channel===channel);}
+ async balanceInput(channel:number,fromMixer:boolean){
+  if(!fromMixer)return this.input(channel);
+  if(!Number.isInteger(channel)||channel<1||channel>this.xr.model().channels)throw Error('Entrée indisponible');
+  const name=String(await this.xr.readParameter('/ch/'+String(channel).padStart(2,'0')+'/config/name')).trim();
+  return {channel,name:name||'Entrée '+channel,source:''};
+ }
  advice(channel:number,symptom:string){
   this.input(channel);const s=SYMPTOMS.find(s=>s.id===symptom);if(!s)throw Error('Choisir un problème proposé');
   return {...s,basis:'description',measuredAudio:false,canSuggest:['muddy','harsh','boomy','cutoff'].includes(symptom)};
@@ -293,19 +316,25 @@ export class SoundCoach {
   const musicians=(profile.musicians??[]).filter(m=>bus===undefined||m.bus===bus);
   const values:Record<string,Value>={};
   for(const m of musicians){
-   const role=ROLES.find(r=>r.id===m.role)!;
-   values[`/bus/${m.bus}/config/name`]=consoleName(m.name);values[`/bus/${m.bus}/config/color`]=role.color;
+   const role=ROLES.find(r=>r.id===m.role);
+   values[`/bus/${m.bus}/config/name`]=consoleName(m.name);values[`/bus/${m.bus}/config/color`]=role?.color??0;
    values[`/bus/${m.bus}/mix/on`]=1;values[`/bus/${m.bus}/mix/lr`]=0;values[`/bus/${m.bus}/mix/fader`]=-10;
    for(const i of profile.inputs){
-    const a=`/ch/${String(i.channel).padStart(2,'0')}/mix/${String(m.bus).padStart(2,'0')}`;
-    values[a+'/tap']='PRE';values[a+'/level']=monitorLevel(m.role,source(i.source).family,m.channels.includes(i.channel),profile.tech?.monitors?.[m.bus]?.kind);
+    const own=m.channels.includes(i.channel);
+    const db=i.source&&m.role!=='unknown'
+     ? monitorLevel(m.role,source(i.source).family,own,profile.tech?.monitors?.[m.bus]?.kind)
+     : own?OWN_LEVEL:undefined;
+    if(db===undefined)continue;
+    const prefix=i.channel===0?'/rtn/aux':'/ch/'+String(i.channel).padStart(2,'0');
+    const a=prefix+'/mix/'+String(m.bus).padStart(2,'0');
+    values[a+'/tap']='PRE';values[a+'/level']=db;
    }
   }
   return {values,musicians};
  }
- async prepareEars(bus?:number,resetUnused=false,ears?:EarsShare):Promise<CoachPreparation>{
+ async prepareEars(bus?:number,resetUnused=false,ears?:EarsShare,mixerProfile?:unknown):Promise<CoachPreparation>{
   const identity=this.control.identity();
-  const profile=validateProfile(this.profile());const {values,musicians}=SoundCoach.earsValues(profile,bus);
+  const profile=mixerProfile===undefined?validateProfile(this.profile()):validateProfile(mixerProfile,this.xr.model());const {values,musicians}=SoundCoach.earsValues(profile,bus);
   if(!musicians.length&&(!resetUnused||bus!==undefined))throw Error(bus?'Aucun musicien sur ce bus':'Ajouter un musicien');if(!profile.inputs.length)throw Error('Ajouter un instrument');
   const group=profile.musicians??[];
   const roster=await ears?.prepareRoster(group,bus);
@@ -319,7 +348,23 @@ export class SoundCoach {
    result={...plan,title:musicians.length?'Refaire le mix des retours':'Fermer tous les retours',explanation:!musicians.length?'Tous les envois vers les sorties de retour et leurs faders seront fermés.':'Les retours sélectionnés reçoivent uniquement les instruments du groupe. Les anciens envois, y compris ceux de l’entrée Aux et des effets, sont fermés. Les retours des musiciens démarrent à −10 dB.',
     inputs:musicians.map(m=>`${m.name} → bus ${m.bus}`),silentBuses:clean.silentBuses,activeBuses:clean.activeBuses};
   }else{
-   result={...await this.control.preview(values,false,roster?.guards,'parameter-backup',undefined,undefined,identity),title:musicians.length===1?`Retour de ${musicians[0]!.name} (bus ${musicians[0]!.bus})`:`Retours de ${musicians.length} musiciens`,
+   let plan;
+   if(mixerProfile!==undefined){
+    const guards:Record<string,Value>={...roster?.guards};
+    for(const m of musicians){
+     const odd=m.bus%2?m.bus:m.bus-1,link=busLinkAddress(m.bus);
+     guards[link]??=await this.xr.readParameter(link);
+     if(guards[link]!==1)continue;
+     const partner=m.bus===odd?odd+1:odd;
+     if(group.some(other=>other.bus===partner))throw Error('Deux musiciens occupent la même paire de retours stéréo. Vérifie leurs sorties.');
+     for(const [address,value] of Object.entries(values)){
+      const paired=address.replace('/bus/'+m.bus+'/','/bus/'+partner+'/').replace('/mix/0'+m.bus+'/','/mix/0'+partner+'/');
+      if(paired!==address)values[paired]=value;
+     }
+    }
+    plan=await previewCleanMix(this.xr,this.control,values,guards,identity);
+   }else plan=await this.control.preview(values,false,roster?.guards,'parameter-backup',undefined,undefined,identity);
+   result={...plan,title:musicians.length===1?`Retour de ${musicians[0]!.name} (bus ${musicians[0]!.bus})`:`Retours de ${musicians.length} musiciens`,
    explanation:'Chaque musicien reçoit un mix pré-fader (indépendant de la façade) : son instrument devant, puis ce dont son rôle a besoin. Le bus est nommé, sorti de la façade et démarré à −10 dB par sécurité. Garde le volume du boîtier d’écoute bas au premier essai ; chacun affine ensuite sur son téléphone.',
    inputs:musicians.map(m=>`${m.name} → bus ${m.bus}`)};
   }
@@ -327,8 +372,11 @@ export class SoundCoach {
    const assignments=(members:Musician[])=>JSON.stringify(members.filter(m=>!roster.scope||roster.scope.has(m.bus))
     .sort((a,b)=>a.bus-b.bus).map(m=>[m.bus,m.name.trim()]));
    const expected=assignments(group);
+   const currentAccess=()=>JSON.stringify(ears!.list().filter(s=>!roster.scope||roster.scope.has(s.bus)||(s.stereo&&roster.scope.has(s.bus+1)))
+    .map(s=>[s.bus,s.name,s.id,s.stereo]));
+   const expectedAccess=currentAccess();
    this.control.onApplied(result.token,{check:()=>{
-    if(assignments(this.profile().musicians??[])!==expected)throw Error('Les musiciens ont changé. Prépare à nouveau les retours.');
+    if(currentAccess()!==expectedAccess||(mixerProfile===undefined&&assignments(this.profile().musicians??[])!==expected))throw Error('Les musiciens ont changé. Prépare à nouveau les retours.');
    },commit:roster.commit});
    result.qrScope=bus===undefined?'group':'bus';
   }
@@ -344,8 +392,8 @@ export class SoundCoach {
    throw error;
   }
  }
- async suggest(channel:number,symptom:string){
-  const input=this.input(channel);if(!input)throw Error('Attribuer un instrument à ce canal');
+ async suggest(channel:number,symptom:string,fromMixer=false){
+  const input=await this.balanceInput(channel,fromMixer);if(!input)throw Error('Attribuer un instrument à ce canal');
   const advice=this.advice(channel,symptom),prefix=`/ch/${String(channel).padStart(2,'0')}`,values:Record<string,Value>={};
   if(symptom==='cutoff'){
    const on=await this.xr.readParameter(prefix+'/gate/on');if(on!==1)return {advice,proposal:null,message:'Le gate de la console est déjà désactivé. Vérifie le traitement en amont.'};values[prefix+'/gate/on']=0;
@@ -373,7 +421,11 @@ export class SoundCoach {
   const src=await this.xr.readParameter(`/ch/${ch}/config/insrc`);
   return typeof src==='number'&&src>=0&&src<this.xr.model().micPreamps?`/headamp/${String(src+1).padStart(2,'0')}/gain`:null;
  }
- private async currentGain(channel:number){const a=await this.gainAddress(channel);return {address:a,gainDb:a?Math.round(Number(fromWire(a,await this.xr.readParameter(a)))*2)/2:null};}
+ private async currentGain(channel:number){
+  const address=await this.gainAddress(channel);
+  const raw=address?await this.xr.readParameter(address):null;
+  return {address,raw,gainDb:address&&raw!==null?Math.round(Number(fromWire(address,raw))*2)/2:null};
+ }
  private storeCalibration(channel:number,patch:Partial<Calibration>&{peakDb?:number}){
   const p=this.profile(),cal={...(p.calibration??{})},old=cal[String(channel)];
   cal[String(channel)]={peakDb:patch.peakDb??old!.peakDb,gainDb:patch.gainDb!==undefined?patch.gainDb:old!.gainDb,bleedDb:'bleedDb' in patch?patch.bleedDb:old?.bleedDb,at:new Date().toISOString()};
@@ -395,19 +447,31 @@ export class SoundCoach {
   return out;
  }
  /** Measure the loudest passage, then propose preamp gain for the selected headroom target. */
- async gainCheck(channel:number,durationMs=4500){
-  const input=this.input(channel);if(!input)throw Error('Attribuer un instrument à ce canal');
-  const report=await this.measure(channel,durationMs);
+ async gainCheck(channel:number,durationMs=4500,fromMixer=false){
+  if(!Number.isInteger(channel)||channel<1||channel>this.xr.model().channels)throw Error('Entrée indisponible');
+  const identity=this.control.identity();
+  const prefix='/ch/'+String(channel).padStart(2,'0');
+  const input=await this.balanceInput(channel,fromMixer);if(!input)throw Error('Attribuer un instrument à ce canal');
+  const guards:Record<string,Value>={};
+  if(fromMixer){
+   guards[prefix+'/config/insrc']=await this.xr.readParameter(prefix+'/config/insrc');
+   if(this.xr.model().usbChannels)guards[prefix+'/preamp/rtnsw']=await this.xr.readParameter(prefix+'/preamp/rtnsw');
+  }
+  const initial=fromMixer?await this.currentGain(channel):null;
+  const expectedGain=initial?.address&&initial.raw!==null?{[initial.address]:initial.raw}:undefined;
+  const report=await this.measure(channel,durationMs,fromMixer);
   if(!report.available)return {report,decision:null,proposal:null};
-  const {address,gainDb}=await this.currentGain(channel),p=address?descriptor(address):null;
+  const {address,gainDb,raw}=await this.currentGain(channel),p=address?descriptor(address):null;
+  if(fromMixer&&(identity!==this.control.identity()||address!==initial?.address||raw!==initial?.raw))throw Error('Connexion ou gain modifié pendant la mesure. Recommence.');
   const decision=gainProposal(report.maximumDb!,gainDb,p?.min,p?.max,this.profile().headroom);
   // E-drums and keyboards send a line-level signal: much preamp gain only adds hiss. Their own output volume is the right knob.
-  const fam=source(input.source).family;
+  const fam=fromMixer?null:source(input.source).family;
   if((fam==='edrums'||fam==='keys')&&(decision.state==='raise'||decision.state==='limit')&&(decision.targetGainDb??gainDb??0)>LINE_GAIN_ADVICE_DB)
    decision.message+=` ${fam==='edrums'?'Une batterie électronique':'Un clavier'} sort un signal « ligne » : au-delà de +${LINE_GAIN_ADVICE_DB} dB de gain, monte plutôt le volume de sortie de ${fam==='edrums'?'son module (Master / Output)':'l’instrument'}, puis remesure. Le son sera plus propre (moins de souffle).`;
+  if(decision.state==='ok'&&fromMixer)return {report,decision,gainDb,proposal:null};
   if(decision.state==='ok'){const old=this.profile().calibration?.[String(channel)];this.storeCalibration(channel,{peakDb:report.maximumDb!,gainDb,bleedDb:old&&old.gainDb===gainDb?old.bleedDb:undefined});return {report,decision,gainDb,proposal:null,thresholds:thresholdsFrom(source(input.source),report.maximumDb!,undefined,this.profile().sound)};}
   if(!address||decision.targetGainDb===null||decision.targetGainDb===gainDb)return {report,decision,gainDb,proposal:null};
-  const plan=await this.control.preview({[address]:decision.targetGainDb});
+  const plan=await this.control.preview({[address]:decision.targetGainDb},false,guards,undefined,expectedGain,undefined,fromMixer?identity:undefined);
   return {report,decision,gainDb,proposal:{...plan,title:`Gain de ${input.name} : ${decision.deltaDb>0?'+':''}${String(decision.deltaDb).replace('.',',')} dB`,explanation:`${decision.message} Seul le gain du préampli de cette entrée change. Le 48 V n’est pas touché. Baisse le volume des retours si un musicien porte ses in-ear.`,inputs:[`${input.name} (entrée ${channel})`]}};
  }
  /** Gate placement: this instrument stays silent while the others play; the level that still arrives is bleed. */
@@ -421,8 +485,9 @@ export class SoundCoach {
   this.storeCalibration(channel,{bleedDb:bleed});
   return {report,thresholds:thresholdsFrom(source(input.source),status.peakDb!,bleed,this.profile().sound)};
  }
- async measure(channel:number,durationMs=4500){
-  if(!this.input(channel))throw Error('Attribuer un instrument à ce canal');
+ async measure(channel:number,durationMs=4500,fromMixer=false){
+  if(fromMixer&&(!Number.isInteger(channel)||channel<1||channel>this.xr.model().channels))throw Error('Entrée indisponible');
+  if(!fromMixer&&!this.input(channel))throw Error('Attribuer un instrument à ce canal');
   if(this.xr.mode!=='real'||!this.xr.status().connected)return {available:false,samples:0,state:'unknown',title:'Console réelle nécessaire',message:'Le test ne simule pas de son. Connecte la console pour recevoir ses niveaux.'};
   const identity=this.control.identity(),samples:MeterSample[]=[];
   const listener=(sample:MeterSample)=>{samples.push(structuredClone(sample));};this.xr.on('meters',listener);

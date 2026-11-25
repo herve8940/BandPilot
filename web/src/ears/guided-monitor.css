@@ -6,3 +6,38 @@ html .ea .ea-head {background:linear-gradient(115deg,#24253f,#161c30);border:1px
 html .ea .ea-page-switch {background:var(--stage-inset);border:1px solid var(--bp-line)}
 html .ea .ea-row,html .ea .ea-master {border-color:var(--bp-line);border-radius:12px}
 html .ea .ea-head h1 {overflow-wrap:anywhere;line-height:1.15}
+
+.ea-groups,.ea-group,.ea-group-editor,.ea-group-members {display:grid;gap:10px;min-width:0}
+.ea-groups h2,.ea-group-editor h3,.ea-group-editor p {margin:0}
+.ea-groups h2 {font-size:18px}
+.ea-group,.ea-group-editor {padding:12px;border:1px solid var(--bp-line);border-radius:12px;background:var(--bp-panel)}
+.ea-group-heading,.ea-group-actions,.ea-order {display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ea-group-heading {justify-content:space-between}
+.ea-groups button,.ea-monitor-page .meter-display-settings :is(button,select) {min-height:44px;min-width:44px;padding:6px 10px;color:var(--bp-text);background:var(--bp-rail);border:1px solid var(--bp-line);border-radius:9px}
+.ea-groups button:disabled {opacity:.5}
+.ea-group-heading .ea-group-toggle {min-width:0;flex:1;text-align:left;overflow-wrap:anywhere;font-weight:700}
+.ea-group-heading output {font-variant-numeric:tabular-nums}
+.ea-group-fader {margin:0;width:100%;height:44px;accent-color:var(--bp-primary);touch-action:pan-y}
+.ea-group-members {border-inline-start:3px solid var(--bp-primary);padding-inline-start:8px}
+.ea-group-editor>label {display:grid;gap:4px}
+.ea-group-editor input:not([type=checkbox]) {width:100%;min-height:44px;padding:8px;border:1px solid var(--bp-line);border-radius:8px;background:var(--bp-bg);color:var(--bp-text)}
+.ea-group-editor ul {list-style:none;padding:0;margin:0}
+.ea-group-editor li {display:flex;align-items:center;justify-content:space-between;gap:4px;border-bottom:1px solid var(--bp-line);min-height:48px}
+.ea-group-editor li label {display:flex;align-items:center;gap:6px;min-width:0;flex:1;min-height:44px;overflow-wrap:anywhere}
+.ea-group-editor input[type=checkbox] {flex:none;width:19px;height:19px;accent-color:var(--bp-primary)}
+.ea-order {gap:2px;flex-wrap:nowrap}
+.ea-order button {padding:4px;line-height:1}
+.ea-grip {touch-action:none;user-select:none;cursor:grab}
+.ea-group-editor .dragging {background:var(--stage-active)}
+.ea-meter {position:relative}
+.ea-meter .ea-peak {position:absolute;top:0;bottom:0;width:2px;transform:translateX(-100%);background:#fff}
+.ea-monitor-page .meter-display-settings {padding:12px;border:1px solid var(--bp-line);border-radius:10px}
+.ea-monitor-page .meter-display-settings label {display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0}
+.ea-monitor-page .ea-master {position:sticky;bottom:env(safe-area-inset-bottom,0px);z-index:3;padding:10px;gap:6px}
+.ea-monitor-page .ea-master .ea-slider {height:40px}
+.ea-monitor-page .ea-master-top span {font-size:20px}
+
+.ea-meter-readout {display:flex;align-items:center;gap:6px}
+.ea-meter-readout .ea-meter {flex:1}
+.ea-meter-readout small {font-size:11px;font-variant-numeric:tabular-nums;color:var(--bp-text)}
+.ea-toast {z-index:5}

@@ -7,7 +7,6 @@ import {isAndroid} from './platform';
 import {SupportButton,SupportCenter} from './SupportCenter';
 import {CommunityLink} from './CommunityLink';
 import {LanguageSettings} from "./LanguageSettings";
-import {UsageNotice,UsageSettings} from "./UsageStats";
 import {tx, getLocale, useLanguage} from "./i18n";
 import {MixerModelContext} from './MixerModel';
 import {DEFAULT_MIXER,type MixerProfile} from '../../shared/mixer-models';
@@ -107,6 +106,7 @@ export default function App() {
   useLanguage();
   useScreenContrast();
   const [page, setPage] = useState<Page>("coach");
+  const [balanceHome,setBalanceHome]=useState(0);
   const previousPage=useRef(page);
   useLayoutEffect(()=>{
     if(previousPage.current===page)return;
@@ -467,7 +467,7 @@ export default function App() {
   const expertMixer = page==="console"&&model.family==="xair"&&consoleMode==="expert";
   const linkLabel = !socketOk?"Hors ligne":isSim?"Simulation":!status.connected?"Déconnectée":canWrite?"Contrôle actif":"Lecture seule";
   const railItem=(sp:typeof SPACES[number])=><div key={sp.id} className={space===sp.id?"rail-space active":"rail-space"}>
-    <button type="button" className="rail-space-btn" data-workspace={sp.id} aria-label={tx(sp.name)} title={tx(sp.name)} aria-current={space===sp.id?"page":undefined} onClick={()=>setPage(sp.pages[0]!)}>
+    <button type="button" className="rail-space-btn" data-workspace={sp.id} aria-label={tx(sp.name)} title={tx(sp.name)} aria-current={space===sp.id?"page":undefined} onClick={()=>{if(page==="coach"&&sp.pages[0]==="coach")setBalanceHome(n=>n+1);setPage(sp.pages[0]!);}}>
       <sp.icon size={19} aria-hidden="true"/><small aria-hidden="true" className="rail-short-label">{tx(sp.name)}</small><span><b>{tx(sp.name)}</b></span>
     </button>
   </div>;
@@ -512,7 +512,7 @@ export default function App() {
       {(page==="setlists"||page==="concert")&&sheetSong&&<SongPdfDialog key={sheetSong.id} song={sheetSong} editable={page==="setlists"&&draftReady} onClose={()=>setSheetSongId(null)} onChange={attached=>setStore(current=>({...current,songs:current.songs.map(s=>s.id===sheetSong.id?{...s,hasPdf:attached}:s)}))}/>}
       {blankPlan && <PlanDialog plan={blankPlan} busy={blankBusy} canApply={canWrite} mode={isSim ? "simulation" : "real"} onClose={() => setBlankPlan(null)} onApply={() => void applyBlank()}/>}
       {notice && <div className="studio-alert" role="alert"><CircleAlert size={16}/><span>{tx(notice)}</span><button onClick={()=>setNotice("")}>{tx("Fermer")}</button></div>}
-      {unsupportedX32 ? <section className="model-blocked"><h2>{tx(model.label)}{tx(" · adaptation en cours")}</h2><p>{tx("Le mélangeur 32 canaux, 16 bus, 8 DCA et 6 matrices est disponible. Les fonctions guidées, scènes complètes et retours sur téléphone nécessitent encore leur adaptateur X32.")}</p><button onClick={()=>setPage("console")}>{tx("Ouvrir le mélangeur ")}{tx(model.label)}</button></section> : page==="console"&&model.family==="x32" ? <div className="studio-work"><X32Console canWrite={canWrite} simulation={isSim}/></div> : page==="rehearse" ? <Rehearse onSetlist={()=>openSetlist(true)} requestedSong={requestedSong} onExpert={ch=>{setSelected(ch);localStorage.setItem("xr18-expert-view","channel");setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="concert" ? <Concert entries={setlist} onSetlist={()=>openSetlist()} onSheet={setSheetSongId}/> : (page==="coach"||page==="rider") ? <SoundCoach riderOnly={page==="rider"} onWorkshop={isAndroid?undefined:()=>{sessionStorage.setItem("bandpilot-workshop-view","true");setPage("rehearse");}} status={status} online={socketOk} meters={coachMeters} onConnect={openConnection} onMonitors={()=>{setPhonesRequested(true);setPage("ears");}} onExpert={(ch,view)=>{if(ch)setSelected(ch);try{localStorage.setItem("xr18-expert-view",view??"channel");}catch{}setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="console" ? consoleMode==="simple" ? <div className="content"><SimpleMixer simulation={isSim} canWrite={canWrite} onExpert={(ch,id)=>{setEntryStrip(id);if(ch)setSelected(ch);try{localStorage.setItem("xr18-expert-view","channel");}catch{}setTab("mixer");setConsoleMode("expert");}}/></div> : <>
+      {unsupportedX32 ? <section className="model-blocked"><h2>{tx(model.label)}{tx(" · adaptation en cours")}</h2><p>{tx("Le mélangeur 32 canaux, 16 bus, 8 DCA et 6 matrices est disponible. Les fonctions guidées, scènes complètes et retours sur téléphone nécessitent encore leur adaptateur X32.")}</p><button onClick={()=>setPage("console")}>{tx("Ouvrir le mélangeur ")}{tx(model.label)}</button></section> : page==="console"&&model.family==="x32" ? <div className="studio-work"><X32Console canWrite={canWrite} simulation={isSim}/></div> : page==="rehearse" ? <Rehearse onSetlist={()=>openSetlist(true)} requestedSong={requestedSong} onExpert={ch=>{setSelected(ch);localStorage.setItem("xr18-expert-view","channel");setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="concert" ? <Concert entries={setlist} onSetlist={()=>openSetlist()} onSheet={setSheetSongId}/> : (page==="coach"||page==="rider") ? <SoundCoach key={JSON.stringify([page,balanceHome,status.mode,status.model,status.host,status.port])} riderOnly={page==="rider"} onWorkshop={isAndroid?undefined:()=>{sessionStorage.setItem("bandpilot-workshop-view","true");setPage("rehearse");}} status={status} online={socketOk} meters={coachMeters} onConnect={openConnection} onMonitors={()=>{setPhonesRequested(true);setPage("ears");}} onExpert={(ch,view,strip)=>{setEntryStrip(strip);if(ch)setSelected(ch);try{localStorage.setItem("xr18-expert-view",view??"channel");}catch{}setPage("console");setTab("mixer");setConsoleMode("expert");}}/> : page==="console" ? consoleMode==="simple" ? <div className="content"><SimpleMixer simulation={isSim} canWrite={canWrite} onExpert={(ch,id)=>{setEntryStrip(id);if(ch)setSelected(ch);try{localStorage.setItem("xr18-expert-view","channel");}catch{}setTab("mixer");setConsoleMode("expert");}}/></div> : <>
 
         <div className="studio-work">
           {model.usbChannels===0&&<p className="model-note">{tx(model.label)} : {tx(model.channels)}{tx(" entrées, ")}{tx(model.micPreamps)}{tx(" préamplis micro et ")}{tx(model.monitorOutputs)}{tx(" sorties Aux physiques. Enregistrement USB stéréo sur clé ; pas d’interface USB multipiste vers l’ordinateur.")}</p>}
@@ -555,14 +555,13 @@ export default function App() {
         </nav>}
         {page==="settings" && <div className="settings-block" id="bp-connection" hidden={settingsSection!=="connection"}><ConnectionPanel key={`connection:${model.id}`} status={status}/>{model.family==="xair"&&<button className="return-to-guide" onClick={()=>setPage("coach")}><ArrowLeft size={16}/>{tx("Revenir à ma balance")}</button>}</div>}
         {page==="settings" && settingsSection==="system" && <div className="settings-support"><SupportButton/><CommunityLink destination="help"/></div>}
-        {page==="settings" && <div className="settings-block" id="bp-preferences" hidden={settingsSection!=="preferences"}><div className="studio-panel pad display-prefs"><h2>{tx("Affichage")}</h2><ContrastSwitch/><FineFaders/></div><LanguageSettings/><UsageSettings/></div>}
+        {page==="settings" && <div className="settings-block" id="bp-preferences" hidden={settingsSection!=="preferences"}><div className="studio-panel pad display-prefs"><h2>{tx("Affichage")}</h2><ContrastSwitch/><FineFaders/></div><LanguageSettings/></div>}
 
         {page==="settings" && <div className="settings-block" id="bp-system" hidden={settingsSection!=="system"}><StudioControl key={`studio-settings:${model.id}`} section="settings"/></div>}
         {page==="settings" && settingsSection==="system" && <section className="studio-panel pad"><div className="panel-title"><div><b>{tx("État du système")}</b><small>{tx("Paramètres de sécurité")}</small></div><Cable size={18}/></div><div className="settings-rows"><div><span>{tx("Mode d'exécution")}</span><b>{tx(isSim?"Simulation":"Console réelle")}</b></div><div><span>{tx("WebSocket")}</span><b>{tx(socketOk?"Connecté":"Déconnecté")}</b></div><div><span>{tx("Réponse OSC")}</span><b>{tx(status.connected?"Reçue / simulation":"Non confirmée")}</b></div><div><span>{tx("Écritures matérielles")}</span><b>{tx(!isSim&&status.writesEnabled?"Activées sur backend":"Désactivées")}</b></div><div><span>{tx("Accès multiappareils")}</span><b>{tx("HTTPS configurable")}</b></div></div><p className="disclaimer">{tx("Utilise le panneau de connexion pour détecter la console, activer le contrôle ou revenir en simulation.")}</p></section>}
       </div>}
-      <UsageNotice/>
     </div>
-    <nav className="bottombar" aria-label={tx("Espaces")}>{SPACES.filter(sp=>sp.id!=="setup").map(sp=><button key={sp.id} type="button" className={space===sp.id?"active":""} aria-current={space===sp.id?"page":undefined} onClick={()=>setPage(sp.pages[0]!)}><sp.icon size={22}/><span>{tx(sp.name)}</span></button>)}</nav>
+    <nav className="bottombar" aria-label={tx("Espaces")}>{SPACES.filter(sp=>sp.id!=="setup").map(sp=><button key={sp.id} type="button" className={space===sp.id?"active":""} aria-current={space===sp.id?"page":undefined} onClick={()=>{if(page==="coach"&&sp.pages[0]==="coach")setBalanceHome(n=>n+1);setPage(sp.pages[0]!);}}><sp.icon size={22}/><span>{tx(sp.name)}</span></button>)}</nav>
   </div></ParameterLinksProvider></MixerModelContext.Provider>;
 }
 

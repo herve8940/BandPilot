@@ -9,7 +9,7 @@ import type { HelpPage } from "../xairHelp";
 export type Value = number | string;
 export type Values = Record<string, Value>;
 export type SetFn = (address: string, value: Value) => void;
-export const pad = (n: number) => String(n).padStart(2, "0");
+export {pad} from "./strips";
 export const num = (values: Values, address: string, fallback = 0) => { const v = values[address]; return typeof v === "number" ? v : fallback; };
 
 // ---------- meters: external store so only meter widgets re-render ----------

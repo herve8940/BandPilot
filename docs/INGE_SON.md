@@ -140,17 +140,17 @@ Interface de dialogue : [OpenAI — Structured model outputs](https://developers
 
 ## Ambiances guidées
 
-Dans **Mon ingé son → Écouter et corriger → Ambiances des sources**, la boîte à outils **Une ambiance, chacun son dosage** propose :
+Dans **Balance → Écoute → Effets par instrument**, le panneau **Effets de la balance** propose :
 
-1. Choisir une source déclarée dans le groupe.
+1. Choisir une entrée du groupe ou une tranche cochée lors de la reprise du mélangeur.
 2. Choisir parmi les presets proposés pour cette source. Les valeurs sont des points de départ à écouter.
-3. Choisir le dosage pour chaque musicien, de **Sec** à **Ample** ; **Discret pour tous** prépare un départ commun.
-4. Cliquer sur **Préparer mon ambiance**, lire les destinataires et confirmer **Essayer dans les ears**.
+3. Choisir le dosage en façade et dans chaque retour. **Sec** coupe l’effet pour cette destination. La façade démarre sur **Sec**.
+4. Cliquer sur **Préparer mon ambiance**, vérifier les destinations et confirmer l’essai.
 5. Écouter quelques phrases, puis **Garder cette ambiance** ou **Revenir avant l’essai**.
 
-Le type d’effet et ses paramètres sont communs ; la quantité est indépendante dans chaque retour. Le musicien utilise le fader **Voix FX** ou **Ambiance FX** sur son téléphone. **Relire les dosages des musiciens** récupère ces changements dans la préparation. L’annulation d’un changement de style conserve les nouveaux dosages personnels ; **Retirer l’ambiance** restaure les réglages précédant sa création.
+Le type d’effet et ses paramètres sont communs ; la quantité est indépendante dans chaque retour. Sur son téléphone, le musicien retrouve le retour par son numéro FX. **Relire les dosages des musiciens** récupère ces changements dans la préparation. L’annulation d’un changement de style conserve les nouveaux dosages personnels ; **Retirer l’ambiance** restaure les réglages précédant sa création.
 
-La boîte utilise un seul processeur FX libre, alimenté par une source à la fois. Elle évite les effets déjà alimentés, insérés ou reliés à d’autres effets. Une source liée en stéréo reste à configurer dans la console. Les deux côtés d’un retour stéréo lié doivent avoir le même dosage. Aucun volume de canal sec, master de retour, préampli ou 48 V n’est modifié. L’effet est envoyé en pré-fader aux seuls retours préparés et son affectation façade est désactivée ; le signal direct conserve son chemin existant.
+Pour passer du chant à la caisse claire, sélectionne directement la nouvelle **Source à traiter**. BandPilot prépare son effet dans un emplacement libre et conserve celui du chant. Pour superposer une réverbération et un délai sur la même entrée, clique sur **Ajouter un effet**. Chaque effet guidé occupe un processeur libre sur les quatre de la console X-Air ou M-Air. Clique sur sa carte pour revoir son dosage, le modifier ou le retirer. Elle évite les effets déjà alimentés, insérés ou reliés à d’autres effets. Une source liée en stéréo reste à configurer dans la console. Les deux côtés d’un retour stéréo lié doivent avoir le même dosage. Aucun volume de canal sec, master de retour, préampli ou 48 V n’est modifié. Avec un dosage en façade, l’envoi vers l’effet suit le fader de l’entrée. Pour un essai réservé aux retours, cet envoi reste pré-fader. L’annulation restaure aussi le routage précédent du retour FX.
 
 La proposition expire après dix minutes et devient invalide si la console change. Une sauvegarde durable précède les commandes ; après une panne partielle, le retour aux réglages précédents reste explicite. Si quelqu’un change le processeur, le routage ou ajoute un instrument dans son envoi, l’application refuse de remplacer ces changements. Pendant l’Atelier du son, terminer/restaurer l’Atelier avant d’essayer ou retirer une ambiance. L’annulation vocale est indépendante de **Annuler le dernier réglage guidé** du conseiller historique.
 

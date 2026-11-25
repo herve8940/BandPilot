@@ -2,48 +2,38 @@
 
 ## Français
 
-BandPilot 3.0.1 corrige la boucle de mise à jour du bureau. Quand tu quittes BandPilot, l’application termine les mesures audio, puis attend que l’installateur soit lancé avant de se fermer.
+Dans la Balance, tu peux partir d’une scène vierge ou reprendre les entrées du mélangeur actuel. Sur X-Air et M-Air, passer du chant à la caisse claire prépare un effet dans un emplacement libre. Le chant garde sa réverbération et ses dosages. Pour superposer un délai sur le chant, choisis **Ajouter un effet**. Clique sur la carte d’un effet pour le modifier ou le retirer.
 
-**Si ton ancienne version propose la même mise à jour à chaque démarrage**, termine ta session et quitte BandPilot. Installe la 3.0.1 une fois depuis les fichiers de cette publication. Sous Windows, lance le fichier `.exe`. Sur Mac, ouvre le `.dmg` adapté à ton Mac et glisse BandPilot dans Applications en acceptant le remplacement. Sous Linux, remplace ton AppImage ou installe le paquet `.deb` selon ton installation. Tes profils restent dans leur dossier habituel.
-
-Rouvre **Aide et incidents** et vérifie que la version affichée est **3.0.1**.
+Les musiciens peuvent regrouper plusieurs sources dans leur retour personnel et les ajuster ensemble. Le compteur d’installations et son écran de configuration ont été supprimés.
 
 <a id="release-en"></a>
 
 ## English
 
-BandPilot 3.0.1 fixes a desktop update loop. When you quit, BandPilot finishes audio measurements and waits for the installer to start before exiting.
+Start a soundcheck from a blank scene or pick inputs from the current mixer. On X-Air and M-Air, switching from vocals to snare prepares an effect in a free slot. The vocal reverb keeps its main and monitor levels. Choose **Add an effect** to layer a delay on the vocal. Select an effect card to edit or remove it.
 
-**If your current version offers the same update at every startup**, finish your session and quit BandPilot. Install 3.0.1 once using the files attached to this release. On Windows, run the `.exe`. On Mac, open the `.dmg` for your Mac and drag BandPilot into Applications, confirming the replacement. On Linux, replace your AppImage or install the `.deb` for your installation. Your profiles stay in their usual folder.
-
-Reopen BandPilot and check that the help and incident panel shows **3.0.1**.
+Musicians can group sources in their personal monitor mix and adjust them together. This version removes the installation counter and its settings screen.
 
 <a id="release-de"></a>
 
 ## Deutsch
 
-BandPilot 3.0.1 behebt eine Update-Schleife in der Desktop-App. Beim Beenden schließt BandPilot die Audiomessungen ab und wartet, bis das Installationsprogramm gestartet ist.
+Der Soundcheck kann mit einer leeren Szene oder mit ausgewählten Eingängen des aktuellen Mischpults beginnen. Beim Wechsel vom Gesang zur Snare wird auf X-Air und M-Air ein freier Effektplatz verwendet. Der Gesangshall behält seine Pegel in der Summe und den Monitorwegen. Über die Schaltfläche zum Hinzufügen eines Effekts lässt sich der Gesang zusätzlich mit einem Delay versehen. Einzelne Effekte können über ihre Karte bearbeitet oder entfernt werden.
 
-**Wenn deine Version bei jedem Start dasselbe Update anbietet**, beende deine Sitzung und schließe BandPilot. Installiere 3.0.1 einmal mit den Dateien aus dieser Veröffentlichung. Unter Windows startest du die `.exe`. Auf dem Mac öffnest du die passende `.dmg`, ziehst BandPilot in den Programme-Ordner und bestätigst das Ersetzen. Unter Linux ersetzt du deine AppImage-Datei oder installierst das `.deb`-Paket. Deine Profile bleiben in ihrem bisherigen Ordner.
-
-Öffne BandPilot erneut und prüfe im Hilfebereich, ob **3.0.1** angezeigt wird.
+Musiker können mehrere Quellen im eigenen Monitormix gruppieren und gemeinsam regeln. Der Installationszähler und seine Einstellungen wurden entfernt.
 
 <a id="release-es"></a>
 
 ## Español
 
-BandPilot 3.0.1 corrige un bucle de actualización en la aplicación de escritorio. Al salir, BandPilot termina las mediciones de audio y espera a que se inicie el instalador antes de cerrarse.
+La prueba de sonido puede empezar con una escena vacía o con las entradas seleccionadas en la mezcla actual. En X-Air y M-Air, al pasar de la voz a la caja, el nuevo efecto ocupa una ranura libre. La reverberación de la voz conserva sus niveles en la mezcla principal y en los monitores. Puedes añadir un segundo efecto para combinarla con un delay. Selecciona la tarjeta de un efecto para editarlo o quitarlo.
 
-**Si tu versión ofrece la misma actualización cada vez que la abres**, termina la sesión y cierra BandPilot. Instala la versión 3.0.1 una vez con los archivos de esta publicación. En Windows, ejecuta el archivo `.exe`. En Mac, abre el `.dmg` que corresponda a tu Mac, arrastra BandPilot a Aplicaciones y confirma el reemplazo. En Linux, sustituye tu AppImage o instala el paquete `.deb`, según tu instalación. Tus perfiles siguen en su carpeta habitual.
-
-Vuelve a abrir BandPilot y comprueba que el panel de ayuda muestra la versión **3.0.1**.
+Cada músico puede agrupar varias fuentes en su mezcla de monitores y ajustar su volumen en conjunto. Se han eliminado el contador de instalaciones y sus ajustes.
 
 <a id="release-it"></a>
 
 ## Italiano
 
-BandPilot 3.0.1 risolve un problema che faceva ripartire lo stesso aggiornamento a ogni avvio dell’app desktop. Quando esci, BandPilot termina le misure audio e attende l’avvio del programma di installazione prima di chiudersi.
+Il soundcheck può partire da una scena vuota o dagli ingressi selezionati sul mixer. Su X-Air e M-Air, passando dalla voce al rullante, il nuovo effetto occupa uno slot libero. Il riverbero della voce mantiene i livelli nel mix principale e nei monitor. Puoi aggiungere un secondo effetto per affiancargli un delay. Seleziona la scheda di un effetto per modificarlo o rimuoverlo.
 
-**Se la tua versione propone lo stesso aggiornamento a ogni avvio**, termina la sessione e chiudi BandPilot. Installa una volta la versione 3.0.1 usando i file di questa pubblicazione. Su Windows esegui il file `.exe`. Su Mac apri il `.dmg` adatto al tuo Mac, trascina BandPilot in Applicazioni e conferma la sostituzione. Su Linux sostituisci la tua AppImage o installa il pacchetto `.deb`, in base alla tua installazione. I profili rimangono nella cartella abituale.
-
-Riapri BandPilot e verifica che il pannello di aiuto mostri la versione **3.0.1**.
+Ogni musicista può raggruppare più sorgenti nel proprio mix monitor e regolarle insieme. Il contatore delle installazioni e le relative impostazioni sono stati rimossi.

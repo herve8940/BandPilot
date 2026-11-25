@@ -29,7 +29,7 @@ import {processingCommands} from "./processing-osc.js";
 import {homedir} from 'node:os';
 import http from "node:http";
 import https from "node:https";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, rm, stat } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import { WebSocketServer, WebSocket } from "ws";
 import {discoverXR18} from "./discovery.js";
@@ -45,13 +45,15 @@ import { Access, permitted, sameOrigin, liveControlPermitted } from "./access.js
 import { LibraryStore } from "./library-store.js";
 import { ShowControl } from "./show-control.js";
 import { StudioApi, body } from "./studio-api.js";
-import {UsageStats,usagePlatform,usageDisabledByEnvironment} from './usage-stats.js';
-import {USAGE_ENDPOINT} from '../shared/usage-endpoint.js';
 const database = new StudioDatabase();
 const processing = new ProcessingStore();
 const dbPath=process.env.XR18_DB_PATH??"data/xr18-studio.db";
 const diagnostics=new DiagnosticLog(join(dirname(dbPath),'logs','xr18-studio.log'));
 setDiagnosticLogger(diagnostics);
+// Remove the retired counter's local identifier when an existing installation upgrades.
+for (const name of ['usage-stats.json', 'usage-stats.json.tmp']) {
+ await rm(join(dirname(dbPath), name), {force: true}).catch(() => diagnostic('legacy_counter_cleanup_failed'));
+}
 function diagnosticLog(){
  let native='';if(process.env.BANDPILOT_ANDROID==='1')for(const name of ['android.log.1','android.log'])try{native+=readFileSync(join(dirname(dbPath),'logs',name),'utf8');}catch{}
  return [...diagnostics.read().split('\n'),...native.split('\n')].filter(Boolean).sort((a,b)=>{try{return String(JSON.parse(a).time).localeCompare(String(JSON.parse(b).time));}catch{return 0;}}).join('\n');
@@ -59,7 +61,6 @@ function diagnosticLog(){
 // Version shown in Réglages and written in the diagnostic log (set by the desktop app, else package.json).
 const APP_VERSION=process.env.XR18_APP_VERSION??(()=>{try{return JSON.parse(readFileSync(new URL('../../package.json',import.meta.url),'utf8')).version as string;}catch{return 'source';}})();
 const APP_BUILD=process.env.XR18_APP_BUILD??'source';
-const usage=new UsageStats(join(dirname(dbPath),'usage-stats.json'),{endpoint:process.env.BANDPILOT_USAGE_ENDPOINT??USAGE_ENDPOINT,version:APP_VERSION,build:APP_BUILD,platform:usagePlatform(),disabled:usageDisabledByEnvironment()});
 const androidUpdates=process.env.BANDPILOT_ANDROID==='1'?new AndroidUpdates(join(dirname(dbPath),'updates'),APP_VERSION):undefined;
 diagnostic('startup',{build:APP_BUILD,version:APP_VERSION,platform:process.platform,arch:process.arch,node:process.version});
 const configPath=process.env.XR18_CONNECTION_PATH??join(dirname(dbPath),'connection.json');
@@ -175,13 +176,6 @@ const handler: http.RequestListener = async (req, res) => {
    else if(path==='/api/android/update/download'&&req.method==='POST'){void androidUpdates.stage();result=androidUpdates.snapshot();}
    else{res.writeHead(404);res.end('{}');return;}
    res.end(JSON.stringify(result));return;
-  }
-  if(path==='/api/usage-stats'){
-   try{
-    if(req.method==='GET'){res.end(JSON.stringify({...await usage.snapshot(),canEdit:user?.role==='admin'}));return;}
-    if(req.method==='POST'){res.end(JSON.stringify({...await usage.update(await body(req)),canEdit:true}));return;}
-    res.writeHead(405);res.end('{}');
-   }catch(e){res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));}return;
   }
   if(path==='/api/expert-view-link'){
    if(user?.role!=='admin'){res.writeHead(403);res.end(JSON.stringify({error:'Administration requise'}));return;}
@@ -459,10 +453,10 @@ const handler: http.RequestListener = async (req, res) => {
   }
   if(path==='/api/coach/vocal-fx'&&req.method==='GET'){res.end(JSON.stringify(vocalFx.status()));return;}
   if(path.startsWith('/api/coach/vocal-fx/')&&req.method==='POST'){
-    try{const d=await body(req);const result=path==='/api/coach/vocal-fx/archive'?await vocalFx.archive(d.confirm===true):path==='/api/coach/vocal-fx/reconnect'?await vocalFx.reconnect(d.confirm===true):path==='/api/coach/vocal-fx/read-doses'?await vocalFx.readDoses():path==='/api/coach/vocal-fx/preview'?await vocalFx.preview(d):path==='/api/coach/vocal-fx/apply'?await vocalFx.apply(d.token,d.confirm):path==='/api/coach/vocal-fx/keep'?await vocalFx.keep():path==='/api/coach/vocal-fx/undo'?await vocalFx.undo(d.all===true,d.confirm===true):null;if(!result)throw Error('Action d’ambiance inconnue');diagnostic('ambience.action',{action:path});res.end(JSON.stringify(result));}catch(e){
+    try{const d=await body(req);const result=path==='/api/coach/vocal-fx/archive'?await vocalFx.archive(d.confirm===true,d.sessionId):path==='/api/coach/vocal-fx/reconnect'?await vocalFx.reconnect(d.confirm===true,d.sessionId):path==='/api/coach/vocal-fx/read-doses'?await vocalFx.readDoses(d.sessionId):path==='/api/coach/vocal-fx/preview'?await vocalFx.preview(d,d.mixerProfile===undefined?undefined:validateProfile(d.mixerProfile,xr18.model()),d.sessionId):path==='/api/coach/vocal-fx/apply'?await vocalFx.apply(d.token,d.confirm):path==='/api/coach/vocal-fx/keep'?await vocalFx.keep(d.sessionId):path==='/api/coach/vocal-fx/undo'?await vocalFx.undo(d.all===true,d.confirm===true,d.sessionId):null;if(!result)throw Error('Action d’ambiance inconnue');diagnostic('ambience.action',{action:path});res.end(JSON.stringify(result));}catch(e){
       if(e instanceof AmbienceConflict){
         diagnostic('ambience.conflict',{action:path,message:e.message});
-        res.writeHead(409);res.end(JSON.stringify({code:'ambience-conflict',error:e.message,state:vocalFx.status()}));
+        res.writeHead(409);res.end(JSON.stringify({code:'ambience-conflict',error:e.message,state:vocalFx.status(e.sessionId)}));
       }else{
         diagnostic('ambience.error',{action:path,message:(e as Error).message,stack:(e as Error).stack});
         res.writeHead(400);res.end(JSON.stringify({error:(e as Error).message}));
@@ -472,28 +466,33 @@ const handler: http.RequestListener = async (req, res) => {
   }
   if(path.startsWith('/api/coach/')&&req.method==='POST'){
     try{const d=await body(req);let result:unknown;
-      if(path==='/api/coach/profile'){result=coach.saveProfile(d.profile);ears.refreshTechnicalCards();}
+      if(path==='/api/coach/profile'){result=coach.saveProfile(d.profile,false,d.newBalance===true);ears.refreshTechnicalCards();}
+      else if(path==='/api/coach/mixer-capture')result=await coach.captureMixerBalance(d.name,d);
       else if(path==='/api/coach/prepare')result=await coach.prepare(d.channel===undefined?undefined:Number(d.channel),d.resetUnused===true);
-      else if(path==='/api/coach/gain')result=await coach.gainCheck(Number(d.channel));
+      else if(path==='/api/coach/gain')result=await coach.gainCheck(Number(d.channel),undefined,d.fromMixer===true);
       else if(path==='/api/coach/bleed')result=await coach.bleedCheck(Number(d.channel));
       else if(path==='/api/coach/calibration')result=await coach.calibrationStatus({sound:d.sound,headroom:d.headroom});
-      else if(path==='/api/coach/ears')result=await coach.prepareEars(d.bus===undefined?undefined:Number(d.bus),d.resetUnused===true,ears);
+      else if(path==='/api/coach/ears')result=await coach.prepareEars(d.bus===undefined?undefined:Number(d.bus),d.resetUnused===true,ears,d.mixerProfile);
+      else if(path==='/api/coach/ears/suggest'){
+        const draft=validateProfile(d.mixerProfile,xr18.model());
+        result=suggestMusicians(draft.inputs,xr18.model().monitorOutputs);
+      }
       else if(path==='/api/coach/ears/share'){
-        const profile=d.profile===undefined?coach.profile():validateProfile(d.profile);
+        const profile=d.mixerProfile!==undefined?validateProfile(d.mixerProfile,xr18.model()):d.profile===undefined?coach.profile():validateProfile(d.profile);
         const roster=await ears.prepareRoster(profile.musicians??suggestMusicians(profile.inputs));
-        if(d.profile!==undefined)coach.saveProfile(profile);
+        if(d.mixerProfile===undefined&&d.profile!==undefined)coach.saveProfile(profile);
         result={...roster.commit(),status:ears.status()};
         ears.refreshTechnicalCards();
       }
-      else if(path==='/api/coach/suggest')result=await coach.suggest(Number(d.channel),String(d.symptom));
+      else if(path==='/api/coach/suggest')result=await coach.suggest(Number(d.channel),String(d.symptom),d.fromMixer===true);
       else if(path==='/api/coach/apply'){if(d.confirm!==true)throw Error('Confirmation requise');result=await coach.apply(d.token,d.confirm);}
       else if(path==='/api/coach/undo')result=await coach.undo();
       else if(path==='/api/coach/measure')result=await coach.measure(Number(d.channel));
       else if(path==='/api/coach/ask'){
         if(typeof d.message!=='string'||!d.message.trim()||d.message.length>2000)throw Error('Question de 1 à 2 000 caractères requise');
-        const channel=Number(d.channel),input=coach.profile().inputs.find(i=>i.channel===channel);
+        const channel=Number(d.channel),input=await coach.balanceInput(channel,d.fromMixer===true);
         if(!input)throw Error('Choisir un instrument de la préparation');
-        if(d.external===true){if(d.consent!==true)throw Error('Accord explicite requis avant envoi à OpenAI');if(Date.now()-aiRequestAt<5000)throw Error('Attendre quelques secondes entre deux demandes IA');aiRequestAt=Date.now();result={source:'openai',...await askConnectedCoach(d.message,{source:input.source,mode:xr18.mode,connected:xr18.status().connected,language:languageOrFrench(d.language)},d.consent)};}
+        if(d.external===true){if(d.consent!==true)throw Error('Accord explicite requis avant envoi à OpenAI');if(Date.now()-aiRequestAt<5000)throw Error('Attendre quelques secondes entre deux demandes IA');aiRequestAt=Date.now();result={source:'openai',...await askConnectedCoach(d.message,{source:input.source||null,mode:xr18.mode,connected:xr18.status().connected,language:languageOrFrench(d.language)},d.consent)};}
         else{const symptom=identifySymptom(d.message);result=symptom?{source:'local',symptom,...coach.advice(channel,symptom)}:{source:'local',answer:'Je peux t’aider à préparer le groupe, vérifier les niveaux et tester une correction à la fois. Décris ce qui te gêne : son brouillon, agressif, notes coupées, saturation, bruit ou voix difficile à distinguer.',check:'Choisis d’abord le canal et l’instrument, puis explique ce que tu entends. Je ne reçois aucun audio par OSC.',measuredAudio:false};}
       }else throw Error('Action du conseiller inconnue');
       diagnostic('coach.action',{action:path});res.end(JSON.stringify(result));
@@ -727,9 +726,8 @@ server.listen(port, listenHost, () => {
 server.on('error',error=>{if(process.env.BANDPILOT_ANDROID==='1'&&(error as NodeJS.ErrnoException).code==='EADDRINUSE')server.listen(0,listenHost);else throw error;});
 const statusTimer=setInterval(()=>{for(const ws of wss.clients){const req=wsRequests.get(ws);if(!req||!access.user(req))ws.terminate();}const message=JSON.stringify({type:"status",status:xr18.status()});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message);},2000);
 statusTimer.unref();
-usage.start(()=>{const s=xr18.status();return s.mode==='real'&&s.connected&&s.model?String(s.model):s.mode==='simulation'?'simulation':'none';});
 export async function stopMeasurements(){await eqRta.close().catch(()=>{});}
-async function shutdown(){await stopMeasurements();clearInterval(statusTimer);usage.close();ears.close();xr18.close();database.close();access.close();library.close();adjustmentGroups.close();for(const ws of wss.clients)ws.terminate();wss.close();server.close();}
+async function shutdown(){await stopMeasurements();clearInterval(statusTimer);ears.close();xr18.close();database.close();access.close();library.close();adjustmentGroups.close();for(const ws of wss.clients)ws.terminate();wss.close();server.close();}
 process.once("SIGINT",shutdown);
 process.once("SIGTERM",shutdown);
 

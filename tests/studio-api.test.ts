@@ -1,13 +1,15 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {access,mkdtemp,rm,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import net from 'node:net';
 import {WebSocket} from 'ws';
 test('HTTP and websocket auth, guest denial and complete simulation recall',async()=>{
  const directory=await mkdtemp(join(tmpdir(),'xr18-api-'));const probe=net.createServer();await new Promise<void>(r=>probe.listen(0,'127.0.0.1',r));const port=(probe.address() as net.AddressInfo).port;await new Promise<void>(r=>probe.close(()=>r()));
+ const retiredFiles=['usage-stats.json','usage-stats.json.tmp'].map(name=>join(directory,name));
+ for(const file of retiredFiles)await writeFile(file,JSON.stringify({enabled:true,noticeSeen:true,id:'old-test-installation'}));
  const child=spawn(process.execPath,['--import','tsx','src/server.ts'],{env:{...process.env,HTTP_PORT:String(port),XR18_DB_PATH:join(directory,'test.db'),XR18_MODE:'simulation'},stdio:['ignore','pipe','pipe']});let logs='';child.stdout.on('data',d=>logs+=d);child.stderr.on('data',d=>logs+=d);
  const base=`http://127.0.0.1:${port}`;let cookie='';
  const call=(path:string,data?:unknown,method=data?'POST':'GET')=>fetch(base+path,{method,headers:{'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:data?JSON.stringify(data):undefined});
@@ -17,6 +19,8 @@ test('HTTP and websocket auth, guest denial and complete simulation recall',asyn
   assert.equal((await call('/api/channels')).status,401);
   await new Promise<void>((resolve,reject)=>{const ws=new WebSocket(base.replace('http','ws')+'/ws');ws.once('unexpected-response',(_req,res)=>{assert.equal(res.statusCode,401);res.resume();resolve();});ws.once('open',()=>{ws.close();reject(Error('Anonymous WS allowed'));});ws.once('error',()=>{});});
   let login=await call('/api/auth/login',{name:'Admin',password:'very-long-password'});cookie=login.headers.get('set-cookie')!.split(';')[0]!;assert.equal((await call('/api/channels')).status,200);
+  for(const file of retiredFiles)await assert.rejects(access(file),{code:'ENOENT'});
+  assert.equal((await call('/api/usage-stats')).status,404);
   assert.equal((await call('/api/mixer-sync')).status,200);
   const rtaInfo=await (await call('/api/eq-rta')).json() as {mode:string;busy:boolean};assert.equal(rtaInfo.mode,'simulation');assert.equal(rtaInfo.busy,false);
   assert.equal((await call('/api/eq-rta/start',{target:{kind:'ch',n:1},post:false})).status,400);

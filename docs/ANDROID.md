@@ -8,9 +8,7 @@
 
 ## Nouveautés de 2.4.0-android.5
 
-Cette version reprend les derniers changements communs à la version ordinateur :
-statistiques d’utilisation désactivables et boutons du menu mieux alignés et
-accessibles dans les petites fenêtres.
+Les boutons du menu sont mieux alignés et plus accessibles dans les petites fenêtres.
 
 **Réglages → Aide et incidents** donne accès à l’entraide Discord, au guide et aux
 idées. Pour un bug, saisir le résumé et les étapes, relire le message avec la
@@ -18,16 +16,9 @@ version Android, le copier puis le coller dans **#bugs-tests**. Les liens ouvren
 Discord ou le navigateur. Aucun message, journal ni audio n’est envoyé
 automatiquement. [Rejoindre la communauté](https://discord.gg/FtWwEPmwE7).
 
-Au premier lancement, l’administrateur peut choisir **OK** ou **Désactiver** dans
-l’avis sur les statistiques. Le choix reste modifiable dans **Réglages →
-Statistiques anonymes**. Le compteur transmet au plus une fois par jour un numéro
-aléatoire d’installation, la version, la plateforme Android, le canal de
-distribution et le modèle de console. Il ne transmet ni nom, ni audio, ni scène,
-ni réglage, ni journal. Désactiver le compteur efface ce numéro de l’appareil.
-Voir les [détails sur les données](PRIVACY.md).
+Le pilotage local de la console fonctionne sans Internet. [Données et confidentialité](PRIVACY.md).
 
-Le compteur nécessite Internet ; le pilotage local de la console reste disponible
-sans Internet. Cette option ne change aucun réglage audio. Installer l’APK
+Installer l’APK
 par-dessus l’ancienne version, **sans désinstaller**, conserve les profils et les
 préférences.
 

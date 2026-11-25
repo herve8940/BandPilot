@@ -215,3 +215,68 @@ test('old DEV sound migrates explicitly, while existing and new independent pref
   assert.equal(SoundCoach.earsValues(coach.profile()).values['/ch/11/mix/05/level'],-26);
  }finally{xr.close();library.close();}
 });
+
+test('start a balance with the actual XR18 or MR12 scene, also in read-only mode, preserving the group profile',async()=>{
+ for(const model of ['XR18','MR12'] as const){
+  const xr=new XR18({mode:'simulation',model,host:'127.0.0.1',port:10024,enableWrites:false});
+  const library=new LibraryStore(':memory:'),control=new ConsoleControl(xr,library),coach=new SoundCoach(xr,control,library);
+  try{
+   coach.saveProfile({version:1,inputs:[{channel:2,source:'bass-di',name:'DI'}],completed:['inputs'],musicians:[]});
+   const profile=coach.profile();
+   const settings={'/ch/01/config/name':'Accordeon','/ch/01/mix/fader':.55,'/ch/01/mix/02/level':.3375,'/ch/01/eq/1/g':.62,'/ch/01/dyn/on':1,'/bus/2/config/name':'Wedge','/lr/mix/fader':.67,'/headamp/01/phantom':1};
+   for(const [address,value] of Object.entries(settings))await xr.writeParameter(address,value,true);
+   const before=xr.parameterState(),received=await control.capture();
+   await assert.rejects(coach.captureMixerBalance('Base',{...xr.status(),mode:'real'}),/Connexion modifiée/);
+   const entry=await coach.captureMixerBalance('Base',xr.status());
+   assert.deepEqual(entry.data,received);
+   assert.equal(entry.kind,'scene');
+   for(const [address,value] of Object.entries(settings))assert.equal(received.values[address],value,address);
+   assert.equal(received.fx.length,4);assert.deepEqual(coach.profile(),profile);assert.deepEqual(xr.parameterState(),before);
+   xr.liveSet('/ch/01/mix/fader',.4);
+   const final=await coach.captureMixerBalance('Après',xr.status());
+   assert.equal((final.data as typeof received).values['/ch/01/mix/fader'],.4);
+   assert.equal((library.get(entry.id).data as typeof received).values['/ch/01/mix/fader'],.55);
+   const capture=control.capture.bind(control);
+   control.capture=async()=>{const scene=await capture();xr.cancelOperations();return scene;};
+   await assert.rejects(coach.captureMixerBalance('Interrompue',xr.status()),/Connexion modifiée/);
+   assert.equal(library.list('scene').length,2);
+  }finally{xr.close();library.close();}
+ }
+});
+
+test('mixer balance can measure a channel absent from the coach profile without attributing an instrument or saving calibration',async()=>{
+ const {xr,library,coach}=setup();
+ try{
+  coach.saveProfile({version:1,inputs:[],completed:[],musicians:[]});
+  xr.liveSet('/ch/04/config/name','Clarinette');
+  const before=coach.profile();
+  coach.measure=async()=>({available:true,state:'present',title:'Signal',message:'Signal',samples:8,maximumDb:-6});
+  assert.equal((await coach.gainCheck(4,50,true)).decision?.state,'ok');
+  assert.deepEqual(coach.profile(),before);
+  await assert.rejects(coach.gainCheck(4,50),/Attribuer un instrument/);
+  await assert.rejects(coach.gainCheck(17,50,true),/Entrée indisponible/);
+  coach.measure=async()=>({available:true,state:'present',title:'Signal',message:'Signal',samples:8,maximumDb:-20});
+  await xr.writeParameter('/ch/04/preamp/rtnsw',0);
+  await xr.writeParameter('/ch/04/config/insrc',6);
+  const initial=await xr.readParameter('/headamp/07/gain');
+  const adjustment=await coach.gainCheck(4,50,true);
+  assert.deepEqual(adjustment.proposal?.changes.map(c=>c.address),['/headamp/07/gain']);
+  assert.equal(await xr.readParameter('/headamp/07/gain'),initial);
+  await xr.writeParameter('/ch/04/preamp/rtnsw',1);
+  await assert.rejects(coach.apply(adjustment.proposal!.token,true),/État modifié/);
+  assert.equal(await xr.readParameter('/headamp/07/gain'),initial);
+  assert.equal((await coach.gainCheck(4,50,true)).proposal,null);
+  assert.deepEqual(coach.profile(),before);
+ }finally{xr.close();library.close();}
+});
+
+test('starting a new soundcheck clears earlier measurements only on saving its new roster',()=>{
+ const {xr,library,coach}=setup();
+ try{
+  const channels=[{channel:1,name:'Basse',source:'bass-di'}];
+  const p={version:1,inputs:channels,completed:[],calibration:{'1':{gainDb:12,peakDb:-6,at:new Date().toISOString()}}};
+  coach.saveProfile(p,true);
+  assert.ok(coach.saveProfile(p).calibration?.['1']);
+  assert.equal(coach.saveProfile(p,false,true).calibration,undefined);
+ }finally{xr.close();library.close();}
+});
