@@ -46,8 +46,9 @@ public class AutonomousTest {
   liveConsole();
   assertEquals("false",js("[...document.querySelectorAll('.rail-space-btn')].some(b=>b.textContent.includes('Enregistrer et réécouter'))"));
   HttpURLConnection unauth=(HttpURLConnection)new URL("http://127.0.0.1:"+EngineService.readyPort()+"/api/status").openConnection();assertEquals(403,unauth.getResponseCode());unauth.disconnect();
-  js("document.querySelector('button[title=\"Régler le son\"]').click()");waitFor("!!document.querySelector('.coach-journey')");
-  js("[...document.querySelectorAll('.coach-journey button')].find(b=>b.textContent.trim().endsWith('Dire qui est branché où')).click()");waitFor("!!document.querySelector('.coach-inputs')");
+  js("document.querySelector('button[title=\"Balance\"]').click()");waitFor("!!document.querySelector('.balance-blank')");
+  js("document.querySelector('.balance-blank').click()");waitFor("!!document.querySelector('.coach-dialog[open]')");
+  js("document.querySelector('.coach-dialog button.primary').click()");waitFor("!!document.querySelector('.coach-inputs')");
   int before=Integer.parseInt(js("document.querySelectorAll('.coach-input2').length"));
   js("[...document.querySelectorAll('.coach-actions button')].find(b=>b.textContent.trim()==='Ajouter un instrument').click()");waitFor("document.querySelectorAll('.coach-input2').length==="+(before+1));
   js("(()=>{const row=[...document.querySelectorAll('.coach-input2')].at(-1),s=row.querySelectorAll('select')[1];s.value='bass-di';s.dispatchEvent(new Event('change',{bubbles:true}));})()");
@@ -56,7 +57,9 @@ public class AutonomousTest {
   js("[...document.querySelectorAll('.coach-input2 .apply')].at(-1).click()");waitFor("!!document.querySelector('.coach-dialog[open]')");
   js("[...document.querySelectorAll('.coach-dialog button')].find(b=>b.textContent.trim()==='Essayer en simulation').click()");waitFor("!document.querySelector('.coach-dialog')&&!!document.querySelector('.coach-toast [role=status]')");
   JSONObject profile=api("/api/coach",null).getJSONObject("profile");JSONArray inputs=profile.getJSONArray("inputs");int channel=inputs.getJSONObject(inputs.length()-1).getInt("channel");assertEquals("Basse Éric",inputs.getJSONObject(inputs.length()-1).getString("name"));
-  js("[...document.querySelectorAll('.coach-shortcuts button')].find(b=>b.textContent.trim()==='Ambiances des sources').click()");waitFor("!!document.querySelector('.vocal-kit fieldset')");
+  js("document.querySelector('.balance-tools summary').click()");
+  js("[...document.querySelectorAll('.coach-shortcuts button')].find(b=>b.textContent.trim()==='Effets par instrument').click()");waitFor("!!document.querySelector('.vocal-kit fieldset')");
+  js("(()=>{const level=document.querySelector('[aria-label=\"Dosage en façade\"]');level.value='-18';level.dispatchEvent(new Event('change',{bubbles:true}));})()");
   js("[...document.querySelectorAll('.vocal-kit button')].find(b=>b.textContent.trim()==='Préparer mon ambiance').click()");waitFor("!!document.querySelector('.vocal-preview')");
   try(Mixer mixer=new Mixer()){
    JSONObject config=new JSONObject().put("mode","real").put("host","127.0.0.1").put("port",10024).put("enableWrites",true);

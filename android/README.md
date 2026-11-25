@@ -1,8 +1,8 @@
 # BandPilot Android autonome
 
-Version Android disponible : **2.4.0-android.5**, avec les dernières améliorations du menu et l’aide Discord.
+Version Android disponible : **3.0.2-android.1**, avec les effets indépendants par entrée et les groupes de sources dans les retours personnels.
 
-[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.5/BandPilot-Android-2.4.0-android.5-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
+[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v3.0.2-android.1/BandPilot-Android-3.0.2-android.1-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
 
 Le contrôle local fonctionne sans Internet. [Données et confidentialité](../docs/PRIVACY.md).
 

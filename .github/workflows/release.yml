@@ -6,6 +6,8 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'README*.md'
+      - 'android/README.md'
+      - 'android/app/src/androidTest/**'
       - 'scripts/sync-community.mjs'
       - 'scripts/sync-support.mjs'
       - '.github/workflows/ci.yml'

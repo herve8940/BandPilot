@@ -10,15 +10,15 @@
 
 ## Instala BandPilot
 
-| Versión de escritorio 3.0.1 | Descargas |
+| Versión de escritorio 3.0.2 | Descargas |
 | --- | --- |
-| Windows | [Windows (.exe)](https://github.com/herve8940/BandPilot/releases/download/v3.0.1/BandPilot-Windows-3.0.1.exe) |
-| macOS | [Apple Silicon](https://github.com/herve8940/BandPilot/releases/download/v3.0.1/BandPilot-macOS-3.0.1-arm64.dmg) · [Intel](https://github.com/herve8940/BandPilot/releases/download/v3.0.1/BandPilot-macOS-3.0.1-x64.dmg) |
-| Linux | [AppImage](https://github.com/herve8940/BandPilot/releases/download/v3.0.1/BandPilot-Linux-3.0.1-x86_64.AppImage) · [Debian / Ubuntu](https://github.com/herve8940/BandPilot/releases/download/v3.0.1/BandPilot-Linux-3.0.1-amd64.deb) |
+| Windows | [Windows (.exe)](https://github.com/herve8940/BandPilot/releases/download/v3.0.2/BandPilot-Windows-3.0.2.exe) |
+| macOS | [Apple Silicon](https://github.com/herve8940/BandPilot/releases/download/v3.0.2/BandPilot-macOS-3.0.2-arm64.dmg) · [Intel](https://github.com/herve8940/BandPilot/releases/download/v3.0.2/BandPilot-macOS-3.0.2-x64.dmg) |
+| Linux | [AppImage](https://github.com/herve8940/BandPilot/releases/download/v3.0.2/BandPilot-Linux-3.0.2-x86_64.AppImage) · [Debian / Ubuntu](https://github.com/herve8940/BandPilot/releases/download/v3.0.2/BandPilot-Linux-3.0.2-amd64.deb) |
 
-[Todos los archivos y sumas SHA-256](https://github.com/herve8940/BandPilot/releases/tag/v3.0.1)
+[Todos los archivos y sumas SHA-256](https://github.com/herve8940/BandPilot/releases/tag/v3.0.2)
 
-**Aplicación Android autónoma.** En una tableta Android, el APK controla la mesa sin ordenador. Para acceder a tu mezcla de monitores desde el teléfono, solo tienes que escanear el QR que comparta el grupo. [Descargar el APK · 2.4.0-android.5](https://github.com/herve8940/BandPilot/releases/download/android-v2.4.0-android.5/BandPilot-Android-2.4.0-android.5-universal.apk)
+**Aplicación Android autónoma.** En una tableta Android, el APK controla la mesa sin ordenador. Para acceder a tu mezcla de monitores desde el teléfono, solo tienes que escanear el QR que comparta el grupo. [Descargar el APK · 3.0.2-android.1](https://github.com/herve8940/BandPilot/releases/download/android-v3.0.2-android.1/BandPilot-Android-3.0.2-android.1-universal.apk)
 
 ## Tu primera prueba de sonido
 

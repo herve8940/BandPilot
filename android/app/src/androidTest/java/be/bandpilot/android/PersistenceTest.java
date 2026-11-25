@@ -23,8 +23,11 @@ public class PersistenceTest {
   waitFor("!!document.querySelector('.studio')");
   js("document.querySelector('button[title=\"Réglages\"]').click()");
   waitFor("!!document.querySelector('#bp-connection')");
-  js("document.querySelector('button[title=\"Régler le son\"]').click()");waitFor("!!document.querySelector('.coach-journey')");
-  js("[...document.querySelectorAll('.coach-journey button')].find(b=>b.textContent.trim().endsWith('Dire qui est branché où')).click()");waitFor("[...document.querySelectorAll('.coach-input2 input')].some(i=>i.value==='Basse Éric')");
+  js("document.querySelector('button[title=\"Balance\"]').click()");waitFor("!!document.querySelector('.balance-blank')");
+  js("document.querySelector('.balance-blank').click()");waitFor("!!document.querySelector('.coach-dialog[open]')");
+  js("document.querySelector('.coach-dialog button.primary').click()");waitFor("!!document.querySelector('.coach-inputs')");
+  String reuse="[...document.querySelectorAll('.coach-panel button')].find(b=>b.textContent.trim()==='Reprendre les instruments de mon groupe enregistré')";
+  waitFor("!!("+reuse+")");js("("+reuse+").click()");waitFor("[...document.querySelectorAll('.coach-input2 input')].some(i=>i.value==='Basse Éric')");
   assertEquals("true",js("document.documentElement.scrollWidth <= window.innerWidth+2"));
   CountDownLatch drawn=new CountDownLatch(1);
   InstrumentationRegistry.getInstrumentation().runOnMainSync(()->web.postVisualStateCallback(1,new WebView.VisualStateCallback(){@Override public void onComplete(long requestId){drawn.countDown();}}));
