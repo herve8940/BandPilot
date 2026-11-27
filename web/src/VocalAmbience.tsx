@@ -1,11 +1,14 @@
 import {reportUIError} from './diagnostics';
 import {tx} from './i18n';
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {Plus,Repeat2,Waves} from 'lucide-react';
-import {GUIDED_AMBIENCES,VOCAL_DOSES,ambiencesForSource} from '../../shared/vocal-ambiences';
+import {GUIDED_AMBIENCES,VOCAL_DOSES,ambiencesForSource,vocalFxProgram,type AmbienceSettings} from '../../shared/vocal-ambiences';
 import type {Profile} from './CoachSetup';
 import './vocal-ambience.css';
-type Effect={id?:string;slot:number;choice:{channel:number;ambience:string;mainDb?:number;doses:Record<string,number>};phase:string;error?:string;conflict?:string;sameConsole:boolean;sourceMissing?:boolean;savedHost?:string;currentHost?:string};
+import {FxRackFace} from './FxRackFace';
+import {FxRackControls} from './FxRackControls';
+import {FX_SCHEMAS,tempoTap,tempoDelayMs} from '../../shared/fx-parameters';
+type Effect={id?:string;slot:number;choice:{settings?:AmbienceSettings;channel:number;ambience:string;mainDb?:number;doses:Record<string,number>};phase:string;error?:string;conflict?:string;sameConsole:boolean;sourceMissing?:boolean;savedHost?:string;currentHost?:string};
 type State={supported:boolean;capacity?:number;voices:{channel:number;name:string;source?:string}[];monitors:{bus:number;name:string}[];sessions?:Effect[];session:Effect|null};
 type Preview={token:string;mainDb?:number;slot:number;voice:string;ambience:{name:string;description:string};monitors:{bus:number;name:string;db:number}[];message:string};
 class AmbienceConflict extends Error {
@@ -25,6 +28,8 @@ export function VocalAmbience({canApply,simulation,mixerProfile,initialChannel}:
  const [state,setState]=useState<State|null>(null),[channel,setChannel]=useState(0),[ambience,setAmbience]=useState('natural'),[doses,setDoses]=useState<Record<string,number>>({}),[busy,setBusy]=useState(false),[error,setError]=useState(''),[preview,setPreview]=useState<Preview|null>(null),[message,setMessage]=useState('');
  const [readings,setReadings]=useState<Record<string,number>|null>(null);
  const [mainDb,setMainDb]=useState(-90);
+ const [settings,setSettings]=useState<AmbienceSettings>({}),[rackOpen,setRackOpen]=useState(false);
+ const taps=useRef<number[]>([]);
  const scoped=(s:State):State=>mixerProfile?{...s,voices:mixerProfile.inputs,monitors:mixerProfile.musicians??[]}:s;
  const adopt=(incoming:State,selected:Effect|null=incoming.session,preferredChannel=initialChannel)=>{
   const s=scoped({...incoming,session:selected});
@@ -33,6 +38,7 @@ export function VocalAmbience({canApply,simulation,mixerProfile,initialChannel}:
   setReadings(null);setPreview(null);setState(s);setChannel(voice?.channel??0);
   setMainDb(selected?.choice.mainDb??-90);
   setAmbience(presets.find(a=>a.id===selected?.choice.ambience)?.id??presets[0]?.id??'natural');
+  setSettings(selected?.choice.settings??{});taps.current=[];
   setDoses(Object.fromEntries(s.monitors.map(m=>[String(m.bus),selected?.choice.doses[String(m.bus)]??(selected?-90:-18)])));
  };
  const refresh=async()=>{
@@ -71,7 +77,9 @@ export function VocalAmbience({canApply,simulation,mixerProfile,initialChannel}:
   if(!result.session?.conflict)setMessage('Dosages des musiciens relus.');
  };
  const presets=ambiencesForSource(state?.voices.find(v=>v.channel===channel)?.source);
+ const program=vocalFxProgram(ambience,session?.slot??1,settings);
  const changed=()=>{setPreview(null);setMessage('');};
+ const adjust=(index:number,value:number)=>{setSettings(old=>({...old,[index]:value}));changed();};
  const otherSource=mixerProfile&&session&&!state?.voices.some(v=>v.channel===session.choice.channel);
  const effects=state?.sessions??(session?[session]:[]);
  const capacity=state?.capacity??4;
@@ -87,8 +95,9 @@ export function VocalAmbience({canApply,simulation,mixerProfile,initialChannel}:
   const preset=GUIDED_AMBIENCES.find(a=>a.id===effect.choice.ambience);
   const Icon=preset?.algorithm===10?Repeat2:Waves;
   const source=state?.voices.find(v=>v.channel===effect.choice.channel)?.name??(tx('Entrée')+' '+effect.choice.channel);
-  return <button key={effect.id??effect.slot} type="button" disabled={busy} aria-pressed={!!session && (effect.id?session.id===effect.id:session.slot===effect.slot)} onClick={()=>select(effect)}>
+  return <button key={effect.id??effect.slot} type="button" disabled={busy} aria-pressed={!!session && (effect.id?session.id===effect.id:session.slot===effect.slot)} onClick={()=>{select(effect);setRackOpen(true);}}>
    <span className="balance-fx-slot"><Icon size={16}/> FX {effect.slot}</span>
+   {preset&&<FxRackFace algorithm={preset.algorithm}/>}
    <strong>{tx(preset?.name??effect.choice.ambience)}</strong><span>{source}</span>
    {(!effect.sameConsole||effect.conflict||effect.phase!=='kept')&&<small>{tx(!effect.sameConsole||effect.conflict?'suivi en pause':effect.phase==='trial'?'à écouter':'récupération nécessaire')}</small>}
   </button>;
@@ -112,11 +121,16 @@ export function VocalAmbience({canApply,simulation,mixerProfile,initialChannel}:
  </div></div>}
  {!conflict&&!!state?.voices.length&&state.supported&&<><label>{tx("1 · La source")}<select aria-label={tx("Source à traiter")} disabled={busy||wrongConsole||(!state.sessions&&!!trial)} value={channel} onChange={e=>select(null,Number(e.target.value))}>{state.voices.map(v=><option value={v.channel} key={v.channel}>{v.name}</option>)}</select></label>
  <fieldset disabled={busy||!!trial||wrongConsole||!!(session&&session.choice.channel!==channel)||(!session&&occupied>=capacity)}>
- <p><b>{tx("2 · Le caractère recherché")}</b></p><div className="vocal-styles">{presets.map(a=><button type="button" key={a.id} aria-pressed={ambience===a.id} className={ambience===a.id?'selected':''} onClick={()=>{setAmbience(a.id);changed();}}><b>{tx(a.name)}</b><small>{tx(a.style)}</small><span>{tx(a.description)}</span></button>)}</div>
+ <p><b>{tx("2 · Le caractère recherché")}</b></p><div className="vocal-styles">{presets.map(a=><button type="button" key={a.id} aria-pressed={ambience===a.id} className={ambience===a.id?'selected':''} onClick={()=>{if(ambience!==a.id){setSettings(session?.choice.ambience===a.id?session.choice.settings??{}:{});taps.current=[];}setAmbience(a.id);setRackOpen(true);changed();}}><FxRackFace algorithm={a.algorithm}/><b>{tx(a.name)}</b><small>{tx(a.style)}</small><span>{tx(a.description)}</span></button>)}</div>
+ <details className="fx-guide-rack" open={rackOpen} onToggle={e=>setRackOpen(e.currentTarget.open)}>
+  <summary>{tx('Réglages du module')} · {tx(FX_SCHEMAS[program.algorithm]!.name)}</summary>
+  <FxRackControls key={ambience} fx={program} disabled={busy||!!trial||wrongConsole||!canApply||(!session&&occupied>=capacity)} onParameter={adjust}/>
+  {program.algorithm===10&&<button type="button" disabled={!canApply} onClick={()=>{const next=tempoTap(taps.current,performance.now());taps.current=next.taps;if(next.bpm!==null)adjust(1,tempoDelayMs(next.bpm,1));}}>{tx('Taper le tempo')}</button>}
+ </details>
  <div className="vocal-dose-title"><b>{tx('3 · Dosage de l’effet')}</b>{state.monitors.length>0&&<button type="button" onClick={()=>{setDoses(Object.fromEntries(state.monitors.map(m=>[String(m.bus),-18])));changed();}}>{tx("Discret pour tous")}</button>}</div>
  <div className="vocal-doses"><label><span>{tx('Façade')}</span><select aria-label={tx('Dosage en façade')} value={mainDb} onChange={e=>{setMainDb(Number(e.target.value));changed();}}>{VOCAL_DOSES.map(d=><option key={d.db} value={d.db}>{tx(d.name)}</option>)}</select></label>{state.monitors.map(m=><label key={m.bus}><span>{m.name}<small>{tx("Retour ")}{m.bus}</small></span><select aria-label={tx(`Ambiance pour ${m.name}`)} value={doses[String(m.bus)]??-90} onChange={e=>{setDoses({...doses,[String(m.bus)]:Number(e.target.value)});changed();}}>{!VOCAL_DOSES.some(d=>d.db===doses[String(m.bus)])&&doses[String(m.bus)]!==undefined&&<option value={doses[String(m.bus)]}>{tx("Actuel (")}{doseName(doses[String(m.bus)]!)}{tx(")")}</option>}{VOCAL_DOSES.map(d=><option key={d.db} value={d.db}>{tx(d.name)}</option>)}</select></label>)}</div>
  <p className="coach-note">{tx(state.monitors.length?'Commence avec un dosage discret.':'Choisis un dosage en façade pour essayer l’effet. Tu peux ajouter les retours à l’étape Retours.')}</p>
- <button type="button" className="primary" disabled={!canApply||(!state.monitors.length&&mainDb===-90)} onClick={()=>void run(async()=>setPreview(await api('/preview',{...target,channel,ambience,doses,...(mainDb>-90&&{mainDb}),...(mixerProfile&&{mixerProfile})})))}>{tx("Préparer mon ambiance")}</button></fieldset></>}
+ <button type="button" className="primary" disabled={!canApply||(!state.monitors.length&&mainDb===-90)} onClick={()=>void run(async()=>setPreview(await api('/preview',{...target,channel,ambience,doses,...(Object.keys(settings).length>0&&{settings}),...(mainDb>-90&&{mainDb}),...(mixerProfile&&{mixerProfile})})))}>{tx("Préparer mon ambiance")}</button></fieldset></>}
  {preview&&!trial&&<section className="vocal-preview" aria-label={tx("Proposition d’ambiance")}><h4>{preview.voice}{tx(" · ")}{tx(preview.ambience.name)}</h4><p>{tx(preview.message)}</p><ul>{(preview.mainDb??-90)>-90&&<li>{tx('Façade')} · {doseName(preview.mainDb!)}</li>}{preview.monitors.map(m=><li key={m.bus}>{m.name}{tx(" : ")}{doseName(m.db)}</li>)}</ul><p>{tx("Emplacement FX ")}{preview.slot}{tx(" vérifié. Les réglages précédents seront sauvegardés avant l’essai.")}</p><div className="coach-actions"><button type="button" className="primary" disabled={busy||!canApply||wrongConsole} onClick={()=>{if(confirm(tx(`Essayer « ${tx(preview.ambience.name)} » sur ${preview.voice} ?`)))void run(async()=>{await action('/apply',{token:preview.token,confirm:true});setPreview(null);setMessage(simulation?'Essai en simulation, aucun son réel.':'Écoute l’effet puis garde ou annule l’essai.');});}}>{tx(simulation?'Essayer en simulation':(preview.mainDb??-90)>-90?'Essayer l’effet':'Essayer dans les ears')}</button><button type="button" disabled={busy} onClick={()=>setPreview(null)}>{tx("Annuler")}</button></div></section>}
  </section>;
 }

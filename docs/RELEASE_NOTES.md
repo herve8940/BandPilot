@@ -2,38 +2,38 @@
 
 ## Français
 
-Dans la Balance, tu peux partir d’une scène vierge ou reprendre les entrées du mélangeur actuel. Sur X-Air et M-Air, passer du chant à la caisse claire prépare un effet dans un emplacement libre. Le chant garde sa réverbération et ses dosages. Pour superposer un délai sur le chant, choisis **Ajouter un effet**. Clique sur la carte d’un effet pour le modifier ou le retirer.
+Les 61 effets X-Air et M-Air ont chacun leur façade et leurs commandes dans le rack. Dans la Balance, tu peux régler un effet avant de confirmer l’essai. Dans la Console, tu peux saisir le centre d’un point d’EQ et le déplacer pour régler sa fréquence et son gain.
 
-Les musiciens peuvent regrouper plusieurs sources dans leur retour personnel et les ajuster ensemble. Le compteur d’installations et son écran de configuration ont été supprimés.
+Les cartes de retour reprennent le nom du bus sur la console, puis celui du profil si le bus est sans nom. « Partager ce retour » se trouve dans la carte sélectionnée. Les modes Simple et Expert sont plus faciles à distinguer. En allemand, la façade s’appelle **FOH**.
 
 <a id="release-en"></a>
 
 ## English
 
-Start a soundcheck from a blank scene or pick inputs from the current mixer. On X-Air and M-Air, switching from vocals to snare prepares an effect in a free slot. The vocal reverb keeps its main and monitor levels. Choose **Add an effect** to layer a delay on the vocal. Select an effect card to edit or remove it.
+Each of the 61 X-Air and M-Air effects has its own rack face and controls. In Soundcheck, you can adjust an effect before confirming the trial. In the console, drag the centre of an EQ point to change its frequency and gain.
 
-Musicians can group sources in their personal monitor mix and adjust them together. This version removes the installation counter and its settings screen.
+Monitor cards use the bus name from the mixer, falling back to the profile name when the bus is unnamed. “Share this monitor mix” is in the selected card. Simple and Expert modes are easier to tell apart. The German console now labels the front-of-house mix **FOH**.
 
 <a id="release-de"></a>
 
 ## Deutsch
 
-Der Soundcheck kann mit einer leeren Szene oder mit ausgewählten Eingängen des aktuellen Mischpults beginnen. Beim Wechsel vom Gesang zur Snare wird auf X-Air und M-Air ein freier Effektplatz verwendet. Der Gesangshall behält seine Pegel in der Summe und den Monitorwegen. Über die Schaltfläche zum Hinzufügen eines Effekts lässt sich der Gesang zusätzlich mit einem Delay versehen. Einzelne Effekte können über ihre Karte bearbeitet oder entfernt werden.
+Alle 61 Effekte für X-Air und M-Air haben im Rack eine eigene Frontplatte mit Bedienelementen. Im Soundcheck kannst du den Effekt einstellen, bevor du den Test bestätigst. In der Konsole kannst du einen EQ-Punkt in der Mitte greifen und ziehen, um Frequenz und Verstärkung einzustellen.
 
-Musiker können mehrere Quellen im eigenen Monitormix gruppieren und gemeinsam regeln. Der Installationszähler und seine Einstellungen wurden entfernt.
+Jede Monitorkarte zeigt den Busnamen des Mischpults. Bei einem unbenannten Bus erscheint der Name aus dem Profil. Der ausgewählte Monitormix lässt sich direkt in seiner Karte teilen. Die Modi „Einfach“ und „Experte“ sind deutlicher zu unterscheiden. Der Hauptmix heißt in der deutschen Konsole jetzt **FOH**.
 
 <a id="release-es"></a>
 
 ## Español
 
-La prueba de sonido puede empezar con una escena vacía o con las entradas seleccionadas en la mezcla actual. En X-Air y M-Air, al pasar de la voz a la caja, el nuevo efecto ocupa una ranura libre. La reverberación de la voz conserva sus niveles en la mezcla principal y en los monitores. Puedes añadir un segundo efecto para combinarla con un delay. Selecciona la tarjeta de un efecto para editarlo o quitarlo.
+Cada uno de los 61 efectos de X-Air y M-Air tiene su propio panel y sus controles en el rack. En la prueba de sonido puedes ajustar el efecto antes de confirmar la prueba. En la consola puedes arrastrar un punto del ecualizador desde el centro para ajustar su frecuencia y ganancia.
 
-Cada músico puede agrupar varias fuentes en su mezcla de monitores y ajustar su volumen en conjunto. Se han eliminado el contador de instalaciones y sus ajustes.
+Las tarjetas de monitor muestran el nombre del bus de la consola. Si el bus no tiene nombre, se usa el del perfil. El botón para compartir la mezcla está en la tarjeta seleccionada. Los modos Simple y Experto se distinguen mejor. La consola en alemán identifica la mezcla principal como **FOH**.
 
 <a id="release-it"></a>
 
 ## Italiano
 
-Il soundcheck può partire da una scena vuota o dagli ingressi selezionati sul mixer. Su X-Air e M-Air, passando dalla voce al rullante, il nuovo effetto occupa uno slot libero. Il riverbero della voce mantiene i livelli nel mix principale e nei monitor. Puoi aggiungere un secondo effetto per affiancargli un delay. Seleziona la scheda di un effetto per modificarlo o rimuoverlo.
+Ognuno dei 61 effetti X-Air e M-Air ha un pannello frontale con i propri controlli nel rack. Nel soundcheck puoi regolare l’effetto prima di confermare la prova. Nella console puoi trascinare un punto dell’equalizzatore dal centro per regolare frequenza e guadagno.
 
-Ogni musicista può raggruppare più sorgenti nel proprio mix monitor e regolarle insieme. Il contatore delle installazioni e le relative impostazioni sono stati rimossi.
+Le schede dei monitor mostrano il nome del bus sul mixer. Se il bus non ha un nome, viene usato quello del profilo. Il pulsante per condividere il mix si trova nella scheda selezionata. Le modalità Semplice ed Esperto sono più facili da distinguere. Nella console in tedesco, il mix principale si chiama **FOH**.

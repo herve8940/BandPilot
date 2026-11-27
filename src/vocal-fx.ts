@@ -1,5 +1,5 @@
 import {randomUUID} from 'node:crypto';
-import {GUIDED_AMBIENCES,ambiencesForSource} from '../shared/vocal-ambiences.js';
+import {GUIDED_AMBIENCES,ambiencesForSource,vocalFxProgram,type AmbienceSettings} from '../shared/vocal-ambiences.js';
 import {FX_NAMES,FX_SCHEMAS} from '../shared/fx-parameters.js';
 import {fromWire,toWire,readbackTolerance,type Value} from './parameters.js';
 import {type CoachProfile} from './sound-coach.js';
@@ -9,22 +9,12 @@ import {diagnostic} from './diagnostics.js';
 type Values=Record<string,Value>;
 type Fx=Awaited<ReturnType<XR18['readFx']>>;
 type Snapshot={values:Values;fx:Fx};
-type Choice={channel:number;ambience:string;mainDb?:number;fromMixer?:boolean;doses:Record<string,number>};
+type Choice={settings?:AmbienceSettings;channel:number;ambience:string;mainDb?:number;fromMixer?:boolean;doses:Record<string,number>};
 type Session={id?:string;simulationConnection?:number;identity:string;slot:number;choice:Choice;origin:Snapshot;current:Snapshot;trialBefore?:Snapshot;previousChoice?:Choice;phase:'trial'|'kept'|'recovery'|'finished';error?:string;conflict?:string};
 type Preview={id:string;target:string|null;identity:string;expires:number;connection:number;choice:Choice;before:Snapshot;after:Snapshot;guards:Values};
 const effectReturnName=(source:string|undefined)=>source==='lead-rock'||source==='backing-vocal'?'Voix FX':'Ambiance FX';
 const ch=(c:number)=>c===0?'/rtn/aux':`/ch/${String(c).padStart(2,'0')}`;
-const log=(value:number,lo:number,hi:number)=>Math.log(value/lo)/Math.log(hi/lo);
-/** Parameter order/scales checked against XAir_fxparse1.c, HALL/PLAT/DLY (pmaillot).
- * Independent mapping of protocol facts; no X32 fallback. See docs/INGE_SON.md.
- */
-export function vocalFxProgram(id:string,slot:number):Fx{
- const a=GUIDED_AMBIENCES.find(a=>a.id===id);if(!a)throw Error('Ambiance inconnue');
- if(a.algorithm===10)return {slot,algorithm:10,parameters:[{type:'f',value:1},{type:'f',value:(110-1)/2999},{type:'i',value:0},{type:'i',value:4},{type:'i',value:4},{type:'f',value:.5},...[log(200,10,500),log(6000,200,20000),log(200,10,500),.08,.08,log(6000,200,20000)].map(value=>({type:'f' as const,value}))]};
- const plate=a.algorithm===5;
- const values=[a.preDelayMs/200,log(a.decaySeconds,plate?.5:.2,plate?10:5),(a.size-2)/98,log(6000,1000,20000),(20-1)/29,.5,log(180,10,500),log(a.highCutHz,200,20000),log(.7,.5,2),plate?log(200,10,500):.4,plate?.1:.2,.1];
- return {slot,algorithm:a.algorithm,parameters:values.map(value=>({type:'f',value}))};
-}
+export {vocalFxProgram};
 export class AmbienceConflict extends Error {
  constructor(message:string,readonly sessionId?:string){super(message);}
 }
@@ -213,17 +203,18 @@ export class VocalFx {
   Object.assign(guards,sourceGuards);
   const doses:Record<string,number>={};for(const bus of buses)doses[String(bus)]=choice.doses[String(bus)]??-90;
   for(let b=1;b<=this.xr.model().buses;b+=2)if(b+1<=this.xr.model().buses&&Number(guards[`/config/buslink/${b}-${b+1}`])===1){const a=doses[String(b)],c=doses[String(b+1)];if(a!==undefined&&c!==undefined&&a!==c)throw Error(`Les retours ${b} et ${b+1} sont une paire stéréo : choisis le même dosage pour les deux`);if(a!==undefined||c!==undefined)doses[String(b)]=doses[String(b+1)]=a??c!;}
+  const settings=choice.settings??(session?.choice.ambience===choice.ambience?session.choice.settings:undefined);
   const afterPreset=GUIDED_AMBIENCES.find(a=>a.id===choice.ambience)!;
   const send=String(slot+6).padStart(2,'0');
   const wanted:Values={[`${ch(choice.channel)}/mix/${send}/level`]:0,[`${ch(choice.channel)}/mix/${send}/tap`]:main>-90?4:3,[`/fxsend/${slot}/mix/on`]:1,[`/fxsend/${slot}/mix/fader`]:-6,[`/rtn/${slot}/mix/on`]:1,[`/rtn/${slot}/mix/lr`]:main>-90?1:0,[`/rtn/${slot}/config/name`]:target===undefined?effectReturnName(voice.source):'FX'+slot+' '+(afterPreset.algorithm===10?'Delay':'Reverb')};
   if(main>-90)wanted[`/rtn/${slot}/mix/fader`]=main;
   // PRE return sends keep ear ambience independent of the return's FOH fader.
   for(let b=1;b<=this.xr.model().buses;b++){const p=`/rtn/${slot}/mix/${String(b).padStart(2,'0')}`;wanted[p+'/level']=doses[String(b)]??-90;wanted[p+'/tap']=3;}
-  const after={values:Object.fromEntries(Object.entries(wanted).map(([a,v])=>[a,toWire(a,v)])),fx:vocalFxProgram(choice.ambience,slot)};
+  const after={values:Object.fromEntries(Object.entries(wanted).map(([a,v])=>[a,toWire(a,v)])),fx:vocalFxProgram(choice.ambience,slot,settings)};
   const before={values:await this.read(Object.keys(after.values)),fx:await this.xr.readFx(slot)};
   if(session)for(const [key,value] of Object.entries(session.current.values))if(!(key in after.values)){after.values[key]=value;before.values[key]=await this.xr.readParameter(key);}
   if(connection!==this.xr.connectionId()||identity!==this.identity())throw Error('Console changée pendant la préparation');
-  const p:Preview={id:randomUUID(),target:session?.id??null,identity,connection,expires:Date.now()+600000,choice:{channel:choice.channel,ambience:choice.ambience,doses,...(main>-90&&{mainDb:main}),...(mixerProfile&&{fromMixer:true})},before,after,guards};this.previewed=p;
+  const p:Preview={id:randomUUID(),target:session?.id??null,identity,connection,expires:Date.now()+600000,choice:{channel:choice.channel,ambience:choice.ambience,doses,...(settings&&{settings}),...(main>-90&&{mainDb:main}),...(mixerProfile&&{fromMixer:true})},before,after,guards};this.previewed=p;
   return {token:p.id,slot,voice:voice.name,mainDb:main,ambience:GUIDED_AMBIENCES.find(a=>a.id===choice.ambience),monitors:monitors.map(m=>({...m,db:doses[String(m.bus)]??-90})),changes:Object.entries(after.values).map(([address,value])=>({address,before:fromWire(address,before.values[address]!),after:fromWire(address,value)})),message:main>-90?'L’effet suit le fader de l’entrée. Le dosage de façade et ceux des retours sont indépendants.':'Même ambiance, dosage individuel. Le son direct et les volumes des ears sont conservés ; cet effet est envoyé uniquement aux retours préparés.'};
  });}
  private async write(snapshot:Snapshot,connection:number){

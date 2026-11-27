@@ -17,12 +17,18 @@
 .monitor-desk>header{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .monitor-desk h2{margin:5px 0;font-size:24px}.monitor-desk small{color:#b6c5df}.monitor-desk header small{color:#b1a0ff;letter-spacing:.08em}
 .desk-readonly{align-self:start;border:1px solid #405675;border-radius:20px;padding:5px 10px;font-size:12px}
-.monitor-people{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:16px 0}
-.monitor-people>button{text-align:left;display:grid;grid-template-columns:1fr 12px;gap:6px;border-top:3px solid #39cbdc}
-.monitor-people b,.monitor-people small{grid-column:1;overflow-wrap:anywhere}.monitor-people .xm-meter{grid-column:2;grid-row:1/3;min-height:34px}
+.monitor-people{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:8px;margin:16px 0}
+.monitor-people>button{text-align:left;display:grid;grid-template-columns:minmax(0,1fr) 6px;align-items:center;gap:8px;border-top:3px solid #39cbdc}
+.monitor-person{display:grid;gap:5px;min-width:0}
+.monitor-person b,.monitor-target-name h3{overflow-wrap:anywhere;white-space:normal}
+.monitor-metadata{display:flex;flex-wrap:wrap;gap:2px 8px;line-height:1.4}
+.monitor-metadata>span{white-space:nowrap}
+.monitor-people .xm-meter{align-self:stretch;height:auto;min-height:34px}
 .monitor-desk button[aria-pressed=true]{background:#43317e;border-color:#b19aff;box-shadow:inset 0 0 18px #7851d52b}
 .monitor-target{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px;background:#111f32;border:1px solid #35526a;border-radius:12px}
-.monitor-target h3{margin:0 0 5px}.monitor-target span{font-size:12px;color:#b2c7df}.monitor-target>div{flex:1 1 220px}.monitor-target label{display:grid;gap:8px;font-size:12px}.monitor-target input{width:200px;max-width:100%;accent-color:#a88aff}
+.monitor-target h3{margin:0 0 5px}.monitor-target span{font-size:12px;color:#b2c7df}.monitor-target-name{flex:1 1 200px;min-width:0}
+.monitor-target-actions{display:flex;align-items:stretch;flex-wrap:wrap;gap:8px;max-width:100%}
+.monitor-target-actions button{white-space:normal}.monitor-target label{display:grid;gap:8px;font-size:12px}.monitor-target input{width:200px;max-width:100%;accent-color:#a88aff}
 .monitor-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.monitor-desk button:disabled{opacity:.45;cursor:not-allowed}
 .monitor-sends{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(86px,1fr);gap:8px;overflow-x:auto;padding:8px 0 12px;scrollbar-width:thin}
 .monitor-source{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 6px;border:1px solid #34465e;border-top:3px solid #32c5d5;border-radius:10px;background:#101b2b;min-width:0}
@@ -34,7 +40,7 @@
 .xs-expert-desk .expert-console>.main,.xs-expert-desk .expert-console>.expert-output-bank,.xs-expert-desk .expert-console>p,.xs-expert-desk .expert-console>.desk-layout[open]{grid-column:1/-1}
 .xs-expert-desk .expert-console>.desk-layout{padding:8px 12px}.desk-layout summary{min-height:24px}
 .monitor-desk{padding:10px 14px}.monitor-desk h2{font-size:21px;margin:3px 0}.monitor-desk p{margin:6px 0;font-size:12px}.monitor-people{margin:10px 0}.monitor-people>button{padding:7px 10px}.monitor-target{padding:9px 12px}.monitor-target h3{font-size:16px}.monitor-tabs{margin:8px 0}.monitor-source{gap:5px}.monitor-source b{min-height:24px}.monitor-source small{min-height:18px}.monitor-source .xm-fader{height:130px}
-@media(max-width:760px){.xs-expert-desk .expert-console{grid-template-columns:minmax(0,1fr)}.monitor-desk{padding:10px}.desk-output-toggle{font-size:11px}.monitor-target label{flex:1 1 160px}}
+@media(max-width:760px){.xs-expert-desk .expert-console{grid-template-columns:minmax(0,1fr)}.monitor-desk{padding:10px}.desk-output-toggle{font-size:11px}.monitor-target label{flex:1 1 160px;min-width:0}.monitor-target input{width:100%;margin-inline:0}.monitor-target-actions{flex:1 1 100%}.monitor-target-actions button{flex:1 1 120px}}
 @media(max-height:820px) and (min-width:761px){.monitor-desk>header p{display:none}.monitor-source .xm-fader{height:90px}.monitor-people{margin:8px 0}.monitor-target{padding-block:7px}}
 
 .desk-banks{border-top:1px solid #334155;margin-top:1rem;padding-top:1rem}.desk-banks ol{display:flex;flex-direction:column;gap:.4rem;padding-left:1.5rem}.desk-banks li span{display:inline-block;min-width:9rem}.desk-banks button{margin:.2rem}.fx-tempo{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center}.fx-tempo small{flex-basis:100%}

@@ -1,3 +1,4 @@
+import {FxRackCatalog} from "../FxRackCatalog";
 import {useAirStrips} from './model-strips';
 import {MeterDisplaySettings} from './meter-preferences';
 import {OutputEqMode,OutputGraphicEq} from './OutputGraphicEq';
@@ -10,6 +11,7 @@ import {
   clamp01, dbToFader, EQ_TYPES, faderToDb, formatDb, formatHz, formatMs, lin, linInv, logInv, logMap, qFromWire, qToWire, RATIOS, stripColor,
 } from "../xairMath";
 import { FX_INFO } from "../xairHelp";
+import {FxSlotLaunch} from "../FxSlotLaunch";
 import { FxConsole } from "../FxConsole";
 import {
   compCurve, eqResponse, Fader, gateCurve, Knob, Meter, num, pad, Radio, readEq, Select, Toggle, transferPoints, VBar,
@@ -334,8 +336,11 @@ export function EqView(props: ViewProps) {
   const move = (e: ReactPointerEvent) => {
     if (drag.current === null || !canWrite || !svg.current) return;
     const transform = svg.current.getScreenCTM();
-    if (!transform) return;
-    const point = transform.inverse().transformPoint({x:e.clientX,y:e.clientY});
+    if (!transform || transform.a * transform.d === transform.b * transform.c) return;
+    const screenPoint = svg.current.createSVGPoint();
+    screenPoint.x = e.clientX;
+    screenPoint.y = e.clientY;
+    const point = screenPoint.matrixTransform(transform.inverse());
     if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return;
     const band = drag.current, base = `${p}/eq/${band + 1}`;
     set(`${base}/f`, clamp01(point.x / EQ_W));
@@ -358,10 +363,10 @@ export function EqView(props: ViewProps) {
       <polygon points={`0,${EQ_H / 2} ${curve} ${EQ_W},${EQ_H / 2}`} className="xm-eq-fill" />
       <polyline points={curve} className="xm-eq-curve" />
       {hpfOn && <g><line x1={xOf(hpf)} x2={xOf(hpf)} y1={0} y2={EQ_H} stroke="#67e8f9" strokeWidth="1.5" /><text x={xOf(hpf) + 4} y={16} className="xm-grid-label">{tx("Low Cut")}</text></g>}
-      {bands.map((b, i) => { const x = xOf(b.f), y = yOf(b.type === 0 || b.type === 5 ? 0 : b.g); return <g key={i}>
+      {bands.map((b, i) => { const x = xOf(b.f), y = yOf(b.type === 0 || b.type === 5 ? 0 : b.g); return <g key={i} pointerEvents="none">
         <line x1={x} x2={x} y1={0} y2={EQ_H} stroke={BAND_COLORS[i]} strokeOpacity=".5" />
         <circle cx={x} cy={14} r={11} fill={BAND_COLORS[i]} /><text x={x} y={18} textAnchor="middle" className="xm-node-num">{tx(i + 1)}</text>
-        <circle cx={x} cy={y} r={i === active ? 22 : 18} className="xm-eq-node" stroke={BAND_COLORS[i]}
+        <circle cx={x} cy={y} r={i === active ? 22 : 18} className="xm-eq-node" stroke={BAND_COLORS[i]} pointerEvents="all"
           onPointerDown={e => { setActive(i); if (!canWrite) return; drag.current = i; svg.current!.setPointerCapture(e.pointerId); }}
           onWheel={e => { if (canWrite) set(`${p}/eq/${i + 1}/q`, clamp01(qToWire(b.q) + Math.sign(e.deltaY) * .03)); }} />
         <line x1={x - 6} x2={x + 6} y1={y} y2={y} stroke="#fff" /><line x1={x} x2={x} y1={y - 6} y2={y + 6} stroke="#fff" />
@@ -442,7 +447,7 @@ export function MainView({ strip, values, set, canWrite }: ViewProps) {
 export function FxView({ values, set, canWrite, confirmed, open }: ViewProps) {
   return <div className="xm-fx-view">
     <div className="xm-fx-slots">{[1, 2, 3, 4].map(n => {
-      const type = num(values, `/fx/${n}/type`), info = FX_INFO[type], insert = num(values, `/fx/${n}/insert`) === 1;
+      const type = num(values, `/fx/${n}/type`, -1), info = FX_INFO[type], insert = num(values, `/fx/${n}/insert`) === 1;
       const rtn = INPUTS.find(s => s.id === `rtn${n}`)!;
       const senders = INPUTS.filter(s => s.kind !== "fxrtn" && num(values, `${s.prefix}/mix/${pad(n + 6)}/level`) > .01);
       // Channels whose insert points at this FX slot (Fx{n}A or Fx{n}B).
@@ -450,8 +455,9 @@ export function FxView({ values, set, canWrite, confirmed, open }: ViewProps) {
       return <section key={n} className="xm-fx-slot">
         <h4>{tx("FX ")}{tx(n)}</h4>
         <select disabled={!canWrite} value={type} aria-label={tx(`Type de l’effet ${n}`)} onChange={e => { const next = Number(e.target.value); void confirmed({ [`/fx/${n}/type`]: next }, `Remplacer l’effet ${n} (${info?.name}) par ${FX_INFO[next]?.name} ? Tous les canaux qui l’utilisent seront concernés.`); }}>
-          {FX_INFO.map((f, i) => <option key={f.code} value={i}>{tx(f.name)}</option>)}
+          {!info&&<option value={type}>—</option>}{FX_INFO.map((f, i) => <option key={f.code} value={i}>{tx(f.name)}</option>)}
         </select>
+        <FxSlotLaunch slot={n} algorithm={type} canTap={canWrite}/>
         <p className="xm-fx-family">{tx(info?.family)}</p><p className="xm-fx-text">{tx(info?.text)}</p>
         <div className="xm-stack row">
           <Toggle tone="cyan" disabled={!canWrite} on={insert} title={tx("Insert : l’effet est placé directement dans un canal au lieu d’être en départ / retour")}
@@ -466,6 +472,7 @@ export function FxView({ values, set, canWrite, confirmed, open }: ViewProps) {
         <p className="xm-fx-senders">{senders.length ? senders.map(s => <button key={s.id} type="button" onClick={() => open(s, "sends")}>{stripName(s, values)}</button>) : <em>{tx("Aucun canal n’envoie vers cet effet.")}</em>}</p>
       </section>;
     })}</div>
+    <FxRackCatalog/>
     <details className="xm-fx-params"><summary>{tx("Paramètres de l’effet (lecture, modification et presets)")}</summary><FxConsole /></details>
   </div>;
 }

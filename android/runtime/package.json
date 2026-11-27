@@ -2,7 +2,7 @@
   "name": "bandpilot-android-runtime",
   "private": true,
   "type": "module",
-  "version": "3.0.2-android.1",
+  "version": "3.0.3-android.1",
   "dependencies": {
     "sql.js": "1.13.0"
   }

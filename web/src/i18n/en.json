@@ -3781,5 +3781,7 @@
   "Cet effet appartient à une autre entrée. Prépare un nouvel effet.": "This effect belongs to another input. Prepare a new effect.",
   "Sélectionne à nouveau l’effet à modifier.": "Select the effect you want to edit again.",
   "Cet emplacement est déjà suivi sur cette console.": "This slot is already assigned on this mixer.",
-  "Sur le téléphone, règle le retour FX correspondant à cet emplacement.": "On your phone, adjust the FX return for this slot."
+  "Sur le téléphone, règle le retour FX correspondant à cet emplacement.": "On your phone, adjust the FX return for this slot.",
+  "Réglages du module": "Module controls",
+  "Catalogue des effets": "Effects catalog"
 }

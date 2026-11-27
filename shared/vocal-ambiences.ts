@@ -1,3 +1,4 @@
+import {fxToWire,FX_SCHEMAS,type FxVector} from './fx-parameters.js';
 /** Creative starting points, not corrections inferred from a recording. */
 export const VOCAL_AMBIENCES=[
  {id:'natural',name:'Naturelle',style:'Acoustique · répétition',description:'Un espace court autour de la voix, pour garder les paroles proches.',algorithm:0,preDelayMs:12,decaySeconds:.7,size:25,highCutHz:7500},
@@ -30,3 +31,29 @@ export function ambiencesForSource(source:string|undefined){
  }
 }
 export const VOCAL_DOSES=[{db:-90,name:'Sec'},{db:-24,name:'Très discret'},{db:-18,name:'Discret'},{db:-12,name:'Présent'},{db:-6,name:'Ample'}] as const;
+
+const log=(value:number,lo:number,hi:number)=>Math.log(value/lo)/Math.log(hi/lo);
+/** Parameter order/scales checked against XAir_fxparse1.c, HALL/PLAT/DLY (pmaillot).
+ * Independent mapping of protocol facts; no X32 fallback. See docs/INGE_SON.md.
+ */
+function baseProgram(id:string,slot:number):FxVector{
+ const a=GUIDED_AMBIENCES.find(a=>a.id===id);if(!a)throw Error('Ambiance inconnue');
+ if(a.algorithm===10)return {slot,algorithm:10,parameters:[{type:'f',value:1},{type:'f',value:(110-1)/2999},{type:'i',value:0},{type:'i',value:4},{type:'i',value:4},{type:'f',value:.5},...[log(200,10,500),log(6000,200,20000),log(200,10,500),.08,.08,log(6000,200,20000)].map(value=>({type:'f' as const,value}))]};
+ const plate=a.algorithm===5;
+ const values=[a.preDelayMs/200,log(a.decaySeconds,plate?.5:.2,plate?10:5),(a.size-2)/98,log(6000,1000,20000),(20-1)/29,.5,log(180,10,500),log(a.highCutHz,200,20000),log(.7,.5,2),plate?log(200,10,500):.4,plate?.1:.2,.1];
+ return {slot,algorithm:a.algorithm,parameters:values.map(value=>({type:'f',value}))};
+}
+/** Optional adjustments are in the units printed on this processor's controls. */
+export type AmbienceSettings=Record<string,number>;
+export function vocalFxProgram(id:string,slot:number,settings?:AmbienceSettings):FxVector{
+ const fx=baseProgram(id,slot);
+ if(settings===undefined)return fx;
+ if(!settings||typeof settings!=='object'||Array.isArray(settings))throw Error('Valeur FX hors plage');
+ const fields=FX_SCHEMAS[fx.algorithm]!.parameters;
+ for(const [key,value] of Object.entries(settings)){
+  const index=Number(key);
+  if(!Number.isInteger(index)||String(index)!==key||!fields[index])throw Error('Valeur FX hors plage');
+  fx.parameters[index]=fxToWire(fields[index]!,value);
+ }
+ return fx;
+}

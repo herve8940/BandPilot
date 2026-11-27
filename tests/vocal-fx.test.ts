@@ -294,3 +294,21 @@ test('layered and independent effects survive a restart, selective undo and a fu
   assert.equal((await rack.preview(choice,undefined,null)).slot,2);
  }finally{f.close();}
 });
+
+test('adjusting a rack stages its real units, preserves per-musician doses and restores the previous sound',async()=>{
+ const f=fixture();
+ try{
+  const first=await f.fx.preview(choice);await f.fx.apply(first.token,true);await f.fx.keep();
+  const preset=await f.xr.readFx(1);
+  const settings={'1':2.75,'0':42};
+  const next=await f.fx.preview({...choice,settings});
+  assert.deepEqual(await f.xr.readFx(1),preset);
+  await f.fx.apply(next.token,true);
+  assert.deepEqual(await f.xr.readFx(1),vocalFxProgram('pop',1,settings));
+  assert.deepEqual(f.fx.status().session!.choice.doses,choice.doses);
+  await f.fx.undo(false,true);
+  assert.deepEqual(await f.xr.readFx(1),preset);
+  assert.equal(f.fx.status().session!.choice.settings,undefined);
+  for(const invalid of [{'15':12},{'1':10000},{'0':NaN}])await assert.rejects(f.fx.preview({...choice,settings:invalid}),/hors plage/);
+ }finally{f.close();}
+});

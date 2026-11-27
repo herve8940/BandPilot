@@ -46,15 +46,24 @@ test('EQ dragging uses the visible chart coordinates on a short, wide screen',as
  try{
   const {EqView}=await import('../src/xair/views'),{INPUTS}=await import('../src/xair/strips');
   const edits:Record<string,unknown>={};
-  await f.render(<EqView strip={INPUTS[0]!} values={{'/ch/01/eq/1/type':2}} set={(key,value)=>{edits[key]=value;}} canWrite confirmed={async()=>false} open={()=>{}}/>);
+  const render=(canWrite:boolean,type=2)=>f.render(<EqView strip={INPUTS[0]!} values={{'/ch/01/eq/1/type':type}} set={(key,value)=>{edits[key]=value;}} canWrite={canWrite} confirmed={async()=>false} open={()=>{}}/>);
+  await render(true);
   const graph=document.querySelector<SVGSVGElement>('.xm-eq-graph')!;
   graph.setPointerCapture=()=>{};
-  Object.defineProperty(graph,'getScreenCTM',{value:()=>({inverse:()=>({transformPoint:({x,y}:{x:number;y:number})=>({x:(x-180)*2,y:(y-80)*2})})})});
-  await f.React.act(async()=>{
+  const transform={a:.5,b:0,c:0,d:.5,inverse:()=>({a:2,b:0,c:0,d:2,e:-360,f:-160})};
+  Object.defineProperty(graph,'getScreenCTM',{value:()=>transform});
+  Object.defineProperty(graph,'createSVGPoint',{value:()=>({
+   x:0,y:0,matrixTransform(m:ReturnType<typeof transform.inverse>){return {x:this.x*m.a+this.y*m.c+m.e,y:this.x*m.b+this.y*m.d+m.f};}
+  })});
+  const gesture=()=>f.React.act(async()=>{
    graph.querySelector('.xm-eq-node')!.dispatchEvent(new f.dom.window.MouseEvent('pointerdown',{bubbles:true}));
-   graph.dispatchEvent(new f.dom.window.MouseEvent('pointermove',{clientX:305,clientY:155,bubbles:true}));
+   for(const event of ['pointermove','pointerup'])graph.dispatchEvent(new f.dom.window.MouseEvent(event,{clientX:305,clientY:130,bubbles:true}));
   });
-  assert.equal(edits['/ch/01/eq/1/f'],.25);
-  assert.equal(edits['/ch/01/eq/1/g'],.5);
+  await gesture();assert.deepEqual(edits,{'/ch/01/eq/1/f':.25,'/ch/01/eq/1/g':.7});
+  delete edits['/ch/01/eq/1/g'];await render(true,0);await gesture();
+  assert.deepEqual(edits,{'/ch/01/eq/1/f':.25});
+  delete edits['/ch/01/eq/1/f'];await render(false);await gesture();
+  assert.deepEqual(edits,{});
+  transform.a=0;await render(true);await gesture();assert.deepEqual(edits,{});
  }finally{await f.close();}
 });

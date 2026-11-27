@@ -47,6 +47,32 @@ test('monitor desk writes only the selected bus sends, EQ and compressor; read-o
   assert.ok(!f.dom.window.document.querySelector('button[aria-pressed="true"]')?.textContent.includes('Bus 6'));
  }finally{await f.close();}
 });
+test('monitor cards, instrument ownership and phone sharing follow the selected physical bus name',async()=>{
+ const f=await fixture();try{
+  const {MonitorDesk}=await import('../src/expert/Workspace');
+  const {MixerModelContext}=await import('../src/MixerModel');
+  const shared:any[]=[],doc=f.dom.window.document;
+  const render=(values:Record<string,string|number>,consoleNames=false)=>f.render(<MixerModelContext.Provider value={MIXER_MODELS.XR12}>
+   <MonitorDesk initialBus={2} values={values} consoleNames={consoleNames} writable={false} set={()=>assert.fail('unexpected audio write')} confirmed={async()=>false} onShare={t=>shared.push(t)}/>
+  </MixerModelContext.Provider>);
+  const selected=()=>doc.querySelector('.monitor-people [aria-pressed=true]')!;
+  const share=async(name:string,bus:number,stereo=false)=>{
+   assert.equal(doc.querySelector('.monitor-target .monitor-share')?.textContent,'Partager ce retour');
+   await f.click('Partager ce retour');assert.deepEqual(shared.pop(),{name,bus,stereo});
+  };
+  await render({'/bus/2/config/name':'Camille','/bus/2/eq/on':0});
+  assert.equal(selected().querySelector('b')?.textContent,'Camille');
+  assert.match(selected().textContent,/EQ OFF/);assert.match(selected().textContent,/Comp —/);
+  assert.equal(doc.querySelector('.monitor-source.own'),null);
+  assert.equal(doc.querySelector('.monitor-target h3')?.textContent,'Retour de Camille');
+  await share('Camille',2);
+  await render({});assert.equal(selected().querySelector('b')?.textContent,'Hervé');await share('Hervé',2);
+  await render({'/config/buslink/1-2':1,'/bus/2/config/name':'Herve'});
+  assert.equal(doc.querySelectorAll('.monitor-people button').length,1);
+  assert.equal(selected().querySelector('b')?.textContent,'Hervé');assert.ok(doc.querySelector('.monitor-source.own'));await share('Hervé',1,true);
+  await render({},true);assert.equal(selected().querySelector('b')?.textContent,'Bus 2');await share('',2);
+ }finally{await f.close();}
+});
 test('signal path labels the real pick-off point rather than assuming every send includes EQ',async()=>{
  const f=await fixture();try{const {SignalPath}=await import('../src/expert/Workspace'),{INPUTS,BUSES}=await import('../src/xair/strips');
  await f.render(<SignalPath source={INPUTS[0]!} bus={BUSES[1]!} values={{'/ch/01/preamp/rtnsw':1,'/ch/01/mix/02/tap':1}}/>);

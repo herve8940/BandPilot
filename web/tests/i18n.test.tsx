@@ -68,6 +68,29 @@ test('All five language settings update a live app without changing form drafts 
  } finally {await f.React.act(async()=>i18n.setLanguage('fr'));await f.close();}
 });
 
+test('German simple and expert consoles label the main mix FOH', async () => {
+ const f = await fixture();
+ const {getLanguage, setLanguage} = await import('../src/i18n');
+ const previousLanguage = getLanguage();
+ try {
+  setLanguage('de');
+  const {SimpleMixer} = await import('../src/SimpleMixer');
+  await f.mount(<SimpleMixer canWrite={false} onExpert={() => {}} />);
+  const doc = f.dom.window.document;
+  assert.equal(doc.querySelector('[role="tab"][aria-selected="true"]')?.textContent, 'FOH');
+
+  localStorage.setItem('xr18-expert-view', 'console');
+  const {ExpertStudio} = await import('../src/expert/ExpertStudio');
+  await f.mount(<ExpertStudio canWrite={false} />);
+  const buttons = Array.from(doc.querySelectorAll('button'), button => button.textContent?.trim());
+  assert.ok(buttons.includes('FOH'));
+  assert.ok(buttons.includes('FOH aktiv'));
+ } finally {
+  await f.close();
+  setLanguage(previousLanguage);
+ }
+});
+
 test('desktop language survives origin/port changes, invalid preferences fall back safely', async () => {
  const f=await fixture();const i18n=await import('../src/i18n');
  try {

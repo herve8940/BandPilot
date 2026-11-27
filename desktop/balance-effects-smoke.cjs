@@ -1,6 +1,7 @@
 // Exercise both soundcheck entry points using the desktop smoke suite's disposable mixer.
 module.exports=async function balanceEffects(win,wait,capture){
  const js=source=>win.webContents.executeJavaScript(source);
+ win.webContents.setBackgroundThrottling(false);
  const status=await js("fetch('/api/status').then(r=>r.json())");
  if(status.mode!=='simulation'||status.writesEnabled)throw Error('Requires a simulated mixer');
  const click=async(selector,text)=>{
@@ -87,5 +88,54 @@ module.exports=async function balanceEffects(win,wait,capture){
  await wait("!!document.querySelector('.balance-monitor-step')");
  await next('Sauvegarde');
  await save('Test effets reprise');
+ // Prepare the four reference processors in this disposable mixer and open the live editor.
+ const {defaultFxParameters}=await import('../dist/shared/fx-parameters.js');
+ const api=(url,data)=>js('('+async function(url,data){
+  const reply=await fetch(url,{method:data?'POST':'GET',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const result=await reply.json();if(!reply.ok)throw Error(result.error);return result;
+ }+')('+JSON.stringify(url)+','+JSON.stringify(data)+')');
+ for(const [index,algorithm] of [10,0,26,16].entries()){
+  const slot=index+1,expected=await api('/api/console/fx?slot='+slot);
+  const plan=await api('/api/library/fx-edit/preview',{expected,data:{slot,algorithm,parameters:defaultFxParameters(algorithm)}});
+  await api('/api/library/fx-edit/apply',{token:plan.token,confirm:true});
+ }
+ await js("localStorage.setItem('xr18-console-mode','expert');localStorage.setItem('xr18-expert-view','fx')");
+ await win.loadURL(win.webContents.getURL());
+ await wait("!!document.querySelector('button[title=Console]')");
+ await js("document.querySelector('button[title=Console]').click()");
+ await click('.subnav button','Mixage');
+ await wait("Array.from(document.querySelectorAll('.xm-fx-slot .fx-rack-face'),svg=>svg.dataset.rack).join(',')==='DLY,HALL,MODD,DIMC'");
+ await js("document.querySelector('.xm-fx-slots').scrollIntoView({block:'center'})");
+ await new Promise(resolve=>setTimeout(resolve,650));
+ await capture('racks-console.png');
+ const readDelay=()=>api('/api/console/fx?slot=1');
+ const before=await readDelay();
+ await js("document.querySelector('.fx-open-face').click()");
+ await wait("document.querySelector('dialog[open] .fx-hardware')?.dataset.algorithm==='10'");
+ await js("document.querySelector('dialog .fx-hardware [role=slider]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}))");
+ await click('dialog button','Prévisualiser les changements');
+ await wait('document.querySelector(`dialog [aria-label="Prévisualisation FX"]`)?.textContent.includes("Durée du délai")');
+ if(JSON.stringify(before)!==JSON.stringify(await readDelay()))throw Error('Opening or adjusting a rack changed the simulator before confirmation');
+ if(await js("document.querySelectorAll('dialog .fx-hardware').length")!==1)throw Error('Duplicated processor in rack editor');
+ await new Promise(resolve=>setTimeout(resolve,400));
+ await capture('rack-delai.png');
+ await click('dialog button','Fermer');
+ await js("document.querySelectorAll('.fx-open-face')[3].click()");
+ await wait("document.querySelector('dialog .fx-hardware')?.dataset.algorithm==='16'");
+ await click('dialog .fx-hardware button','Mode 2');
+ await wait("document.querySelectorAll('dialog .fx-hardware button[aria-pressed=true]').length===1");
+ const desktopBounds=win.getBounds(),min=win.getMinimumSize();
+ try{
+  win.setMinimumSize(320,480);win.setSize(390,760);
+  await wait("innerWidth<=420 && (()=>{const d=document.querySelector('dialog');return d&&d.scrollWidth<=d.clientWidth+1})()");
+  await new Promise(resolve=>setTimeout(resolve,400));
+  await capture('rack-chorus-mobile.png');
+ }finally{win.setBounds(desktopBounds);win.setMinimumSize(...min);}
+ await click('dialog button','Fermer');
+ await js("document.querySelector('.fx-rack-catalog summary').click()");
+ await wait("document.querySelectorAll('.fx-catalog-cards button').length===10");
+ await click('.fx-catalog-families button','Dynamique');
+ await click('.fx-catalog-cards button span','Stereo Ultimo Compressor');
+ await wait("!!document.querySelector('.fx-rack-catalog figure [data-rack=ULC]')");
  console.log('Balance validated: vocals on FX1, direct switch to snare on FX2, second vocal FX on FX3; saved routing in both journeys.');
 };

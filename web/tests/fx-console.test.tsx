@@ -149,3 +149,26 @@ test('stereo GEQ shares one curve, remains read-only for guests, and all new con
   assert.ok(!f.calls.some(c=>c.body));
  }finally{await f.React.act(async()=>setLanguage('fr'));await f.close();}
 });
+
+test('all 61 processors have a faceplate and their front-panel controls address the right bank',async()=>{
+ const f=await fixture();
+ try{
+  const {FxRackFace}=await import('../src/FxRackFace'),{FxRackControls}=await import('../src/FxRackControls');
+  const {FX_NAMES}=await import('../../shared/fx-parameters');
+  const {rackModel}=await import('../src/fx-rack-models');
+  const changes:{i:number;v:number}[]=[];
+  for(const [algorithm,code] of FX_NAMES.entries()){
+   const fx={algorithm,slot:1,parameters:defaultFxParameters(algorithm)};
+   await f.render(<><FxRackFace algorithm={algorithm}/><FxRackControls key={algorithm} fx={fx} disabled={false} onParameter={(i,v)=>changes.push({i,v})}/></>);
+   assert.equal(f.dom.window.document.querySelector('.fx-rack-face')?.getAttribute('data-rack'),code);
+   if(FX_SCHEMAS[algorithm]!.geq)continue;
+   const panel=f.dom.window.document.querySelector('.fx-hardware');
+   assert.ok(panel,code);
+   assert.ok(rackModel(algorithm)!.controls.every(i=>FX_SCHEMAS[algorithm]!.parameters[i]),code);
+   if(algorithm===16){await f.click('Mode 4');assert.deepEqual(changes.pop(),{i:6,v:1});}
+   if(algorithm===47){await f.click('Côté B (droite)');await f.click('20');assert.deepEqual(changes.pop(),{i:11,v:3});}
+   if(algorithm===42){await f.click('Side');const knob=panel.querySelector('svg[role=slider]');await f.React.act(async()=>knob.dispatchEvent(new f.dom.window.KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true})));assert.equal(changes.pop()?.i,8);}
+  }
+  assert.equal(FX_NAMES.length,61);
+ }finally{await f.close();}
+});
