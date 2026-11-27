@@ -83,7 +83,8 @@ ${link('#main', t.skip, ' class="skip"')}
 </div></div></section>
 <section class="section feature" id="features"><div class="wrap"><div class="section-head"><div><p class="kicker">${esc(t.views)}</p><h2 id="workspace">${esc(t.explore)}</h2></div></div>
 <div id="screenshots" class="gallery"><nav class="view-links" aria-label="${esc(t.views)}">${tabs}</nav>${panels}</div>
-<div class="release-line" id="scenes-presets"><a id="news" href="${notes}">BandPilot ${desktop} · ${esc(t.release)}</a></div></div></section>
+<article class="release-line" id="scenes-presets"><div><h3 id="news">${esc(t.rackTitle)}</h3><p>${esc(t.rackText)}</p>${link(notes, 'BandPilot '+desktop+' · '+t.release)}</div>
+<a class="screenshot-link" href="${photos}stereo-delay.jpg" aria-label="${esc(t.zoom+' · Stereo Delay')}"><img src="${photos}stereo-delay.jpg" width="1440" height="401" loading="lazy" alt="${esc(t.rackAlt+' · '+t.sim)}"></a></article></div></section>
 <section class="section gear" id="models"><div class="wrap split"><div><p class="kicker">${esc(t.hardware)}</p><h2>${esc(t.modelTitle)}</h2>${link('multi-model.html',t.matrix)}</div>
 <div class="model-list">${models.map((name,i)=>`<article><h3>${esc(name)}</h3><p>${esc(t.modelTexts[i])}</p></article>`).join('\n')}</div></div></section>
 <section class="section install" id="download"><div class="wrap"><div class="section-head"><div><p class="kicker">${esc(t.desktop)} · ${desktop}</p><h2>${esc(t.installTitle)}</h2></div>${link(desktopRelease,t.allFiles)}</div>
@@ -114,6 +115,12 @@ ${chain(langs.map(code => code === l ? '**'+language[code].language+'**' : md(la
 ${chain([md(t.get,canonical(l)+'#download'),md(t.guide,guide),md(t.release,'docs/RELEASE_NOTES.md#release-'+l)])}
 
 [![${t.tabs[3]} · ${t.sim}](docs/${photos}hero.jpg)](${canonical(l)}#view-mixer)
+
+## ${t.rackTitle}
+
+${t.rackText}
+
+[![${t.rackAlt}](docs/${photos}stereo-delay.jpg)](${canonical(l)}#news)
 
 ## ${t.installTitle}
 

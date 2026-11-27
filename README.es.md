@@ -2,11 +2,17 @@
 
 [Français](README.md) · [English](README.en.md) · [Deutsch](README.de.md) · **Español** · [Italiano](README.it.md)
 
-**De la prueba de sonido al concierto.** Prepara las entradas del grupo, ajusta la mezcla de monitores de cada músico y ten a mano el repertorio. BandPilot controla la mesa desde la red local.
+**De la prueba de sonido al concierto.** Controla tu mesa X-Air o M-Air desde un ordenador o una tableta Android. Prepara la prueba de sonido, ajusta los monitores de cada músico y ten a mano el repertorio en el escenario.
 
 [Descargar BandPilot](https://herve8940.github.io/BandPilot/es.html#download) · [Guía de inicio](docs/USER_GUIDE_ES.md) · [Notas de la versión](docs/RELEASE_NOTES.md#release-es)
 
 [![Mesa · Interfaz en francés en modo de simulación](docs/images/bandpilot-3.0/hero.jpg)](https://herve8940.github.io/BandPilot/es.html#view-mixer)
+
+## 61 efectos en el rack
+
+Cada efecto de X-Air y M-Air tiene su propio panel. En Stereo Delay, gira los mandos para ajustar las repeticiones al ritmo del tema. En la mesa puedes arrastrar un punto del ecualizador desde el centro. Cada mezcla de monitores muestra el nombre del bus o del perfil y se comparte desde su propia tarjeta.
+
+[![Panel de Stereo Delay con seis mandos de tiempo, realimentación, mezcla y filtros](docs/images/bandpilot-3.0/stereo-delay.jpg)](https://herve8940.github.io/BandPilot/es.html#news)
 
 ## Instala BandPilot
 

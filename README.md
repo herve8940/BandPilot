@@ -2,11 +2,17 @@
 
 **Français** · [English](README.en.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Italiano](README.it.md)
 
-**De la balance au concert.** Prépare les entrées de ton groupe, règle les retours de chaque musicien et garde ta setlist sous la main. BandPilot pilote ta console sur le réseau local.
+**De la balance au concert.** Pilote ta console X-Air ou M-Air depuis un ordinateur ou une tablette Android. Prépare la balance, règle le retour de chaque musicien et retrouve ta setlist sur scène.
 
 [Télécharger BandPilot](https://herve8940.github.io/BandPilot/#download) · [Guide de démarrage](docs/USER_GUIDE_FR.md) · [Notes de version](docs/RELEASE_NOTES.md#release-fr)
 
 [![Console · Captures en français, en simulation](docs/images/bandpilot-3.0/hero.jpg)](https://herve8940.github.io/BandPilot/#view-mixer)
+
+## 61 effets à régler dans le rack
+
+Sur X-Air et M-Air, chaque effet a sa façade. Sur le Stereo Delay, tourne les potards pour caler les répétitions sur le morceau. Dans la Console, tu peux déplacer un point d’EQ par son centre. Les retours affichent le nom du bus ou celui du profil, et le bouton de partage se trouve dans la carte du retour sélectionné.
+
+[![Façade du Stereo Delay avec les six potards de durée, de réinjection, de mélange et de filtrage](docs/images/bandpilot-3.0/stereo-delay.jpg)](https://herve8940.github.io/BandPilot/#news)
 
 ## Installe BandPilot
 

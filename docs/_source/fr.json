@@ -8,11 +8,14 @@
   "downloads": "Téléchargements",
   "get": "Télécharger BandPilot",
   "release": "Notes de version",
+  "rackTitle": "61 effets à régler dans le rack",
+  "rackText": "Sur X-Air et M-Air, chaque effet a sa façade. Sur le Stereo Delay, tourne les potards pour caler les répétitions sur le morceau. Dans la Console, tu peux déplacer un point d’EQ par son centre. Les retours affichent le nom du bus ou celui du profil, et le bouton de partage se trouve dans la carte du retour sélectionné.",
+  "rackAlt": "Façade du Stereo Delay avec les six potards de durée, de réinjection, de mélange et de filtrage",
   "heading": [
     "De la balance",
     "au concert."
   ],
-  "intro": "Prépare les entrées de ton groupe, règle les retours de chaque musicien et garde ta setlist sous la main. BandPilot pilote ta console sur le réseau local.",
+  "intro": "Pilote ta console X-Air ou M-Air depuis un ordinateur ou une tablette Android. Prépare la balance, règle le retour de chaque musicien et retrouve ta setlist sur scène.",
   "platform": "Gratuit et open source",
   "views": "Dans l’application",
   "explore": "Quatre vues pour préparer ton concert",

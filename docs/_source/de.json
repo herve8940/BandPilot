@@ -8,11 +8,14 @@
   "downloads": "Downloads",
   "get": "BandPilot herunterladen",
   "release": "Versionshinweise",
+  "rackTitle": "61 Effekte im Rack",
+  "rackText": "Jeder X-Air- und M-Air-Effekt hat eine eigene Frontplatte. Beim Stereo Delay stimmst du die Wiederholungen mit den Drehreglern auf den Song ab. Im Mischpult kannst du EQ-Punkte in der Mitte greifen und verschieben. Monitormischungen zeigen den Bus- oder Profilnamen an. Die ausgewählte Mischung lässt sich direkt in ihrer Karte teilen.",
+  "rackAlt": "Stereo-Delay-Frontplatte mit sechs Drehreglern für Verzögerungszeit, Rückkopplung, Effektanteil und Filter",
   "heading": [
     "Vom Soundcheck",
     "zum Auftritt."
   ],
-  "intro": "Bereite die Eingänge deiner Band vor, stelle für jeden Musiker einen Monitormix ein und behalte die Setlist im Blick. BandPilot steuert dein Mischpult über das lokale Netzwerk.",
+  "intro": "Steuere dein X-Air- oder M-Air-Mischpult vom Computer oder Android-Tablet aus. Mach den Soundcheck, stelle die Monitormischungen ein und behalte auf der Bühne die Setlist im Blick.",
   "platform": "Kostenlos und quelloffen",
   "views": "Einblick in die App",
   "explore": "Vier Ansichten für deinen Auftritt",

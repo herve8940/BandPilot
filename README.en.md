@@ -2,11 +2,17 @@
 
 [Français](README.md) · **English** · [Deutsch](README.de.md) · [Español](README.es.md) · [Italiano](README.it.md)
 
-**From soundcheck to showtime.** Set up your band’s inputs, give each musician a personal monitor mix and keep your setlist close. BandPilot controls your mixer over the local network.
+**From soundcheck to showtime.** Control your X-Air or M-Air mixer from a computer or Android tablet. Run soundcheck, set up each musician’s monitor mix and keep your setlist handy on stage.
 
 [Download BandPilot](https://herve8940.github.io/BandPilot/en.html#download) · [Getting started](docs/USER_GUIDE_EN.md) · [Release notes](docs/RELEASE_NOTES.md#release-en)
 
 [![Mixer · French interface shown in simulation](docs/images/bandpilot-3.0/hero.jpg)](https://herve8940.github.io/BandPilot/en.html#view-mixer)
+
+## 61 effects in the rack
+
+Each X-Air and M-Air effect has its own front panel. On Stereo Delay, turn the knobs to time the repeats to the song. In the mixer, grab the centre of an EQ point and drag it. Monitor mixes show the bus or profile name, with the share button right on the selected mix.
+
+[![Stereo Delay front panel with six knobs for delay time, feedback, mix and filters](docs/images/bandpilot-3.0/stereo-delay.jpg)](https://herve8940.github.io/BandPilot/en.html#news)
 
 ## Install BandPilot
 

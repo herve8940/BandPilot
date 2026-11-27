@@ -2,11 +2,17 @@
 
 [Français](README.md) · [English](README.en.md) · **Deutsch** · [Español](README.es.md) · [Italiano](README.it.md)
 
-**Vom Soundcheck zum Auftritt.** Bereite die Eingänge deiner Band vor, stelle für jeden Musiker einen Monitormix ein und behalte die Setlist im Blick. BandPilot steuert dein Mischpult über das lokale Netzwerk.
+**Vom Soundcheck zum Auftritt.** Steuere dein X-Air- oder M-Air-Mischpult vom Computer oder Android-Tablet aus. Mach den Soundcheck, stelle die Monitormischungen ein und behalte auf der Bühne die Setlist im Blick.
 
 [BandPilot herunterladen](https://herve8940.github.io/BandPilot/de.html#download) · [Erste Schritte](docs/USER_GUIDE_DE.md) · [Versionshinweise](docs/RELEASE_NOTES.md#release-de)
 
 [![Mischpult · Französische Oberfläche im Simulationsmodus](docs/images/bandpilot-3.0/hero.jpg)](https://herve8940.github.io/BandPilot/de.html#view-mixer)
+
+## 61 Effekte im Rack
+
+Jeder X-Air- und M-Air-Effekt hat eine eigene Frontplatte. Beim Stereo Delay stimmst du die Wiederholungen mit den Drehreglern auf den Song ab. Im Mischpult kannst du EQ-Punkte in der Mitte greifen und verschieben. Monitormischungen zeigen den Bus- oder Profilnamen an. Die ausgewählte Mischung lässt sich direkt in ihrer Karte teilen.
+
+[![Stereo-Delay-Frontplatte mit sechs Drehreglern für Verzögerungszeit, Rückkopplung, Effektanteil und Filter](docs/images/bandpilot-3.0/stereo-delay.jpg)](https://herve8940.github.io/BandPilot/de.html#news)
 
 ## BandPilot installieren
 

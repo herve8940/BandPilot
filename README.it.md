@@ -2,11 +2,17 @@
 
 [Français](README.md) · [English](README.en.md) · [Deutsch](README.de.md) · [Español](README.es.md) · **Italiano**
 
-**Dal soundcheck al concerto.** Prepara gli ingressi del gruppo, regola il mix di monitoraggio di ogni musicista e tieni la scaletta a portata di mano. BandPilot controlla il mixer sulla rete locale.
+**Dal soundcheck al concerto.** Controlla il tuo mixer X-Air o M-Air da un computer o da un tablet Android. Prepara il soundcheck, regola il mix di monitoraggio di ogni musicista e tieni la scaletta a portata di mano sul palco.
 
 [Scarica BandPilot](https://herve8940.github.io/BandPilot/it.html#download) · [Guida introduttiva](docs/USER_GUIDE_IT.md) · [Note di rilascio](docs/RELEASE_NOTES.md#release-it)
 
 [![Mixer · Interfaccia in francese, in simulazione](docs/images/bandpilot-3.0/hero.jpg)](https://herve8940.github.io/BandPilot/it.html#view-mixer)
+
+## 61 effetti nel rack
+
+Ogni effetto X-Air e M-Air ha il proprio pannello. Con le manopole dello Stereo Delay puoi mettere le ripetizioni a tempo con il brano. Nel mixer puoi trascinare i punti dell’equalizzatore afferrandoli al centro. Ogni mix di monitoraggio mostra il nome del bus o del profilo e si condivide dalla scheda selezionata.
+
+[![Pannello dello Stereo Delay con sei manopole per tempo, feedback, mix e filtri](docs/images/bandpilot-3.0/stereo-delay.jpg)](https://herve8940.github.io/BandPilot/it.html#news)
 
 ## Installa BandPilot
 

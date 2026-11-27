@@ -69,7 +69,8 @@ h3 { font-size: clamp(1.3rem, 2vw, 1.85rem); letter-spacing: -.035em; }
 .screenshot-link { display: block; cursor: zoom-in; background: #171624; padding: .35rem; border-radius: .65rem; box-shadow: 0 .8rem 2rem #20193c1a; }
 .screenshot-link img { width: 100%; border-radius: .4rem; }
 figcaption { color: var(--muted); font-size: .81rem; margin-top: .65rem; }
-.release-line { border-top: 1px solid var(--rule); padding-top: 1rem; margin-top: 1.5rem; }
+.release-line { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); gap: clamp(1.5rem, 4vw, 4rem); align-items: center; border-top: 1px solid var(--rule); padding-top: 2rem; margin-top: 2rem; }
+.release-line p { margin: .8rem 0; color: var(--muted); }
 .split { display: grid; grid-template-columns: minmax(0,.82fr) minmax(0,1.2fr); gap: clamp(2rem,7vw,8rem); }
 .split h2 { margin-bottom: 1.2rem; }
 .gear { background: #edecf4; }

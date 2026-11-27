@@ -8,11 +8,14 @@
   "downloads": "Descargas",
   "get": "Descargar BandPilot",
   "release": "Notas de la versión",
+  "rackTitle": "61 efectos en el rack",
+  "rackText": "Cada efecto de X-Air y M-Air tiene su propio panel. En Stereo Delay, gira los mandos para ajustar las repeticiones al ritmo del tema. En la mesa puedes arrastrar un punto del ecualizador desde el centro. Cada mezcla de monitores muestra el nombre del bus o del perfil y se comparte desde su propia tarjeta.",
+  "rackAlt": "Panel de Stereo Delay con seis mandos de tiempo, realimentación, mezcla y filtros",
   "heading": [
     "De la prueba de sonido",
     "al concierto."
   ],
-  "intro": "Prepara las entradas del grupo, ajusta la mezcla de monitores de cada músico y ten a mano el repertorio. BandPilot controla la mesa desde la red local.",
+  "intro": "Controla tu mesa X-Air o M-Air desde un ordenador o una tableta Android. Prepara la prueba de sonido, ajusta los monitores de cada músico y ten a mano el repertorio en el escenario.",
   "platform": "Gratis y de código abierto",
   "views": "Dentro de la aplicación",
   "explore": "Cuatro vistas para preparar el concierto",
