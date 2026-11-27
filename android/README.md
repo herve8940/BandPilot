@@ -1,8 +1,8 @@
 # BandPilot Android autonome
 
-Version Android disponible : **3.0.2-android.1**, avec les effets indépendants par entrée et les groupes de sources dans les retours personnels.
+La version Android **3.0.3-android.1** apporte les façades des 61 effets X-Air et M-Air et corrige la manipulation des points d’EQ et l’affichage des retours.
 
-[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v3.0.2-android.1/BandPilot-Android-3.0.2-android.1-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
+[Télécharger l’APK signé](https://github.com/herve8940/BandPilot/releases/download/android-v3.0.3-android.1/BandPilot-Android-3.0.3-android.1-universal.apk) · [Guide d’installation](../docs/ANDROID.md)
 
 Le contrôle local fonctionne sans Internet. [Données et confidentialité](../docs/PRIVACY.md).
 

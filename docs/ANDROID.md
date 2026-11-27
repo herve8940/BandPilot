@@ -1,14 +1,16 @@
 # Installer BandPilot sur Android
 
-> **Préversion Android 3.0.2-android.1** : APK distribué séparément de la version stable de bureau.
+> **Préversion Android 3.0.3-android.1** : APK distribué séparément de la version stable de bureau.
 
-**BandPilot Android 3.0.2-android.1 est disponible en APK signé.** La tablette embarque l’interface, le moteur de console et les données : elle se connecte directement à la table par Wi-Fi, sans PC ni Docker.
+**BandPilot Android 3.0.3-android.1 est disponible en APK signé.** La tablette embarque l’interface, le moteur de console et les données : elle se connecte directement à la table par Wi-Fi, sans PC ni Docker.
 
-[Télécharger l’APK Android](https://github.com/herve8940/BandPilot/releases/download/android-v3.0.2-android.1/BandPilot-Android-3.0.2-android.1-universal.apk) · [Version et sommes de contrôle](https://github.com/herve8940/BandPilot/releases/tag/android-v3.0.2-android.1)
+[Télécharger l’APK Android](https://github.com/herve8940/BandPilot/releases/download/android-v3.0.3-android.1/BandPilot-Android-3.0.3-android.1-universal.apk) · [Version et sommes de contrôle](https://github.com/herve8940/BandPilot/releases/tag/android-v3.0.3-android.1)
 
-## Nouveautés de 3.0.2-android.1
+## Nouveautés de 3.0.3-android.1
 
-Sur X-Air et M-Air, changer d’instrument prépare son effet dans un emplacement libre. « Ajouter un effet » permet de combiner deux effets sur la même entrée. La Balance peut démarrer depuis une scène vierge ou depuis le mélangeur actuel. Chaque musicien peut grouper plusieurs sources dans son retour personnel. Le compteur d’installations a été retiré.
+Les 61 effets X-Air et M-Air disposent chacun d’une façade avec leurs réglages. La Balance permet d’ajuster un effet avant de confirmer l’essai. Dans la Console, tu peux déplacer le centre d’un point d’EQ pour régler sa fréquence et son gain.
+
+Les retours affichent le nom du bus ou, si celui-ci est vide, le nom enregistré dans le profil. Le bouton « Partager ce retour » se trouve dans la carte sélectionnée. Les modes Simple et Expert sont plus lisibles, et la console allemande affiche désormais **FOH**.
 
 **Réglages → Aide et incidents** donne accès à l’entraide Discord, au guide et aux
 idées. Pour un bug, saisir le résumé et les étapes, relire le message avec la
@@ -26,7 +28,7 @@ préférences.
 
 - Android **8.0 minimum**, avec **Android System WebView 111 minimum**.
 - APK universel pour ARM 32 bits, ARM 64 bits et x86_64. Portrait et paysage.
-- Une version précédente a été installée et démarrée en simulation sur **Xiaomi Redmi Pad (22081283G), Android 14, ARM 64 bits** ; fonctionnement confirmé par son utilisateur. Sur un émulateur Android 15, la version 3.0.2-android.1 a été installée par-dessus la 2.4.0-android.5. Le pilotage d’une console simulée et la réouverture du groupe enregistré ont été vérifiés.
+- Une version précédente a été installée et démarrée en simulation sur **Xiaomi Redmi Pad (22081283G), Android 14, ARM 64 bits** ; fonctionnement confirmé par son utilisateur. Sur un émulateur Android 15, la version 3.0.3-android.1 a été installée par-dessus la 3.0.2-android.1. Le pilotage d’une console simulée et la réouverture du groupe enregistré ont été vérifiés.
 - Les autres modèles de tablettes et les combinaisons tablette/console doivent encore être validés. Les appareils utilisant des pages mémoire de **16 Ko ne sont pas certifiés** pour cette première version.
 - Les limites propres à chaque console restent applicables : voir la [matrice de compatibilité](multi-model.md). X32 demeure partielle et expérimentale.
 
