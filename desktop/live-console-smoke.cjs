@@ -26,10 +26,11 @@ module.exports=async(win,wait,screenshot)=>{
   await js(`(()=>{const s=document.querySelector('.bandpilot-language select');s.value=${JSON.stringify(lang)};s.dispatchEvent(new Event('change',{bubbles:true}));})()`);
   await wait(`document.documentElement.lang===${JSON.stringify(lang)}`);
   await js(`document.querySelector('[data-workspace=mix]').click()`);await wait(`document.querySelectorAll('.subnav button').length===2`);
-  await js(`document.querySelector('.subnav button').click()`);await wait(`!!document.querySelector('.studio-control fieldset button')`);
-  await js(`document.querySelector('.studio-control').closest('details').open=true;document.querySelector('.studio-control fieldset button').click()`);
-  await wait(`document.querySelector('.parameter-grid').textContent.includes(${JSON.stringify(expected)})`);
+  await js(`document.querySelector('.subnav button').click()`);await wait(`!!document.querySelector('.fx-editor > fieldset button')`);
+  await js(`document.querySelector('.fx-editor').closest('details').open=true;document.querySelector('.fx-editor > fieldset button').click()`);
+  await wait(`document.querySelector('.fx-editor .fx-hardware')?.dataset.algorithm==='10' && document.querySelector('.fx-editor .parameter-grid')?.textContent.includes(${JSON.stringify(expected)})`);
  }
+ await js(`document.querySelector('.fx-editor .fx-hw-precise').open=true`);
  await js(`(()=>{const s=document.querySelector('.fx-tempo select');s.value='0.75';s.dispatchEvent(new Event('change',{bubbles:true}));})()`);
  await button('Préparer cette durée');await wait(`Number(document.querySelectorAll('.parameter-card input')[1].value)===375`);
  if(JSON.stringify(await api('/api/console/fx?slot=1'))!==JSON.stringify(desired))throw Error('Preparing tempo wrote audio');
